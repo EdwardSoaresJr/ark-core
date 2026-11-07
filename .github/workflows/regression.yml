@@ -1,0 +1,67 @@
+name: Regression
+
+# The full suite, once a night on main (the integration baseline), on request from the Actions tab (release gates),
+# and on a pull request labeled "full-regression" (major or high-risk changes). Failures are checked against the
+# committed known-failure baseline (.github/regression-known-failures.txt, #147): any other failing test is a
+# regression and fails the job, as does a run that crashed, timed out, or ran far fewer tests than expected.
+on:
+  schedule:
+    # GitHub schedules in UTC and does not follow daylight saving time: 09:00 UTC is 02:00 Mountain from November to
+    # March (MST, UTC-7) and 03:00 from March to November (MDT, UTC-6). Scheduled runs can start late when GitHub is busy.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: regression-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  pest:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-regression')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    # The suite forces SQLite :memory: in phpunit.xml. It does not use MySQL.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run the full suite
+        id: suite
+        timeout-minutes: 80
+        run: |
+          set +e
+          php -d memory_limit=2048M vendor/bin/pest --no-coverage --log-junit "$RUNNER_TEMP/junit.xml"
+          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+
+      # Runs even when the suite step was stopped or timed out, so a missing or partial report fails visibly.
+      - name: Report against the known-failure baseline
+        if: always()
+        run: |
+          set -euo pipefail
+          php scripts/ci-regression-report.php \
+            --junit="$RUNNER_TEMP/junit.xml" \
+            --known=.github/regression-known-failures.txt \
+            --out="$RUNNER_TEMP/failures.txt" \
+            --exit-code="${{ steps.suite.outputs.exit-code || 'missing' }}" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep this run's failure list
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-failures
+          path: ${{ runner.temp }}/failures.txt
+          if-no-files-found: ignore
+          retention-days: 30

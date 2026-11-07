@@ -1,18 +1,30 @@
 name: Tests
 
+# Fast checks for every pull request and every push to main. The full suite runs nightly on main and on request
+# (regression.yml); see CONTRIBUTING.md.
 on:
-  push:
   pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+
 jobs:
-  pest:
+  lint:
     runs-on: ubuntu-latest
-    # The suite forces SQLite :memory: in phpunit.xml. It does not use MySQL.
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -23,14 +35,87 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Run tests
-        run: composer test:serial
+      - name: PHP syntax of changed files
+        run: |
+          set -euo pipefail
+          git diff --name-only --diff-filter=ACMR "$BASE"...HEAD -- '*.php' ':!*.blade.php' | while IFS= read -r file; do
+            php -l "$file" > /dev/null
+          done
+
+      - name: JavaScript syntax of changed files
+        run: |
+          set -euo pipefail
+          git diff --name-only --diff-filter=ACMR "$BASE"...HEAD -- 'resources/js/*.js' 'public/js/ark/*.js' | while IFS= read -r file; do
+            node --check "$file"
+          done
+
+      - name: Blade views compile
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+        run: php artisan view:cache
+
+      - name: Pint on changed files (advisory; several files predate the style rules)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          files=$(git diff --name-only --diff-filter=ACMR "$BASE"...HEAD -- '*.php' ':!*.blade.php')
+          if [ -n "$files" ]; then vendor/bin/pint --test $files; fi
+
+  security:
+    runs-on: ubuntu-latest
+    # Authentication, permissions, sessions, signed access, isolation between records and test databases: on every
+    # change, whatever it touches. Payment tests join when the change touches payments or billing.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Security and isolation tests
+        run: |
+          set -euo pipefail
+          tests=(
+            tests/Feature/Auth
+            tests/Feature/Authorization
+            tests/Feature/Runtime/SecurityHardeningTest.php
+            tests/Feature/Platform/SessionCookieDomainTest.php
+            tests/Feature/Operations/EstimateAccessTokenSecurityTest.php
+            tests/Feature/Operations/Portal/StaffPortalSessionTest.php
+            tests/Feature/Communications/TwilioWebhookSignatureTest.php
+            tests/Feature/Operations/RepairOrderReadCacheIsolationTest.php
+            tests/Feature/Testing/TestExecutionIsolationTest.php
+            tests/Unit/Testing/TestDatabaseIsolationBleedTest.php
+          )
+          if git diff --name-only "$BASE"...HEAD | grep -Eiq 'payment|square|billing|invoice|terminal'; then
+            tests+=(
+              tests/Feature/Operations/Payments
+              tests/Unit/Operations/Payments
+              tests/Feature/Mobile/MobilePaymentCaptureTest.php
+              tests/Feature/Operations/SendPaymentLinkTest.php
+            )
+          fi
+          present=()
+          for test in "${tests[@]}"; do
+            if [ -e "$test" ]; then present+=("$test"); fi
+          done
+          php -d memory_limit=1024M vendor/bin/pest --no-coverage "${present[@]}"
 
   targeted:
     runs-on: ubuntu-latest
-    # Repair-order cache checks, plus the needs-attention regressions when that
-    # pull request is the one being tested. The full suite above is not a
-    # required check while its existing failures remain.
+    # Repair-order cache checks and the needs-attention regressions, on every change.
     steps:
       - uses: actions/checkout@v4
 
@@ -69,6 +154,38 @@ jobs:
             php vendor/bin/pest --no-coverage --filter 'communications queue api includes ringing and active calls' \
               tests/Feature/Operations/CommunicationsQueueTest.php
           fi
+
+  focused:
+    runs-on: ubuntu-latest
+    # The tests relevant to what changed (scripts/ci-focused-tests.sh), not the whole suite.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Tests for the changed files
+        run: |
+          set -euo pipefail
+          mapfile -t tests < <(bash scripts/ci-focused-tests.sh "$BASE" 2> "$RUNNER_TEMP/broad.txt")
+          if [ -s "$RUNNER_TEMP/broad.txt" ]; then
+            echo "::notice::This change touches $(sed 's/^broad: //' "$RUNNER_TEMP/broad.txt" | paste -sd ', ' -). A name search cannot follow its reach; add the full-regression label if it is high-risk."
+          fi
+          if [ "${#tests[@]}" -eq 0 ]; then
+            echo "No tests name the changed files."
+            exit 0
+          fi
+          printf 'Running %d test files:\n' "${#tests[@]}"
+          printf '  %s\n' "${tests[@]}"
+          php -d memory_limit=2048M vendor/bin/pest --no-coverage "${tests[@]}"
 
   communications-boundary:
     runs-on: ubuntu-latest

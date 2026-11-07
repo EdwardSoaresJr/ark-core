@@ -124,10 +124,10 @@ Observed on ARK Core, not changed by this file:
 
 | Line | Protection | Workflows |
 | --- | --- | --- |
-| `main` | Ruleset `main`: no deletion, no force-push, pull request required, zero approving reviews, `gitleaks` required | `secret-scan.yml`, `tests.yml` (`pest`), `knowledge-base.yml` |
+| `main` | Ruleset `main`: no deletion, no force-push, pull request required, zero approving reviews, `gitleaks` required | `secret-scan.yml`, `tests.yml` (`lint`, `security`, `targeted`, `focused`, `communications-boundary`), `regression.yml` (`pest`: nightly, on request, or with the `full-regression` label), `knowledge-base.yml` |
 | `v2/native-messaging` | No ruleset | `knowledge-base.yml` only |
 
-`pest` runs on `main` and is not required. Shop rulesets could not be read with the current GitHub plan. Shop CI is the boundary workflow. No workflow deploys production. Do not add one.
+`pest` (the full suite) runs nightly on `main` and is not required. Before a major or high-risk production release, run `regression.yml` on the release commit (Actions tab, or the `full-regression` label on its pull request) and record its report: the release needs no failures outside the known-failure baseline (`.github/regression-known-failures.txt`, #147) and a complete run. Shop rulesets could not be read with the current GitHub plan. Shop CI is the boundary workflow. No workflow deploys production. Do not add one.
 
 Do not remove `gitleaks`, force-push protection, or the pull-request rule. Recommend these only as additions, after the suite is green: require `pest` on `main`, put `tests.yml` and `secret-scan.yml` on the branch that is actually released, and require one approving review before a production release merges. A required check that is already failing does not make a release safer.
 
