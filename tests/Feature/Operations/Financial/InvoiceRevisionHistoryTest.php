@@ -66,7 +66,7 @@ function revisionHistoryStorePdf(EstimateDocument $invoice, string $contents): v
 {
     $path = DocumentPdfPath::for($invoice);
     Storage::disk('local')->put($path, $contents);
-    DB::table('estimate_documents')->where('id', $invoice->id)->update(['pdf_path' => $path, 'needs_pdf_refresh' => false]);
+    DB::table('estimate_documents')->where('id', $invoice->id)->update(['pdf_path' => $path, 'needs_pdf_refresh' => false, 'pdf_refreshed_at' => now()]);
 }
 
 function revisionHistoryPatchHours(RepairOrder $repairOrder, RepairOrderLine $line, string $hours): void
@@ -129,12 +129,15 @@ test('a partly paid invoice updates, keeps payments, and does not add a revision
     [$repairOrder, $line, $invoice] = revisionHistoryRepairOrder();
     app(RecordLedgerEntryAction::class)->recordPayment($repairOrder->fresh(), 5000, PaymentMethod::Card);
 
+    expect($invoice->fresh()->needs_pdf_refresh)->toBeTrue();
+
     revisionHistoryPatchHours($repairOrder, $line, '0.50');
 
     $balance = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh());
     expect(revisionHistoryTotal($invoice))->toBe(7500)
         ->and($invoice->fresh()->priorRevisions())->toHaveCount(1)
         ->and($invoice->fresh()->priorRevisions()[0]['collected_cents'])->toBe(5000)
+        ->and(Storage::disk('local')->get($invoice->fresh()->priorRevisions()[0]['pdf_path']))->toBe('PDF of the invoice as first issued')
         ->and($balance->paymentsAppliedCents)->toBe(5000)
         ->and($balance->balanceDueCents)->toBe(2500)
         ->and($balance->overpaidCents)->toBe(0);
@@ -215,7 +218,7 @@ test('a revision PDF is served exactly as stored, never rendered again, and does
 
 test('revision PDFs need repair order access and only exist where a PDF was stored', function () {
     [$repairOrder, $line, $invoice] = revisionHistoryRepairOrder();
-    DB::table('estimate_documents')->where('id', $invoice->id)->update(['needs_pdf_refresh' => true]);
+    DB::table('estimate_documents')->where('id', $invoice->id)->update(['refreshed_at' => now(), 'pdf_refreshed_at' => now()->subMinute()]);
     app(RecordLedgerEntryAction::class)->recordPayment($repairOrder->fresh(), 5000, PaymentMethod::Card);
     revisionHistoryPatchHours($repairOrder, $line, '0.50');
 
