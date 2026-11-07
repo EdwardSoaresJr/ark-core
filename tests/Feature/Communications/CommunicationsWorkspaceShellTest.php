@@ -606,8 +606,9 @@ test('the inbox has one Inbox heading, a compact channel filter, neutral counts 
     expect($html)->not->toContain('badge bg-primary-lt">Needs attention</span>')
         ->and($html)->not->toMatch('/class="badge[^"]*\bbg-red\b/')
         ->and(substr_count($html, 'data-comms-channel-option='))->toBe(6)
-        // On the inbox itself the page's filter is the only channel control; the top bar adds none.
-        ->and($html)->not->toContain('data-ark-inbox-menu');
+        // The header's Inbox menu is global, Communications included; the page adds only its channel filter.
+        ->and(substr_count($html, 'data-ark-inbox-menu'))->toBe(1)
+        ->and(substr_count($html, 'data-comms-channel-filter'))->toBe(1);
 });
 
 test('choosing a channel filters the list, keeps the lane and advisor filters, and survives a live refresh', function (): void {

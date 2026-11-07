@@ -72,14 +72,15 @@
     <div class="page-wrapper">
         <header class="navbar navbar-expand d-print-none">
             <div class="container-fluid gap-2">
-                @if ($showTopbarCommsStrip)
-                    @include('operations.communications.partials.channel-strip', [
-                        'comms_channel_tabs' => $commsChannelTabs,
-                        'variant' => 'tabler',
-                        'urgent' => (bool) ($commsPressure['has_live_calls'] ?? false),
-                    ])
-                @endif
                 <div class="navbar-nav flex-row align-items-center gap-2 ms-auto">
+                    {{-- The Inbox sits with the header's own items on every staff page, Communications included. --}}
+                    @if ($commsChannelTabs !== [])
+                        @include('operations.communications.partials.channel-strip', [
+                            'comms_channel_tabs' => $commsChannelTabs,
+                            'variant' => 'tabler',
+                            'urgent' => (bool) ($commsPressure['has_live_calls'] ?? false),
+                        ])
+                    @endif
                     <x-operations.workstation-presence :presence="$workstationPresence" ui="tabler" />
                     @include('components.operations.shell.tabler-user-menu', [
                         'menuUser' => $user,

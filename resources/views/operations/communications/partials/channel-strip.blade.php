@@ -17,8 +17,8 @@
     $urgent = (bool) ($urgent ?? false);
 @endphp
 {{-- One Inbox menu at every width: channels with how many need attention; red only while a call is live. --}}
-<nav class="navbar-nav flex-row" aria-label="Communications by channel" data-ark-channel-strip>
-    <div class="nav-item dropdown">
+<nav class="nav-item" aria-label="Communications by channel" data-ark-channel-strip>
+    <div class="dropdown">
         <a
             href="#"
             class="nav-link px-2 gap-2"
@@ -37,7 +37,7 @@
                 ]) data-ark-inbox-count>{{ $attentionTotal }}</span>
             @endif
         </a>
-        <div class="dropdown-menu dropdown-menu-arrow">
+        <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
             <span class="dropdown-header">Inbox · need attention</span>
             @foreach ($comms_channel_tabs as $tab)
                 <a href="{{ $tab['url'] }}" class="dropdown-item" data-ark-inbox-channel="{{ $tab['slug'] }}">
