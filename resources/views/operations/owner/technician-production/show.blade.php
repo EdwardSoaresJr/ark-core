@@ -7,10 +7,9 @@
     <x-tabler.page
         layout="fluid"
         :title="$technician->name"
-        pretitle="Technician production"
+        :breadcrumbs="[['label' => 'Technician production', 'url' => route('operations.owner.technician-production.index')]]"
         :subtitle="$from.' → '.$to"
         actions-label="Technician shortcuts"
-        stack-actions
     >
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.owner.technician-production.index', ['from' => $from, 'to' => $to])" icon="arrow-left" label="All technicians" />

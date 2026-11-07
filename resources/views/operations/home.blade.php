@@ -4,7 +4,7 @@
 @endphp
 
 <x-operations.app title="Job Board" ui="tabler">
-    <x-tabler.page layout="fluid">
+    <x-tabler.page layout="fluid" title="Job Board">
         <section
             class="d-flex flex-column gap-3"
             data-job-board

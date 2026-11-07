@@ -324,7 +324,7 @@ test('vehicle search keeps its page actions and an empty state', function () {
         ->assertSee('href="'.route('operations.customers.search').'"', false)
         ->assertSee('href="'.route('operations.repair-orders.index').'"', false)
         ->assertSee('href="'.route('operations.intake.create').'"', false)
-        ->assertSee('title="Repair Orders" aria-label="Repair Orders" data-bs-toggle="tooltip"', false)
+        ->assertSee('data-ark-page-action="secondary" aria-label="Repair Orders"', false)
         ->assertSee('No vehicles match &ldquo;Nothing Here&rdquo;.', false)
         ->assertSee('Clear search');
 });

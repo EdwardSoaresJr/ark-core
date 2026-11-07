@@ -170,18 +170,13 @@
             <h3 class="subheader mb-1" id="ro-identity-visit-heading">Visit</h3>
             <div class="ark-ro-visit">
                 <div class="min-w-0">
-                    {{-- Review Notes and Print drop below the RO number when the Visit column is too narrow for both. --}}
-                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2" data-ro-visit-heading>
-                        <div class="d-flex flex-wrap align-items-center gap-2 min-w-0">
+                    {{-- On the RO editor (with visit commands) the top bar carries the RO number, its status and these actions. --}}
+                    @unless (isset($visitCommands))
+                        <div class="d-flex flex-wrap align-items-center gap-2 min-w-0" data-ro-visit-heading>
                             <h2 class="page-title mb-0 text-nowrap" data-ro-number>RO #{{ $repairOrder->repair_order_id }}</h2>
-                            @unless ($statusSelectShown)
-                                <span class="badge bg-secondary-lt" data-ro-status>{{ $repairOrder->statusDisplayLabel() }}</span>
-                            @endunless
+                            <span class="badge bg-secondary-lt" data-ro-status>{{ $repairOrder->statusDisplayLabel() }}</span>
                         </div>
-                        @isset($visitCommands)
-                            @include('operations.repair-orders.partials.repair-order-visit-actions', $visitCommands)
-                        @endisset
-                    </div>
+                    @endunless
 
                     @isset($visitCommands)
                         @include('operations.repair-orders.partials.repair-order-visit-commands', $visitCommands)

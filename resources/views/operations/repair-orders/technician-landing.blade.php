@@ -10,7 +10,7 @@
         $captureSurface = $landing['capture_surface'] ?? $coverage['capture_surface'] ?? 'desktop_walk';
     @endphp
 
-    <x-tabler.page layout="focused" pretitle="Work order" :title="$landing['vehicle_label']" stack-actions>
+    <x-tabler.page layout="focused" pretitle="Work order" :title="$landing['vehicle_label']">
         <x-slot:actions>
             <x-tabler.page-action :href="$landing['back_url']" icon="arrow-left" label="Job Board" />
         </x-slot:actions>

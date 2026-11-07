@@ -112,7 +112,7 @@
     </x-layouts.inspection-tablet>
 @else
     <x-operations.app title="Vehicle Inspection - RO #{{ $repairOrder->repair_order_id }}" ui="tabler">
-        <x-tabler.page layout="focused" pretitle="Vehicle inspection" :title="$vehicleTitle" stack-actions>
+        <x-tabler.page layout="focused" pretitle="Vehicle inspection" :title="$vehicleTitle">
             @if ($isPointWalk)
                 <x-slot:actions>
                     <x-tabler.page-action :href="$sectionsUrl" icon="arrow-left" label="Back to sections" data-inspection-sections-back />

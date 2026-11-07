@@ -15,10 +15,9 @@
     <x-tabler.page
         layout="focused"
         :title="$stationName"
-        pretitle="Stations & Phones"
+        :breadcrumbs="[['label' => 'Stations & Phones', 'url' => route('operations.shop.communications')]]"
         :subtitle="$showLocation ? $workspace['workstation_location'] : null"
         actions-label="Station commands"
-        stack-actions
     >
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.shop.communications')" icon="arrow-left" label="Stations & Phones" />

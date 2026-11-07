@@ -5,7 +5,7 @@
 @endphp
 
 <x-operations.app :title="$user->name.' · Shop'" ui="tabler">
-    <x-tabler.page layout="focused" :title="$user->name" pretitle="Stations & Phones" actions-label="Person commands" stack-actions>
+    <x-tabler.page layout="focused" :title="$user->name" :breadcrumbs="[['label' => 'Stations & Phones', 'url' => route('operations.shop.communications')]]" actions-label="Person commands">
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.shop.communications')" icon="arrow-left" label="Stations & Phones" />
         </x-slot:actions>

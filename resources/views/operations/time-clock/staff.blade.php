@@ -5,7 +5,7 @@
 @endphp
 
 <x-operations.app :title="'Time Clock · '.$technician->name" ui="tabler">
-    <x-tabler.page layout="focused" pretitle="Staff time clock" :title="$technician->name" stack-actions>
+    <x-tabler.page layout="focused" pretitle="Staff time clock" :title="$technician->name">
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.time-clock.index')" icon="arrow-left" label="Time clock" />
             @if ($canManage)

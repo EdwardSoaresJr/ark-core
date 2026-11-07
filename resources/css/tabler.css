@@ -567,28 +567,13 @@
     }
 }
 
-/*
- * The Visit section sizes by its own width: wide enough (half the panel from xxl) its controls and details sit side by
- * side; below 24rem its action buttons show only their icons, named by aria-label and title.
- */
+/* The Visit section sizes by its own width: wide enough (half the panel from xxl) its controls and details sit side by side. */
 .ark-identity-panel__visit {
     container-type: inline-size;
 }
 
 .ark-ro-visit__action-label {
     display: none;
-}
-
-@container (max-width: 23.99rem) {
-    [data-ro-command-actions] .btn .icon {
-        margin: 0;
-    }
-}
-
-@container (min-width: 24rem) {
-    .ark-ro-visit__action-label {
-        display: inline;
-    }
 }
 
 @container (min-width: 32rem) {
@@ -617,6 +602,140 @@ span.ark-legacy {
  */
 .page > .navbar-vertical {
     z-index: 40;
+}
+
+/*
+ * The top bar carries the page's context (components.tabler.page-context): breadcrumbs, title and the page's actions on
+ * the left, then the global controls. It stays one row at every width: the title truncates, the crumbs and subtitle give
+ * way first, and on phones the secondary actions sit in the overflow menu (tabler.js). There is no title row below it,
+ * so the page body starts a short gap under the bar.
+ */
+.ark-topbar {
+    min-height: 3.5rem;
+}
+
+.ark-topbar > .container-fluid {
+    min-width: 0;
+}
+
+.ark-page-context {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.ark-page-context__heading {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.ark-page-context__crumbs {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+/* The last crumb leads to the title, so it takes the divider too. */
+.ark-page-context__crumbs::after {
+    padding-inline: var(--tblr-breadcrumb-item-padding-x, 0.5rem) 0;
+    color: var(--tblr-breadcrumb-divider-color, var(--tblr-secondary));
+    content: var(--tblr-breadcrumb-divider, "/");
+}
+
+/* The title keeps its room; the subtitle takes only what is left. */
+.ark-page-context .page-title {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ark-page-context__meta {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.ark-page-context__subtitle {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--tblr-secondary);
+    font-size: 0.875rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ark-page-context__actions {
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+
+/* A label inside the overflow menu shows even when its button hid it. */
+[data-ark-page-overflow-menu] .ark-page-action__label {
+    display: inline !important;
+}
+
+/* The page's actions and the global controls read as two groups. */
+.ark-page-context + .navbar-nav {
+    padding-inline-start: 0.75rem;
+    border-inline-start: var(--tblr-border-width) solid var(--tblr-border-color);
+}
+
+/* The repair order's Visit actions show their labels in the bar from md, and only their icons on phones. */
+@media (min-width: 768px) {
+    .ark-page-context .ark-ro-visit__action-label {
+        display: inline;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .ark-page-context [data-ro-command-actions] .btn .icon {
+        margin: 0;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .ark-page-context__subtitle {
+        display: none;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .ark-page-context,
+    .ark-page-context__heading {
+        gap: 0.5rem;
+    }
+
+    .ark-page-context__crumbs {
+        display: none;
+    }
+
+    .ark-page-context .page-title {
+        font-size: 1rem;
+    }
+
+    .ark-page-context + .navbar-nav {
+        padding-inline-start: 0;
+        border-inline-start: 0;
+    }
+}
+
+.page-wrapper .page-body {
+    margin-top: 1rem;
 }
 
 /*
@@ -655,22 +774,8 @@ span.ark-legacy {
     min-height: 0;
 }
 
-/* Desktop and tablet: a compact title row and tight margins leave the panels the rest of the screen. */
+/* Desktop and tablet: tight margins leave the panels the rest of the screen. */
 @media (min-width: 992px) {
-    .ark-split > .page-header {
-        margin-top: 0.5rem;
-    }
-
-    .ark-split > .page-header .page-title {
-        font-size: 1.125rem;
-    }
-
-    .ark-split > .page-header .btn {
-        min-height: 2rem;
-        padding-top: 0.25rem;
-        padding-bottom: 0.25rem;
-    }
-
     .ark-split > .page-body {
         margin-top: 0.5rem;
         margin-bottom: 0.5rem;
@@ -786,7 +891,7 @@ span.ark-legacy {
 
 /* On a phone an open conversation takes the screen: the back button replaces the page title and section tabs. */
 @media (max-width: 991.98px) {
-    .ark-split.ark-comms-thread-open > .page-header,
+    .page:has(.ark-split.ark-comms-thread-open) .ark-page-context,
     .ark-split.ark-comms-thread-open [data-comms-section-nav] {
         display: none;
     }

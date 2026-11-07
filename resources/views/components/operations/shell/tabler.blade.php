@@ -70,9 +70,11 @@
     </aside>
 
     <div class="page-wrapper">
-        <header class="navbar navbar-expand d-print-none">
-            <div class="container-fluid gap-2">
-                <div class="navbar-nav flex-row align-items-center gap-2 ms-auto">
+        {{-- One bar: the page's context and actions (pushed by x-tabler.page) on the left, the global controls on the right. --}}
+        <header class="navbar navbar-expand d-print-none ark-topbar" data-ark-topbar>
+            <div class="container-fluid gap-2 flex-nowrap">
+                @stack('ark-page-context')
+                <div class="navbar-nav flex-row align-items-center gap-2 ms-auto flex-shrink-0">
                     {{-- The Inbox sits with the header's own items on every staff page, Communications included. --}}
                     @if ($commsChannelTabs !== [])
                         @include('operations.communications.partials.channel-strip', [

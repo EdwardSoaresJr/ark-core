@@ -139,7 +139,7 @@ test('technician lanes render as tabler cards with their rows, counts, and links
     $lane = $xpath->query('//section[@data-today-lane="'.$assigned->key.'"]')->item(0);
 
     expect(trim($xpath->query('//h2[contains(concat(" ", @class, " "), " page-title ")]')->item(0)->firstChild->textContent))->toBe('Today')
-        ->and($xpath->query('//*[contains(concat(" ", @class, " "), " page-header ")]//a[@href="'.route('operations.workboard').'"]')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@id="ark-page-context"]//a[@href="'.route('operations.workboard').'"]')->length)->toBeGreaterThan(0)
         ->and($xpath->query('//*[@data-today-lanes]//*[contains(concat(" ", @class, " "), " ark-legacy ")]')->length)->toBe(0)
         ->and($xpath->query('//section[@data-today-lane]')->length)->toBe(count($sections))
         ->and($lane)->toBeInstanceOf(DOMElement::class)

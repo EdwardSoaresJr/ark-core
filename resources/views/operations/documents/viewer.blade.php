@@ -4,7 +4,7 @@
 @endphp
 
 <x-operations.app :title="$document->title" ui="tabler">
-    <x-tabler.page layout="focused" :title="$document->title" :pretitle="$row['type_label']" actions-label="Document commands" stack-actions>
+    <x-tabler.page layout="focused" :title="$document->title" :pretitle="$row['type_label']" actions-label="Document commands">
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.customers.show', [$customer, 'tab' => 'documents'])" icon="arrow-left" label="Back" />
             <x-tabler.page-action :href="$row['download_url']" icon="arrow-down" label="Download" />
