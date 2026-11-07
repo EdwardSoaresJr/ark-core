@@ -1611,6 +1611,7 @@ TEXT;
             : null;
 
         $resolvedName = $name !== '' ? $name : 'Retail';
+        $concernBillingPosture = self::selectableConcernBillingPosture($row['concern_billing_posture'] ?? null);
 
         return [
             'name' => $resolvedName,
@@ -1630,7 +1631,30 @@ TEXT;
                     : null),
             'default_parts_matrix_key' => $row['default_parts_matrix_key'] ?? $defaults['default_parts_matrix_key'] ?? null,
             'pill_color' => BillingClassPillColor::resolve($row['pill_color'] ?? null, $resolvedName),
+            ...($concernBillingPosture !== null ? ['concern_billing_posture' => $concernBillingPosture->value] : []),
         ];
+    }
+
+    /**
+     * The billing a new concern starts with for a customer in this billing class: the billing the
+     * class names when the shop chose one, otherwise the billing its name implies.
+     */
+    public function concernBillingPostureForCustomerType(?string $customerType): ConcernBillingPosture
+    {
+        $row = collect($this->customerTypeRows())
+            ->first(fn (array $row): bool => strcasecmp($row['name'], trim((string) $customerType)) === 0);
+
+        return self::selectableConcernBillingPosture($row['concern_billing_posture'] ?? null)
+            ?? ConcernBillingPosture::defaultForCustomerTag($customerType);
+    }
+
+    private static function selectableConcernBillingPosture(mixed $value): ?ConcernBillingPosture
+    {
+        $posture = is_string($value) ? ConcernBillingPosture::tryFrom($value) : null;
+
+        return $posture !== null && in_array($posture, ConcernBillingPosture::advisorSelectableCases(), true)
+            ? $posture
+            : null;
     }
 
     /**

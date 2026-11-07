@@ -16,8 +16,8 @@
             ])
             ->values()
             ->all(),
-        'initialConcerns' => $repairOrder->concerns->sortBy('position')->values()->map(function ($concern) use ($dealerQuoteShopSettings): array {
-            $matrix = $concern->defaultPartsMatrix($dealerQuoteShopSettings);
+        'initialConcerns' => $repairOrder->concerns->sortBy('position')->values()->map(function ($concern) use ($dealerQuoteShopSettings, $repairOrder): array {
+            $matrix = $concern->defaultPartsMatrix($dealerQuoteShopSettings, $repairOrder->customer);
 
             return [
                 'id' => $concern->id,

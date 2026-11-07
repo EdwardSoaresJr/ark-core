@@ -190,11 +190,12 @@ class RepairOrderLinePricing
             : null;
 
         $repairOrder->loadMissing('customer', 'concerns');
-        $concern = $repairOrder->concerns->firstWhere('id', $data['repair_order_concern_id'] ?? null);
+        $concern = $repairOrder->concerns->firstWhere('id', $data['repair_order_concern_id'] ?? null)
+            ?->setRelation('repairOrder', $repairOrder);
         $posture = $concern?->billing_posture ?? ConcernBillingPosture::Default;
         $matrix = $this->explicitMatrixSelected($data)
             ? $settings->partsMatrixByKey($data['pricing_matrix_key'])
-            : $posture->defaultPartsMatrix($settings);
+            : ($concern?->defaultPartsMatrix($settings) ?? $settings->defaultPartsMatrix());
         abort_if($matrix === null, 422, 'Selected parts matrix is not available.');
 
         $suggestion = $partCostCents === null

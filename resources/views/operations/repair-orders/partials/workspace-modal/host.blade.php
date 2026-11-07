@@ -133,8 +133,7 @@
         {{-- Line create (one form per repair action for correct pricing defaults) --}}
         @foreach ($repairOrder->concerns as $concern)
             @php
-                $concernPartsMatrixKey = $concern->billing_posture
-                    ->defaultPartsMatrix($partstechShopSettings ?? \App\Ark\Operations\Settings\ShopSettings::current())['key'];
+                $concernPartsMatrixKey = $concern->defaultPartsMatrix($partstechShopSettings ?? \App\Ark\Operations\Settings\ShopSettings::current(), $repairOrder->customer)['key'];
                 $concernLaborDefaults = ($partstechShopSettings ?? \App\Ark\Operations\Settings\ShopSettings::current())
                     ->laborDefaultsForConcern($concern->billing_posture, $repairOrder->customer);
                 $concernDefaultLaborRate = $concernLaborDefaults['rate'];

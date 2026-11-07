@@ -1395,11 +1395,22 @@
                                                                 @endif
                                                             </div>
                                                         </div>
-                                                        <div class="col-12 border-top pt-2 small text-secondary">
+                                                        <div class="col-12 col-sm-6">
                                                             @php
-                                                                $defaultPosture = App\Ark\Operations\RepairOrders\ConcernBillingPosture::defaultForCustomerTag($type['name']);
+                                                                $nameBillingPosture = App\Ark\Operations\RepairOrders\ConcernBillingPosture::defaultForCustomerTag($type['name']);
+                                                                $chosenBillingPosture = old('customer_types.'.$index.'.concern_billing_posture', $type['concern_billing_posture'] ?? null);
                                                             @endphp
-                                                            New scopes default to <strong>{{ $defaultPosture->label() }}</strong> billing when this billing class is on the customer.
+                                                            <label for="{{ $billingField }}-concern-billing" class="form-label">New concerns bill as</label>
+                                                            <select id="{{ $billingField }}-concern-billing" name="customer_types[{{ $index }}][concern_billing_posture]" class="form-select" data-billing-class-concern-billing>
+                                                                <option value="">{{ $nameBillingPosture->label() }} (from the class name)</option>
+                                                                @foreach (App\Ark\Operations\RepairOrders\ConcernBillingPosture::advisorSelectableCases() as $posture)
+                                                                    <option value="{{ $posture->value }}" @selected($chosenBillingPosture === $posture->value)>{{ $posture->label() }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <div class="form-hint">Labor policy, shop fees and parts matrix of new concerns follow this billing.</div>
+                                                        </div>
+                                                        <div class="col-12 border-top pt-2 small text-secondary">
+                                                            New scopes default to <strong>{{ $settings->concernBillingPostureForCustomerType($type['name'])->label() }}</strong> billing when this billing class is on the customer.
                                                             Change fees and matrix per scope on the estimate.
                                                         </div>
                                                     </div>
