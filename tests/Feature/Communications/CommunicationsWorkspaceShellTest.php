@@ -13,8 +13,10 @@ use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationParticipant;
 use App\Ark\Operations\Conversations\ConversationParticipantType;
 use App\Ark\Operations\Conversations\ConversationRecorder;
+use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Conversations\ConversationWaitingOn;
+use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -28,6 +30,7 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\InternalChannelSeeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
@@ -547,4 +550,127 @@ test('caller lookup and the repair order communications tab use the Tabler conve
         ->assertSee('id="communication-rail"', false)
         ->assertSee('data-ark-conversation-composer', false)
         ->assertDontSee('class="ark-legacy bg-white text-dark border rounded overflow-hidden" data-comms-composer', false);
+});
+
+function inboxUxMessage(Conversation $conversation, OperationalCommunicationChannel $channel, string $body, int $minutesAgo): void
+{
+    $participant = ConversationParticipant::query()->create([
+        'conversation_id' => $conversation->id,
+        'participant_type' => ConversationParticipantType::Customer,
+    ]);
+    ConversationMessage::query()->create([
+        'conversation_id' => $conversation->id,
+        'conversation_participant_id' => $participant->id,
+        'channel' => $channel,
+        'direction' => OperationalCommunicationDirection::Inbound,
+        'body' => $body,
+        'occurred_at' => now()->subMinutes($minutesAgo),
+    ]);
+}
+
+/**
+ * @return array{sms: Conversation, email: Conversation}
+ */
+function inboxUxConversations(): array
+{
+    $work = app(ConversationWork::class);
+    $sms = $work->ensureForPhone('7195553001');
+    inboxUxMessage($sms, OperationalCommunicationChannel::Sms, 'Is my truck ready?', 5);
+    $work->markNeedsAttention($sms);
+
+    $email = app(ConversationResolver::class)->forEmail('pat.synthetic@example.test');
+    inboxUxMessage($email, OperationalCommunicationChannel::Email, 'Question about my estimate', 3);
+    $work->markNeedsAttention($email);
+
+    return ['sms' => $sms->fresh(), 'email' => $email->fresh()];
+}
+
+test('the inbox has one Inbox heading, a compact channel filter, neutral counts and a channel label on each row', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    inboxUxConversations();
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs']))
+        ->assertOk()
+        ->assertSee('<h2 class="page-title">Inbox</h2>', false)
+        ->assertSee('aria-label="Channel: All channels"', false)
+        ->assertSee('data-comms-row-channel="sms"', false)
+        ->assertSee('data-comms-row-channel="email"', false)
+        ->assertSee('data-comms-list-total>2 conversations</span>', false)
+        ->assertSee('bg-primary-lt" data-comms-lane-count="needs">2</span>', false)
+        ->assertDontSee('data-comms-row-urgent', false)
+        ->assertDontSee('ops-comms-channel-strip', false)
+        ->getContent();
+
+    // Inside Needs attention each row's badge would only repeat the lane; red appears nowhere.
+    expect($html)->not->toContain('badge bg-primary-lt">Needs attention</span>')
+        ->and($html)->not->toMatch('/class="badge[^"]*\bbg-red\b/')
+        ->and(substr_count($html, 'data-comms-channel-option='))->toBe(6)
+        // The header's Inbox menu is global, Communications included; the page adds only its channel filter.
+        ->and(substr_count($html, 'data-ark-inbox-menu'))->toBe(1)
+        ->and(substr_count($html, 'data-comms-channel-filter'))->toBe(1);
+});
+
+test('choosing a channel filters the list, keeps the lane and advisor filters, and survives a live refresh', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    inboxUxConversations();
+
+    $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs', 'channel' => 'sms']))
+        ->assertOk()
+        ->assertSee('aria-label="Channel: SMS"', false)
+        ->assertSee('data-comms-row-channel="sms"', false)
+        ->assertDontSee('data-comms-row-channel="email"', false)
+        ->assertSee('data-comms-list-total>1 SMS conversation</span>', false)
+        ->assertSee(e(route('operations.communications.inbox', ['channel' => 'sms', 'filter' => 'waiting'])), false)
+        ->assertSee(e(route('operations.communications.inbox', ['filter' => 'needs', 'channel' => 'sms', 'owner' => 'mine'])), false);
+
+    $fragment = $this->actingAs($advisor)
+        ->getJson(route('operations.communications.workspace.fragment', ['section' => 'inbox', 'filter' => 'needs', 'channel' => 'email']))
+        ->assertOk()
+        ->json();
+    expect($fragment['list'])->toContain('data-comms-row-channel="email"')
+        ->and($fragment['list'])->not->toContain('data-comms-row-channel="sms"')
+        ->and($fragment['nav'])->toContain('data-comms-section-nav');
+
+    $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs', 'channel' => 'portal']))
+        ->assertOk()
+        ->assertSee('No Portal conversations here.')
+        ->assertSee('data-comms-list-total>0 Portal conversations</span>', false);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs', 'channel' => 'not-a-channel']))
+        ->assertOk()
+        ->assertSee('aria-label="Channel: All channels"', false)
+        ->assertSee('data-comms-row-channel="email"', false)
+        ->assertSee('data-comms-row-channel="sms"', false);
+});
+
+test('unread is counted apart from the total, and red is kept for an overdue follow-up', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    ['sms' => $sms, 'email' => $email] = inboxUxConversations();
+    DB::table('conversation_reads')->insert([
+        'conversation_id' => $email->id,
+        'user_id' => $advisor->id,
+        'read_through_at' => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs']))
+        ->assertOk()
+        ->assertSee('data-comms-list-total>2 conversations</span>', false)
+        ->assertSee('data-comms-list-unread>1 unread</span>', false);
+
+    app(ConversationWork::class)->followUp($sms, $advisor, now()->subHour());
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'all']))
+        ->assertOk()
+        ->assertSee('<span class="badge bg-red-lt"  data-comms-row-urgent >Follow-up overdue</span>', false)
+        ->getContent();
+
+    expect(substr_count($html, 'data-comms-row-urgent'))->toBe(1);
 });

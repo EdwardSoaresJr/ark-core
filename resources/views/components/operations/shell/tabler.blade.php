@@ -3,10 +3,9 @@
     $commsBadgeClass = match (true) {
         (bool) ($commsPressure['has_live_calls'] ?? false) => 'bg-red text-red-fg',
         ($commsNavSummary['since_last_shift_count'] ?? 0) > 0 => 'bg-orange text-orange-fg',
-        default => 'bg-red-lt',
+        default => 'bg-secondary-lt',
     };
     $topbarAvatarUser = $workstationPresence->currentOperator ?? $user;
-    $channelTotal = (int) (collect($commsChannelTabs)->firstWhere('slug', 'all')['count'] ?? 0);
 @endphp
 
 <div class="page">
@@ -73,44 +72,15 @@
     <div class="page-wrapper">
         <header class="navbar navbar-expand d-print-none">
             <div class="container-fluid gap-2">
-                @if ($showTopbarCommsStrip)
-                    <div class="navbar-nav d-lg-none">
-                        <div class="nav-item dropdown">
-                            <a
-                                href="#"
-                                class="nav-link px-2"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                aria-label="Communications, {{ $channelTotal }} need attention"
-                            >
-                                <x-tabler.icon name="message" />
-                                @if ($channelTotal > 0)
-                                    <span class="badge bg-red text-red-fg badge-notification badge-pill">{{ $channelTotal }}</span>
-                                @endif
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-arrow">
-                                <span class="dropdown-header">Communications</span>
-                                @foreach ($commsChannelTabs as $tab)
-                                    <a href="{{ $tab['url'] }}" class="dropdown-item">
-                                        {{ $tab['label'] }}
-                                        <span @class([
-                                            'badge ms-auto',
-                                            'bg-red text-red-fg' => $tab['count'] > 0,
-                                            'bg-secondary-lt' => $tab['count'] === 0,
-                                        ])>{{ $tab['count'] }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-fill overflow-x-auto d-none d-lg-block">
+                <div class="navbar-nav flex-row align-items-center gap-2 ms-auto">
+                    {{-- The Inbox sits with the header's own items on every staff page, Communications included. --}}
+                    @if ($commsChannelTabs !== [])
                         @include('operations.communications.partials.channel-strip', [
                             'comms_channel_tabs' => $commsChannelTabs,
                             'variant' => 'tabler',
+                            'urgent' => (bool) ($commsPressure['has_live_calls'] ?? false),
                         ])
-                    </div>
-                @endif
-                <div class="navbar-nav flex-row align-items-center gap-2 ms-auto">
+                    @endif
                     <x-operations.workstation-presence :presence="$workstationPresence" ui="tabler" />
                     @include('components.operations.shell.tabler-user-menu', [
                         'menuUser' => $user,

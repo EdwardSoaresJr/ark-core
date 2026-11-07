@@ -721,6 +721,26 @@ span.ark-legacy {
     display: contents;
 }
 
+/*
+ * The inbox lanes scroll sideways on phones next to the channel filter. There they fade at the right edge instead of
+ * being cut off against the button, and the scrollbar line under the pills is hidden (touch scrolling needs none).
+ */
+.ark-comms-lanes {
+    min-width: 0;
+}
+
+@media (max-width: 575.98px) {
+    .ark-comms-lanes {
+        scrollbar-width: none;
+        -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+        mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    }
+
+    .ark-comms-lanes::-webkit-scrollbar {
+        display: none;
+    }
+}
+
 /* A conversation row is a link, but reads as a row: no underline when hovered, focused, or selected. */
 .ark-comms-row,
 .ark-comms-row:hover,

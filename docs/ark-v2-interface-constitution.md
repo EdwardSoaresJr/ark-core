@@ -165,7 +165,7 @@ Layout topbar (surface name: Work, Communications, Intake, Operations)
 
 **Current drift:**
 - ~~Three header systems~~ - unified on `queue-page-header` + `queue-band-header` (`work-queue-band-header` delegates to `home` variant).
-- Communications still stacks channel tabs under page header - intentional filter strip, not a second page title.
+- Communications filters by channel with one compact dropdown beside the lanes - a filter, not a second navigation bar or page title.
 - Intake lane tone modifiers - [x] intake bands use `ops-pressure-band--*` + `ops-queue-band--*` like Operations lanes; lane headers inherit tone via `ops-queue-band-header`.
 
 ---
@@ -555,7 +555,7 @@ Prioritized fixes - behavior preserved, substrate aligned.
 | **Vehicles** | ~~No global index~~ | `/app/vehicles/search` - plate/VIN/YMM/customer retrieval |
 | **Index tabular** | Staff roster, schedule week list | Settings admin + schedule time-grid - not `ops-ro-card` retrieval |
 | **Workspace hybrid** | Intake AJAX customer search | Card grid inside workspace shell - acceptable, not a fifth page type |
-| **Comms full page** | Channel tabs under page header | Filter strip for channel scope - not a duplicate page title |
+| **Comms full page** | Channel dropdown beside the lanes | Filter for channel scope - not a duplicate page title or tab strip |
 | **Recent Activity** | Inline `h3` + JS count on comms queue | Fragment refresh; migrate to `queue-band-header` when comms page is next touched |
 
 ---

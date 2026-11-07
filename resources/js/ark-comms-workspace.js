@@ -260,8 +260,9 @@ function hrefKey(href) {
 
     try {
         const url = new URL(href, window.location.origin);
-        // Row links never carry the advisor filter or loaded-row count that the address keeps.
+        // Row links never carry the advisor and channel filters or loaded-row count that the address keeps.
         url.searchParams.delete('owner');
+        url.searchParams.delete('channel');
         url.searchParams.delete('shown');
         url.searchParams.sort();
 
@@ -854,10 +855,10 @@ export function initCommsWorkspace() {
             applyPayload(payload, { replaceList: refreshList, mergeList, selectedHref });
             syncFragmentUrl(nextUrl);
 
-            // Row links name only the conversation and lane; the address keeps the advisor filter and how many rows
-            // are loaded, so Back, Forward and reload return to the same list.
+            // Row links name only the conversation and lane; the address keeps the advisor and channel filters and
+            // how many rows are loaded, so Back, Forward and reload return to the same list.
             const address = new URL(selectedHref, window.location.origin);
-            ['owner', 'shown'].forEach((key) => {
+            ['owner', 'channel', 'shown'].forEach((key) => {
                 if (! address.searchParams.has(key) && fragment.searchParams.has(key)) {
                     address.searchParams.set(key, fragment.searchParams.get(key));
                 }

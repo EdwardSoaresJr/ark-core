@@ -15,7 +15,7 @@
     };
 @endphp
 
-<x-operations.app title="Communications" ui="tabler">
+<x-operations.app title="Inbox" ui="tabler">
     <x-operations.communications-workspace
         :section="$workspace['section']"
         :list-items="$workspace['list_items']"
@@ -38,6 +38,7 @@
         :platform-backed="(bool) ($workspace['platform_backed'] ?? false)"
         :owner-filter="$workspace['owner_filter'] ?? 'everyone'"
         :owner-counts="$workspace['owner_counts'] ?? null"
+        :channel-options="$workspace['channel_options'] ?? null"
     >
         @if (filled($workspace['error'] ?? null) || session('error'))
             <div class="alert alert-warning flex-shrink-0 mb-2" role="alert">

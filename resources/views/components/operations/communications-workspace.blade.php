@@ -22,6 +22,7 @@
     'pollSignature' => null,
     'liveEvents' => [],
     'platformBacked' => false,
+    'channelOptions' => null,
 ])
 
 @php
@@ -40,7 +41,7 @@
 >
     <x-tabler.page
         layout="split"
-        title="Communications"
+        :title="$isInbox ? 'Inbox' : 'Communications'"
         :title-id="$isInbox ? null : 'ops-comms-workspace'"
         :title-count="$isInbox ? null : $listCount"
         :subtitle="$isInbox ? null : $listDescription"
@@ -62,6 +63,7 @@
             'ownerFilter' => $ownerFilter,
             'turnFilter' => $turnFilter,
             'turnCounts' => $turnCounts,
+            'channelOptions' => $channelOptions,
         ])
 
         <div
@@ -98,6 +100,7 @@
                             'listNext' => $listNext,
                             'section' => $section,
                             'platformBacked' => $platformBacked,
+                            'channelOptions' => $channelOptions,
                         ])
                     </div>
                     @if ($paginator !== null && $paginator->hasPages())

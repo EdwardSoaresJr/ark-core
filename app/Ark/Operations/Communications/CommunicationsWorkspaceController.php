@@ -86,6 +86,7 @@ class CommunicationsWorkspaceController
                 $filter,
                 $request->string('owner')->toString() ?: 'everyone',
                 $request->integer('shown') ?: null,
+                $request->string('channel')->toString() ?: null,
             ),
         ]);
     }
