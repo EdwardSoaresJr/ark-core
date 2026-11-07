@@ -5,6 +5,8 @@ namespace App\Ark\Operations\Attention;
 use App\Ark\Operations\Communications\CommunicationEvent;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
+use App\Ark\Operations\Financial\BalanceDueCalculator;
+use App\Ark\Operations\Financial\BalanceDueResult;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -20,13 +22,15 @@ use Illuminate\Support\Facades\Route;
  *
  * Authority remains on RepairOrder, lines, approvals, payments, and communications.
  *
- * Paid exclusion uses RepairOrder::isPaid() (ledger / BalanceDueCalculator only).
- * Legacy payment_status mirrors must not create false calm on Attention.
+ * Paid exclusion uses BalanceDueCalculator (ledger / issued invoice only), batched once
+ * per resolve() via mapForRepairOrders(). Legacy payment_status mirrors must not create
+ * false calm on Attention.
  */
 final class CustomerDecisionPressure
 {
     public function __construct(
         private readonly EstimateTotalsCalculator $totalsCalculator,
+        private readonly BalanceDueCalculator $balanceDueCalculator,
     ) {}
 
     /**
@@ -53,6 +57,7 @@ final class CustomerDecisionPressure
             ->orderByDesc('updated_at')
             ->get();
 
+        $balances = $this->balanceDueCalculator->mapForRepairOrders($repairOrders);
         $scheduleMap = $this->activeScheduleMap($repairOrders);
 
         $estimateReadyNotSent = [];
@@ -61,7 +66,7 @@ final class CustomerDecisionPressure
         $scheduledLater = [];
 
         foreach ($repairOrders as $repairOrder) {
-            if ($this->isPaid($repairOrder)) {
+            if ($this->isPaid($repairOrder, $balances)) {
                 continue;
             }
 
@@ -205,9 +210,12 @@ final class CustomerDecisionPressure
         return $byCustomer instanceof CustomerDecisionSchedule ? $byCustomer : null;
     }
 
-    private function isPaid(RepairOrder $repairOrder): bool
+    /**
+     * @param  array<int|string, BalanceDueResult>  $balances
+     */
+    private function isPaid(RepairOrder $repairOrder, array $balances): bool
     {
-        return $repairOrder->isPaid();
+        return ($balances[$repairOrder->id] ?? null)?->isPaid() === true;
     }
 
     private function isAwaitingCustomerDecision(RepairOrder $repairOrder): bool
