@@ -378,6 +378,29 @@ test('settings hold only the scheduling policy, and staff without settings acces
     expect(BookingSettings::mode())->toBe(BookingMode::Instant);
 });
 
+test('online requests keeps the shop settings menu, with online requests current', function (): void {
+    $dom = new DOMDocument;
+    @$dom->loadHTML($this->actingAs($this->admin)->get(route('operations.settings.booking'))->assertOk()->getContent());
+    $xpath = new DOMXPath($dom);
+    $nav = '//nav[@aria-label="Shop settings sections"]';
+    $current = $xpath->query($nav.'//a[@aria-current="page"]');
+
+    expect($current->length)->toBe(1)
+        ->and(trim($current->item(0)->textContent))->toBe('Online Requests')
+        ->and($current->item(0)->getAttribute('href'))->toBe(route('operations.settings.booking'))
+        ->and($xpath->query($nav.'//a[@href="'.route('operations.settings.shop.edit', ['section' => 'general']).'"]')->length)->toBe(1)
+        ->and($xpath->query($nav.'//a[@href="'.route('operations.settings.shop.edit', ['section' => 'financial']).'"]')->length)->toBe(1)
+        ->and($xpath->query($nav.'//a[@href="'.route('operations.shop.communications').'"]')->length)->toBe(1)
+        ->and($xpath->query($nav.'//button')->length)->toBe(0)
+        ->and($xpath->query('//select[@id="settings-section"]/optgroup/option[@selected]')->item(0)?->getAttribute('value'))->toBe(route('operations.settings.booking'))
+        ->and($xpath->query('//*[@data-online-request-settings]')->length)->toBe(1);
+
+    $settings = $this->actingAs($this->admin)->get(route('operations.settings.shop.edit'))->assertOk()->getContent();
+
+    expect($settings)->toContain('<a href="'.route('operations.settings.booking').'" class="list-group-item list-group-item-action">Online Requests</a>')
+        ->toContain('@click="setActive(\'general\')"');
+});
+
 test('a host can add an availability rule such as travel time', function (): void {
     app()->bind('test.travel', fn () => new class implements BookingAvailabilityConstraint
     {
