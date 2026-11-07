@@ -446,7 +446,9 @@ test('public canvas inset leaves service articles in place', function (): void {
     }
 CSS
         )
-        ->and($css)->toContain('html.dark .public-surface input:not([type])');
+        ->and($css)->toContain('html.dark .public-surface input:not([type])')
+        ->and($css)->toContain('--public-ink: #f8fafc')
+        ->and($css)->toMatch('/html\.dark \.public-surface\s*\{[^}]*--public-ink:\s*#f8fafc/s');
 });
 
 test('contact corrects three answers and financing keeps one set of destinations', function (): void {

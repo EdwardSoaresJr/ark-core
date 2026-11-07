@@ -32193,6 +32193,10 @@ html.dark .ops-printing-cmd,
         --public-text: theme('colors.slate.100');
         --public-text-muted: theme('colors.slate.400');
         --public-border: rgb(148 163 184 / 0.18);
+        /* Light-mode .public-surface sets a dark --public-ink; without this override, dark pages
+           keep dark ink and shop chrome (headers, asides) can render invisible body text. */
+        --public-ink: #f8fafc;
+        --public-ink-rgb: 248 250 252;
         color: var(--public-text);
         background: var(--public-surface-shop-alt);
     }
