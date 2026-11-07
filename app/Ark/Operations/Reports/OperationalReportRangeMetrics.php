@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Reports;
 
+use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Labor\ShopOverheadSnapshot;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -27,6 +28,9 @@ class OperationalReportRangeMetrics
 
     /** @var array{sales_cents: int, tax_cents: int, total_cents: int, lines_match: bool}|null */
     private ?array $postedInvoice = null;
+
+    /** @var Collection<int, RepairOrder>|null */
+    private ?Collection $unpaidReadyPickupRepairOrders = null;
 
     public function __construct(
         private readonly Carbon $from,
@@ -654,10 +658,25 @@ class OperationalReportRangeMetrics
      */
     private function unpaidReadyPickupRepairOrders(): Collection
     {
-        return OperationalReportDateScope::openedBetween(RepairOrder::query(), $this->from, $this->to)
+        return $this->unpaidReadyPickupRepairOrders ??= $this->resolveUnpaidReadyPickupRepairOrders();
+    }
+
+    /**
+     * Paid exclusion matches RepairOrder::isPaid() / BalanceDueResult::isPaid()
+     * (issued invoice with zero balance due). Balances are batched once.
+     *
+     * @return Collection<int, RepairOrder>
+     */
+    private function resolveUnpaidReadyPickupRepairOrders(): Collection
+    {
+        $repairOrders = OperationalReportDateScope::openedBetween(RepairOrder::query(), $this->from, $this->to)
             ->where('status', RepairOrderStatus::ReadyPickup)
-            ->get()
-            ->filter(fn (RepairOrder $repairOrder): bool => ! $repairOrder->isPaid())
+            ->get();
+
+        $balances = app(BalanceDueCalculator::class)->mapForRepairOrders($repairOrders);
+
+        return $repairOrders
+            ->filter(fn (RepairOrder $repairOrder): bool => ($balances[$repairOrder->id] ?? null)?->isPaid() !== true)
             ->values();
     }
 
