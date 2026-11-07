@@ -79,6 +79,7 @@
     >Program category - book hours and category rate apply. Adjust labor is hidden here so program billing stays clean.</p>
 
     <input type="hidden" name="labor_rate_overridden" :value="sellEdited && laborCategoryAllowsModifiers() ? '1' : '0'">
+    <input type="hidden" name="reprice_labor" :value="repriceLabor ? '1' : '0'">
     <input type="hidden" name="labor_hours_overridden" :value="laborHoursOverridden ? '1' : '0'">
 
     <div class="d-flex flex-wrap align-items-center gap-3 small">
@@ -98,11 +99,12 @@
         >Use calculated hours</button>
         <button
             type="button"
-            x-show="laborCategoryAllowsModifiers() && sellEdited"
+            x-show="laborRateDiffersFromPolicy()"
             x-cloak
             class="btn btn-link btn-sm p-0"
+            data-use-policy-labor-rate
             @click="usePolicyLaborRate()"
-        >Use policy rate</button>
+        >Use policy rate ($<span x-text="laborPolicyRate()"></span>)</button>
         <button
             type="button"
             x-show="laborCategoryAllowsModifiers()"

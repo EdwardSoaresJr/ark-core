@@ -5,6 +5,8 @@ namespace App\Ark\Operations\RepairOrders;
 use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Documents\EstimateDocument;
+use App\Ark\Operations\EstimatePricing\LaborPolicy;
+use App\Ark\Operations\EstimatePricing\OperationClass;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\Inspections\InspectionItem;
@@ -75,6 +77,8 @@ final class RepairOrderReadCache
             InspectionItemMeasurement::class,
             RepairOrderLine::class,
             PhoneSmsCapability::class,
+            LaborPolicy::class,
+            OperationClass::class,
         ] as $model) {
             /** @var class-string<Model> $model */
             $model::saved($flush);

@@ -65,6 +65,7 @@
             concernSummary: @js($concern->summary),
             sell: '{{ $totals->decimal($line->unit_price_cents) }}',
             sellEdited: @js($laborRateOverridden),
+            laborRatePinned: true,
             defaultLaborRate: '{{ $defaultLaborRate }}',
             laborCategories: @js($laborCategories),
             defaultLaborCategoryKey: @js($defaultLaborCategoryKey),

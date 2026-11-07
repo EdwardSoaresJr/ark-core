@@ -24,5 +24,6 @@ test('opening a repair order reuses settlement catalog and messaging reads', fun
             ->assertSee('Customer View', false);
     });
 
-    expect($measured['count'])->toBeLessThanOrEqual(60);
+    // Includes one read each of labor_policies, operation_classes and operations for the labor rates the editors show.
+    expect($measured['count'])->toBeLessThanOrEqual(63);
 });

@@ -164,6 +164,9 @@ final class ApplyWorkTemplateAction
                         'subtotal_cents' => $line->subtotal_cents,
                         'total_cents' => $line->total_cents,
                         'from_work_template_id' => $template->id,
+                        ...(($conflict = $line->programPricingConflict($concern->billing_posture)) !== null
+                            ? ['program_price_conflict' => $conflict]
+                            : []),
                         ...($blueprint->type->isLabor() && $laborOverride !== null
                             ? [
                                 'labor_source' => 'historical_recall',
