@@ -1,0 +1,69 @@
+name: Regression
+
+# The full suite, once a night on main (the integration baseline), on request from the Actions tab (release gates),
+# and on a pull request labeled "full-regression" (major or high-risk changes). The report separates new failures
+# from those already failing in the previous nightly run; the job fails only on new ones.
+on:
+  schedule:
+    - cron: "0 9 * * *" # 02:00 Mountain Standard Time
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: regression-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  pest:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-regression')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    # The suite forces SQLite :memory: in phpunit.xml. It does not use MySQL.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run the full suite
+        continue-on-error: true
+        run: php -d memory_limit=2048M vendor/bin/pest --no-coverage --log-junit "$RUNNER_TEMP/junit.xml"
+
+      - name: Failures of the previous nightly run on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          previous=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow regression.yml --branch main --event schedule \
+            --status completed --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          if [ -n "$previous" ]; then
+            gh run download "$previous" --repo "$GITHUB_REPOSITORY" --name regression-failures --dir "$RUNNER_TEMP/previous" \
+              || echo "The previous nightly run kept no failure list."
+          fi
+
+      - name: Report
+        run: |
+          set -euo pipefail
+          args=(--junit="$RUNNER_TEMP/junit.xml" --out="$RUNNER_TEMP/failures.txt")
+          if [ -f "$RUNNER_TEMP/previous/failures.txt" ]; then args+=(--previous="$RUNNER_TEMP/previous/failures.txt"); fi
+          php scripts/ci-regression-report.php "${args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep this run's failure list
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-failures
+          path: ${{ runner.temp }}/failures.txt
+          if-no-files-found: ignore
+          retention-days: 30
