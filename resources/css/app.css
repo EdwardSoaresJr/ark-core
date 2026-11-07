@@ -26150,7 +26150,7 @@ html.dark .ops-printing-cmd,
         --public-navy-soft: #1e293b;
         --public-gold: #fbbf24; /* available for stars; never mandatory decoration */
         --public-surface-shop: #ffffff;
-        --public-surface-shop-alt: #f8fafc;
+        --public-surface-shop-alt: #f4f6f8;
         --public-surface-proof: var(--public-navy);
         --public-text: #0f172a;
         --public-text-muted: #475569;
@@ -26162,8 +26162,46 @@ html.dark .ops-printing-cmd,
         --public-space-band: 2rem;
         --public-read-max: 40rem;
         overflow-x: clip;
-        background: var(--public-surface-shop);
+        background: var(--public-surface-shop-alt);
         color: var(--public-text);
+        font-family: var(--public-font-body);
+    }
+
+    /* Platform / demo disclosure: compact secondary strip, never a hero banner. */
+    .ark-public-notice {
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--public-border);
+        background: color-mix(in srgb, var(--public-ink) 92%, white);
+        color: rgb(248 250 252 / 0.92);
+        padding: 0.375rem 1rem;
+        text-align: center;
+    }
+
+    .ark-public-notice__text {
+        margin: 0 auto;
+        max-width: 72rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1.4;
+        letter-spacing: 0.01em;
+    }
+
+    .ark-public-notice__link {
+        margin-left: 0.35rem;
+        color: #bae6fd;
+        font-weight: 650;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .ark-public-notice__link:hover {
+        color: #e0f2fe;
+    }
+
+    html.dark .ark-public-notice {
+        background: color-mix(in srgb, var(--public-surface-shop) 70%, black);
+        border-bottom-color: rgb(148 163 184 / 0.16);
+        color: rgb(226 232 240 / 0.88);
     }
 
     .public-surface a:not([class]) {
@@ -26485,10 +26523,9 @@ html.dark .ops-printing-cmd,
         margin-right: calc(50% - 50vw);
         width: 100vw;
         max-width: 100vw;
-        border-bottom: 0;
-        background: rgb(255 255 255 / 0.97);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 1px 0 rgb(15 23 42 / 0.08);
+        border-bottom: 1px solid var(--public-border);
+        background: var(--public-surface-shop);
+        box-shadow: none;
         position: sticky;
         top: 0;
         z-index: 40;
@@ -26513,8 +26550,19 @@ html.dark .ops-printing-cmd,
     .public-surface .customer-header__bar {
         flex-wrap: nowrap;
         gap: 0.5rem 0.75rem;
+        padding-top: 0.625rem;
+        padding-bottom: 0.625rem;
+    }
+
+    .public-surface .customer-subheader-zone {
         padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .public-surface .customer-subheader {
+        border: 0;
+        background: transparent;
+        padding: 0;
     }
 
     .public-surface .customer-header__brand {
@@ -32140,13 +32188,13 @@ html.dark .ops-printing-cmd,
     /* Customer public surface - dark theme follows html.dark, not the device scheme. */
     html.dark .public-surface {
         color-scheme: dark;
-        --public-surface-shop: #0f172a;
-        --public-surface-shop-alt: #111827;
+        --public-surface-shop: #121a24;
+        --public-surface-shop-alt: #0c1219;
         --public-text: theme('colors.slate.100');
         --public-text-muted: theme('colors.slate.400');
         --public-border: rgb(148 163 184 / 0.18);
-        color: theme('colors.slate.100');
-        background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+        color: var(--public-text);
+        background: var(--public-surface-shop-alt);
     }
 
     html:not(.dark) .public-surface {
@@ -32167,8 +32215,9 @@ html.dark .ops-printing-cmd,
     }
 
     html.dark .public-surface .customer-header {
-        background: rgb(15 23 42 / 0.94);
-        box-shadow: 0 1px 0 rgb(148 163 184 / 0.08), 0 8px 24px -16px rgb(0 0 0 / 0.45);
+        background: var(--public-surface-shop);
+        border-bottom-color: var(--public-border);
+        box-shadow: none;
     }
 
     html.dark .public-surface .customer-header__name,

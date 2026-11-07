@@ -4,6 +4,8 @@
     'title' => null,
     'showNav' => true,
     'showFooter' => true,
+    /** When false, the shell omits the breadcrumb strip (booking and other focused flows). */
+    'showBreadcrumb' => true,
     'publicSurfacePage' => null,
     /** Full-bleed public page sections; inner content keeps customer-page-inset */
     'editorialSections' => false,
@@ -68,7 +70,9 @@
                 @include('partials.customer.site-header', $headerData)
             @endif
 
-            @include('partials.customer.breadcrumb-subheader')
+            @if ($showBreadcrumb)
+                @include('partials.customer.breadcrumb-subheader')
+            @endif
 
             <main @class([
                 $mainClass,
