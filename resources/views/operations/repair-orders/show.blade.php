@@ -1968,60 +1968,84 @@
                 }
 
                 const gap = 16;
-                let stack = null;
                 let lastHeight = 0;
+                let queued = false;
 
+                // From lg the rail is sticky below the top bar and workspace strip. One taller than the space above the
+                // action dock scrolls on its own (ops-review-rail--scrolls, tabler.css) with its tabs and summary pinned.
                 const fit = () => {
+                    queued = false;
+
                     if (window.innerWidth < 1024) {
-                        rail.style.top = '';
-                        lastHeight = rail.offsetHeight;
+                        rail.classList.remove('ops-review-rail--scrolls');
+                        lastHeight = rail.scrollHeight;
                         return;
                     }
 
-                    if (stack === null) {
-                        rail.style.top = '';
-                        stack = parseFloat(getComputedStyle(rail).top) || 0;
-                    }
-
-                    // Continuity can replace the dock, so look it up on every fit.
+                    // Continuity can replace the dock and the totals card, so look them up on every fit.
                     const footer = document.querySelector('[data-ro-orientation-header]');
-                    const footerHeight = footer ? footer.offsetHeight : 0;
-                    const available = window.innerHeight - stack - footerHeight - gap;
-                    const height = rail.offsetHeight;
+                    const header = rail.querySelector('#estimate-total-panel > .card-header');
+                    const summary = rail.querySelector('[data-rail-summary]');
+                    const top = parseFloat(getComputedStyle(rail).top) || 0;
+                    // A sticky rail cannot outrun its column, so on a short page also leave the room the page has below it.
+                    const container = rail.parentElement.getBoundingClientRect().bottom + window.scrollY;
+                    const below = document.documentElement.scrollHeight - container;
+                    const reserved = Math.max((footer ? footer.offsetHeight : 0) + gap, below);
+                    const available = Math.floor(window.innerHeight - top - reserved);
+                    const height = rail.scrollHeight;
                     const grew = lastHeight > 0 && height > lastHeight + 1;
-                    const overflow = Math.max(0, height - available);
-                    const nextTop = (stack - overflow) + 'px';
-                    const before = rail.getBoundingClientRect().top;
+                    const scrolls = height > available + 1;
+                    const headerHeight = header ? header.offsetHeight : 0;
 
-                    if (rail.style.top !== nextTop) {
-                        rail.style.top = nextTop;
-                        const shift = before - rail.getBoundingClientRect().top;
-                        if (Math.abs(shift) > 1) {
-                            document.scrollingElement.scrollTop -= shift;
-                        }
-                    }
-
+                    rail.style.setProperty('--ops-rail-max-height', available + 'px');
+                    rail.style.setProperty('--ops-rail-header-height', headerHeight + 'px');
+                    rail.style.setProperty('--ops-rail-pinned-height', (headerHeight + (summary ? summary.offsetHeight : 0)) + 'px');
+                    rail.classList.toggle('ops-review-rail--scrolls', scrolls);
                     lastHeight = height;
 
-                    if (!grew || height > available || !footer) {
+                    if (scrolls || !grew || !footer) {
                         return;
                     }
 
+                    // A rail that still fits but grew under the dock is brought into view, as before.
                     const hidden = rail.getBoundingClientRect().bottom - (footer.getBoundingClientRect().top - gap);
                     if (hidden > 1) {
                         document.scrollingElement.scrollTop += hidden;
                     }
                 };
 
+                const schedule = () => {
+                    if (!queued) {
+                        queued = true;
+                        requestAnimationFrame(fit);
+                    }
+                };
+
                 fit();
                 // The sticky offset includes the workspace strip, whose height is set once the deferred scripts ran.
-                document.addEventListener('DOMContentLoaded', () => {
-                    stack = null;
-                    fit();
-                }, { once: true });
-                window.addEventListener('resize', fit);
+                document.addEventListener('DOMContentLoaded', schedule, { once: true });
+                window.addEventListener('resize', schedule);
+                // A tab opens at its own start.
+                rail.addEventListener('click', (event) => {
+                    if (event.target.closest('[data-totals-tab]')) {
+                        rail.scrollTop = 0;
+                    }
+                });
                 if (typeof ResizeObserver !== 'undefined') {
-                    new ResizeObserver(fit).observe(rail);
+                    // While the rail scrolls its own box keeps one height, so watch its content too, and the workspace strip
+                    // and action dock that bound the space it has (the strip's height lands after the deferred scripts run).
+                    const sizes = new ResizeObserver(schedule);
+                    const watch = () => {
+                        sizes.disconnect();
+                        sizes.observe(rail);
+                        [...rail.children].forEach((child) => sizes.observe(child));
+                        document.querySelectorAll('#ops-workspace-tabs, [data-ro-orientation-header]').forEach((bound) => sizes.observe(bound));
+                    };
+                    watch();
+                    new MutationObserver(() => {
+                        watch();
+                        schedule();
+                    }).observe(rail, { childList: true });
                 }
             })();
         </script>
