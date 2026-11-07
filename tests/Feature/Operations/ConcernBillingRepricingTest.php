@@ -9,6 +9,7 @@ use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
+use App\Ark\Operations\RepairOrders\ApprovedWorkScope;
 use App\Ark\Operations\RepairOrders\ChangeConcernBillingPostureAction;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -324,4 +325,39 @@ test('a billing change updates a presented, partly paid invoice and keeps the pa
         ->and($balance->paymentsAppliedCents)->toBe(10000)
         ->and($balance->balanceDueCents)->toBe(25640)
         ->and($balances->issuedInvoice($repairOrder->fresh())->snapshot_revisions_json)->toHaveCount(1);
+});
+
+test('staff can deliberately reduce approved labor kept at the old rate, keeping its approval and updating the invoice', function () {
+    $this->seed(RepairOrderStatusCatalogSeeder::class);
+    $repairOrder = billingRepricingRepairOrder();
+    $concern = billingRepricingConcern($repairOrder, 'Warranty', ConcernBillingPosture::WarrantyOther);
+    $line = billingRepricingLabor($repairOrder, $concern, 'warranty-other');
+    $concern->update(['disposition' => RepairOrderConcernDisposition::Approved]);
+    approveCurrentAmounts($repairOrder);
+    issueFinalInvoiceFor($repairOrder->fresh());
+    $approvalScopes = ApprovedWorkScope::query()->where('repair_order_concern_id', $concern->id)->get()->map->getAttributes()->all();
+
+    billingRepricingChange($repairOrder, $concern, ConcernBillingPosture::RepairPal)->assertSessionHasNoErrors();
+    expect($line->fresh()->unit_price_cents)->toBe(16500);
+
+    $this->patch(route('operations.repair-orders.lines.update', [$repairOrder, $line]), [
+        'repair_order_concern_id' => $concern->id,
+        'type' => 'labor',
+        'description' => $line->description,
+        'labor_category_key' => 'warranty-other',
+        'labor_entered_hours' => '2.00',
+        'labor_adjustment' => 'normal',
+        'unit_price' => '150.00',
+        'labor_rate_overridden' => '0',
+        'reprice_labor' => '1',
+    ])->assertSessionHasNoErrors();
+
+    $repairOrder = $repairOrder->fresh(['concerns', 'lines.concern']);
+
+    expect($line->fresh())->unit_price_cents->toBe(15000)->resolved_from_posture->toBe('repairpal')
+        ->and($concern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and(ApprovedWorkScope::query()->where('repair_order_concern_id', $concern->id)->get()->map->getAttributes()->all())->toBe($approvalScopes)
+        ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder))->toHaveCount(0)
+        ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder)->totalCents())->toBe(32400)
+        ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder)->invoiceTotalCents)->toBe(32400);
 });
