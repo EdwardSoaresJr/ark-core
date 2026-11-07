@@ -190,8 +190,10 @@ jobs:
           echo "selected=${#tests[@]}" >> "$GITHUB_OUTPUT"
           printf 'Running %d test files:\n' "${#tests[@]}"
           printf '  %s\n' "${tests[@]}"
-          php -d memory_limit=2048M vendor/bin/pest --no-coverage --log-junit "$RUNNER_TEMP/junit.xml" "${tests[@]}"
-          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+          # GitHub runs this step with bash -e: keep going when tests fail so the report sees the real exit code.
+          code=0
+          php -d memory_limit=2048M vendor/bin/pest --no-coverage --log-junit "$RUNNER_TEMP/junit.xml" "${tests[@]}" || code=$?
+          echo "exit-code=$code" >> "$GITHUB_OUTPUT"
 
       # Failures are checked against the committed known-failure baseline (#147), as the nightly run does: only a failure
       # it does not list, a crash, a stopped or incomplete run, or a missing report fails this job.
