@@ -196,6 +196,7 @@ use App\Ark\Operations\RepairOrders\EstimateToolbarDefaultController;
 use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationExceptionController;
 use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationRevokeController;
 use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController;
+use App\Ark\Operations\RepairOrders\RepairOrderBillingPostureController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernBillingPostureController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDestroyController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDispositionController;
@@ -1586,6 +1587,14 @@ SurfaceRouting::appRoutes(function (): void {
         Route::patch('/app/repair-orders/{repairOrder}/concerns/{concern}/billing-posture', RepairOrderConcernBillingPostureController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.concerns.billing-posture');
+
+        Route::get('/app/repair-orders/{repairOrder}/billing-posture/preview', [RepairOrderBillingPostureController::class, 'preview'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.billing-posture.preview');
+
+        Route::patch('/app/repair-orders/{repairOrder}/billing-posture', [RepairOrderBillingPostureController::class, 'update'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.billing-posture.update');
 
         Route::patch('/app/repair-orders/{repairOrder}/concerns/{concern}/recommendation-intent', RepairOrderConcernRecommendationIntentController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

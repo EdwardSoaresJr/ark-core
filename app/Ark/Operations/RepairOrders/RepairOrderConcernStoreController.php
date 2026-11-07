@@ -91,7 +91,7 @@ class RepairOrderConcernStoreController
         $concern = $repairOrder->concerns()->create([
             ...$data,
             'disposition' => RepairOrderConcernDisposition::Draft,
-            'billing_posture' => ConcernBillingPosture::defaultForCustomer($repairOrder->customer),
+            'billing_posture' => $repairOrder->defaultBillingPosture(),
         ]);
 
         $conceptLearner->record(

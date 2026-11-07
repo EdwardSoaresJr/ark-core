@@ -7,7 +7,6 @@ use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
-use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\ConcernRecommendationDefaults;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
@@ -63,7 +62,7 @@ final class MobileConcernStoreController
                 filled($data['recommendation_intent'] ?? null) ? (string) $data['recommendation_intent'] : null,
             ),
             'disposition' => RepairOrderConcernDisposition::Draft,
-            'billing_posture' => ConcernBillingPosture::defaultForCustomer($repairOrder->customer),
+            'billing_posture' => $repairOrder->defaultBillingPosture(),
         ]);
 
         $conceptLearner->record(
