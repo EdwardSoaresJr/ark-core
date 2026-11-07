@@ -44,6 +44,7 @@ final class MoveRepairOrderConcernToNewRepairOrderAction
             $newRepairOrder = RepairOrder::query()->create([
                 'customer_id' => $source->customer_id,
                 'vehicle_id' => $source->vehicle_id,
+                'shop_fee_rules' => $source->getAttribute('shop_fee_rules'),
                 'status' => RepairOrderStatus::Draft,
                 'concern_summary' => $concern->summary !== ''
                     ? $concern->summary

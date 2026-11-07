@@ -15,6 +15,7 @@ use App\Ark\Operations\Labor\LaborAuthority;
 use App\Ark\Operations\Parts\CustomerPartDescriptionMode;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
+use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderVisitMode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -944,13 +945,13 @@ TEXT;
      *     shop_fee_summary: string
      * }
      */
-    public function billingPostureOptionPresentation(ConcernBillingPosture $posture): array
+    public function billingPostureOptionPresentation(ConcernBillingPosture $posture, ?RepairOrder $repairOrder = null): array
     {
         $labor = $this->laborDefaultsForBillingPosture($posture);
         $rate = $labor['rate'];
         $matrix = $posture->defaultPartsMatrix($this);
         $matrixName = (string) ($matrix['name'] ?? 'Shop matrix');
-        $shopFee = $posture->shopFeePolicy($this);
+        $shopFee = $repairOrder?->shopFeePolicyFor($posture, $this) ?? $posture->shopFeePolicy($this);
 
         // decimal:3 cast stringifies as e.g. "5.000" - present "5" / "5.25".
         $feeRate = filled($shopFee['rate'])

@@ -168,7 +168,7 @@
             class="form-select"
         >
             @foreach (App\Ark\Operations\RepairOrders\ConcernBillingPosture::advisorSelectableCases() as $posture)
-                <option value="{{ $posture->value }}" @selected($visitBilling === $posture)>{{ $visitBillingSettings->billingPostureOptionPresentation($posture)['label'] }}</option>
+                <option value="{{ $posture->value }}" @selected($visitBilling === $posture)>{{ $visitBillingSettings->billingPostureOptionPresentation($posture, $repairOrder)['label'] }}</option>
             @endforeach
         </select>
         <div class="form-hint">
