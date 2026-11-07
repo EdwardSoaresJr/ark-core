@@ -1,16 +1,22 @@
 {{--
     The Shop Settings section menu. With no $current it switches sections inside the Shop Settings page
     (Alpine `active` / `setActive`). With $current set, it is shown on a settings page of its own and
-    every item is a link, the current one highlighted.
+    every item is a link, the current one highlighted. Website and Book Service Builder are pages of a
+    hosting product (ARK Sites, ARK Shop); they appear only where that product registered the route.
 --}}
 @php
     $current ??= null;
+    $productUrl = fn (string $route): ?string => \Illuminate\Support\Facades\Route::has($route) ? route($route) : null;
     $settingsNav = [
         'Your shop' => [
             ['key' => 'general', 'label' => 'Shop Identity'],
             ['key' => 'operations', 'label' => 'Appointments & Setup'],
-            ['key' => 'booking', 'label' => 'Online Requests', 'href' => route('operations.settings.booking')],
             ['key' => 'staff', 'label' => 'Staff', 'can' => App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value],
+        ],
+        'Website & booking' => [
+            ['key' => 'website', 'label' => 'Website', 'href' => $productUrl('sites.settings.index'), 'hidden' => $productUrl('sites.settings.index') === null, 'can' => App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value],
+            ['key' => 'booking-builder', 'label' => 'Book Service Builder', 'href' => $productUrl('booking.builder'), 'hidden' => $productUrl('booking.builder') === null, 'can' => App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value],
+            ['key' => 'booking', 'label' => 'Online Requests', 'href' => route('operations.settings.booking')],
         ],
         'Money' => [
             ['key' => 'financial', 'label' => 'Financial Rules'],
@@ -34,18 +40,18 @@
         $items,
         fn (array $item): bool => ! ($item['hidden'] ?? false) && (! isset($item['can']) || auth()->user()?->can($item['can'])),
     )), $settingsNav);
+    $settingsNav = array_filter($settingsNav);
     $linkTo = fn (array $item): string => $item['href'] ?? route('operations.settings.shop.edit', ['section' => $item['key']]);
 @endphp
 
 <div class="col-12 d-lg-none">
     <label for="settings-section" class="form-label">Section</label>
     @if ($current === null)
-        <select id="settings-section" class="form-select" :value="active" @change="setActive($event.target.value)">
+        <select id="settings-section" class="form-select" :value="active" @change="$event.target.selectedOptions[0].dataset.href ? window.location.assign($event.target.selectedOptions[0].dataset.href) : setActive($event.target.value)">
             @foreach ($settingsNav as $group => $items)
                 <optgroup label="{{ $group }}">
                     @foreach ($items as $item)
-                        @continue(isset($item['href']))
-                        <option value="{{ $item['key'] }}">{{ $item['label'] }}</option>
+                        <option value="{{ $item['key'] }}" @isset($item['href']) data-href="{{ $item['href'] }}" @endisset>{{ $item['label'] }}</option>
                     @endforeach
                 </optgroup>
             @endforeach
