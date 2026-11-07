@@ -84,6 +84,7 @@ use App\Ark\Operations\Documents\DocumentVisibilityController;
 use App\Ark\Operations\Documents\EstimateDocumentEmailController;
 use App\Ark\Operations\Documents\EstimateDocumentOpenController;
 use App\Ark\Operations\Documents\EstimateDocumentPdfController;
+use App\Ark\Operations\Documents\EstimateDocumentRevisionPdfController;
 use App\Ark\Operations\Documents\EstimateDocumentShowController;
 use App\Ark\Operations\Documents\EstimateDocumentStoreController;
 use App\Ark\Operations\Documents\InvoiceDocumentEmailController;
@@ -1361,6 +1362,16 @@ SurfaceRouting::appRoutes(function (): void {
         Route::get('/app/repair-orders/{repairOrder}/estimate-documents/{document}/pdf/download', [EstimateDocumentPdfController::class, 'download'])
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
             ->name('operations.repair-orders.estimate-documents.pdf.download');
+
+        Route::get('/app/repair-orders/{repairOrder}/estimate-documents/{document}/revisions/{revision}/pdf', [EstimateDocumentRevisionPdfController::class, 'show'])
+            ->whereNumber('revision')
+            ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
+            ->name('operations.repair-orders.estimate-documents.revisions.pdf.show');
+
+        Route::get('/app/repair-orders/{repairOrder}/estimate-documents/{document}/revisions/{revision}/pdf/download', [EstimateDocumentRevisionPdfController::class, 'download'])
+            ->whereNumber('revision')
+            ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
+            ->name('operations.repair-orders.estimate-documents.revisions.pdf.download');
 
         Route::post('/app/repair-orders/{repairOrder}/post', RepairOrderPostController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)

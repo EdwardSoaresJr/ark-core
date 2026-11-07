@@ -171,6 +171,7 @@ class RepairOrderLineStoreController
         $refreshInvoice->executeIfNeeded(
             $repairOrder->fresh(['concerns', 'lines.concern', 'customer']),
             $request->user(),
+            'line_added',
         );
 
         $fragment = filled($data['repair_order_work_group_id'] ?? null)

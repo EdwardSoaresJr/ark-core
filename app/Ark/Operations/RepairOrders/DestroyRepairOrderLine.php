@@ -56,6 +56,7 @@ final class DestroyRepairOrderLine
         $this->refreshInvoice->executeIfNeeded(
             $repairOrder->fresh(['concerns', 'lines.concern', 'customer']),
             $actor,
+            'line_deleted',
         );
     }
 

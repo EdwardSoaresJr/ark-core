@@ -75,6 +75,7 @@ final class UpdateConcernDispositionAction
         $this->refreshInvoice->executeIfNeeded(
             $repairOrder->fresh(['concerns', 'lines.concern', 'customer']),
             $actor,
+            'disposition_changed',
         );
 
         $repairOrder->refresh();

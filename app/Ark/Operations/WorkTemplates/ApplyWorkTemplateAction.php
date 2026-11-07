@@ -223,6 +223,7 @@ final class ApplyWorkTemplateAction
             $this->refreshInvoice->executeIfNeeded(
                 $repairOrder->fresh(['concerns', 'lines.concern', 'customer']),
                 $actor,
+                'saved_work_applied',
             );
 
             return [

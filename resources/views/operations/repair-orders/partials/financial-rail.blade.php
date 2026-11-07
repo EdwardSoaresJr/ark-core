@@ -54,6 +54,12 @@
                 @endcan
             </div>
         @endif
+        @if ($financial['invoiceOverpaid'] ?? null)
+            <div class="alert alert-danger mb-0 small mt-2" role="status" data-invoice-overpaid="{{ $financial['invoiceOverpaidCents'] }}">
+                <div class="fw-bold">Refund or credit due: {{ $financial['invoiceOverpaid'] }}</div>
+                <div>The revised invoice is less than what the customer paid. Record the refund, or issue store credit, for the difference.</div>
+            </div>
+        @endif
         </div>
 
         @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
@@ -299,6 +305,38 @@
                 >
                     Final Invoice PDF
                 </a>
+                @if (($financial['invoiceRevisions'] ?? []) !== [])
+                    @php($displayTimezone = config('app.display_timezone'))
+                    <details class="small" data-invoice-revision-history>
+                        <summary class="fw-bold">Revision history ({{ count($financial['invoiceRevisions']) + 1 }} versions)</summary>
+                        <ul class="list-unstyled mt-2 mb-0 d-flex flex-column gap-2">
+                            <li data-invoice-revision="{{ $financial['invoiceCurrentRevision'] }}">
+                                <div class="fw-medium">Revision {{ $financial['invoiceCurrentRevision'] }} · current · {{ $financial['invoiceTotal'] }}</div>
+                                <div class="text-secondary">
+                                    {{ $financial['invoicePresentedAt'] ? 'Shown to customer '.$financial['invoicePresentedAt']->timezone($displayTimezone)->format('M j, Y g:i A') : 'Not yet shown to customer' }}
+                                </div>
+                            </li>
+                            @foreach ($financial['invoiceRevisions'] as $revision)
+                                <li data-invoice-revision="{{ $revision['revision'] }}">
+                                    <div class="fw-medium">Revision {{ $revision['revision'] }} · {{ $revision['total'] }}</div>
+                                    <div class="text-secondary">
+                                        Replaced {{ $revision['archived_at']?->timezone($displayTimezone)->format('M j, Y g:i A') ?? '' }}{{ $revision['actor_name'] ? ' by '.$revision['actor_name'] : '' }}
+                                        · {{ $revision['presented_at'] ? 'shown to customer '.$revision['presented_at']->timezone($displayTimezone)->format('M j, Y') : 'not shown to customer' }}
+                                    </div>
+                                    @if ($revision['has_pdf'])
+                                        <div class="d-flex flex-wrap gap-2 mt-1">
+                                            <a href="{{ route('operations.repair-orders.estimate-documents.revisions.pdf.show', [$repairOrder, $financial['invoice'], $revision['revision']]) }}" target="_blank" rel="noopener">View PDF</a>
+                                            <a href="{{ route('operations.repair-orders.estimate-documents.revisions.pdf.download', [$repairOrder, $financial['invoice'], $revision['revision']]) }}">Download PDF</a>
+                                            <a href="{{ route('operations.repair-orders.estimate-documents.revisions.pdf.show', [$repairOrder, $financial['invoice'], $revision['revision']]) }}" target="_blank" rel="noopener" data-invoice-revision-reprint>Reprint</a>
+                                        </div>
+                                    @else
+                                        <div class="text-secondary fst-italic">No PDF was stored for this revision.</div>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
             @endif
 
             @if ($financial['closeoutBlockingReason'] && $repairOrder->status === App\Ark\Operations\RepairOrders\RepairOrderStatus::ReadyPickup)

@@ -132,17 +132,23 @@ class EstimateDocument extends Model
 
     /**
      * @param  array<string, mixed>  $snapshot
+     * @param  array<string, mixed>  $details  what triggered the revision and the amounts at that moment
      */
-    public function archiveCurrentSnapshotAndReplace(array $snapshot, ?User $actor = null, string $reason = 'approved_work_changed'): self
+    public function archiveCurrentSnapshotAndReplace(array $snapshot, ?User $actor = null, string $reason = 'approved_work_changed', array $details = []): self
     {
         $revisions = is_array($this->snapshot_revisions_json) ? $this->snapshot_revisions_json : [];
         $prior = is_array($this->snapshot_json) ? $this->snapshot_json : [];
+        $revision = $this->currentRevisionNumber();
 
         $revisions[] = [
+            'revision' => $revision,
             'archived_at' => now()->toIso8601String(),
             'reason' => $reason,
             'actor_user_id' => $actor?->id,
             'invoice_total_cents' => InvoiceSnapshotBuilder::invoiceTotalCents($prior),
+            'presented_at' => $this->customer_presented_at?->toIso8601String(),
+            'pdf_path' => InvoiceRevisionPdf::preserveCurrent($this, $revision),
+            ...$details,
             'snapshot' => $prior,
         ];
 
@@ -163,6 +169,37 @@ class EstimateDocument extends Model
         }
 
         return $this;
+    }
+
+    /**
+     * Versions number from 1, the invoice as first issued. Archived entries written before
+     * revisions were numbered take their position.
+     */
+    public function currentRevisionNumber(): int
+    {
+        return count(is_array($this->snapshot_revisions_json) ? $this->snapshot_revisions_json : []) + 1;
+    }
+
+    /**
+     * Earlier versions of this invoice, oldest first, without their snapshots.
+     *
+     * @return list<array{revision: int, archived_at: string|null, reason: string|null, trigger: string|null, actor_user_id: int|null, invoice_total_cents: int, presented_at: string|null, pdf_path: string|null, collected_cents: int|null}>
+     */
+    public function priorRevisions(): array
+    {
+        $revisions = is_array($this->snapshot_revisions_json) ? array_values($this->snapshot_revisions_json) : [];
+
+        return array_map(fn (array $entry, int $index): array => [
+            'revision' => (int) ($entry['revision'] ?? $index + 1),
+            'archived_at' => $entry['archived_at'] ?? null,
+            'reason' => $entry['reason'] ?? null,
+            'trigger' => $entry['trigger'] ?? null,
+            'actor_user_id' => isset($entry['actor_user_id']) ? (int) $entry['actor_user_id'] : null,
+            'invoice_total_cents' => (int) ($entry['invoice_total_cents'] ?? 0),
+            'presented_at' => $entry['presented_at'] ?? null,
+            'pdf_path' => $entry['pdf_path'] ?? null,
+            'collected_cents' => isset($entry['collected_cents']) ? (int) $entry['collected_cents'] : null,
+        ], $revisions, array_keys($revisions));
     }
 
     private function isLivingInvoiceRefresh(): bool

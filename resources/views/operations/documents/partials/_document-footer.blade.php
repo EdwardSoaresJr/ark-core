@@ -119,7 +119,11 @@
                             @if (($financial['adjustments_cents'] ?? 0) !== 0)
                                 <div class="totals-row"><span>Adjustments</span><strong>{{ $financial['adjustments'] }}</strong></div>
                             @endif
-                            <div class="totals-row final"><span>Balance due</span><span>{{ $financial['balance_due'] }}</span></div>
+                            @if (($financial['overpaid_cents'] ?? 0) > 0)
+                                <div class="totals-row final"><span>Credit due to customer</span><span>{{ $financial['overpaid'] }}</span></div>
+                            @else
+                                <div class="totals-row final"><span>Balance due</span><span>{{ $financial['balance_due'] }}</span></div>
+                            @endif
                         @endif
                     </div>
 

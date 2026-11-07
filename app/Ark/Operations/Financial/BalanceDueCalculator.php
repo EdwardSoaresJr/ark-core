@@ -143,10 +143,8 @@ final class BalanceDueCalculator
         $credits = $this->sumEntries($entries, [LedgerEntryType::StoreCreditApplication]);
         $writeOffs = $this->sumEntries($entries, [LedgerEntryType::WriteOff]);
 
-        $balanceDue = max(
-            0,
-            $invoiceTotal - $deposits - $payments - $writeOffs - $credits + $adjustments + $refunds,
-        );
+        $remainingCents = $invoiceTotal - $deposits - $payments - $writeOffs - $credits + $adjustments + $refunds;
+        $balanceDue = max(0, $remainingCents);
 
         return new BalanceDueResult(
             hasIssuedInvoice: true,
@@ -160,6 +158,7 @@ final class BalanceDueCalculator
             balanceDueCents: $balanceDue,
             unappliedDepositsCents: 0,
             invoiceStatus: $this->resolveInvoiceStatus($invoice, $balanceDue, $invoiceTotal),
+            overpaidCents: max(0, -$remainingCents),
         );
     }
 

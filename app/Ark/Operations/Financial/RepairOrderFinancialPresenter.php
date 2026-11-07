@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Financial;
 
+use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
 use App\Ark\Operations\Payments\Capture\TerminalPaymentProgress;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
@@ -9,7 +10,9 @@ use App\Ark\Operations\RepairOrders\EstimateTotals;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderPosting;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Models\User;
 use Brick\Money\Money;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 final class RepairOrderFinancialPresenter
@@ -217,6 +220,11 @@ final class RepairOrderFinancialPresenter
                 ? count($invoice->snapshot_revisions_json)
                 : 0,
             'invoiceCustomerPresented' => $invoice?->wasPresentedToCustomer() ?? false,
+            'invoiceCurrentRevision' => $invoice?->currentRevisionNumber(),
+            'invoicePresentedAt' => $invoice?->customer_presented_at,
+            'invoiceRevisions' => $invoice !== null ? $this->invoiceRevisions($invoice) : [],
+            'invoiceOverpaidCents' => $balance->overpaidCents,
+            'invoiceOverpaid' => $balance->hasOverpayment() ? $this->formatCents($balance->overpaidCents) : null,
             'defaultDepositEnabled' => $defaultDeposit->enabled,
             'suggestedDepositCents' => $defaultDeposit->totalCents,
             'suggestedDepositPartsCents' => $defaultDeposit->partsCents,
@@ -531,6 +539,33 @@ final class RepairOrderFinancialPresenter
                 ];
             })
             ->all();
+    }
+
+    /**
+     * Earlier invoice versions, newest first, for Revision History.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function invoiceRevisions(EstimateDocument $invoice): array
+    {
+        $revisions = $invoice->priorRevisions();
+
+        if ($revisions === []) {
+            return [];
+        }
+
+        $actors = User::query()
+            ->whereIn('id', array_filter(array_column($revisions, 'actor_user_id')))
+            ->pluck('name', 'id');
+
+        return array_reverse(array_map(fn (array $revision): array => [
+            ...$revision,
+            'total' => $this->formatCents($revision['invoice_total_cents']),
+            'archived_at' => filled($revision['archived_at']) ? Carbon::parse($revision['archived_at']) : null,
+            'presented_at' => filled($revision['presented_at']) ? Carbon::parse($revision['presented_at']) : null,
+            'actor_name' => $revision['actor_user_id'] !== null ? ($actors[$revision['actor_user_id']] ?? null) : null,
+            'has_pdf' => filled($revision['pdf_path']),
+        ], $revisions));
     }
 
     private function formatCents(int $cents): string

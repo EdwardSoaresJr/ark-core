@@ -78,6 +78,8 @@ final class InvoicePdfFinancialSnapshot
             'write_offs_cents' => $balance->writeOffsCents,
             'balance_due' => $this->formatCents($balance->balanceDueCents),
             'balance_due_cents' => $balance->balanceDueCents,
+            'overpaid' => $this->formatCents($balance->overpaidCents),
+            'overpaid_cents' => $balance->overpaidCents,
             'invoice_status' => $balance->invoiceStatus->value,
             'collection_disposition' => RepairOrderCollectionDisposition::tryFromMixed($repairOrder->collection_disposition)->value,
             'collection_waiver_label' => RepairOrderCollectionDisposition::tryFromMixed($repairOrder->collection_disposition)->waiverCustomerLabel(),
