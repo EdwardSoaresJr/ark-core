@@ -141,10 +141,12 @@ final class CommunicationsWorkspaceProjection
         ?string $listFilter = null,
         ?string $ownerFilter = null,
         ?int $listLimit = null,
+        ?string $channel = null,
     ): array {
         if ($viewer === null || ! SchemaPresence::hasTable('conversations')) {
             return $this->emptySection('inbox');
         }
+        $channelFilter = CommunicationsSurfaceChannel::fromQuery($channel);
 
         $filter = $this->normalizeListFilter($listFilter, $turnFilter);
         // Taken before the list is read: a change landing while the page is built then makes the next poll differ,
@@ -167,6 +169,14 @@ final class CommunicationsWorkspaceProjection
         $listItems = $presentation->decorateList($listItems, $viewer);
         $ownerCounts = $this->ownerCounts($filter, $filterCounts, $viewer, $listItems);
         $listItems = $presentation->applyOwnerFilter($listItems, $ownerFilter, $viewer);
+        $loadedCount = count($listItems);
+        if ($channelFilter !== CommunicationsSurfaceChannel::All) {
+            $listItems = array_values(array_filter(
+                $listItems,
+                fn (array $item): bool => ($item['channel'] ?? null) === $channelFilter->value,
+            ));
+        }
+        $listItems = array_map(fn (array $item): array => $this->withChannelPresentation($item), $listItems);
 
         $selectedKey = match (true) {
             $conversationId !== null => 'conversation:'.$conversationId,
@@ -206,11 +216,22 @@ final class CommunicationsWorkspaceProjection
             'list_filter' => $filter,
             'filter_counts' => $filterCounts,
             'list_shown' => count($listItems),
-            'list_total' => max(count($listItems), (int) $ownerCounts[$ownerFilter]),
-            'list_truncated' => (int) $ownerCounts[$ownerFilter] > count($listItems),
+            // With a channel chosen only the loaded page is filtered, so there is no channel total to show.
+            'list_total' => $channelFilter === CommunicationsSurfaceChannel::All
+                ? max(count($listItems), (int) $ownerCounts[$ownerFilter])
+                : null,
+            'list_truncated' => (int) $ownerCounts[$ownerFilter] > $loadedCount,
             'list_next' => min(self::LIST_MAX, $limit + self::LIST_PAGE_SIZE),
             'owner_filter' => $ownerFilter,
             'owner_counts' => $ownerCounts,
+            'channel_filter' => $channelFilter->value,
+            'channel_options' => array_map(fn (CommunicationsSurfaceChannel $option): array => [
+                'value' => $option->value,
+                'label' => $option->filterLabel(),
+                'noun' => $option === CommunicationsSurfaceChannel::All ? null : $option->label(),
+                'icon' => $option->icon(),
+                'active' => $option === $channelFilter,
+            ], CommunicationsSurfaceChannel::filterTabs()),
             // Compatibility aliases for older nav / deep links.
             'turn_filter' => match ($filter) {
                 'waiting' => 'customer',
@@ -610,6 +631,7 @@ final class CommunicationsWorkspaceProjection
                     'headline' => $presented['headline'],
                     'subtitle' => $presented['display_phone'],
                     'channel_label' => 'Phone',
+                    'channel' => CommunicationsSurfaceChannel::Phone->value,
                     'reason' => match (true) {
                         $handled => 'Handled · '.$presented['status_label'],
                         $missed => 'Missed inbound call',
@@ -1716,6 +1738,7 @@ final class CommunicationsWorkspaceProjection
             'shop_hint' => null,
             'snippet' => $this->queueSnippet($latest),
             'channel_label' => $originLabel ?? $this->queueChannelLabel($latest),
+            'channel' => CommunicationsSurfaceChannel::forMessage($latest)?->value,
             'origin_label' => $originLabel,
             'reason' => $resolved ? 'Resolved' : ($conversation->waiting_on?->label() ?? 'Open'),
             'turn' => $turn,
@@ -1730,6 +1753,25 @@ final class CommunicationsWorkspaceProjection
             'select_url' => route('operations.communications.inbox', $this->selectionQuery($key, filter: $filter)),
             'sort_at' => $ageAt?->toIso8601String() ?? '',
         ];
+    }
+
+    /**
+     * The row's channel icon and word, and whether it is a call ringing or in progress (shown as urgent).
+     *
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    private function withChannelPresentation(array $item): array
+    {
+        $channel = CommunicationsSurfaceChannel::tryFrom((string) ($item['channel'] ?? ''));
+        $item['channel_icon'] = $channel?->icon();
+        $item['channel_text'] = $channel === null
+            ? null
+            : (($item['channel_label'] ?? '') === 'MMS' ? 'MMS' : $channel->label());
+        $item['live_call'] = ($item['kind'] ?? '') === 'call'
+            && in_array($item['call_status'] ?? '', [CallSessionStatus::Ringing->value, CallSessionStatus::Answered->value], true);
+
+        return $item;
     }
 
     private function queueSnippet(?ConversationMessage $latest): string

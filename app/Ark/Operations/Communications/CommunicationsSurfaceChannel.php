@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Communications;
 
+use App\Ark\Operations\Conversations\ConversationMessage;
+
 enum CommunicationsSurfaceChannel: string
 {
     case All = 'all';
@@ -20,6 +22,48 @@ enum CommunicationsSurfaceChannel: string
             self::Email => 'Email',
             self::Messenger => 'Messenger',
             self::Portal => 'Portal',
+        };
+    }
+
+    /** Label for the inbox channel filter ("All channels" instead of "All"). */
+    public function filterLabel(): string
+    {
+        return $this === self::All ? 'All channels' : $this->label();
+    }
+
+    public function icon(): string
+    {
+        return match ($this) {
+            self::All => 'messages',
+            self::Phone => 'phone',
+            self::Sms => 'message',
+            self::Email => 'mail',
+            self::Messenger => 'brand-messenger',
+            self::Portal => 'world',
+        };
+    }
+
+    /**
+     * The channel a message counts under in the queue and the inbox; null for channels without a filter
+     * (in person, internal).
+     */
+    public static function forMessage(?ConversationMessage $message): ?self
+    {
+        if ($message === null) {
+            return null;
+        }
+
+        if (($message->metadata['portal_estimate_view'] ?? false) === true) {
+            return self::Portal;
+        }
+
+        return match ($message->channel) {
+            OperationalCommunicationChannel::Messenger => self::Messenger,
+            OperationalCommunicationChannel::Email => self::Email,
+            OperationalCommunicationChannel::Sms => self::Sms,
+            OperationalCommunicationChannel::Website => self::Portal,
+            OperationalCommunicationChannel::Phone => self::Phone,
+            default => null,
         };
     }
 

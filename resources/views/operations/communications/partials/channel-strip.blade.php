@@ -12,19 +12,51 @@
 @endphp
 
 @if ($variant === 'tabler')
-<nav class="navbar-nav flex-row flex-nowrap" aria-label="Communications by channel" data-ark-channel-strip>
-    @foreach ($comms_channel_tabs as $tab)
-        <div class="nav-item">
-            <a href="{{ $tab['url'] }}" class="nav-link px-2 text-nowrap">
-                {{ $tab['label'] }}
+@php
+    $attentionTotal = (int) (collect($comms_channel_tabs)->firstWhere('slug', 'all')['count'] ?? 0);
+    $urgent = (bool) ($urgent ?? false);
+@endphp
+{{-- One Inbox menu at every width: channels with how many need attention; red only while a call is live. --}}
+<nav class="navbar-nav flex-row" aria-label="Communications by channel" data-ark-channel-strip>
+    <div class="nav-item dropdown">
+        <a
+            href="#"
+            class="nav-link px-2 gap-2"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-label="Inbox, {{ $attentionTotal }} need attention"
+            data-ark-inbox-menu
+        >
+            <x-tabler.icon name="messages" />
+            <span class="d-none d-lg-inline">Inbox</span>
+            @if ($attentionTotal > 0)
                 <span @class([
-                    'badge ms-2',
-                    'bg-red text-red-fg' => $tab['count'] > 0,
-                    'bg-secondary-lt' => $tab['count'] === 0,
-                ])>{{ $tab['count'] }}@if ($tab['count'] > 0)<span class="visually-hidden"> need attention</span>@endif</span>
+                    'badge',
+                    'bg-red text-red-fg' => $urgent,
+                    'bg-secondary-lt' => ! $urgent,
+                ]) data-ark-inbox-count>{{ $attentionTotal }}</span>
+            @endif
+        </a>
+        <div class="dropdown-menu dropdown-menu-arrow">
+            <span class="dropdown-header">Inbox · need attention</span>
+            @foreach ($comms_channel_tabs as $tab)
+                <a href="{{ $tab['url'] }}" class="dropdown-item" data-ark-inbox-channel="{{ $tab['slug'] }}">
+                    @if (filled($tab['icon'] ?? null))
+                        <x-tabler.icon :name="$tab['icon']" class="me-2 text-secondary" />
+                    @endif
+                    {{ $tab['filter_label'] ?? $tab['label'] }}
+                    @if ($tab['count'] > 0)
+                        <span class="badge bg-secondary-lt ms-auto">{{ $tab['count'] }}<span class="visually-hidden"> need attention</span></span>
+                    @endif
+                </a>
+            @endforeach
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item" data-ops-global-search-open>
+                <x-tabler.icon name="search" class="me-2 text-secondary" />
+                Search conversations
             </a>
         </div>
-    @endforeach
+    </div>
 </nav>
 @else
 <section @class([

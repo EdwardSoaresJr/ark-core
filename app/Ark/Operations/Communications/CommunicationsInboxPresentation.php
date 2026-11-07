@@ -63,9 +63,15 @@ final class CommunicationsInboxPresentation
                 $preview = trim((string) ($item['preview'] ?? ''));
             }
 
+            $overdue = $conversation instanceof Conversation && $this->work->isFollowUpOverdue($conversation);
+
             $item['lane'] = $lane;
-            $item['badge'] = $badge;
-            $item['badge_tone'] = $badge === 'Follow-up today' ? 'follow' : $lane;
+            $item['badge'] = $overdue ? 'Follow-up overdue' : $badge;
+            $item['badge_tone'] = match (true) {
+                $overdue => 'urgent',
+                $badge === 'Follow-up today' => 'follow',
+                default => $lane,
+            };
             $item['initials'] = $this->initials($name);
             $item['owner_id'] = $conversation?->owned_by_user_id ?? ($item['owner_id'] ?? null);
             $item['owner_initials'] = $this->initials($ownerName);

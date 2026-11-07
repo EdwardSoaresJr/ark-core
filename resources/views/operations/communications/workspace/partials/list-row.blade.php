@@ -15,12 +15,19 @@
         $item['ro_label'] ?? null,
         $item['vehicle_label'] ?? null,
     ])));
+    // Red is kept for what is urgent: an overdue follow-up or a call that is ringing or in progress.
+    $liveCall = ! empty($item['live_call']);
     $badgeClass = match ($badgeTone) {
+        'urgent' => 'bg-red-lt',
         'waiting' => 'bg-yellow-lt',
         'follow' => 'bg-azure-lt',
         'resolved' => 'bg-green-lt',
-        default => 'bg-red-lt',
+        default => 'bg-primary-lt',
     };
+    // Inside a lane the lane itself says "Needs attention" or "Waiting"; the badge only adds what differs.
+    $showBadge = $badge !== '' && (($listFilter ?? null) === null || $listFilter === 'all' || $badgeTone !== $listFilter);
+    $channelIcon = (string) ($item['channel_icon'] ?? '');
+    $channelText = (string) ($item['channel_text'] ?? '');
 @endphp
 
 <a
@@ -46,11 +53,19 @@
                 @endif
             </div>
             <div class="d-flex flex-wrap align-items-center gap-1 mt-1 small">
+                @if ($channelIcon !== '' && $channelText !== '')
+                    <span class="d-inline-flex align-items-center gap-1 text-secondary" title="{{ $channelText }}" data-comms-row-channel="{{ $item['channel'] ?? '' }}">
+                        <x-tabler.icon :name="$channelIcon" class="icon-inline" />{{ $channelText }}
+                    </span>
+                @endif
                 @if ($sourceLabel !== '')
                     <span class="badge bg-secondary-lt">{{ $sourceLabel }}</span>
                 @endif
-                @if ($badge !== '')
-                    <span class="badge {{ $badgeClass }}">{{ $badge }}</span>
+                @if ($liveCall)
+                    <span class="badge bg-red-lt" data-comms-row-urgent>Live call</span>
+                @endif
+                @if ($showBadge)
+                    <span class="badge {{ $badgeClass }}" @if ($badgeTone === 'urgent') data-comms-row-urgent @endif>{{ $badge }}</span>
                 @endif
                 @if ($sourceLabel !== '' && $assignedLabel !== '')
                     <span class="text-secondary">{{ $assignedLabel }}</span>

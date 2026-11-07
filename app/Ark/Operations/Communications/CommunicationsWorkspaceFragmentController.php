@@ -107,6 +107,7 @@ class CommunicationsWorkspaceFragmentController
                 $filter,
                 $request->string('owner')->toString() ?: 'everyone',
                 $request->integer('shown') ?: null,
+                $request->string('channel')->toString() ?: null,
             ),
             'history' => $projection->history(
                 $request,
@@ -143,6 +144,7 @@ class CommunicationsWorkspaceFragmentController
                 'ownerFilter' => $workspace['owner_filter'] ?? 'everyone',
                 'turnFilter' => $workspace['turn_filter'] ?? null,
                 'turnCounts' => $workspace['turn_counts'] ?? null,
+                'channelOptions' => $workspace['channel_options'] ?? null,
             ])->render(),
             'list' => view('operations.communications.workspace.partials.list-panel', [
                 'title' => $listTitle,
@@ -161,6 +163,7 @@ class CommunicationsWorkspaceFragmentController
                 'turnCounts' => $workspace['turn_counts'] ?? null,
                 'section' => $section,
                 'platformBacked' => (bool) ($workspace['platform_backed'] ?? false),
+                'channelOptions' => $workspace['channel_options'] ?? null,
             ])->render(),
             'thread' => view('operations.communications.workspace.partials.thread-panel', [
                 'thread' => $workspace['thread'],

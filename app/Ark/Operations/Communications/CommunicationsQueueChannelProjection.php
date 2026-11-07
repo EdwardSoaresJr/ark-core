@@ -36,7 +36,7 @@ final class CommunicationsQueueChannelProjection
 
     /**
      * @param  array<int, array<string, mixed>>  $attentionRows
-     * @return list<array{slug: string, label: string, count: int, url: string, active: bool}>
+     * @return list<array{slug: string, label: string, filter_label: string, icon: string, count: int, url: string, active: bool}>
      */
     private function tabs(array $attentionRows, CommunicationsSurfaceChannel $active): array
     {
@@ -54,6 +54,8 @@ final class CommunicationsQueueChannelProjection
                 return [
                     'slug' => $tab->value,
                     'label' => $tab->label(),
+                    'filter_label' => $tab->filterLabel(),
+                    'icon' => $tab->icon(),
                     'count' => $count,
                     'url' => $tab === CommunicationsSurfaceChannel::All
                         ? CommunicationsNeedsYou::url()

@@ -261,17 +261,7 @@ class CommunicationsMessageQueuePresenter
 
     private function queueTab(ConversationMessage $message): string
     {
-        if (($message->metadata['portal_estimate_view'] ?? false) === true) {
-            return CommunicationsSurfaceChannel::Portal->value;
-        }
-
-        return match ($message->channel) {
-            OperationalCommunicationChannel::Messenger => CommunicationsSurfaceChannel::Messenger->value,
-            OperationalCommunicationChannel::Email => CommunicationsSurfaceChannel::Email->value,
-            OperationalCommunicationChannel::Sms => CommunicationsSurfaceChannel::Sms->value,
-            OperationalCommunicationChannel::Website => CommunicationsSurfaceChannel::Portal->value,
-            default => $message->channel->value,
-        };
+        return CommunicationsSurfaceChannel::forMessage($message)?->value ?? $message->channel->value;
     }
 
     /**

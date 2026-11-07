@@ -87,20 +87,25 @@ test('the Tabler sidebar keeps the live communications count hook', function ():
         ->assertSee('data-ops-comms-nav-style="tabler"', false);
 });
 
-test('below desktop width the channel strip becomes one menu with the same destinations', function (): void {
+test('the top bar has one Inbox menu with every channel destination instead of a tab strip', function (): void {
     $html = $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->get(route('operations.customers.search'))
         ->assertOk()
-        ->assertSee('class="flex-fill overflow-x-auto d-none d-lg-block"', false)
-        ->assertSee('aria-label="Communications, 0 need attention"', false)
+        ->assertSee('aria-label="Inbox, 0 need attention"', false)
         ->assertDontSee('ops-comms-channel-strip', false)
+        ->assertDontSee('flex-fill overflow-x-auto d-none d-lg-block', false)
         ->getContent();
 
-    $menuHrefs = primaryNavHrefs($html, '<span class="dropdown-header">Communications</span>', '</div>');
-    $stripHrefs = primaryNavHrefs($html, 'data-ark-channel-strip', '</nav>');
+    expect(substr_count($html, 'data-ark-channel-strip'))->toBe(1)
+        ->and(substr_count($html, 'data-ark-inbox-menu'))->toBe(1);
 
-    expect($menuHrefs)->not->toBeEmpty()
-        ->and($menuHrefs)->toBe($stripHrefs);
+    $menuHrefs = primaryNavHrefs($html, 'data-ark-channel-strip', '</nav>');
+    $expected = array_map(
+        fn (string $channel): string => url('/app/communications/inbox').'?filter=needs'.($channel === '' ? '' : '&amp;channel='.$channel),
+        ['', 'phone', 'sms', 'messenger', 'email', 'portal'],
+    );
+
+    expect($menuHrefs)->toBe($expected);
 });
 
 test('customer filters stay collapsed on phones until one is active', function (): void {
