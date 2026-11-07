@@ -77,6 +77,38 @@
         @endif
     </div>
 
+    @if ($hasCloseout && $financial)
+        {{-- Shown only while the rail scrolls on its own (tabler.css), pinned under the tabs so Closeout keeps its totals in view. --}}
+        <dl class="ops-rail-summary card-body py-2 border-bottom mb-0 small" x-show="totalsTab === 'closeout'" data-rail-summary>
+            @if ($financial['hasIssuedInvoice'] ?? false)
+                <div>
+                    <dt class="fw-normal text-secondary">Invoice total</dt>
+                    <dd class="mb-0 fw-semibold ark-money">{{ $financial['invoiceTotal'] }}</dd>
+                </div>
+                @if ($financial['invoiceOverpaid'] ?? null)
+                    <div class="text-end text-danger">
+                        <dt class="fw-normal">Credit due</dt>
+                        <dd class="mb-0 fw-bold ark-money">{{ $financial['invoiceOverpaid'] }}</dd>
+                    </div>
+                @else
+                    <div class="text-end">
+                        <dt class="fw-normal text-secondary">Settlement balance</dt>
+                        <dd class="mb-0 fw-bold ark-money">{{ $financial['settlementBalanceDue'] ?? $financial['balanceDue'] }}</dd>
+                    </div>
+                @endif
+            @else
+                <div>
+                    <dt class="fw-normal text-secondary">Estimate total</dt>
+                    <dd class="mb-0 fw-semibold ark-money">{{ $financial['estimateTotal'] }}</dd>
+                </div>
+                <div class="text-end">
+                    <dt class="fw-normal text-secondary">Owe today</dt>
+                    <dd class="mb-0 fw-bold ark-money">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
+                </div>
+            @endif
+        </dl>
+    @endif
+
     <div @if ($hasCloseout) x-show="totalsTab === 'estimate'" @endif>
     <div id="authorized-money" data-continuity-region="authorized-money">
         @include('operations.repair-orders.partials.repair-order-approval-forecast', [

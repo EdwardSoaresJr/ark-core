@@ -521,6 +521,43 @@ html:has([data-ark-topbar]) {
     --ops-sticky-stack-offset: calc(var(--ark-topbar-height) + var(--ops-workspace-tabs-height, 0px) + 1rem);
 }
 
+/*
+ * The repair order's financial rail is sticky below the top bar and workspace strip from lg. When it is taller than the
+ * space above the action dock, the page's fit script marks it ops-review-rail--scrolls and sets --ops-rail-max-height:
+ * the rail then scrolls on its own, and at either end the scroll carries on to the page. Only its tabs and a one-line
+ * Closeout summary stay pinned at its top. A rail that fits, and every rail below lg, keeps the page's scroll.
+ */
+.ops-rail-summary {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .ops-review-rail--pinned.ops-review-rail--scrolls {
+        max-height: var(--ops-rail-max-height);
+        overflow-x: hidden;
+        overflow-y: auto;
+        scroll-padding-top: var(--ops-rail-pinned-height, 0px);
+    }
+
+    .ops-review-rail--scrolls #estimate-total-panel > .card-header,
+    .ops-review-rail--scrolls .ops-rail-summary {
+        position: sticky;
+        z-index: 2;
+        background-color: var(--tblr-bg-surface);
+    }
+
+    .ops-review-rail--scrolls #estimate-total-panel > .card-header {
+        top: 0;
+    }
+
+    .ops-review-rail--scrolls .ops-rail-summary {
+        display: flex;
+        top: var(--ops-rail-header-height, 0px);
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+}
+
 /* A page's own sticky toolbar stops below the top bar and the workspace strip. */
 .ark-sticky-below-workspace-tabs {
     top: calc(var(--ark-topbar-height) + var(--ops-workspace-tabs-height, 0px));
