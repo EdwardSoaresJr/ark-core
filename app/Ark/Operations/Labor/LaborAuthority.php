@@ -209,6 +209,47 @@ final class LaborAuthority
     }
 
     /**
+     * Re-prices a policy-priced line after its concern's billing changed. In the same category only
+     * the rate and its policy snapshot change; moving to another program category recomputes billed
+     * hours from the entered hours under that category's minimum and rounding.
+     *
+     * @return array<string, mixed>
+     */
+    public function repriceForBillingChange(
+        RepairOrderLine $line,
+        ConcernBillingPosture $posture,
+        string $categoryKey,
+        ShopSettings $settings,
+    ): array {
+        if ($categoryKey !== (string) $line->labor_category_key) {
+            return $this->resolveForLine([
+                'labor_category_key' => $categoryKey,
+                'labor_entered_hours' => (string) ($line->labor_entered_hours ?? $line->quantity),
+                'labor_adjustment' => LaborAdjustment::Normal->value,
+                ...self::billingPostureInput($posture),
+            ], $settings);
+        }
+
+        $operation = Operation::forLine(
+            $line->operation_id !== null ? (int) $line->operation_id : null,
+            $categoryKey,
+        );
+        $resolution = $this->resolvePolicyRate(self::billingPostureInput($posture), $categoryKey, $settings, $operation);
+
+        return [
+            'quantity' => (string) $line->quantity,
+            'unit_price_cents' => $resolution['rate_cents'],
+            'labor_rate_cents' => $resolution['rate_cents'],
+            'policy_resolved_labor_rate_cents' => $resolution['rate_cents'],
+            ...$resolution['snapshot'],
+            'labor_rate_override_reason' => null,
+            'labor_rate_overridden_at' => null,
+            'labor_rate_overridden_by_user_id' => null,
+            'operation_id' => $operation->id,
+        ];
+    }
+
+    /**
      * The hourly rate a new labor line in this category is saved at on a concern with this billing.
      */
     public function policyRateCentsFor(string $categoryKey, ConcernBillingPosture $posture, ShopSettings $settings): int
