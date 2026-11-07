@@ -200,71 +200,8 @@
         @endif
         <p class="text-secondary small">Parts matrix changes save as you edit. Every other section has its own Save button.</p>
 
-        @php
-            $settingsNav = [
-                'Your shop' => [
-                    ['key' => 'general', 'label' => 'Shop Identity'],
-                    ['key' => 'operations', 'label' => 'Appointments & Setup'],
-                    ['key' => 'booking', 'label' => 'Online Requests', 'href' => route('operations.settings.booking')],
-                    ['key' => 'staff', 'label' => 'Staff', 'can' => App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value],
-                ],
-                'Money' => [
-                    ['key' => 'financial', 'label' => 'Financial Rules'],
-                    ['key' => 'overhead', 'label' => 'Shop Overhead'],
-                    ['key' => 'excellence', 'label' => 'Owner Targets & Reporting'],
-                ],
-                'Documents & workflow' => [
-                    ['key' => 'estimates', 'label' => 'Documents / Disclaimers'],
-                    ['key' => 'workflow', 'label' => 'Workflow Defaults'],
-                    ['key' => 'printing', 'label' => 'Label Printing'],
-                ],
-                'Connected services' => [
-                    ['key' => 'payments', 'label' => 'Square Payments'],
-                    ['key' => 'partstech', 'label' => 'Parts catalogs'],
-                    ['key' => 'communications', 'label' => 'Communications'],
-                    ['key' => 'stations', 'label' => 'Stations & Phones', 'href' => route('operations.shop.communications')],
-                    ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
-                ],
-            ];
-        @endphp
-
         <div class="row g-3">
-            <div class="col-12 d-lg-none">
-                <label for="settings-section" class="form-label">Section</label>
-                <select id="settings-section" class="form-select" :value="active" @change="setActive($event.target.value)">
-                    @foreach ($settingsNav as $group => $items)
-                        <optgroup label="{{ $group }}">
-                            @foreach ($items as $item)
-                                @continue(isset($item['href']) || ($item['hidden'] ?? false) || (isset($item['can']) && ! auth()->user()?->can($item['can'])))
-                                <option value="{{ $item['key'] }}">{{ $item['label'] }}</option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-12 col-lg-3 col-xxl-2 d-none d-lg-block">
-                <nav class="card sticky-lg-top" style="top: 1rem" aria-label="Shop settings sections">
-                    @foreach ($settingsNav as $group => $items)
-                        <div class="card-header py-2"><div class="subheader">{{ $group }}</div></div>
-                        <div class="list-group list-group-flush">
-                            @foreach ($items as $item)
-                                @continue(($item['hidden'] ?? false) || (isset($item['can']) && ! auth()->user()?->can($item['can'])))
-                                @if (isset($item['href']))
-                                    <a href="{{ $item['href'] }}" class="list-group-item list-group-item-action">{{ $item['label'] }}</a>
-                                @else
-                                    <button
-                                        type="button"
-                                        class="list-group-item list-group-item-action"
-                                        :class="{ 'active': active === @js($item['key']) }"
-                                        :aria-current="active === @js($item['key']) ? 'page' : null"
-                                        @click="setActive(@js($item['key']))"
-                                    >{{ $item['label'] }}</button>
-                                @endif
-                            @endforeach
-                        </div>
-                    @endforeach
-                </nav>
-            </div>
+            @include('operations.settings.partials.section-nav')
 
             <div class="col-12 col-lg-9 col-xxl-10">
                 <section class="card" x-show="active === 'general'" data-settings-section="general">
