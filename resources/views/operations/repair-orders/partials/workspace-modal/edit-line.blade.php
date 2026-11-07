@@ -8,6 +8,7 @@
     );
     $concernDefaultLaborRate = $concernLaborDefaults['rate'];
     $concernDefaultLaborCategoryKey = $concernLaborDefaults['category_key'];
+    $concernLaborCategories = $partstechShopSettings->laborCategoriesForBillingPosture($concern->billing_posture);
     $workGroupLaborCount = $workGroup
         ? \App\Ark\Operations\RepairOrders\LaborDescriptionPresentation::laborCountInGroup($workGroup->lines)
         : null;
@@ -40,7 +41,7 @@
         'cancelUrl' => $cancelUrl,
         'totals' => $totals,
         'defaultLaborRate' => $concernDefaultLaborRate,
-        'laborCategories' => $laborCategories,
+        'laborCategories' => $concernLaborCategories,
         'defaultLaborCategoryKey' => $concernDefaultLaborCategoryKey,
         'partsMatrices' => $partsMatrices,
         'defaultPartsMatrixKey' => $concernPartsMatrixKey,

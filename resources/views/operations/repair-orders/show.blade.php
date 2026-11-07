@@ -87,6 +87,9 @@
             laborFinalHours: config.laborFinalHours || config.laborEnteredHours || '1.00',
             laborOverrideReason: config.laborOverrideReason || '',
             laborRateOverrideReason: config.laborRateOverrideReason || '',
+            laborRatePinned: Boolean(config.laborRatePinned),
+            laborSavedRate: config.sell || '',
+            repriceLabor: false,
             laborAdjustExpanded: Boolean(config.laborAdjustExpanded),
             laborDescriptionExpanded: Boolean(config.laborDescriptionExpanded),
             explicitMatrix: Boolean(config.explicitMatrix),
@@ -372,11 +375,7 @@
                 if (this.type === 'labor' && ! this.laborCategoryAllowsModifiers()) {
                     this.sellEdited = false;
                     this.laborRateOverrideReason = '';
-                    const category = this.selectedLaborCategory();
-
-                    if (category) {
-                        this.sell = (category.rate_cents / 100).toFixed(2);
-                    }
+                    this.sell = this.laborRatePinned ? this.laborSavedRate : this.laborPolicyRate();
 
                     return;
                 }
@@ -390,13 +389,27 @@
                 this.queuePreview();
             },
             usePolicyLaborRate() {
-                if (this.type !== 'labor' || ! this.laborCategoryAllowsModifiers()) {
+                if (this.type !== 'labor') {
                     return;
                 }
 
+                this.laborRatePinned = false;
+                this.repriceLabor = true;
                 this.sellEdited = false;
                 this.laborRateOverrideReason = '';
                 this.onLaborCategoryChange(false);
+            },
+            laborPolicyRate() {
+                const category = this.selectedLaborCategory();
+
+                return category ? (category.rate_cents / 100).toFixed(2) : '';
+            },
+            laborRateDiffersFromPolicy() {
+                const policyRate = this.laborPolicyRate();
+
+                return this.type === 'labor'
+                    && policyRate !== ''
+                    && (Number.parseFloat(this.sell) || 0).toFixed(2) !== policyRate;
             },
             suggestionText() {
                 return this.guidance;
@@ -499,12 +512,7 @@
                 this.laborRateOverrideReason = '';
                 this.laborAdjustExpanded = false;
                 this.sellEdited = false;
-
-                const category = this.selectedLaborCategory();
-
-                if (category) {
-                    this.sell = (category.rate_cents / 100).toFixed(2);
-                }
+                this.sell = this.laborRatePinned ? this.laborSavedRate : this.laborPolicyRate();
 
                 this.onLaborAuthorityInput();
             },
@@ -670,17 +678,20 @@
 
                 this.clearLaborModifiersIfLocked();
 
-                if (! this.sellEdited) {
-                    this.onLaborCategoryChange(false);
-                } else {
+                if (this.sellEdited || this.laborRatePinned) {
                     this.onLaborAuthorityInput();
+                } else {
+                    this.onLaborCategoryChange(false);
                 }
             },
             onLaborCategoryChange(recalculate = true) {
-                const category = this.selectedLaborCategory();
+                if (recalculate && this.laborRatePinned) {
+                    this.laborRatePinned = false;
+                    this.repriceLabor = true;
+                }
 
-                if (category) {
-                    this.sell = (category.rate_cents / 100).toFixed(2);
+                if (this.laborPolicyRate() !== '') {
+                    this.sell = this.laborPolicyRate();
                     this.sellEdited = false;
                     this.laborRateOverrideReason = '';
                 }
@@ -727,6 +738,8 @@
 
                 if (this.sellEdited) {
                     preview += ` · Custom rate $${this.sell}/hr`;
+                } else if (this.laborRatePinned && this.laborRateDiffersFromPolicy()) {
+                    preview += ` · Saved rate $${this.sell}/hr (policy now $${this.laborPolicyRate()}/hr)`;
                 }
 
                 return preview;

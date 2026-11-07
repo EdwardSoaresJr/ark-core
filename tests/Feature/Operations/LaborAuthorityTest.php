@@ -75,6 +75,8 @@ test('courtesy category applies zero rate unless labor rate is explicitly overri
 });
 
 test('courtesy category keeps an explicit labor rate override', function () {
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
     $resolved = app(LaborAuthority::class)->resolveForLine([
         'labor_category_key' => 'courtesy',
         'labor_entered_hours' => '1.00',
@@ -150,14 +152,13 @@ test('worksheet stores a custom labor rate when override reason is provided', fu
         ->assertSee('value="competitive_match"', false);
 });
 
-test('repairpal category ignores difficulty adjustment hours override and rate override', function () {
+test('repairpal category ignores difficulty adjustment and hours override', function () {
     $resolved = app(LaborAuthority::class)->resolveForLine([
         'labor_category_key' => ShopSettings::WARRANTY_REPAIRPAL_LABOR_CATEGORY_KEY,
         'labor_entered_hours' => '2.00',
         'labor_adjustment' => LaborAdjustment::Difficult->value,
         'labor_adjustment_reason' => LaborAdjustmentReason::Corrosion->value,
-        'unit_price' => '175.00',
-        'labor_rate_overridden' => '1',
+        'unit_price' => '150.00',
         'quantity' => '3.50',
         'labor_hours_overridden' => '1',
         'labor_override_reason' => 'Should be ignored.',
@@ -176,14 +177,13 @@ test('repairpal category ignores difficulty adjustment hours override and rate o
         ->labor_rate_cents->toBe(15000);
 });
 
-test('warranty other category ignores difficulty adjustment hours override and rate override', function () {
+test('warranty other category ignores difficulty adjustment and hours override', function () {
     $resolved = app(LaborAuthority::class)->resolveForLine([
         'labor_category_key' => ShopSettings::WARRANTY_OTHER_LABOR_CATEGORY_KEY,
         'labor_entered_hours' => '1.50',
         'labor_adjustment' => LaborAdjustment::Severe->value,
         'labor_adjustment_reason' => LaborAdjustmentReason::AccessDifficulty->value,
-        'unit_price' => '200.00',
-        'labor_rate_overridden' => '1',
+        'unit_price' => '165.00',
         'quantity' => '3.00',
         'labor_hours_overridden' => '1',
         'labor_override_reason' => 'Should be ignored.',
@@ -198,6 +198,22 @@ test('warranty other category ignores difficulty adjustment hours override and r
         ->unit_price_cents->toBe(16500);
 });
 
+test('program categories reject a labor rate override instead of discarding it', function (string $categoryKey, string $message) {
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    expect(fn () => app(LaborAuthority::class)->resolveForLine([
+        'labor_category_key' => $categoryKey,
+        'labor_entered_hours' => '1.00',
+        'labor_adjustment' => LaborAdjustment::Normal->value,
+        'unit_price' => '175.00',
+        'labor_rate_overridden' => '1',
+        'labor_rate_override_reason' => \App\Ark\Operations\EstimatePricing\LaborRateOverrideReason::CompetitiveMatch->value,
+    ], ShopSettings::current()))->toThrow(\Illuminate\Validation\ValidationException::class, $message);
+})->with([
+    'RepairPal' => [ShopSettings::WARRANTY_REPAIRPAL_LABOR_CATEGORY_KEY, 'RepairPal labor is billed at its policy rate ($150.00/hr)'],
+    'Warranty' => [ShopSettings::WARRANTY_OTHER_LABOR_CATEGORY_KEY, 'Warranty - Other labor is billed at its policy rate ($165.00/hr)'],
+]);
+
 test('worksheet strips repairpal labor modifiers on store', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     [$repairOrder, $concern] = repairOrderForLaborAuthority();
@@ -210,8 +226,7 @@ test('worksheet strips repairpal labor modifiers on store', function () {
         'labor_entered_hours' => '2.00',
         'labor_adjustment' => LaborAdjustment::Difficult->value,
         'labor_adjustment_reason' => LaborAdjustmentReason::Corrosion->value,
-        'unit_price' => '175.00',
-        'labor_rate_overridden' => '1',
+        'unit_price' => '150.00',
         'quantity' => '3.50',
         'labor_hours_overridden' => '1',
         'labor_override_reason' => 'Should be ignored.',

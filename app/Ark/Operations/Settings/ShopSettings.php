@@ -11,6 +11,7 @@ use App\Ark\Operations\Appointments\SchedulingHours;
 use App\Ark\Operations\Communications\CommunicationsQuickReplyTemplates;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\Labor\LaborAuthority;
 use App\Ark\Operations\Parts\CustomerPartDescriptionMode;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
@@ -885,13 +886,31 @@ TEXT;
         };
 
         $category = $this->laborCategoryByKey($categoryKey) ?? $this->defaultLaborCategory();
-        $rateCents = (int) $category['rate_cents'];
+        $rateCents = app(LaborAuthority::class)->policyRateCentsFor((string) $category['key'], $posture, $this);
 
         return [
             'category_key' => (string) $category['key'],
             'rate_cents' => $rateCents,
             'rate' => number_format($rateCents / 100, 2, '.', ''),
         ];
+    }
+
+    /**
+     * Labor categories priced for a concern with this billing: each rate is the labor
+     * policy rate a new line in that category is saved at, not the category's own rate.
+     *
+     * @return array<int, array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool}>
+     */
+    public function laborCategoriesForBillingPosture(ConcernBillingPosture $posture): array
+    {
+        $laborAuthority = app(LaborAuthority::class);
+
+        return collect($this->laborCategories())
+            ->map(fn (array $category): array => [
+                ...$category,
+                'rate_cents' => $laborAuthority->policyRateCentsFor($category['key'], $posture, $this),
+            ])
+            ->all();
     }
 
     /**

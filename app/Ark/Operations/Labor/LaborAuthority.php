@@ -8,9 +8,13 @@ use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\OperationAuthority\Operation;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Runtime\Authorization\PricingAuthority;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 final class LaborAuthority
 {
@@ -103,10 +107,11 @@ final class LaborAuthority
         $policyRateCents = $policyResolution['rate_cents'];
         $snapshot = $policyResolution['snapshot'];
 
-        $rateOverridden = $allowsModifiers && filter_var(
+        $overrideRequested = filter_var(
             $data['labor_rate_overridden'] ?? $data['unit_price_override'] ?? false,
             FILTER_VALIDATE_BOOLEAN,
         );
+        $rateOverridden = $allowsModifiers && $overrideRequested;
         $explicitReprice = filter_var($data['reprice_labor'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         // Category change is an intentional pricing context change (e.g. mechanical → courtesy → $0).
@@ -150,12 +155,31 @@ final class LaborAuthority
                 $submittedRateCents = $this->calculator->unitPriceCents($data['unit_price']);
 
                 if ($submittedRateCents !== $policyRateCents) {
+                    if (! PricingAuthority::allows(Auth::user())) {
+                        throw ValidationException::withMessages([
+                            'unit_price' => 'Manual pricing overrides require pricing authority.',
+                        ]);
+                    }
+
                     $rateCents = $submittedRateCents;
                     $rateOverrideReason = $this->resolveRateOverrideReason($data);
                     $rateOverriddenAt = now();
                     $rateOverriddenByUserId = Auth::id();
                 }
             }
+        }
+
+        if ($overrideRequested
+            && ! $allowsModifiers
+            && filled($data['unit_price'] ?? null)
+            && $this->calculator->unitPriceCents($data['unit_price']) !== $rateCents) {
+            throw ValidationException::withMessages([
+                'unit_price' => sprintf(
+                    '%s labor is billed at its policy rate ($%s/hr) and its rate cannot be overridden. Change the concern billing or the labor category instead.',
+                    $category['name'],
+                    number_format($rateCents / 100, 2),
+                ),
+            ]);
         }
 
         return [
@@ -182,6 +206,59 @@ final class LaborAuthority
             'labor_rate_overridden_by_user_id' => $rateOverriddenByUserId,
             'operation_id' => $operationId,
         ];
+    }
+
+    /**
+     * The hourly rate a new labor line in this category is saved at on a concern with this billing.
+     */
+    public function policyRateCentsFor(string $categoryKey, ConcernBillingPosture $posture, ShopSettings $settings): int
+    {
+        return app(RepairOrderReadCache::class)->remember(
+            "labor-policy-rate:{$posture->value}:{$categoryKey}",
+            function () use ($categoryKey, $posture, $settings): int {
+                try {
+                    $operation = $this->activeOperationsByCode()->get($categoryKey)
+                        ?? Operation::forLine(null, $categoryKey);
+
+                    return $this->resolvePolicyRate(
+                        self::billingPostureInput($posture),
+                        $categoryKey,
+                        $settings,
+                        $operation,
+                    )['rate_cents'];
+                } catch (RuntimeException) {
+                    return $this->legacyCategoryRateCents($categoryKey, $settings);
+                }
+            },
+        );
+    }
+
+    /**
+     * @return Collection<string, Operation>
+     */
+    private function activeOperationsByCode(): Collection
+    {
+        return app(RepairOrderReadCache::class)->remember('active-operations', function () {
+            $classes = $this->laborPolicyResolver->operationClasses()->keyBy('id');
+
+            return Operation::query()
+                ->where('is_active', true)
+                ->get()
+                ->each(fn (Operation $operation) => $operation->setRelation('operationClass', $classes->get($operation->operation_class_id)))
+                ->keyBy('code');
+        });
+    }
+
+    /**
+     * Shop default billing leaves the posture to the labor category, as line pricing does.
+     *
+     * @return array{billing_posture?: string}
+     */
+    public static function billingPostureInput(?ConcernBillingPosture $posture): array
+    {
+        return $posture instanceof ConcernBillingPosture && $posture !== ConcernBillingPosture::Default
+            ? ['billing_posture' => $posture->value]
+            : [];
     }
 
     /**
