@@ -78,8 +78,8 @@
     </div>
 
     @if ($hasCloseout && $financial)
-        {{-- Shown only while the rail scrolls on its own (tabler.css), pinned under the tabs so Closeout keeps its totals in view. --}}
-        <dl class="ops-rail-summary card-body py-2 border-bottom mb-0 small" x-show="totalsTab === 'closeout'" data-rail-summary>
+        {{-- Shown only while the rail scrolls on its own (tabler.css), pinned under the tabs so Closeout keeps its totals in view. Its own financial-position region, so every refresh that moves those figures replaces it. --}}
+        <dl id="rail-closeout-summary" class="ops-rail-summary card-body py-2 border-bottom mb-0 small" x-show="totalsTab === 'closeout'" data-continuity-region="financial-position" data-rail-summary>
             @if ($financial['hasIssuedInvoice'] ?? false)
                 <div>
                     <dt class="fw-normal text-secondary">Invoice total</dt>
