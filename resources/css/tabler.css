@@ -634,6 +634,20 @@ span.ark-legacy {
     height: var(--ark-topbar-height);
 }
 
+/*
+ * Two legacy overlays stack below the station lock (145): the payment workspace (130, inside the repair order rail) and
+ * the deposit breakdown (140). While one is open, the top bar, workspace strip and action dock give up their layer so
+ * the overlay covers them. The top bar also stops being sticky then: a sticky element always forms its own stacking
+ * context, which would keep the station lock it contains below the overlay.
+ */
+body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) :is(.ark-topbar, .ark-workspace-tabs, [data-ro-orientation-header]) {
+    z-index: auto;
+}
+
+body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topbar {
+    position: relative;
+}
+
 .ark-topbar > .container-fluid {
     min-width: 0;
 }

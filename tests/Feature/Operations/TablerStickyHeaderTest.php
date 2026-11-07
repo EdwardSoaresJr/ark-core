@@ -57,6 +57,26 @@ test('the top bar stays at the top of the viewport at one height, with the works
         ->toContain('scroll-padding-top: calc(var(--ark-topbar-height) + var(--ops-workspace-tabs-height, 0px));');
 });
 
+test('the payment workspace and deposit breakdown cover the sticky shell, and the station lock stays above them', function (): void {
+    $css = (string) file_get_contents(resource_path('css/tabler.css'));
+    $open = 'body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open))';
+
+    expect(tablerCssRule($css, $open.' :is(.ark-topbar, .ark-workspace-tabs, [data-ro-orientation-header])'))
+        ->toContain('z-index: auto;');
+
+    // A sticky bar is its own stacking context; it must stop being sticky so the lock inside it keeps its 145.
+    expect(tablerCssRule($css, $open.' .ark-topbar'))
+        ->toContain('position: relative;');
+
+    $legacy = (string) file_get_contents(resource_path('css/app.css'));
+    expect($legacy)
+        ->toMatch('/\.ops-workspace-modal \{[^}]*z-index: 130;/')
+        ->toMatch('/\.ops-deposit-breakdown-modal \{[^}]*z-index: 140;/')
+        ->toMatch('/\.ops-review-rail--pinned\.ops-review-rail--payment-open \{[^}]*z-index: 130;/');
+    expect((string) file_get_contents(resource_path('views/components/operations/workstation-presence.blade.php')))
+        ->toMatch('/\.ws-presence-overlay \{[^}]*z-index: 145;/');
+});
+
 test('every Tabler staff page has one top bar, followed by the workspace strip', function (string $route): void {
     $html = $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route($route))
