@@ -25,7 +25,8 @@ CI follows the same split:
   - `focused`: tests that name the changed files;
   - `communications-boundary`.
 - **The full suite** (`.github/workflows/regression.yml`):
-  - nightly on `main`, with a report that separates new failures from those already failing the night before;
+  - nightly on `main` at 09:00 UTC (02:00 Mountain in winter, 03:00 during daylight saving time);
+  - checked against the committed known-failure baseline, `.github/regression-known-failures.txt` (#147). Any other failing test is a regression, however many nights it has failed, until it is fixed or added to the baseline in a reviewed change with its issue. A run that crashes, times out, leaves no report, or runs far fewer tests than the baseline expects also fails. Remove baseline entries whose tests pass;
   - on demand from the Actions tab;
   - on a pull request labeled `full-regression`. Use it for major or high-risk changes, and for changes the focused job reports as broad (harness, dependencies, migrations, routes, config).
 
