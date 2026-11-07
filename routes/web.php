@@ -84,6 +84,7 @@ use App\Ark\Operations\Documents\DocumentVisibilityController;
 use App\Ark\Operations\Documents\EstimateDocumentEmailController;
 use App\Ark\Operations\Documents\EstimateDocumentOpenController;
 use App\Ark\Operations\Documents\EstimateDocumentPdfController;
+use App\Ark\Operations\Documents\EstimateDocumentRevisionPdfController;
 use App\Ark\Operations\Documents\EstimateDocumentShowController;
 use App\Ark\Operations\Documents\EstimateDocumentStoreController;
 use App\Ark\Operations\Documents\InvoiceDocumentEmailController;
@@ -206,6 +207,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderConcernRecommendationIntentContro
 use App\Ark\Operations\RepairOrders\RepairOrderConcernStoreController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernUpdateController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernVocabularySuggestController;
+use App\Ark\Operations\RepairOrders\RepairOrderCreditDueController;
 use App\Ark\Operations\RepairOrders\RepairOrderCustomerDisplayController;
 use App\Ark\Operations\RepairOrders\RepairOrderDepositController;
 use App\Ark\Operations\RepairOrders\RepairOrderDraftStoreController;
@@ -1362,6 +1364,16 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
             ->name('operations.repair-orders.estimate-documents.pdf.download');
 
+        Route::get('/app/repair-orders/{repairOrder}/estimate-documents/{document}/revisions/{revision}/pdf', [EstimateDocumentRevisionPdfController::class, 'show'])
+            ->whereNumber('revision')
+            ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
+            ->name('operations.repair-orders.estimate-documents.revisions.pdf.show');
+
+        Route::get('/app/repair-orders/{repairOrder}/estimate-documents/{document}/revisions/{revision}/pdf/download', [EstimateDocumentRevisionPdfController::class, 'download'])
+            ->whereNumber('revision')
+            ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
+            ->name('operations.repair-orders.estimate-documents.revisions.pdf.download');
+
         Route::post('/app/repair-orders/{repairOrder}/post', RepairOrderPostController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
             ->name('operations.repair-orders.post');
@@ -1405,6 +1417,10 @@ SurfaceRouting::appRoutes(function (): void {
         Route::post('/app/repair-orders/{repairOrder}/refund', RepairOrderLedgerRefundController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
             ->name('operations.repair-orders.refund.store');
+
+        Route::post('/app/repair-orders/{repairOrder}/credit-due', RepairOrderCreditDueController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.repair-orders.credit-due.store');
 
         Route::post('/app/repair-orders/{repairOrder}/waive-balance', RepairOrderLedgerWriteOffController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)

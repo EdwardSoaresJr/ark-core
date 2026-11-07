@@ -48,9 +48,36 @@
                         </form>
                     @elseif ($financial['invoiceRefreshBlockedBySettlement'] ?? false)
                         <div class="mt-2">
-                            Write-off, refund, or store credit is on file - invoice cannot auto-update. Use credit memo, adjustment, or refund workflows.
+                            {{ App\Ark\Operations\Financial\RefreshCustomerInvoiceAction::SETTLED_EXPLANATION }}
                         </div>
                     @endif
+                @endcan
+            </div>
+        @endif
+        @if ($financial['invoiceOverpaid'] ?? null)
+            <div class="alert alert-danger mb-0 small mt-2" role="status" data-invoice-overpaid="{{ $financial['invoiceOverpaidCents'] }}">
+                <div class="fw-bold">Refund or credit due: {{ $financial['invoiceOverpaid'] }}</div>
+                <div>The revised invoice is less than what the customer paid. Refund the difference or issue it as store credit. This stays on the repair order until it is settled, including after it is closed.</div>
+                @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
+                    <form
+                        method="POST"
+                        action="{{ route('operations.repair-orders.credit-due.store', $repairOrder) }}"
+                        class="d-flex flex-column gap-2 mt-2"
+                        data-refresh-scope="financial"
+                        data-credit-due-form
+                        @submit.prevent="submitWorksheetForm($event)"
+                    >
+                        @csrf
+                        <label class="visually-hidden" for="credit-due-amount-{{ $repairOrder->repair_order_id }}">Amount</label>
+                        <input id="credit-due-amount-{{ $repairOrder->repair_order_id }}" name="amount" inputmode="decimal" required value="{{ number_format($financial['invoiceOverpaidCents'] / 100, 2, '.', '') }}" class="form-control">
+                        <label class="visually-hidden" for="credit-due-settle-{{ $repairOrder->repair_order_id }}">Settle as</label>
+                        <select id="credit-due-settle-{{ $repairOrder->repair_order_id }}" name="settle_as" class="form-select">
+                            <option value="refund">Refund to customer</option>
+                            <option value="store_credit">Issue as store credit</option>
+                        </select>
+                        <input name="reference" type="text" placeholder="Reference / note (optional)" class="form-control">
+                        <button type="submit" class="btn btn-outline-danger w-100">Settle credit due</button>
+                    </form>
                 @endcan
             </div>
         @endif
@@ -299,6 +326,38 @@
                 >
                     Final Invoice PDF
                 </a>
+                @if (($financial['invoiceRevisions'] ?? []) !== [])
+                    @php($displayTimezone = config('app.display_timezone'))
+                    <details class="small" data-invoice-revision-history>
+                        <summary class="fw-bold">Revision history ({{ count($financial['invoiceRevisions']) + 1 }} versions)</summary>
+                        <ul class="list-unstyled mt-2 mb-0 d-flex flex-column gap-2">
+                            <li data-invoice-revision="{{ $financial['invoiceCurrentRevision'] }}">
+                                <div class="fw-medium">Revision {{ $financial['invoiceCurrentRevision'] }} · current · {{ $financial['invoiceTotal'] }}</div>
+                                <div class="text-secondary">
+                                    {{ $financial['invoicePresentedAt'] ? 'Shown to customer '.$financial['invoicePresentedAt']->timezone($displayTimezone)->format('M j, Y g:i A') : 'Not yet shown to customer' }}
+                                </div>
+                            </li>
+                            @foreach ($financial['invoiceRevisions'] as $revision)
+                                <li data-invoice-revision="{{ $revision['revision'] }}">
+                                    <div class="fw-medium">Revision {{ $revision['revision'] }} · {{ $revision['total'] }}</div>
+                                    <div class="text-secondary">
+                                        Replaced {{ $revision['archived_at']?->timezone($displayTimezone)->format('M j, Y g:i A') ?? '' }}{{ $revision['actor_name'] ? ' by '.$revision['actor_name'] : '' }}
+                                        · {{ $revision['presented_at'] ? 'shown to customer '.$revision['presented_at']->timezone($displayTimezone)->format('M j, Y') : 'not shown to customer' }}
+                                    </div>
+                                    @if ($revision['has_pdf'])
+                                        <div class="d-flex flex-wrap gap-2 mt-1">
+                                            <a href="{{ route('operations.repair-orders.estimate-documents.revisions.pdf.show', [$repairOrder, $financial['invoice'], $revision['revision']]) }}" target="_blank" rel="noopener">View PDF</a>
+                                            <a href="{{ route('operations.repair-orders.estimate-documents.revisions.pdf.download', [$repairOrder, $financial['invoice'], $revision['revision']]) }}">Download PDF</a>
+                                            <a href="{{ route('operations.repair-orders.estimate-documents.revisions.pdf.show', [$repairOrder, $financial['invoice'], $revision['revision']]) }}" target="_blank" rel="noopener" data-invoice-revision-reprint>Reprint</a>
+                                        </div>
+                                    @else
+                                        <div class="text-secondary fst-italic">No PDF was stored for this revision.</div>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
             @endif
 
             @if ($financial['closeoutBlockingReason'] && $repairOrder->status === App\Ark\Operations\RepairOrders\RepairOrderStatus::ReadyPickup)

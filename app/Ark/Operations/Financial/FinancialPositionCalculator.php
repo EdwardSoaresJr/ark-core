@@ -54,7 +54,8 @@ final class FinancialPositionCalculator
             - $writeOffsCents
             - $creditsCents
             + $adjustmentsCents
-            + $refundsCents,
+            + $refundsCents
+            + BalanceDueCalculator::creditDueStoreCreditCents($entries),
         );
 
         return new FinancialPositionProjection(

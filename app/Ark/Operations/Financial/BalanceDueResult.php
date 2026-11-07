@@ -16,6 +16,8 @@ final readonly class BalanceDueResult
         public int $balanceDueCents,
         public int $unappliedDepositsCents,
         public InvoiceStatus $invoiceStatus,
+        public int $overpaidCents = 0,
+        public int $creditDueToStoreCreditCents = 0,
     ) {}
 
     public function isPaid(): bool
@@ -28,11 +30,26 @@ final readonly class BalanceDueResult
      * Settlement freezes the invoice contract. Deposits alone do not -
      * they reserve work before the final bill is settled.
      */
+    /**
+     * Money collected beyond what the invoice now bills, owed back to the customer as a refund
+     * or store credit. Balance due never goes below zero, so this is where it shows.
+     */
+    public function hasOverpayment(): bool
+    {
+        return $this->overpaidCents > 0;
+    }
+
+    public function collectedCents(): int
+    {
+        return $this->depositsAppliedCents + $this->paymentsAppliedCents - $this->refundsAppliedCents - $this->creditDueToStoreCreditCents;
+    }
+
     public function hasSettlementActivity(): bool
     {
         return $this->paymentsAppliedCents > 0
             || $this->writeOffsCents > 0
             || $this->refundsAppliedCents > 0
-            || $this->creditsAppliedCents > 0;
+            || $this->creditsAppliedCents > 0
+            || $this->creditDueToStoreCreditCents > 0;
     }
 }

@@ -164,6 +164,7 @@ class RepairOrderLineUpdateController
         $refreshInvoice->executeIfNeeded(
             $repairOrder->fresh(['concerns', 'lines.concern', 'customer']),
             $request->user(),
+            'line_updated',
         );
 
         return redirect()
