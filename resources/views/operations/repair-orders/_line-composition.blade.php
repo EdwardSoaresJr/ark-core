@@ -74,4 +74,14 @@
         'lineEditUrl' => $lineEditUrl,
         'linePresentationMode' => $linePresentationMode,
     ])
+    @php
+        $programPricingConflict = $line->programPricingConflict(
+            isset($concern) && $concern->id === $line->repair_order_concern_id ? $concern->billing_posture : null,
+        );
+    @endphp
+    @if ($programPricingConflict)
+        <div class="small text-warning fw-medium mt-1" data-program-pricing-conflict="{{ $line->id }}">
+            Quoted ${{ number_format($programPricingConflict['quoted_cents'] / 100, 2) }}/hr differs from the {{ $programPricingConflict['billing'] }} labor rate of ${{ number_format($programPricingConflict['program_cents'] / 100, 2) }}/hr. Confirm which rate to bill.
+        </div>
+    @endif
 </div>

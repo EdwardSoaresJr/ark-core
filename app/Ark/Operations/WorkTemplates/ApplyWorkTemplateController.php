@@ -7,6 +7,7 @@ use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
+use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\WorksheetMutationIdempotency;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -88,7 +89,7 @@ final class ApplyWorkTemplateController
         return redirect()
             ->route('operations.repair-orders.show', $repairOrder)
             ->withFragment('repair-action-'.$result['work_group']->id)
-            ->with('status', 'Saved work added.');
+            ->with('status', self::statusMessage($result));
     }
 
     /**
@@ -115,5 +116,29 @@ final class ApplyWorkTemplateController
             'hours' => (float) $data['historical_labor_hours'],
             'tier' => $tier->value,
         ];
+    }
+
+    /**
+     * @param  array{concern: RepairOrderConcern, line_ids: list<int>}  $result
+     */
+    private static function statusMessage(array $result): string
+    {
+        $conflict = RepairOrderLine::query()
+            ->whereIn('id', $result['line_ids'])
+            ->get()
+            ->map(fn (RepairOrderLine $line): ?array => $line->programPricingConflict($result['concern']->billing_posture))
+            ->filter()
+            ->first();
+
+        if ($conflict === null) {
+            return 'Saved work added.';
+        }
+
+        return sprintf(
+            'Saved work added. Its labor price of $%s/hr differs from the %s labor rate of $%s/hr; confirm which rate to bill.',
+            number_format($conflict['quoted_cents'] / 100, 2),
+            $conflict['billing'],
+            number_format($conflict['program_cents'] / 100, 2),
+        );
     }
 }

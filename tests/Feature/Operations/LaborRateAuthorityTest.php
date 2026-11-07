@@ -4,6 +4,8 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\EstimatePricing\LaborRateOverrideReason;
 use App\Ark\Operations\EstimatePricing\OperationClass;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
+use App\Ark\Operations\Events\OperationalEvent;
+use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -271,4 +273,39 @@ test('a work template labor price is kept as a menu price on every concern', fun
         ->unit_price_cents->toBe(19900)
         ->policy_resolved_labor_rate_cents->toBe(15000)
         ->labor_rate_override_reason->toBe(LaborRateOverrideReason::MenuOrPackage->value);
+});
+
+test('a template price on RepairPal work is kept and flagged against the RepairPal labor rate', function () {
+    $repairOrder = laborRateRepairOrder();
+    $repairPal = laborRateConcern($repairOrder, ConcernBillingPosture::RepairPal, 'RepairPal');
+    $customerPay = laborRateConcern($repairOrder, ConcernBillingPosture::CustomerPay, 'Customer pay');
+    $template = WorkTemplate::query()->create(['title' => 'Pre-purchase inspection']);
+    $template->lines()->create(['type' => 'labor', 'description' => 'Pre-purchase inspection', 'quantity' => '1.00', 'unit_price_cents' => 19900, 'position' => 1]);
+
+    $this->post(route('operations.repair-orders.work-templates.apply', $repairOrder), [
+        'work_template_id' => $template->id,
+        'repair_order_concern_id' => $repairPal->id,
+    ])->assertSessionHas('status', 'Saved work added. Its labor price of $199.00/hr differs from the RepairPal labor rate of $150.00/hr; confirm which rate to bill.');
+
+    $this->post(route('operations.repair-orders.work-templates.apply', $repairOrder), [
+        'work_template_id' => $template->id,
+        'repair_order_concern_id' => $customerPay->id,
+    ])->assertSessionHas('status', 'Saved work added.');
+
+    $repairPalLine = RepairOrderLine::query()->where('repair_order_concern_id', $repairPal->id)->where('type', 'labor')->sole();
+    $customerPayLine = RepairOrderLine::query()->where('repair_order_concern_id', $customerPay->id)->where('type', 'labor')->sole();
+    $event = OperationalEvent::query()
+        ->where('event_name', OperationalEventName::EstimateLineAdded->value)
+        ->get()
+        ->first(fn ($event) => ($event->payload_json['line_id'] ?? null) === $repairPalLine->id);
+
+    expect($repairPalLine->unit_price_cents)->toBe(19900)
+        ->and($repairPalLine->programPricingConflict(ConcernBillingPosture::RepairPal))->toBe(['quoted_cents' => 19900, 'program_cents' => 15000, 'billing' => 'RepairPal'])
+        ->and($customerPayLine->programPricingConflict(ConcernBillingPosture::CustomerPay))->toBeNull()
+        ->and($event->payload_json['program_price_conflict'])->toBe(['quoted_cents' => 19900, 'program_cents' => 15000, 'billing' => 'RepairPal']);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('data-program-pricing-conflict="'.$repairPalLine->id.'"', false)
+        ->assertDontSee('data-program-pricing-conflict="'.$customerPayLine->id.'"', false);
 });

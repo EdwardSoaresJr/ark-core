@@ -144,6 +144,31 @@ class RepairOrderLine extends Model
         return $this->belongsTo(RepairOrder::class);
     }
 
+    /**
+     * A labor rate kept on Warranty or RepairPal work that differs from that program's labor rate,
+     * such as a saved-work menu price. The quoted rate stays; staff decide which rate to bill.
+     *
+     * @return array{quoted_cents: int, program_cents: int, billing: string}|null
+     */
+    public function programPricingConflict(?ConcernBillingPosture $posture = null): ?array
+    {
+        $posture ??= $this->relationLoaded('concern') ? $this->concern?->billing_posture : null;
+
+        if ($posture === null
+            || ! ($posture->isWarranty() || $posture->isProgramBilling())
+            || ! $this->type->isLabor()
+            || $this->policy_resolved_labor_rate_cents === null
+            || (int) $this->unit_price_cents === (int) $this->policy_resolved_labor_rate_cents) {
+            return null;
+        }
+
+        return [
+            'quoted_cents' => (int) $this->unit_price_cents,
+            'program_cents' => (int) $this->policy_resolved_labor_rate_cents,
+            'billing' => $posture->label(),
+        ];
+    }
+
     public function concern(): BelongsTo
     {
         return $this->belongsTo(RepairOrderConcern::class, 'repair_order_concern_id');
