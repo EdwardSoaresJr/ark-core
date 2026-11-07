@@ -38,7 +38,7 @@
 @endphp
 
 <div class="d-flex align-items-center gap-2 flex-shrink-0 mb-2" data-comms-section-bar>
-    <nav class="flex-fill overflow-auto" aria-label="Communications sections" data-comms-section-nav>
+    <nav class="flex-fill overflow-auto ark-comms-lanes" aria-label="Communications sections" data-comms-section-nav>
         <ul class="nav nav-pills flex-nowrap">
             @if ($section === 'inbox')
                 @foreach ($lanes as $lane)
@@ -89,7 +89,7 @@
     </nav>
 
     @if ($section === 'inbox' && $activeChannel !== null)
-        <div class="dropdown flex-shrink-0" data-comms-channel-filter>
+        <div class="dropdown flex-shrink-0 ms-1" data-comms-channel-filter>
             <button
                 type="button"
                 @class(['btn btn-sm dropdown-toggle', 'btn-outline-primary' => $channelValue !== null])
@@ -97,7 +97,7 @@
                 aria-expanded="false"
                 aria-label="Channel: {{ $activeChannel['label'] }}"
             >
-                <x-tabler.icon :name="$activeChannel['icon']" class="me-1" />
+                <x-tabler.icon :name="$activeChannel['icon']" class="me-sm-1" />
                 <span class="d-none d-sm-inline">{{ $activeChannel['label'] }}</span>
             </button>
             <div class="dropdown-menu dropdown-menu-end">
