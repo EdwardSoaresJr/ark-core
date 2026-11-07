@@ -7,7 +7,6 @@ use App\Ark\Operations\Conversations\ConversationLinker;
 use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Encounters\EncounterSource;
-use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Intake\IntakeWorkspaceSession;
 use App\Ark\Operations\Leads\LeadContactNameParser;
 use App\Ark\Operations\Leads\LeadContactPreference;
@@ -25,7 +24,7 @@ class CustomerUpdateController
         Request $request,
         Customer $customer,
         EstimateDocumentService $documents,
-        EstimateTotalsCalculator $totalsCalculator,
+        ApplyCustomerBillingClassChangeAction $applyBillingClassChange,
     ): RedirectResponse|JsonResponse {
         $customerTypes = collect(ShopSettings::current()->customerTypeRows())
             ->pluck('name')
@@ -75,10 +74,7 @@ class CustomerUpdateController
             ->each(fn ($repairOrder) => $documents->markDirtyForRepairOrder($repairOrder));
 
         if ($previousCustomerType !== $customer->fresh()->customer_type) {
-            $customer->repairOrders()
-                ->where('status', '!=', RepairOrderStatus::Closed->value)
-                ->with(['lines', 'customer', 'concerns'])
-                ->each(fn ($repairOrder) => $totalsCalculator->recalculateRepairOrder($repairOrder));
+            $applyBillingClassChange->execute($customer->fresh(), $previousCustomerType, $request->user());
         }
 
         $customer->refresh();
