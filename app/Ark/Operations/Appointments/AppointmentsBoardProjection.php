@@ -16,7 +16,7 @@ final class AppointmentsBoardProjection
         $end = $day->copy()->timezone(ShopDisplayTimezone::resolve())->endOfDay()->utc();
 
         return Appointment::query()
-            ->with(['repairOrder:id,repair_order_id,status,assigned_technician_id', 'repairOrder.assignedTechnician:id,name', 'customer:id,first_name,last_name', 'vehicle:id,year,make,model'])
+            ->with(['repairOrder:id,repair_order_id,status,assigned_technician_id', 'repairOrder.assignedTechnician:id,name', 'technician:id,name', 'customer:id,first_name,last_name', 'vehicle:id,year,make,model'])
             ->whereBetween('starts_at', [$start, $end])
             ->whereIn('status', [
                 AppointmentStatus::Scheduled->value,
@@ -36,7 +36,7 @@ final class AppointmentsBoardProjection
     public function upcoming(int $limit = 20): array
     {
         return Appointment::query()
-            ->with(['repairOrder:id,repair_order_id,status,assigned_technician_id', 'repairOrder.assignedTechnician:id,name', 'customer:id,first_name,last_name', 'vehicle:id,year,make,model'])
+            ->with(['repairOrder:id,repair_order_id,status,assigned_technician_id', 'repairOrder.assignedTechnician:id,name', 'technician:id,name', 'customer:id,first_name,last_name', 'vehicle:id,year,make,model'])
             ->where('starts_at', '>=', now()->utc()->startOfDay())
             ->whereIn('status', [
                 AppointmentStatus::Scheduled->value,
