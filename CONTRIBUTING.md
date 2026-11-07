@@ -22,7 +22,7 @@ CI follows the same split:
   - `lint`: syntax of changed PHP and JavaScript, Blade compile, advisory Pint;
   - `security`: authentication, authorization, sessions, signed access and isolation, plus payment tests when payments or billing change;
   - `targeted`: the existing repair-order and attention regressions;
-  - `focused`: tests that name the changed files;
+  - `focused`: tests that name the changed files, checked against the same known-failure baseline as the nightly run. A failure the baseline does not list, a crash, a stopped run, or a selected test file that reported no test fails it;
   - `communications-boundary`.
 - **The full suite** (`.github/workflows/regression.yml`):
   - nightly on `main` at 09:00 UTC (02:00 Mountain in winter, 03:00 during daylight saving time);
