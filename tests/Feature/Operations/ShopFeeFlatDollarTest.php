@@ -1,8 +1,14 @@
 <?php
 
+use App\Ark\Operations\Approvals\ApprovalEvent;
+use App\Ark\Operations\Approvals\ApprovalSource;
+use App\Ark\Operations\Approvals\ApprovalType;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -179,4 +185,121 @@ test('shop fee profile serializes from shop settings', function () {
     expect($profile->isFlat())->toBeTrue()
         ->and($profile->flatCents)->toBe(2500)
         ->and($profile->toArray()['schema'])->toBe(1);
+});
+
+test('saving shop fee settings does not rewrite open presented approved or closed document snapshots', function () {
+    $openRo = flatFeeRepairOrder();
+    flatFeeLabor($openRo, 'Open documented');
+    $openFees = (int) $openRo->lines()->sum('shop_fee_cents');
+    expect($openFees)->toBe(2500);
+
+    $openSnapshot = [
+        'marker' => 'open-pre-fee-change',
+        'schema_version' => 2,
+        'totals' => ['fees_cents' => $openFees, 'total_cents' => 19000],
+        'settings' => ['shop_fee_flat_cents' => 2500],
+    ];
+    $openDocument = EstimateDocument::query()->create([
+        'repair_order_id' => $openRo->id,
+        'document_number' => 1,
+        'document_type' => FinancialDocumentType::Estimate->value,
+        'status' => 'generated',
+        'snapshot_json' => $openSnapshot,
+        'generated_at' => now()->subHour(),
+    ]);
+
+    $presentedRo = flatFeeRepairOrder();
+    flatFeeLabor($presentedRo, 'Presented documented');
+    $presentedSnapshot = [
+        'marker' => 'presented-pre-fee-change',
+        'schema_version' => 2,
+        'totals' => ['fees_cents' => 2500, 'total_cents' => 19000],
+    ];
+    $presentedDocument = EstimateDocument::query()->create([
+        'repair_order_id' => $presentedRo->id,
+        'document_number' => 1,
+        'document_type' => FinancialDocumentType::Invoice->value,
+        'status' => InvoiceStatus::Issued->value,
+        'snapshot_json' => $presentedSnapshot,
+        'customer_presented_at' => now()->subMinutes(30),
+        'generated_at' => now()->subHour(),
+    ]);
+
+    $approvedRo = flatFeeRepairOrder();
+    flatFeeLabor($approvedRo, 'Approved documented');
+    $approval = ApprovalEvent::query()->create([
+        'visit_id' => $approvedRo->id,
+        'estimate_snapshot_reference' => 'approved-pre-fee-change',
+        'approval_type' => ApprovalType::Repair,
+        'approved_amount_cents' => 19000,
+        'source' => ApprovalSource::Phone,
+        'approved_by' => 'Synthetic Customer',
+        'approved_at' => now()->subMinutes(20),
+        'notes' => 'Approved before fee settings change.',
+    ]);
+    $approvedSnapshot = [
+        'marker' => 'approved-pre-fee-change',
+        'schema_version' => 2,
+        'totals' => ['fees_cents' => 2500, 'total_cents' => 19000],
+        'staff' => [
+            'approval_events' => [[
+                'approval_type' => ApprovalType::Repair->value,
+                'approved_amount_cents' => 19000,
+                'source' => ApprovalSource::Phone->value,
+                'approved_by' => 'Synthetic Customer',
+                'notes' => 'Approved before fee settings change.',
+            ]],
+        ],
+    ];
+    $approvedDocument = EstimateDocument::query()->create([
+        'repair_order_id' => $approvedRo->id,
+        'document_number' => 1,
+        'document_type' => FinancialDocumentType::Estimate->value,
+        'status' => 'generated',
+        'snapshot_json' => $approvedSnapshot,
+        'generated_at' => now()->subHour(),
+    ]);
+
+    $closedRo = flatFeeRepairOrder();
+    flatFeeLabor($closedRo, 'Closed documented');
+    $closedRo->forceFill(['status' => RepairOrderStatus::Closed, 'closed_at' => now()])->save();
+    $closedSnapshot = [
+        'marker' => 'closed-pre-fee-change',
+        'schema_version' => 2,
+        'totals' => ['fees_cents' => 2500, 'total_cents' => 19000],
+    ];
+    $closedDocument = EstimateDocument::query()->create([
+        'repair_order_id' => $closedRo->id,
+        'document_number' => 1,
+        'document_type' => FinancialDocumentType::Estimate->value,
+        'status' => 'generated',
+        'snapshot_json' => $closedSnapshot,
+        'generated_at' => now()->subDay(),
+    ]);
+
+    $this->patch(route('operations.settings.shop.fees.update'), [
+        'shop_fee_enabled' => '1',
+        'shop_fee_mode' => 'flat',
+        'shop_fee_flat' => '99.00',
+        'shop_fee_rate' => '5.000',
+    ])->assertRedirect();
+
+    expect(ShopSettings::current()->shop_fee_flat_cents)->toBe(9900);
+
+    expect($openDocument->fresh()->snapshot_json)->toBe($openSnapshot)
+        ->and($presentedDocument->fresh()->snapshot_json)->toBe($presentedSnapshot)
+        ->and($approvedDocument->fresh()->snapshot_json)->toBe($approvedSnapshot)
+        ->and($closedDocument->fresh()->snapshot_json)->toBe($closedSnapshot)
+        ->and((int) $openRo->lines()->sum('shop_fee_cents'))->toBe(2500)
+        ->and($openRo->fresh()->shop_fee_profile['flat_cents'])->toBe(2500);
+
+    $approval->refresh();
+    expect($approval->approved_amount_cents)->toBe(19000)
+        ->and($approval->estimate_snapshot_reference)->toBe('approved-pre-fee-change')
+        ->and($approval->notes)->toBe('Approved before fee settings change.');
+
+    $newer = flatFeeRepairOrder();
+    flatFeeLabor($newer, 'Uses new flat after fee save');
+    expect((int) $newer->lines()->sum('shop_fee_cents'))->toBe(9900)
+        ->and($newer->fresh()->shop_fee_profile['flat_cents'])->toBe(9900);
 });

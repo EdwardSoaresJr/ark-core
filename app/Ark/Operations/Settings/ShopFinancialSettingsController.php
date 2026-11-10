@@ -349,8 +349,8 @@ class ShopFinancialSettingsController
                 : null,
         ]);
 
-        // Forward-only: do not recalculate living ROs when fee settings change.
-        $this->syncOpenEstimateDocuments();
+        // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
+        // New ROs pick up the updated fee profile through the established stamp-on-create path.
 
         return $this->redirectWithStatus('Shop fee settings saved.');
     }
