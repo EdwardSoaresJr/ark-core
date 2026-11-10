@@ -68,7 +68,9 @@
 <div class="col-12 col-lg-3 col-xxl-2 d-none d-lg-block">
     <nav class="card sticky-lg-top" style="top: 1rem" aria-label="Shop settings sections">
         @foreach ($settingsNav as $group => $items)
-            <div class="card-header py-2"><div class="subheader">{{ $group }}</div></div>
+            <div class="card-header py-2">
+                <div class="subheader text-uppercase fw-semibold" style="font-weight: 600; letter-spacing: .04em;">{{ $group }}</div>
+            </div>
             <div class="list-group list-group-flush">
                 @foreach ($items as $item)
                     @if ($current !== null)
