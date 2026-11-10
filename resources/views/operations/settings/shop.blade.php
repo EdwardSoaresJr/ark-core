@@ -1,6 +1,7 @@
 <x-operations.app title="Shop Settings" ui="tabler">
     <x-tabler.page layout="fluid" title="Shop Settings" pretitle="System" subtitle="How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.">
     <section
+        data-shop-settings
         x-data="{
             active: (() => {
                 const candidate = @js($initialSection) || new URLSearchParams(window.location.search).get('section') || localStorage.getItem('ark:shop-settings:section') || 'general';

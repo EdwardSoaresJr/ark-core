@@ -305,9 +305,14 @@ document.addEventListener('alpine:init', () => {
             this.selectedWorkType = key;
             this.syncWorkTypeUrl(true);
         },
+        shopSettings() {
+            const el = this.$el.closest('[data-shop-settings]');
+            return el ? Alpine.$data(el) : null;
+        },
         syncWorkTypeUrl(push) {
             // Labor stays mounted while other Financial tabs are shown; never steal the active tab.
-            if (this.$root?.financialTab && this.$root.financialTab !== 'labor') {
+            // Alpine $root is this component, not Shop Settings — read the shop host explicitly.
+            if (this.shopSettings()?.financialTab !== 'labor') {
                 return;
             }
             const url = new URL(window.location.href);

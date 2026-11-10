@@ -264,8 +264,12 @@ document.addEventListener('alpine:init', () => {
                 }
             });
         },
+        shopSettings() {
+            const el = this.$el.closest('[data-shop-settings]');
+            return el ? Alpine.$data(el) : null;
+        },
         showInlineTabList() {
-            const tab = this.$root?.financialTab;
+            const tab = this.shopSettings()?.financialTab;
             return tab === 'billing-classes' || tab === 'customer-tags' || tab === 'customer-types';
         },
         csrf() {
