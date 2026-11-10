@@ -77,12 +77,15 @@
  * compose actions (Add Labor / Part / Note) sit under it and cannot be clicked.
  * Keep the sticky design; only leave scroll room above the dock.
  */
-.page-body:has(> [data-ro-orientation-header]) .ops-estimate-layout {
+.page-body:has([data-ro-orientation-header]) .ops-estimate-layout,
+.ops-estimate-layout:has(+ [data-ro-orientation-header]),
+body:has([data-ro-orientation-header]) .ops-estimate-layout {
     padding-bottom: max(6.75rem, calc(5.25rem + env(safe-area-inset-bottom, 0px)));
 }
 
-.page-body:has(> [data-ro-orientation-header]) [data-scope-compose],
-.page-body:has(> [data-ro-orientation-header]) [data-repair-action] .btn-list {
+.page-body:has([data-ro-orientation-header]) [data-scope-compose],
+.page-body:has([data-ro-orientation-header]) [data-repair-action] .btn-list,
+body:has([data-ro-orientation-header]) [data-scope-compose] {
     scroll-margin-bottom: max(7.5rem, calc(6rem + env(safe-area-inset-bottom, 0px)));
 }
 
