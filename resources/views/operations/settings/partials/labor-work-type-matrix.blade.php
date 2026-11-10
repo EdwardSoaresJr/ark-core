@@ -306,6 +306,10 @@ document.addEventListener('alpine:init', () => {
             this.syncWorkTypeUrl(true);
         },
         syncWorkTypeUrl(push) {
+            // Labor stays mounted while other Financial tabs are shown; never steal the active tab.
+            if (this.$root?.financialTab && this.$root.financialTab !== 'labor') {
+                return;
+            }
             const url = new URL(window.location.href);
             url.searchParams.set('section', 'financial');
             url.searchParams.set('financial-tab', 'labor');
