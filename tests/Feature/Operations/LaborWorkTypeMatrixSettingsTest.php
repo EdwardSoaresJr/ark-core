@@ -33,7 +33,10 @@ test('labor settings show vertical work-type matrix without a save button', func
         ->assertSee('data-labor-work-type-nav', false)
         ->assertSee('+ Add Work Type')
         ->assertSee('+ Add Billing Class')
-        ->assertSee('Shop default hourly rate')
+        ->assertSee('Default Labor Rate')
+        ->assertSee('Default Work Type')
+        ->assertSee('Billing Classes for')
+        ->assertSee('Use Default Labor Rate')
         ->assertDontSee('Save Labor Settings')
         ->assertDontSee('Standard hourly rate');
 });

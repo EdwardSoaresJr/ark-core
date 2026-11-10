@@ -36,13 +36,19 @@ test('labor settings show vertical matrix with Mechanical Retail as the visible 
         ]))
         ->assertOk()
         ->assertSee('Labor rate matrix')
-        ->assertSee('Shop default hourly rate')
+        ->assertSee('Default Labor Rate')
+        ->assertSee('Default Work Type')
+        ->assertSee('Billing Classes for')
+        ->assertSee('Use Default Labor Rate')
+        ->assertSee('Custom Rate')
+        ->assertSee('No Charge')
         ->assertSee('+ Add Work Type')
         ->assertSee('data-labor-matrix', false)
         ->assertDontSee('Save Labor Settings')
         ->assertDontSee('Labor categories')
         ->assertDontSee('Advanced billing rates')
-        ->assertDontSee('Standard hourly rate');
+        ->assertDontSee('Standard hourly rate')
+        ->assertSee('Default Work Type × Retail', false);
 });
 
 test('saving Mechanical Retail rate syncs matching Customer Pay policies atomically', function () {

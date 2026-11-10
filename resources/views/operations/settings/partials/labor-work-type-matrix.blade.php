@@ -22,7 +22,7 @@
             <h3 class="mb-1">Labor rate matrix</h3>
             <p class="text-secondary small mb-0">
                 Select a work type, edit hourly rates inline, and open Rules for billing-class minimums.
-                Mechanical × Retail is the shop default. Changes apply to new repair orders only.
+                Mechanical is the Default Work Type. Changes apply to new repair orders only.
             </p>
         </div>
         <div class="small" aria-live="polite">
@@ -32,6 +32,31 @@
             <span class="text-danger" x-show="status === 'error'">
                 Not saved — <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="retryLast()">Retry</button>
             </span>
+        </div>
+    </div>
+
+    <div class="border rounded px-3 py-2 mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2" data-labor-default-rate>
+        <div>
+            <div class="fw-semibold">Default Labor Rate</div>
+            <div class="form-hint mb-0">
+                Shop-wide inheritance source.
+                <span x-text="inheritCount()"></span> matrix entries use this rate.
+                Updating it changes new repair orders only.
+            </div>
+        </div>
+        <div class="input-group input-group-sm" style="max-width: 10rem">
+            <span class="input-group-text">$</span>
+            <input
+                type="text"
+                class="form-control font-monospace text-end"
+                :value="defaultRateInput()"
+                @change="saveDefaultLaborRate($event.target.value)"
+                @keydown.enter.prevent="saveDefaultLaborRate($event.target.value)"
+                inputmode="decimal"
+                aria-label="Default Labor Rate"
+                data-labor-default-rate-input
+            >
+            <span class="input-group-text">/hr</span>
         </div>
     </div>
 
@@ -47,7 +72,7 @@
                         :data-labor-work-type="workType.key"
                     >
                         <span x-text="workType.label"></span>
-                        <span class="badge bg-azure-lt text-azure" x-show="workType.is_default">Default</span>
+                        <span class="badge bg-azure-lt text-azure" x-show="workType.is_default">Default Work Type</span>
                     </button>
                 </template>
             </div>
@@ -57,12 +82,20 @@
         </div>
 
         <div class="col-12 col-lg-9">
+            <div class="mb-2">
+                <h4 class="mb-0" data-labor-selected-heading>
+                    Billing Classes for <span x-text="selectedWorkTypeLabel()"></span>
+                </h4>
+                <p class="form-hint mb-0">
+                    Configure hourly rates for <span x-text="selectedWorkTypeLabel()"></span> work.
+                </p>
+            </div>
             <div class="table-responsive border rounded">
                 <table class="table table-vcenter table-sm mb-0" data-labor-rate-editor>
                     <thead>
                         <tr>
-                            <th class="bg-light">Billing class</th>
-                            <th class="bg-light text-end" style="width: 11rem">Hourly rate</th>
+                            <th class="bg-light">Billing Class</th>
+                            <th class="bg-light text-end" style="width: 14rem">Hourly rate</th>
                             <th class="bg-light text-end" style="width: 6rem">Rules</th>
                         </tr>
                     </thead>
@@ -71,22 +104,22 @@
                             <tr :data-billing-class="column.value">
                                 <td>
                                     <div class="fw-medium" x-text="column.label"></div>
-                                    <div class="form-hint mb-0" x-show="selectedWorkType === 'mechanical' && column.value === 'customer_pay'">
-                                        Shop default hourly rate
+                                    <div class="form-hint mb-0" x-show="cell(selectedWorkType, column.value).is_default_cell">
+                                        Default Work Type × Retail — inherits Default Labor Rate
                                     </div>
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column align-items-end gap-1">
                                         <select
                                             class="form-select form-select-sm"
-                                            style="max-width: 9.5rem"
+                                            style="max-width: 13rem"
                                             x-model="cell(selectedWorkType, column.value).settings_mode"
                                             @change="saveRate(selectedWorkType, column.value)"
                                             :aria-label="`${selectedWorkTypeLabel()} ${column.label} rate mode`"
                                         >
-                                            <option value="standard">Use Default</option>
-                                            <option value="custom">Custom</option>
-                                            <option value="zero">$0.00</option>
+                                            <option value="standard">Use Default Labor Rate</option>
+                                            <option value="custom">Custom Rate</option>
+                                            <option value="zero">No Charge</option>
                                         </select>
                                         <div class="input-group input-group-sm" style="max-width: 9.5rem" x-show="cell(selectedWorkType, column.value).settings_mode === 'custom'">
                                             <span class="input-group-text">$</span>
@@ -100,7 +133,16 @@
                                                 :aria-label="`${selectedWorkTypeLabel()} ${column.label} hourly rate`"
                                             >
                                         </div>
-                                        <div class="form-hint mb-0 font-monospace" x-show="cell(selectedWorkType, column.value).settings_mode !== 'custom'" x-text="cell(selectedWorkType, column.value).rate_display"></div>
+                                        <div
+                                            class="form-hint mb-0 font-monospace"
+                                            x-show="cell(selectedWorkType, column.value).settings_mode === 'standard'"
+                                            x-text="`Uses Default Labor Rate · ${cell(selectedWorkType, column.value).rate_display}/hr`"
+                                        ></div>
+                                        <div
+                                            class="form-hint mb-0 font-monospace"
+                                            x-show="cell(selectedWorkType, column.value).settings_mode === 'zero'"
+                                            x-text="`${cell(selectedWorkType, column.value).rate_display} · No Charge`"
+                                        ></div>
                                     </div>
                                 </td>
                                 <td class="text-end">
@@ -158,8 +200,8 @@
                         <input type="text" class="form-control font-monospace mb-2" x-model="rulesDraft.hours" inputmode="decimal">
                         <label class="form-label">Shortfall rate</label>
                         <select class="form-select mb-2" x-model="rulesDraft.shortfall_rate_source">
-                            <option value="standard_mechanical">Mechanical × Retail (default)</option>
-                            <option value="custom">Custom rate</option>
+                            <option value="standard_mechanical">Default Labor Rate (Mechanical × Retail)</option>
+                            <option value="custom">Custom Rate</option>
                         </select>
                         <div class="input-group" x-show="rulesDraft.shortfall_rate_source === 'custom'">
                             <span class="input-group-text">$</span>
@@ -224,6 +266,32 @@ document.addEventListener('alpine:init', () => {
         },
         selectedWorkTypeLabel() {
             return this.matrix.work_types.find((row) => row.key === this.selectedWorkType)?.label || 'Work type';
+        },
+        defaultRateInput() {
+            const cents = this.matrix.standard_rate_cents;
+            return cents == null ? '' : (cents / 100).toFixed(2);
+        },
+        inheritCount() {
+            let count = 0;
+            Object.values(this.matrix.cells || {}).forEach((row) => {
+                Object.values(row || {}).forEach((cell) => {
+                    if (cell?.settings_mode === 'standard' || cell?.follows_shop_standard) {
+                        count += 1;
+                    }
+                });
+            });
+            return count === 1 ? '1' : String(count);
+        },
+        async saveDefaultLaborRate(value) {
+            const cents = Math.round(parseFloat(value || '0') * 100);
+            const rate = Number.isFinite(cents) ? (cents / 100).toFixed(2) : '0.00';
+            this.matrix.standard_rate_cents = Math.round(parseFloat(rate) * 100);
+            await this.request(this.matrix.routes.rate, 'PATCH', {
+                work_type: 'mechanical',
+                billing_class: 'customer_pay',
+                mode: 'custom',
+                rate,
+            });
         },
         cell(workType, billingClass) {
             this.matrix.cells[workType] ||= {};
