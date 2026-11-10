@@ -44,10 +44,8 @@ final class LaborBillingMinimums
 
         $rows = [];
 
-        foreach (LaborWorkTypeMatrix::minimumConfigurablePostures() as $posture) {
-            $entry = $raw[$posture->value] ?? null;
-
-            if (! is_array($entry)) {
+        foreach ($raw as $key => $entry) {
+            if (! is_array($entry) || ! is_string($key) || $key === '') {
                 continue;
             }
 
@@ -60,7 +58,7 @@ final class LaborBillingMinimums
                 $source = self::SHORTFALL_STANDARD_MECHANICAL;
             }
 
-            $rows[$posture->value] = [
+            $rows[$key] = [
                 'mode' => $mode->value,
                 'hours' => $hours,
                 'shortfall_rate_cents' => isset($entry['shortfall_rate_cents'])
@@ -85,8 +83,9 @@ final class LaborBillingMinimums
 
         $rows = [];
 
-        foreach (LaborWorkTypeMatrix::minimumConfigurablePostures() as $posture) {
-            $entry = $input[$posture->value] ?? [];
+        foreach (LaborWorkTypeMatrix::minimumConfigurablePostures($settings) as $posture) {
+            $key = self::postureKey($posture);
+            $entry = $input[$key] ?? [];
             $mode = LaborBillingMinimumMode::tryFrom((string) ($entry['mode'] ?? 'none'))
                 ?? LaborBillingMinimumMode::None;
             $hours = number_format(max(0, (float) ($entry['hours'] ?? 0)), 2, '.', '');
@@ -100,7 +99,7 @@ final class LaborBillingMinimums
                 ? (int) round(((float) $entry['shortfall_rate']) * 100)
                 : (isset($entry['shortfall_rate_cents']) ? (int) $entry['shortfall_rate_cents'] : null);
 
-            $rows[$posture->value] = [
+            $rows[$key] = [
                 'mode' => $mode->value,
                 'hours' => $mode === LaborBillingMinimumMode::None ? '0.00' : $hours,
                 'shortfall_rate_cents' => $source === self::SHORTFALL_CUSTOM
@@ -134,16 +133,9 @@ final class LaborBillingMinimums
     /**
      * @return MinimumRow|null
      */
-    public function forPosture(ConcernBillingPosture $posture): ?array
+    public function forPosture(ConcernBillingPosture|string $posture): ?array
     {
-        $normalized = match ($posture) {
-            ConcernBillingPosture::Default => ConcernBillingPosture::CustomerPay,
-            ConcernBillingPosture::Warranty => ConcernBillingPosture::WarrantyOther,
-            ConcernBillingPosture::WarrantyRepairPal => ConcernBillingPosture::RepairPal,
-            default => $posture,
-        };
-
-        return $this->rows[$normalized->value] ?? null;
+        return $this->rows[self::postureKey($posture)] ?? null;
     }
 
     /**
@@ -154,7 +146,7 @@ final class LaborBillingMinimums
         return $this->rows;
     }
 
-    public function shortfallRateCents(ConcernBillingPosture $posture, ShopSettings $settings): int
+    public function shortfallRateCents(ConcernBillingPosture|string $posture, ShopSettings $settings): int
     {
         $row = $this->forPosture($posture);
 
@@ -162,13 +154,8 @@ final class LaborBillingMinimums
             return $settings->defaultLaborRateCents();
         }
 
-        // Prefer the stamped/saved cents so RO profiles stay immutable after create.
         if (isset($row['shortfall_rate_cents']) && $row['shortfall_rate_cents'] !== null) {
             return (int) $row['shortfall_rate_cents'];
-        }
-
-        if (($row['shortfall_rate_source'] ?? self::SHORTFALL_STANDARD_MECHANICAL) === self::SHORTFALL_CUSTOM) {
-            return $settings->defaultLaborRateCents();
         }
 
         try {
@@ -178,5 +165,24 @@ final class LaborBillingMinimums
         } catch (\Throwable) {
             return $settings->defaultLaborRateCents();
         }
+    }
+
+    public static function postureKey(ConcernBillingPosture|string $posture): string
+    {
+        if (is_string($posture)) {
+            return match ($posture) {
+                'default' => ConcernBillingPosture::CustomerPay->value,
+                'warranty' => ConcernBillingPosture::WarrantyOther->value,
+                'warranty_repairpal' => ConcernBillingPosture::RepairPal->value,
+                default => $posture,
+            };
+        }
+
+        return match ($posture) {
+            ConcernBillingPosture::Default => ConcernBillingPosture::CustomerPay->value,
+            ConcernBillingPosture::Warranty => ConcernBillingPosture::WarrantyOther->value,
+            ConcernBillingPosture::WarrantyRepairPal => ConcernBillingPosture::RepairPal->value,
+            default => $posture->value,
+        };
     }
 }

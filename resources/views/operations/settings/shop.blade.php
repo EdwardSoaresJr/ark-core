@@ -644,22 +644,8 @@
                         </ul>
                     </div>
 
-                    <div class="card-body" id="financial-panel-labor" role="tabpanel" aria-labelledby="financial-tab-labor" x-show="financialTab === 'labor'">
-                        <form
-                            method="POST"
-                            action="{{ route('operations.settings.shop.labor.update') }}"
-                            data-settings-labor
-                        >
-                            @csrf
-                            @method('PATCH')
-
-                            @include('operations.settings.partials.labor-work-type-matrix')
-
-                            <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-3">
-                                <a href="{{ route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']) }}" class="btn">Cancel</a>
-                                <button type="submit" class="btn btn-primary">Save Labor Settings</button>
-                            </div>
-                        </form>
+                    <div class="card-body" id="financial-panel-labor" role="tabpanel" aria-labelledby="financial-tab-labor" x-show="financialTab === 'labor'" data-settings-labor>
+                        @include('operations.settings.partials.labor-work-type-matrix')
                     </div>
 
                     <div class="card-body" id="financial-panel-tax" role="tabpanel" aria-labelledby="financial-tab-tax" x-show="financialTab === 'tax'" x-cloak>

@@ -121,10 +121,10 @@ class RepairOrderLinePricing
         if (! filled($data['billing_posture'] ?? null)) {
             $repairOrder->loadMissing('concerns');
             $concern = $repairOrder->concerns->firstWhere('id', $data['repair_order_concern_id'] ?? null);
-            $data = [...$data, ...LaborAuthority::billingPostureInput($concern?->billing_posture)];
+            $data = [...$data, ...LaborAuthority::billingPostureInputFromConcern($concern)];
         }
 
-        $resolved = $this->laborAuthority->resolveForLine($data, $settings, $existingLine);
+        $resolved = $this->laborAuthority->resolveForLine($data, $settings, $existingLine, $repairOrder);
 
         return [
             'quantity' => $resolved['quantity'],

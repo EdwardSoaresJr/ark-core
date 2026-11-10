@@ -3,13 +3,17 @@
 namespace App\Ark\Operations\Labor;
 
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
+use App\Ark\Operations\EstimatePricing\LaborPricingProfile;
 use App\Ark\Operations\EstimatePricing\LaborRateOverrideReason;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\OperationAuthority\Operation;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
+use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\Settings\ShopSettings;
+use Illuminate\Support\Carbon;
 use App\Ark\Runtime\Authorization\PricingAuthority;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -46,7 +50,7 @@ final class LaborAuthority
      *     labor_rate_override_reason: string|null,
      * }
      */
-    public function resolveForLine(array $data, ShopSettings $settings, ?RepairOrderLine $existingLine = null): array
+    public function resolveForLine(array $data, ShopSettings $settings, ?RepairOrderLine $existingLine = null, ?RepairOrder $repairOrder = null): array
     {
         $categoryKey = filled($data['labor_category_key'] ?? null)
             ? (string) $data['labor_category_key']
@@ -103,7 +107,7 @@ final class LaborAuthority
             $category['key'],
         );
 
-        $policyResolution = $this->resolvePolicyRate($data, $category['key'], $settings, $operation);
+        $policyResolution = $this->resolvePolicyRate($data, $category['key'], $settings, $operation, $repairOrder);
         $policyRateCents = $policyResolution['rate_cents'];
         $snapshot = $policyResolution['snapshot'];
 
@@ -217,7 +221,7 @@ final class LaborAuthority
      */
     public function repriceForBillingChange(
         RepairOrderLine $line,
-        ConcernBillingPosture $posture,
+        ConcernBillingPosture|string $posture,
         string $categoryKey,
         ShopSettings $settings,
     ): array {
@@ -252,10 +256,12 @@ final class LaborAuthority
     /**
      * The hourly rate a new labor line in this category is saved at on a concern with this billing.
      */
-    public function policyRateCentsFor(string $categoryKey, ConcernBillingPosture $posture, ShopSettings $settings): int
+    public function policyRateCentsFor(string $categoryKey, ConcernBillingPosture|string $posture, ShopSettings $settings): int
     {
+        $postureKey = $posture instanceof ConcernBillingPosture ? $posture->value : (string) $posture;
+
         return app(RepairOrderReadCache::class)->remember(
-            "labor-policy-rate:{$posture->value}:{$categoryKey}",
+            "labor-policy-rate:{$postureKey}:{$categoryKey}",
             function () use ($categoryKey, $posture, $settings): int {
                 try {
                     $operation = $this->activeOperationsByCode()->get($categoryKey)
@@ -295,11 +301,27 @@ final class LaborAuthority
      *
      * @return array{billing_posture?: string}
      */
-    public static function billingPostureInput(?ConcernBillingPosture $posture): array
+    public static function billingPostureInput(ConcernBillingPosture|string|null $posture): array
     {
+        if (is_string($posture) && $posture !== '' && $posture !== ConcernBillingPosture::Default->value) {
+            return ['billing_posture' => $posture];
+        }
+
         return $posture instanceof ConcernBillingPosture && $posture !== ConcernBillingPosture::Default
             ? ['billing_posture' => $posture->value]
             : [];
+    }
+
+    /**
+     * @return array{billing_posture?: string}
+     */
+    public static function billingPostureInputFromConcern(?RepairOrderConcern $concern): array
+    {
+        if ($concern === null) {
+            return [];
+        }
+
+        return self::billingPostureInput($concern->billingClassKey());
     }
 
     /**
@@ -343,6 +365,7 @@ final class LaborAuthority
         string $categoryKey,
         ShopSettings $settings,
         Operation $operation,
+        ?RepairOrder $repairOrder = null,
     ): array {
         // Courtesy labor category still uses shop category rate until posture is set (pricing concern, not Operation).
         if ($categoryKey === 'courtesy' && ! filled($data['billing_posture'] ?? null)) {
@@ -362,7 +385,40 @@ final class LaborAuthority
             : $operation->operationClassKey();
 
         $posture = $this->resolveBillingPosture($data, $categoryKey);
-        $resolved = $this->laborPolicyResolver->resolve($posture, $operationClassKey);
+
+        // Forward-only: stamped profile rates win for ROs created after matrix activation.
+        if ($repairOrder !== null) {
+            $profile = LaborPricingProfile::tryFromStored(
+                is_array($repairOrder->labor_pricing_profile) ? $repairOrder->labor_pricing_profile : null,
+            );
+
+            if ($profile?->hasFrozenRates()) {
+                $frozen = $profile->rateCentsForOperationClass($operationClassKey, $posture)
+                    ?? $profile->rateCentsFor($categoryKey, $posture);
+
+                if ($frozen !== null) {
+                    return [
+                        'rate_cents' => $frozen,
+                        'snapshot' => [
+                            'resolved_from_posture' => $posture instanceof ConcernBillingPosture
+                                ? $posture->value
+                                : (string) $posture,
+                            'resolved_from_operation_class' => $operationClassKey,
+                            'labor_policy_id' => null,
+                            'labor_policy_version' => $profile->version,
+                        ],
+                    ];
+                }
+            }
+        }
+
+        // Legacy null-profile ROs: resolve as-of open date so later policy versions do not rewrite new lines.
+        $asOf = null;
+        if ($repairOrder?->opened_at !== null) {
+            $asOf = Carbon::parse($repairOrder->opened_at);
+        }
+
+        $resolved = $this->laborPolicyResolver->resolve($posture, $operationClassKey, $asOf);
 
         return [
             'rate_cents' => $resolved->hourlyRateCents,
@@ -378,12 +434,18 @@ final class LaborAuthority
      * TODO(migration): Delete category→posture inference once every labor resolve
      * receives an explicit concern billing posture. Transitional only - do not freeze.
      */
-    private function resolveBillingPosture(array $data, string $categoryKey): ConcernBillingPosture
+    private function resolveBillingPosture(array $data, string $categoryKey): ConcernBillingPosture|string
     {
         if (filled($data['billing_posture'] ?? null)) {
-            $explicit = ConcernBillingPosture::tryFrom((string) $data['billing_posture']);
+            $raw = (string) $data['billing_posture'];
+            $explicit = ConcernBillingPosture::tryFrom($raw);
             if ($explicit instanceof ConcernBillingPosture) {
                 return $explicit;
+            }
+
+            // Shop-defined custom billing class key.
+            if ($raw !== '' && ShopSettings::current()->customLaborBillingClass($raw) !== null) {
+                return $raw;
             }
         }
 

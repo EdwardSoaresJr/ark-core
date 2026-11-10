@@ -20,7 +20,7 @@ final class LaborPolicyResolver
         string $operationClassKey,
         ?CarbonInterface $asOf = null,
     ): ResolvedLaborRate {
-        $posture = $this->normalizePosture($billingPosture);
+        $postureKey = $this->postureKey($billingPosture);
         $asOfDate = ($asOf ?? Carbon::now())->toDateString();
         $classKey = trim($operationClassKey);
 
@@ -31,7 +31,7 @@ final class LaborPolicyResolver
         }
 
         $policy = $this->policies()->first(
-            fn (LaborPolicy $policy): bool => $policy->billing_posture === $posture->value
+            fn (LaborPolicy $policy): bool => $policy->billing_posture === $postureKey
                 && (int) $policy->operation_class_id === (int) $operationClass->id
                 && $policy->effective_from->toDateString() <= $asOfDate
                 && ($policy->effective_until === null || $policy->effective_until->toDateString() >= $asOfDate),
@@ -39,14 +39,14 @@ final class LaborPolicyResolver
 
         if ($policy === null) {
             throw new RuntimeException(
-                "No labor policy for posture [{$posture->value}] and operation class [{$classKey}] on [{$asOfDate}].",
+                "No labor policy for posture [{$postureKey}] and operation class [{$classKey}] on [{$asOfDate}].",
             );
         }
 
         return new ResolvedLaborRate(
             hourlyRateCents: $this->hourlyCentsFromPolicy($policy),
             rateType: $policy->rate_type,
-            billingPosture: $posture->value,
+            billingPosture: $postureKey,
             operationClassKey: $operationClass->key,
             laborPolicyId: $policy->id,
             laborPolicyVersion: $policy->version,
@@ -78,17 +78,22 @@ final class LaborPolicyResolver
             ->keyBy('key'));
     }
 
-    private function normalizePosture(ConcernBillingPosture|string $billingPosture): ConcernBillingPosture
+    private function postureKey(ConcernBillingPosture|string $billingPosture): string
     {
-        $posture = $billingPosture instanceof ConcernBillingPosture
-            ? $billingPosture
-            : (ConcernBillingPosture::tryFrom((string) $billingPosture) ?? ConcernBillingPosture::CustomerPay);
+        if (is_string($billingPosture)) {
+            return match ($billingPosture) {
+                'default' => ConcernBillingPosture::CustomerPay->value,
+                'warranty' => ConcernBillingPosture::WarrantyOther->value,
+                'warranty_repairpal' => ConcernBillingPosture::RepairPal->value,
+                default => $billingPosture,
+            };
+        }
 
-        return match ($posture) {
-            ConcernBillingPosture::Default => ConcernBillingPosture::CustomerPay,
-            ConcernBillingPosture::Warranty => ConcernBillingPosture::WarrantyOther,
-            ConcernBillingPosture::WarrantyRepairPal => ConcernBillingPosture::RepairPal,
-            default => $posture,
+        return match ($billingPosture) {
+            ConcernBillingPosture::Default => ConcernBillingPosture::CustomerPay->value,
+            ConcernBillingPosture::Warranty => ConcernBillingPosture::WarrantyOther->value,
+            ConcernBillingPosture::WarrantyRepairPal => ConcernBillingPosture::RepairPal->value,
+            default => $billingPosture->value,
         };
     }
 
@@ -96,8 +101,13 @@ final class LaborPolicyResolver
     {
         return match ($policy->rate_type) {
             LaborRateType::Zero => 0,
-            LaborRateType::Standard => ShopSettings::current()->defaultLaborRateCents(),
+            // Prefer the cents written when the Standard policy was versioned so as-of
+            // resolution on legacy ROs does not silently follow a later shop default.
+            LaborRateType::Standard => $policy->hourly_rate_cents !== null
+                ? (int) $policy->hourly_rate_cents
+                : ShopSettings::current()->defaultLaborRateCents(),
             LaborRateType::Hourly, LaborRateType::Contract, LaborRateType::Cost => (int) ($policy->hourly_rate_cents ?? 0),
         };
     }
 }
+

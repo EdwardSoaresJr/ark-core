@@ -114,7 +114,6 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
     $section = '//section[@data-settings-section="financial"]';
 
     foreach ([
-        route('operations.settings.shop.labor.update') => ['standard_hourly_rate', 'matrix[mechanical][customer_pay][mode]', 'billing_minimums[customer_pay][mode]'],
         route('operations.settings.shop.tax.update') => ['tax_enabled', 'tax_label', 'default_tax_rate', 'taxable_labor', 'taxable_parts', 'taxable_shop_fees'],
         route('operations.settings.shop.fees.update') => ['shop_fee_enabled', 'shop_fee_rate', 'shop_fee_cap'],
         route('operations.settings.shop.deposits.update') => ['default_deposit_enabled', 'default_deposit_include_parts', 'default_deposit_include_diagnostics', 'default_deposit_diagnostic_labor_category_keys[]'],
@@ -128,7 +127,10 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
     }
 
     expect($xpath->query($section.'//form[@id="parts-matrix-form"]')->length)->toBe(1)
-        ->and($xpath->query($section.'//*[@data-labor-rate-matrix]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-labor-matrix]')->length)->toBe(1)
+        ->and($html)->toContain('arkLaborMatrix')
+        ->and(preg_match('/labor-matrix\\\\+\/rate/', $html))->toBe(1)
+        ->and(preg_match('/labor-matrix\\\\+\/minimum/', $html))->toBe(1)
         ->and(preg_match_all('/<input data-matrix-name-input name="parts_matrices\[\d+\]\[name\]" x-model="matrixName" @input="autosaveMatrix\(/', $html))->toBe(count($settings->partsMatrices()));
 
     expect($html)
@@ -168,7 +170,8 @@ test('submitting each rendered financial form unchanged keeps every stored value
     $submitRenderedForms = function (): void {
         $xpath = financialSettingsXpath($this->get(route('operations.settings.shop.edit', ['section' => 'financial']))->assertOk()->getContent());
 
-        foreach (['labor', 'tax', 'fees', 'deposits', 'customer-types'] as $form) {
+        // Labor settings autosave through labor-matrix JSON endpoints (no bulk form).
+        foreach (['tax', 'fees', 'deposits', 'customer-types'] as $form) {
             $action = route('operations.settings.shop.'.$form.'.update');
             $element = $xpath->query('//section[@data-settings-section="financial"]//form[@action="'.$action.'"]')->item(0);
 

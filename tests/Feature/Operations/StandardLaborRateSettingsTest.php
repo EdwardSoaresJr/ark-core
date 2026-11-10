@@ -18,67 +18,44 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
 
-function standardLaborSettingsPayload(array $overrides = []): array
-{
-    $settings = ShopSettings::current();
-
-    $categories = collect($settings->laborCategories())
-        ->values()
-        ->map(fn (array $category): array => [
-            'key' => $category['key'],
-            'name' => $category['name'],
-            'rate' => number_format($category['rate_cents'] / 100, 2, '.', ''),
-            'minimum_hours' => $category['minimum_hours'],
-            'rounding_rule' => $category['rounding_rule'],
-            'allows_modifiers' => $category['allows_modifiers'] ? '1' : '0',
-        ])
-        ->all();
-
-    $defaultKey = $overrides['default_labor_category_key'] ?? ShopSettings::DEFAULT_LABOR_CATEGORY_KEY;
-    $defaultCategory = collect($categories)->firstWhere('key', $defaultKey) ?? ($categories[0] ?? null);
-    $standardHourlyRate = $overrides['standard_hourly_rate']
-        ?? ($defaultCategory['rate'] ?? number_format($settings->default_labor_rate_cents / 100, 2, '.', ''));
-
-    return array_merge([
-        'standard_hourly_rate' => $standardHourlyRate,
-        'default_labor_category_key' => ShopSettings::DEFAULT_LABOR_CATEGORY_KEY,
-        'labor_categories' => $categories,
-    ], $overrides);
-}
-
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
     ShopSettings::current()->update([
         'labor_categories' => ShopSettings::DEFAULT_LABOR_CATEGORIES,
         'default_labor_rate_cents' => 16500,
+        'labor_pricing_profile_version' => 0,
     ]);
 });
 
-test('labor settings show standard hourly rate and effective estimate rate', function () {
+test('labor settings show vertical matrix with Mechanical Retail as the visible default', function () {
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', [
             'section' => 'financial',
             'financial-tab' => 'labor',
         ]))
         ->assertOk()
-        ->assertSee('Standard hourly rate')
         ->assertSee('Labor rate matrix')
-        ->assertSee('Billing-class minimums')
-        ->assertSee('Use Standard')
-        ->assertSee('data-labor-rate-matrix', false)
-        ->assertDontSee('>Labor Policies</button>', false)
+        ->assertSee('Shop default hourly rate')
+        ->assertSee('+ Add Work Type')
+        ->assertSee('data-labor-matrix', false)
+        ->assertDontSee('Save Labor Settings')
         ->assertDontSee('Labor categories')
-        ->assertDontSee('Advanced billing rates');
+        ->assertDontSee('Advanced billing rates')
+        ->assertDontSee('Standard hourly rate');
 });
 
-test('saving standard hourly rate syncs matching Customer Pay policies atomically', function () {
+test('saving Mechanical Retail rate syncs matching Customer Pay policies atomically', function () {
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), standardLaborSettingsPayload([
-            'standard_hourly_rate' => '185.00',
-        ]))
-        ->assertRedirect(route('operations.settings.shop.edit'))
-        ->assertSessionHas('status');
+        ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            'mode' => 'custom',
+            'rate' => '185.00',
+            'expected_version' => 0,
+        ])
+        ->assertOk()
+        ->assertJsonPath('status', 'saved');
 
     $settings = ShopSettings::current();
     expect($settings->default_labor_rate_cents)->toBe(18500)
@@ -113,11 +90,14 @@ test('standard rate does not overwrite specialty Customer Pay operation-class ra
     );
 
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), standardLaborSettingsPayload([
-            'standard_hourly_rate' => '190.00',
-        ]))
-        ->assertRedirect(route('operations.settings.shop.edit'))
-        ->assertSessionHas('status');
+        ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            'mode' => 'custom',
+            'rate' => '190.00',
+            'expected_version' => (int) ShopSettings::current()->labor_pricing_profile_version,
+        ])
+        ->assertOk();
 
     expect(app(LaborPolicyResolver::class)->resolve(
         ConcernBillingPosture::CustomerPay,
@@ -135,7 +115,7 @@ test('standard rate does not overwrite specialty Customer Pay operation-class ra
     expect(ShopSettings::current()->default_labor_rate_cents)->toBe(19000);
 });
 
-test('existing labor line snapshot is unchanged after standard rate save', function () {
+test('existing labor line snapshot is unchanged after Mechanical Retail rate save', function () {
     $repairOrder = repairOrderForFinancialAuthority();
     $concern = concernForFinancialAuthority($repairOrder);
 
@@ -176,10 +156,14 @@ test('existing labor line snapshot is unchanged after standard rate save', funct
     ]);
 
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), standardLaborSettingsPayload([
-            'standard_hourly_rate' => '200.00',
-        ]))
-        ->assertRedirect(route('operations.settings.shop.edit'));
+        ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            'mode' => 'custom',
+            'rate' => '200.00',
+            'expected_version' => (int) ShopSettings::current()->labor_pricing_profile_version,
+        ])
+        ->assertOk();
 
     $updated = app(RepairOrderLinePricing::class)->attributesFor([
         'type' => RepairOrderLineType::Labor->value,
@@ -198,49 +182,27 @@ test('existing labor line snapshot is unchanged after standard rate save', funct
 
 test('standard rate inheritance is explicit via LaborRateType::Standard in the matrix', function () {
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), [
-            'standard_hourly_rate' => '175.00',
-            'matrix' => [
-                'mechanical' => [
-                    ConcernBillingPosture::CustomerPay->value => [
-                        'mode' => 'standard',
-                        'rate' => '175.00',
-                    ],
-                    ConcernBillingPosture::Fleet->value => [
-                        'mode' => 'custom',
-                        'rate' => '140.00',
-                    ],
-                ],
-            ],
-            'billing_minimums' => [
-                ConcernBillingPosture::CustomerPay->value => [
-                    'mode' => 'none',
-                    'hours' => '0.00',
-                ],
-                ConcernBillingPosture::Internal->value => [
-                    'mode' => 'none',
-                    'hours' => '0.00',
-                ],
-            ],
+        ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            'mode' => 'custom',
+            'rate' => '175.00',
+            'expected_version' => 0,
         ])
-        ->assertRedirect(route('operations.settings.shop.edit'))
-        ->assertSessionHas('status');
+        ->assertOk();
 
-    // Intentional zero for Internal is configured under billing-class minimums shortfall,
-    // but Internal rate zero goes through the matrix Internal column when present.
+    $version = (int) ShopSettings::current()->labor_pricing_profile_version;
+
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), [
-            'standard_hourly_rate' => '175.00',
-            'matrix' => [
-                'mechanical' => [
-                    ConcernBillingPosture::CustomerPay->value => ['mode' => 'standard'],
-                    ConcernBillingPosture::Fleet->value => ['mode' => 'custom', 'rate' => '140.00'],
-                ],
-            ],
+        ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::Fleet->value,
+            'mode' => 'custom',
+            'rate' => '140.00',
+            'expected_version' => $version,
         ])
-        ->assertRedirect();
+        ->assertOk();
 
-    // Upsert Internal zero via dedicated UpsertLaborPolicyAction (matrix primary columns only).
     $operationClass = OperationClass::query()->where('key', 'general_repair')->firstOrFail();
     app(UpsertLaborPolicyAction::class)->execute(
         ConcernBillingPosture::Internal,
@@ -266,16 +228,14 @@ test('standard rate inheritance is explicit via LaborRateType::Standard in the m
         ->and($internal->hourlyRateCents)->toBe(0);
 
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), [
-            'standard_hourly_rate' => '188.00',
-            'matrix' => [
-                'mechanical' => [
-                    ConcernBillingPosture::CustomerPay->value => ['mode' => 'standard'],
-                    ConcernBillingPosture::Fleet->value => ['mode' => 'custom', 'rate' => '140.00'],
-                ],
-            ],
+        ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            'mode' => 'custom',
+            'rate' => '188.00',
+            'expected_version' => (int) ShopSettings::current()->labor_pricing_profile_version,
         ])
-        ->assertRedirect(route('operations.settings.shop.edit'));
+        ->assertOk();
 
     expect($resolver->resolve(ConcernBillingPosture::CustomerPay, 'general_repair')->hourlyRateCents)->toBe(18800)
         ->and($resolver->resolve(ConcernBillingPosture::Fleet, 'general_repair')->hourlyRateCents)->toBe(14000)
@@ -313,7 +273,6 @@ test('station bind prompt stays off for multi-station and telephony-only shops u
         'is_active' => true,
     ]);
 
-    // No ShopSettings "stations enabled" flag exists yet (only workstation_idle_lock_minutes).
     expect(WorkstationPresence::stationBindingPromptEnabled())->toBeFalse();
 
     $this->actingAs($this->admin)
@@ -331,28 +290,24 @@ test('failed Customer Pay verification rolls back labor category and policy writ
         'general_repair',
     )->hourlyRateCents;
 
-    // Sync throws after ShopSettings is written inside the transaction so both roll back.
     $this->mock(SyncStandardCustomerPayLaborRatesAction::class, function ($mock): void {
         $mock->shouldReceive('execute')
             ->once()
             ->andThrow(\Illuminate\Validation\ValidationException::withMessages([
-                'standard_hourly_rate' => 'Forced sync failure for rollback proof.',
+                'rate' => 'Forced sync failure for rollback proof.',
             ]));
     });
 
     $this->actingAs($this->admin)
-        ->from(route('operations.settings.shop.edit', [
-            'section' => 'financial',
-            'financial-tab' => 'labor',
-        ]))
-        ->patch(route('operations.settings.shop.labor.update'), standardLaborSettingsPayload([
-            'standard_hourly_rate' => '199.00',
-        ]))
-        ->assertRedirect(route('operations.settings.shop.edit', [
-            'section' => 'financial',
-            'financial-tab' => 'labor',
-        ]))
-        ->assertSessionHasErrors('standard_hourly_rate');
+        ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            'mode' => 'custom',
+            'rate' => '199.00',
+            'expected_version' => 0,
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('rate');
 
     ShopSettings::forgetCurrent();
 

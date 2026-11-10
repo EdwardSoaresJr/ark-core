@@ -9,16 +9,18 @@ use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Maintains RO-scoped billing-class minimum Fee lines from the RO's stamped profile.
  * Never mutates original labor hours or technician production quantities.
+ * Identity uses system_line_kind / system_line_scope — not description prefixes alone.
  *
  * @phpstan-type ChangeNotice array{posture: string, label: string, from_hours: string, to_hours: string}
  */
 final class ApplyBillingClassMinimumsAction
 {
+    public const SYSTEM_KIND = 'billing_minimum';
+
     public const SYSTEM_DESCRIPTION_PREFIX = 'Billing minimum · ';
 
     /**
@@ -40,28 +42,40 @@ final class ApplyBillingClassMinimumsAction
 
         $repairOrder->loadMissing(['concerns.lines']);
 
-        foreach (LaborWorkTypeMatrix::minimumConfigurablePostures() as $posture) {
-            $row = $minimums->forPosture($posture);
+        // Use the RO-stamped minimum keys so historical custom classes still resolve.
+        $scopes = array_keys($minimums->toArray());
+
+        if ($scopes === []) {
+            $scopes = array_map(
+                fn (ConcernBillingPosture|string $posture): string => LaborBillingMinimums::postureKey($posture),
+                LaborWorkTypeMatrix::minimumConfigurablePostures($settings),
+            );
+        }
+
+        foreach ($scopes as $scope) {
+            $row = $minimums->forPosture($scope);
 
             if ($row === null) {
+                $this->removePostureMinimumFees($repairOrder, $scope);
+
                 continue;
             }
 
             $mode = LaborBillingMinimumMode::tryFrom($row['mode']) ?? LaborBillingMinimumMode::None;
 
             if ($mode === LaborBillingMinimumMode::None || (float) $row['hours'] <= 0) {
-                $this->removePostureMinimumFees($repairOrder, $posture);
+                $this->removePostureMinimumFees($repairOrder, $scope);
 
                 continue;
             }
 
-            $rateCents = $minimums->shortfallRateCents($posture, $settings);
-            $label = LaborWorkTypeMatrix::billingColumnLabel($posture);
+            $rateCents = $minimums->shortfallRateCents($scope, $settings);
+            $label = LaborWorkTypeMatrix::billingColumnLabel($scope, $settings);
 
             if ($mode === LaborBillingMinimumMode::PerRepairOrder) {
                 $notice = $this->syncPerRepairOrderMinimum(
                     $repairOrder,
-                    $posture,
+                    $scope,
                     (float) $row['hours'],
                     $rateCents,
                     $label,
@@ -74,14 +88,16 @@ final class ApplyBillingClassMinimumsAction
                 continue;
             }
 
-            $lineNotices = $this->syncPerLineMinimums(
-                $repairOrder,
-                $posture,
-                (float) $row['hours'],
-                $rateCents,
-                $label,
+            array_push(
+                $notices,
+                ...$this->syncPerLineMinimums(
+                    $repairOrder,
+                    $scope,
+                    (float) $row['hours'],
+                    $rateCents,
+                    $label,
+                ),
             );
-            array_push($notices, ...$lineNotices);
         }
 
         return $notices;
@@ -92,15 +108,16 @@ final class ApplyBillingClassMinimumsAction
      */
     private function syncPerRepairOrderMinimum(
         RepairOrder $repairOrder,
-        ConcernBillingPosture $posture,
+        string $scope,
         float $requiredHours,
         int $rateCents,
         string $label,
     ): ?array {
-        $eligible = $this->eligibleLaborHours($repairOrder, $posture);
+        $eligible = $this->eligibleLaborHours($repairOrder, $scope);
         $shortfall = max(0, round($requiredHours - $eligible, 2));
         $description = self::SYSTEM_DESCRIPTION_PREFIX.$label;
-        $existing = $this->systemMinimumFees($repairOrder, $posture)->first();
+        $existing = $this->systemMinimumFees($repairOrder, $scope)
+            ->first(fn (RepairOrderLine $fee): bool => ! str_contains((string) $fee->description, ' · line '));
         $previousShortfall = $existing ? (float) $existing->quantity : 0.0;
 
         if ($shortfall < 0.005) {
@@ -110,7 +127,7 @@ final class ApplyBillingClassMinimumsAction
 
             if ($previousShortfall >= 0.005) {
                 return [
-                    'posture' => $posture->value,
+                    'posture' => $scope,
                     'label' => $label,
                     'from_hours' => number_format($previousShortfall, 2, '.', ''),
                     'to_hours' => '0.00',
@@ -120,7 +137,7 @@ final class ApplyBillingClassMinimumsAction
             return null;
         }
 
-        $concern = $this->attributionConcern($repairOrder, $posture);
+        $concern = $this->attributionConcern($repairOrder, $scope);
 
         if ($concern === null) {
             if ($existing) {
@@ -130,40 +147,34 @@ final class ApplyBillingClassMinimumsAction
             return null;
         }
 
-        $unitPrice = $rateCents;
-        $subtotal = (int) round($shortfall * $unitPrice);
+        $subtotal = (int) round($shortfall * $rateCents);
+        $payload = [
+            'repair_order_concern_id' => $concern->id,
+            'type' => RepairOrderLineType::Fee,
+            'system_line_kind' => self::SYSTEM_KIND,
+            'system_line_scope' => $scope,
+            'description' => $description,
+            'quantity' => number_format($shortfall, 2, '.', ''),
+            'unit_price_cents' => $rateCents,
+            'subtotal_cents' => $subtotal,
+            'tax_cents' => 0,
+            'shop_fee_cents' => 0,
+            'standing_discount_cents' => 0,
+            'total_cents' => $subtotal,
+        ];
 
         if ($existing) {
-            $existing->update([
-                'repair_order_concern_id' => $concern->id,
-                'description' => $description,
-                'quantity' => number_format($shortfall, 2, '.', ''),
-                'unit_price_cents' => $unitPrice,
-                'subtotal_cents' => $subtotal,
-                'tax_cents' => 0,
-                'shop_fee_cents' => 0,
-                'standing_discount_cents' => 0,
-                'total_cents' => $subtotal,
-            ]);
+            $existing->update($payload);
         } else {
             RepairOrderLine::query()->create([
                 'repair_order_id' => $repairOrder->id,
-                'repair_order_concern_id' => $concern->id,
-                'type' => RepairOrderLineType::Fee,
-                'description' => $description,
-                'quantity' => number_format($shortfall, 2, '.', ''),
-                'unit_price_cents' => $unitPrice,
-                'subtotal_cents' => $subtotal,
-                'tax_cents' => 0,
-                'shop_fee_cents' => 0,
-                'standing_discount_cents' => 0,
-                'total_cents' => $subtotal,
+                ...$payload,
             ]);
         }
 
         if (abs($previousShortfall - $shortfall) >= 0.005) {
             return [
-                'posture' => $posture->value,
+                'posture' => $scope,
                 'label' => $label,
                 'from_hours' => number_format($previousShortfall, 2, '.', ''),
                 'to_hours' => number_format($shortfall, 2, '.', ''),
@@ -178,22 +189,23 @@ final class ApplyBillingClassMinimumsAction
      */
     private function syncPerLineMinimums(
         RepairOrder $repairOrder,
-        ConcernBillingPosture $posture,
+        string $scope,
         float $requiredHours,
         int $rateCents,
         string $label,
     ): array {
         $notices = [];
-        $laborLines = $this->eligibleLaborLines($repairOrder, $posture);
-        $keptKeys = [];
+        $laborLines = $this->eligibleLaborLines($repairOrder, $scope);
+        $keptLineIds = [];
 
         foreach ($laborLines as $laborLine) {
             $billed = (float) ($laborLine->labor_billed_hours ?? $laborLine->quantity ?? 0);
             $shortfall = max(0, round($requiredHours - $billed, 2));
-            $description = self::SYSTEM_DESCRIPTION_PREFIX.$label.' · line '.$laborLine->id;
-            $keptKeys[] = $description;
-            $existing = $this->systemMinimumFees($repairOrder, $posture)
-                ->first(fn (RepairOrderLine $fee): bool => $fee->description === $description);
+            $lineScope = $scope.'|line:'.$laborLine->id;
+            $keptLineIds[] = $laborLine->id;
+            $existing = $this->systemMinimumFees($repairOrder, $scope)
+                ->first(fn (RepairOrderLine $fee): bool => (string) $fee->system_line_scope === $lineScope
+                    || $fee->description === self::SYSTEM_DESCRIPTION_PREFIX.$label.' · line '.$laborLine->id);
             $previous = $existing ? (float) $existing->quantity : 0.0;
 
             if ($shortfall < 0.005) {
@@ -203,7 +215,7 @@ final class ApplyBillingClassMinimumsAction
 
                 if ($previous >= 0.005) {
                     $notices[] = [
-                        'posture' => $posture->value,
+                        'posture' => $scope,
                         'label' => $label,
                         'from_hours' => number_format($previous, 2, '.', ''),
                         'to_hours' => '0.00',
@@ -216,7 +228,10 @@ final class ApplyBillingClassMinimumsAction
             $subtotal = (int) round($shortfall * $rateCents);
             $payload = [
                 'repair_order_concern_id' => $laborLine->repair_order_concern_id,
-                'description' => $description,
+                'type' => RepairOrderLineType::Fee,
+                'system_line_kind' => self::SYSTEM_KIND,
+                'system_line_scope' => $lineScope,
+                'description' => self::SYSTEM_DESCRIPTION_PREFIX.$label.' · line '.$laborLine->id,
                 'quantity' => number_format($shortfall, 2, '.', ''),
                 'unit_price_cents' => $rateCents,
                 'subtotal_cents' => $subtotal,
@@ -231,14 +246,13 @@ final class ApplyBillingClassMinimumsAction
             } else {
                 RepairOrderLine::query()->create([
                     'repair_order_id' => $repairOrder->id,
-                    'type' => RepairOrderLineType::Fee,
                     ...$payload,
                 ]);
             }
 
             if (abs($previous - $shortfall) >= 0.005) {
                 $notices[] = [
-                    'posture' => $posture->value,
+                    'posture' => $scope,
                     'label' => $label,
                     'from_hours' => number_format($previous, 2, '.', ''),
                     'to_hours' => number_format($shortfall, 2, '.', ''),
@@ -246,24 +260,23 @@ final class ApplyBillingClassMinimumsAction
             }
         }
 
-        foreach ($this->systemMinimumFees($repairOrder, $posture) as $fee) {
-            if (! in_array($fee->description, $keptKeys, true)
-                && str_contains($fee->description, ' · line ')
-            ) {
+        foreach ($this->systemMinimumFees($repairOrder, $scope) as $fee) {
+            $scopeValue = (string) ($fee->system_line_scope ?? '');
+            if (str_contains($scopeValue, '|line:')) {
+                $lineId = (int) substr($scopeValue, strrpos($scopeValue, ':') + 1);
+                if (! in_array($lineId, $keptLineIds, true)) {
+                    $fee->delete();
+                }
+            } elseif ($scopeValue === $scope || $fee->description === self::SYSTEM_DESCRIPTION_PREFIX.$label) {
+                // Remove prior per-RO fee when in per-line mode.
                 $fee->delete();
             }
         }
 
-        // Remove any prior per-RO fee for this posture when in per-line mode.
-        $perRoDescription = self::SYSTEM_DESCRIPTION_PREFIX.$label;
-        $this->systemMinimumFees($repairOrder, $posture)
-            ->filter(fn (RepairOrderLine $fee): bool => $fee->description === $perRoDescription)
-            ->each(fn (RepairOrderLine $fee) => $fee->delete());
-
         return $notices;
     }
 
-    public function eligibleLaborHours(RepairOrder $repairOrder, ConcernBillingPosture $posture): float
+    public function eligibleLaborHours(RepairOrder $repairOrder, ConcernBillingPosture|string $posture): float
     {
         return round(
             $this->eligibleLaborLines($repairOrder, $posture)
@@ -275,17 +288,13 @@ final class ApplyBillingClassMinimumsAction
     /**
      * @return Collection<int, RepairOrderLine>
      */
-    public function eligibleLaborLines(RepairOrder $repairOrder, ConcernBillingPosture $posture): Collection
+    public function eligibleLaborLines(RepairOrder $repairOrder, ConcernBillingPosture|string $posture): Collection
     {
-        $postureValue = $this->normalizePosture($posture)->value;
+        $postureValue = LaborBillingMinimums::postureKey($posture);
 
         return $repairOrder->concerns
             ->filter(function (RepairOrderConcern $concern) use ($postureValue): bool {
-                $concernPosture = $concern->billing_posture instanceof ConcernBillingPosture
-                    ? $this->normalizePosture($concern->billing_posture)
-                    : ConcernBillingPosture::CustomerPay;
-
-                return $concernPosture->value === $postureValue;
+                return $this->concernBillingKey($concern) === $postureValue;
             })
             ->flatMap(fn (RepairOrderConcern $concern) => $concern->lines)
             ->filter(function (RepairOrderLine $line): bool {
@@ -297,27 +306,85 @@ final class ApplyBillingClassMinimumsAction
                     return false;
                 }
 
-                // Zero-priced intentional labor does not satisfy a billing-class minimum.
                 return (int) ($line->labor_rate_cents ?? $line->unit_price_cents ?? 0) > 0;
             })
             ->values();
     }
 
-    private function attributionConcern(RepairOrder $repairOrder, ConcernBillingPosture $posture): ?RepairOrderConcern
+    /**
+     * Persistent advisor explanation for a concern (survives reload).
+     *
+     * @return array{label: string, mode: string, required_hours: string, eligible_hours: string, shortfall_hours: string, shortfall_cents: int, applied: bool}|null
+     */
+    public function concernExplanation(RepairOrder $repairOrder, RepairOrderConcern $concern): ?array
     {
-        $postureValue = $this->normalizePosture($posture)->value;
+        $profile = LaborPricingProfile::tryFromStored(
+            is_array($repairOrder->labor_pricing_profile) ? $repairOrder->labor_pricing_profile : null,
+        );
 
+        if ($profile === null || ! $profile->appliesBillingClassMinimums()) {
+            return null;
+        }
+
+        $scope = $this->concernBillingKey($concern);
+        $row = $profile->minimums()->forPosture($scope);
+
+        if ($row === null) {
+            return null;
+        }
+
+        $mode = LaborBillingMinimumMode::tryFrom($row['mode']) ?? LaborBillingMinimumMode::None;
+
+        if ($mode === LaborBillingMinimumMode::None || (float) $row['hours'] <= 0) {
+            return null;
+        }
+
+        $label = LaborWorkTypeMatrix::billingColumnLabel($scope);
+        $required = (float) $row['hours'];
+        $eligible = $this->eligibleLaborHours($repairOrder, $scope);
+        $shortfall = max(0, round($required - $eligible, 2));
+        $rateCents = $profile->minimums()->shortfallRateCents($scope, ShopSettings::current());
+
+        if ($mode === LaborBillingMinimumMode::PerLine) {
+            $lineEligible = $this->eligibleLaborLines($repairOrder, $scope)
+                ->filter(fn (RepairOrderLine $line): bool => (int) $line->repair_order_concern_id === (int) $concern->id)
+                ->sum(fn (RepairOrderLine $line): float => (float) ($line->labor_billed_hours ?? $line->quantity ?? 0));
+            $lineShortfall = $this->systemMinimumFees($repairOrder, $scope)
+                ->filter(fn (RepairOrderLine $fee): bool => (int) $fee->repair_order_concern_id === (int) $concern->id)
+                ->sum(fn (RepairOrderLine $fee): float => (float) $fee->quantity);
+
+            return [
+                'label' => $label,
+                'mode' => $mode->value,
+                'required_hours' => number_format($required, 2, '.', ''),
+                'eligible_hours' => number_format($lineEligible, 2, '.', ''),
+                'shortfall_hours' => number_format($lineShortfall, 2, '.', ''),
+                'shortfall_cents' => (int) round($lineShortfall * $rateCents),
+                'applied' => $lineShortfall >= 0.005,
+            ];
+        }
+
+        $attribution = $this->attributionConcern($repairOrder, $scope);
+        $appliedHere = $attribution !== null && (int) $attribution->id === (int) $concern->id && $shortfall >= 0.005;
+
+        return [
+            'label' => $label,
+            'mode' => $mode->value,
+            'required_hours' => number_format($required, 2, '.', ''),
+            'eligible_hours' => number_format($eligible, 2, '.', ''),
+            'shortfall_hours' => number_format($shortfall, 2, '.', ''),
+            'shortfall_cents' => (int) round($shortfall * $rateCents),
+            'applied' => $appliedHere,
+        ];
+    }
+
+    private function attributionConcern(RepairOrder $repairOrder, string $postureValue): ?RepairOrderConcern
+    {
         return $repairOrder->concerns
-            ->filter(function (RepairOrderConcern $concern) use ($postureValue): bool {
-                $concernPosture = $concern->billing_posture instanceof ConcernBillingPosture
-                    ? $this->normalizePosture($concern->billing_posture)
-                    : ConcernBillingPosture::CustomerPay;
-
-                return $concernPosture->value === $postureValue;
-            })
+            ->filter(fn (RepairOrderConcern $concern): bool => $this->concernBillingKey($concern) === $postureValue)
             ->sortBy('id')
-            ->first(function (RepairOrderConcern $concern) use ($repairOrder, $posture): bool {
-                return $this->eligibleLaborLines($repairOrder, $posture)
+            ->first(function (RepairOrderConcern $concern) use ($repairOrder, $postureValue): bool {
+                return $this->eligibleLaborLines($repairOrder, $postureValue)
                     ->contains(fn (RepairOrderLine $line): bool => (int) $line->repair_order_concern_id === (int) $concern->id);
             });
     }
@@ -325,21 +392,37 @@ final class ApplyBillingClassMinimumsAction
     /**
      * @return Collection<int, RepairOrderLine>
      */
-    private function systemMinimumFees(RepairOrder $repairOrder, ConcernBillingPosture $posture): Collection
+    private function systemMinimumFees(RepairOrder $repairOrder, string $scope): Collection
     {
-        $label = LaborWorkTypeMatrix::billingColumnLabel($posture);
-        $prefix = self::SYSTEM_DESCRIPTION_PREFIX.$label;
-
         return $repairOrder->lines()
             ->where('type', RepairOrderLineType::Fee->value)
-            ->where('description', 'like', $prefix.'%')
+            ->where(function ($query) use ($scope): void {
+                $query->where(function ($inner) use ($scope): void {
+                    $inner->where('system_line_kind', self::SYSTEM_KIND)
+                        ->where(function ($scopeQuery) use ($scope): void {
+                            $scopeQuery->where('system_line_scope', $scope)
+                                ->orWhere('system_line_scope', 'like', $scope.'|line:%');
+                        });
+                })->orWhere(function ($legacy) use ($scope): void {
+                    $label = LaborWorkTypeMatrix::billingColumnLabel($scope);
+                    $legacy->whereNull('system_line_kind')
+                        ->where('description', 'like', self::SYSTEM_DESCRIPTION_PREFIX.$label.'%');
+                });
+            })
             ->get();
     }
 
     public function isSystemMinimumFee(RepairOrderLine $line): bool
     {
-        return $line->type === RepairOrderLineType::Fee
-            && str_starts_with($line->description, self::SYSTEM_DESCRIPTION_PREFIX);
+        if ($line->type !== RepairOrderLineType::Fee) {
+            return false;
+        }
+
+        if ($line->system_line_kind === self::SYSTEM_KIND) {
+            return true;
+        }
+
+        return str_starts_with((string) $line->description, self::SYSTEM_DESCRIPTION_PREFIX);
     }
 
     /**
@@ -347,33 +430,37 @@ final class ApplyBillingClassMinimumsAction
      */
     private function removeAllSystemMinimumFees(RepairOrder $repairOrder): array
     {
-        $removed = RepairOrderLine::query()
+        RepairOrderLine::query()
             ->where('repair_order_id', $repairOrder->id)
             ->where('type', RepairOrderLineType::Fee->value)
-            ->where('description', 'like', self::SYSTEM_DESCRIPTION_PREFIX.'%')
-            ->get();
-
-        foreach ($removed as $line) {
-            $line->delete();
-        }
+            ->where(function ($query): void {
+                $query->where('system_line_kind', self::SYSTEM_KIND)
+                    ->orWhere('description', 'like', self::SYSTEM_DESCRIPTION_PREFIX.'%');
+            })
+            ->delete();
 
         return [];
     }
 
-    private function removePostureMinimumFees(RepairOrder $repairOrder, ConcernBillingPosture $posture): void
+    private function removePostureMinimumFees(RepairOrder $repairOrder, string $scope): void
     {
-        foreach ($this->systemMinimumFees($repairOrder, $posture) as $fee) {
+        foreach ($this->systemMinimumFees($repairOrder, $scope) as $fee) {
             $fee->delete();
         }
     }
 
-    private function normalizePosture(ConcernBillingPosture $posture): ConcernBillingPosture
+    private function concernBillingKey(RepairOrderConcern $concern): string
     {
-        return match ($posture) {
-            ConcernBillingPosture::Default => ConcernBillingPosture::CustomerPay,
-            ConcernBillingPosture::Warranty => ConcernBillingPosture::WarrantyOther,
-            ConcernBillingPosture::WarrantyRepairPal => ConcernBillingPosture::RepairPal,
-            default => $posture,
-        };
+        $raw = $concern->getAttributes()['billing_posture'] ?? null;
+
+        if (is_string($raw) && $raw !== '') {
+            return LaborBillingMinimums::postureKey($raw);
+        }
+
+        $posture = $concern->billing_posture instanceof ConcernBillingPosture
+            ? $concern->billing_posture
+            : ConcernBillingPosture::CustomerPay;
+
+        return LaborBillingMinimums::postureKey($posture);
     }
 }

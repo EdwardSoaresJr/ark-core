@@ -244,4 +244,26 @@ class RepairOrderConcern extends Model
 
         return $this->billing_posture->defaultPartsMatrix($settings);
     }
+
+    /**
+     * Raw billing class key (built-in posture value or shop-defined custom_* key).
+     */
+    public function billingClassKey(): string
+    {
+        $raw = $this->getAttributes()['billing_posture'] ?? null;
+
+        return is_string($raw) && $raw !== ''
+            ? $raw
+            : $this->billing_posture->value;
+    }
+
+    public function billingClassLabel(): string
+    {
+        $key = $this->billingClassKey();
+        $custom = ShopSettings::current()->customLaborBillingClass($key);
+
+        return is_array($custom)
+            ? (string) $custom['label']
+            : $this->billing_posture->label();
+    }
 }

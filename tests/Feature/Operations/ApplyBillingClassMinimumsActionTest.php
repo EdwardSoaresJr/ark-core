@@ -47,20 +47,25 @@ beforeEach(function () {
 function stampRetailRoMinimumProfile($repairOrder, string $mode = 'per_ro', string $hours = '1.00'): void
 {
     $repairOrder->forceFill([
-        'labor_pricing_profile' => (new LaborPricingProfile(1, [
-            'customer_pay' => [
-                'mode' => $mode,
-                'hours' => $hours,
-                'shortfall_rate_cents' => 16500,
-                'shortfall_rate_source' => LaborBillingMinimums::SHORTFALL_STANDARD_MECHANICAL,
+        'labor_pricing_profile' => (new LaborPricingProfile(
+            version: 1,
+            billingMinimums: [
+                'customer_pay' => [
+                    'mode' => $mode,
+                    'hours' => $hours,
+                    'shortfall_rate_cents' => 16500,
+                    'shortfall_rate_source' => LaborBillingMinimums::SHORTFALL_STANDARD_MECHANICAL,
+                ],
+                'warranty_other' => [
+                    'mode' => LaborBillingMinimumMode::None->value,
+                    'hours' => '0.00',
+                    'shortfall_rate_cents' => 16500,
+                    'shortfall_rate_source' => LaborBillingMinimums::SHORTFALL_STANDARD_MECHANICAL,
+                ],
             ],
-            'warranty_other' => [
-                'mode' => LaborBillingMinimumMode::None->value,
-                'hours' => '0.00',
-                'shortfall_rate_cents' => 16500,
-                'shortfall_rate_source' => LaborBillingMinimums::SHORTFALL_STANDARD_MECHANICAL,
-            ],
-        ]))->toArray(),
+            defaultLaborRateCents: 16500,
+            schema: 1,
+        ))->toArray(),
     ])->save();
 }
 

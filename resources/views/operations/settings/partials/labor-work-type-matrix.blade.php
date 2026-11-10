@@ -1,220 +1,303 @@
 @php
-    /** @var array $laborWorkTypeMatrix */
     $matrix = $laborWorkTypeMatrix ?? [
         'work_types' => [],
         'columns' => [],
         'cells' => [],
-        'standard_rate_cents' => 0,
         'billing_minimums' => [],
         'labor_pricing_profile_version' => 0,
+        'routes' => [],
     ];
-    $standardDisplay = number_format(($matrix['standard_rate_cents'] ?? 0) / 100, 2, '.', '');
+    $initialWorkType = $matrix['work_types'][0]['key'] ?? 'mechanical';
 @endphp
 
-<div class="mb-4" data-settings-labor-matrix>
-    <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+<div
+    class="labor-matrix"
+    data-settings-labor-matrix
+    data-labor-matrix
+    x-data="arkLaborMatrix(@js($matrix))"
+    x-cloak
+>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h3 class="mb-1">Labor rate matrix</h3>
             <p class="text-secondary small mb-0">
-                Work type × billing class. Use Standard follows the shop hourly rate.
-                Programming and Troubleshooting share one operation-class rate until Core splits them.
+                Select a work type, edit hourly rates inline, and open Rules for billing-class minimums.
+                Mechanical × Retail is the shop default. Changes apply to new repair orders only.
             </p>
         </div>
-        <div style="max-width: 14rem" class="w-100">
-            <label for="standard-hourly-rate" class="form-label mb-1">Standard hourly rate</label>
-            <div class="input-group">
-                <span class="input-group-text">$</span>
-                <input
-                    id="standard-hourly-rate"
-                    name="standard_hourly_rate"
-                    value="{{ old('standard_hourly_rate', $standardDisplay) }}"
-                    required
-                    inputmode="decimal"
-                    class="form-control font-monospace @error('standard_hourly_rate') is-invalid @enderror"
-                    data-labor-standard-rate
-                >
-            </div>
-            @error('standard_hourly_rate')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-            @enderror
+        <div class="small" aria-live="polite">
+            <span class="text-secondary" x-show="status === 'idle'">Ready</span>
+            <span class="text-secondary" x-show="status === 'saving'">Saving…</span>
+            <span class="text-success" x-show="status === 'saved'">Saved</span>
+            <span class="text-danger" x-show="status === 'error'">
+                Not saved — <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="retryLast()">Retry</button>
+            </span>
         </div>
     </div>
 
-    <div class="table-responsive border rounded">
-        <table class="table table-vcenter table-sm mb-0" data-labor-rate-matrix>
-            <thead>
-                <tr>
-                    <th class="bg-light">Work type</th>
-                    @foreach ($matrix['columns'] as $column)
-                        <th class="bg-light text-center">{{ $column['label'] }}</th>
-                    @endforeach
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($matrix['work_types'] as $workType)
-                    @php
-                        $linked = $workType['shares_class_with'] ?? null;
-                    @endphp
-                    <tr data-labor-work-type="{{ $workType['key'] }}">
-                        <td class="fw-medium">
-                            {{ $workType['label'] }}
-                            @if ($linked)
-                                <div class="form-hint mb-0">Same rate as {{ collect($matrix['work_types'])->firstWhere('key', $linked)['label'] ?? 'linked row' }}</div>
-                            @endif
-                        </td>
-                        @foreach ($matrix['columns'] as $column)
-                            @php
-                                $cell = $matrix['cells'][$workType['key']][$column['value']] ?? [];
-                                $mode = old(
-                                    'matrix.'.$workType['key'].'.'.$column['value'].'.mode',
-                                    $cell['settings_mode'] ?? ($cell['follows_shop_standard'] ?? false ? 'standard' : 'custom'),
-                                );
-                                if ($mode === null || $mode === '') {
-                                    $mode = ($cell['follows_shop_standard'] ?? false) ? 'standard' : 'custom';
-                                }
-                                $rateValue = old(
-                                    'matrix.'.$workType['key'].'.'.$column['value'].'.rate',
-                                    isset($cell['effective_rate_cents'])
-                                        ? number_format($cell['effective_rate_cents'] / 100, 2, '.', '')
-                                        : $standardDisplay,
-                                );
-                                $disabled = $linked !== null;
-                            @endphp
-                            <td class="align-top" style="min-width: 9.5rem">
-                                @if ($disabled)
-                                    <div class="font-monospace text-center py-2" title="Linked to {{ $linked }}">
-                                        {{ $cell['rate_display'] ?? '—' }}
+    <div class="row g-3">
+        <div class="col-12 col-lg-3">
+            <div class="list-group list-group-flush border rounded" data-labor-work-type-nav>
+                <template x-for="workType in matrix.work_types" :key="workType.key">
+                    <button
+                        type="button"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                        :class="{ active: selectedWorkType === workType.key }"
+                        @click="selectedWorkType = workType.key"
+                        :data-labor-work-type="workType.key"
+                    >
+                        <span x-text="workType.label"></span>
+                        <span class="badge bg-azure-lt text-azure" x-show="workType.is_default">Default</span>
+                    </button>
+                </template>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-2" @click="promptAddWorkType()">
+                + Add Work Type
+            </button>
+        </div>
+
+        <div class="col-12 col-lg-9">
+            <div class="table-responsive border rounded">
+                <table class="table table-vcenter table-sm mb-0" data-labor-rate-editor>
+                    <thead>
+                        <tr>
+                            <th class="bg-light">Billing class</th>
+                            <th class="bg-light text-end" style="width: 11rem">Hourly rate</th>
+                            <th class="bg-light text-end" style="width: 6rem">Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="column in matrix.columns" :key="column.value">
+                            <tr :data-billing-class="column.value">
+                                <td>
+                                    <div class="fw-medium" x-text="column.label"></div>
+                                    <div class="form-hint mb-0" x-show="selectedWorkType === 'mechanical' && column.value === 'customer_pay'">
+                                        Shop default hourly rate
                                     </div>
-                                @else
-                                    <div
-                                        x-data="{ mode: @js($mode) }"
-                                        class="vstack gap-1"
-                                    >
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column align-items-end gap-1">
                                         <select
-                                            name="matrix[{{ $workType['key'] }}][{{ $column['value'] }}][mode]"
                                             class="form-select form-select-sm"
-                                            x-model="mode"
-                                            aria-label="{{ $workType['label'] }} {{ $column['label'] }} rate mode"
+                                            style="max-width: 9.5rem"
+                                            x-model="cell(selectedWorkType, column.value).settings_mode"
+                                            @change="saveRate(selectedWorkType, column.value)"
+                                            :aria-label="`${selectedWorkTypeLabel()} ${column.label} rate mode`"
                                         >
-                                            <option value="standard">Use Standard</option>
+                                            <option value="standard">Use Default</option>
                                             <option value="custom">Custom</option>
-                                            <option value="zero">Zero</option>
+                                            <option value="zero">$0.00</option>
                                         </select>
-                                        <div class="input-group input-group-sm" x-show="mode === 'custom'" x-cloak>
+                                        <div class="input-group input-group-sm" style="max-width: 9.5rem" x-show="cell(selectedWorkType, column.value).settings_mode === 'custom'">
                                             <span class="input-group-text">$</span>
                                             <input
                                                 type="text"
-                                                name="matrix[{{ $workType['key'] }}][{{ $column['value'] }}][rate]"
-                                                value="{{ $rateValue }}"
+                                                class="form-control font-monospace text-end"
+                                                :value="rateInput(selectedWorkType, column.value)"
+                                                @change="setRateInput(selectedWorkType, column.value, $event.target.value); saveRate(selectedWorkType, column.value)"
+                                                @keydown.enter.prevent="setRateInput(selectedWorkType, column.value, $event.target.value); saveRate(selectedWorkType, column.value)"
                                                 inputmode="decimal"
-                                                class="form-control font-monospace"
-                                                aria-label="{{ $workType['label'] }} {{ $column['label'] }} custom rate"
+                                                :aria-label="`${selectedWorkTypeLabel()} ${column.label} hourly rate`"
                                             >
                                         </div>
-                                        <div class="form-hint mb-0 text-center" x-show="mode === 'standard'" x-cloak>
-                                            Standard
-                                        </div>
-                                        <div class="form-hint mb-0 text-center" x-show="mode === 'zero'" x-cloak>
-                                            $0.00
-                                        </div>
+                                        <div class="form-hint mb-0 font-monospace" x-show="cell(selectedWorkType, column.value).settings_mode !== 'custom'" x-text="cell(selectedWorkType, column.value).rate_display"></div>
                                     </div>
-                                @endif
-                            </td>
-                        @endforeach
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+                                </td>
+                                <td class="text-end">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary btn-sm"
+                                        @click="openRules(column)"
+                                    >
+                                        Rules
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" @click="promptAddBillingClass()">
+                + Add Billing Class
+            </button>
+        </div>
     </div>
-</div>
 
-<div class="mb-4" data-settings-labor-minimums>
-    <h3 class="mb-1">Billing-class minimums</h3>
-    <p class="text-secondary small mb-3">
-        Per billing class only — Retail hours do not satisfy a Warranty minimum, and vice versa.
-        Shortfall uses the Retail Mechanical rate by default (configurable below).
-        Applies only to repair orders created after you activate a minimum.
-        @if (($matrix['labor_pricing_profile_version'] ?? 0) >= 1)
-            <span class="badge bg-azure-lt text-azure ms-1">Profile v{{ $matrix['labor_pricing_profile_version'] }} active for new ROs</span>
-        @endif
-    </p>
-
-    <div class="list-group list-group-flush border rounded">
-        @foreach (\App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix::minimumConfigurablePostures() as $posture)
-            @php
-                $row = $matrix['billing_minimums'][$posture->value] ?? [
-                    'mode' => 'none',
-                    'hours' => '0.00',
-                    'shortfall_rate_source' => 'standard_mechanical',
-                    'shortfall_rate_cents' => $matrix['standard_rate_cents'] ?? 0,
-                ];
-                $label = \App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix::billingColumnLabel($posture);
-                $mode = old('billing_minimums.'.$posture->value.'.mode', $row['mode']);
-                $hours = old('billing_minimums.'.$posture->value.'.hours', $row['hours']);
-                $source = old('billing_minimums.'.$posture->value.'.shortfall_rate_source', $row['shortfall_rate_source'] ?? 'standard_mechanical');
-                $customRate = old(
-                    'billing_minimums.'.$posture->value.'.shortfall_rate',
-                    number_format(($row['shortfall_rate_cents'] ?? $matrix['standard_rate_cents'] ?? 0) / 100, 2, '.', ''),
-                );
-            @endphp
-            <div
-                class="list-group-item"
-                data-billing-minimum="{{ $posture->value }}"
-                x-data="{ mode: @js($mode), source: @js($source) }"
-            >
-                <div class="row g-2 align-items-end">
-                    <div class="col-12 col-md-3">
-                        <div class="fw-medium">{{ $label }}</div>
-                        <div class="form-hint mb-0">{{ $posture->label() }}</div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <label class="form-label" for="min-mode-{{ $posture->value }}">Minimum</label>
-                        <select
-                            id="min-mode-{{ $posture->value }}"
-                            name="billing_minimums[{{ $posture->value }}][mode]"
-                            class="form-select"
-                            x-model="mode"
-                        >
-                            @foreach (\App\Ark\Operations\EstimatePricing\LaborBillingMinimumMode::cases() as $minMode)
-                                <option value="{{ $minMode->value }}">{{ $minMode->label() }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-6 col-sm-3 col-md-2" x-show="mode !== 'none'" x-cloak>
-                        <label class="form-label" for="min-hours-{{ $posture->value }}">Hours</label>
-                        <input
-                            id="min-hours-{{ $posture->value }}"
-                            name="billing_minimums[{{ $posture->value }}][hours]"
-                            value="{{ $hours }}"
-                            inputmode="decimal"
-                            class="form-control font-monospace"
-                        >
-                    </div>
-                    <div class="col-12 col-md-4" x-show="mode !== 'none'" x-cloak>
-                        <label class="form-label" for="min-source-{{ $posture->value }}">Shortfall rate</label>
-                        <select
-                            id="min-source-{{ $posture->value }}"
-                            name="billing_minimums[{{ $posture->value }}][shortfall_rate_source]"
-                            class="form-select mb-1"
-                            x-model="source"
-                        >
-                            <option value="standard_mechanical">Retail Mechanical (default)</option>
+    <div class="modal modal-blur fade" tabindex="-1" x-ref="rulesModal" data-labor-rules-modal>
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content" x-show="rulesColumn">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <span x-text="rulesColumn?.label"></span> rules
+                    </h5>
+                    <button type="button" class="btn-close" @click="closeRules()"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-secondary small">
+                        Minimums belong to this billing class for every work type.
+                        Only eligible labor on concerns with this billing class counts toward the minimum.
+                    </p>
+                    <label class="form-label">Minimum labor</label>
+                    <select class="form-select mb-2" x-model="rulesDraft.mode">
+                        <option value="none">No minimum</option>
+                        <option value="per_line">Minimum per labor line</option>
+                        <option value="per_ro">Minimum per repair order</option>
+                    </select>
+                    <div x-show="rulesDraft.mode !== 'none'">
+                        <label class="form-label">Minimum hours</label>
+                        <input type="text" class="form-control font-monospace mb-2" x-model="rulesDraft.hours" inputmode="decimal">
+                        <label class="form-label">Shortfall rate</label>
+                        <select class="form-select mb-2" x-model="rulesDraft.shortfall_rate_source">
+                            <option value="standard_mechanical">Mechanical × Retail (default)</option>
                             <option value="custom">Custom rate</option>
                         </select>
-                        <div class="input-group input-group-sm" x-show="source === 'custom'" x-cloak>
+                        <div class="input-group" x-show="rulesDraft.shortfall_rate_source === 'custom'">
                             <span class="input-group-text">$</span>
-                            <input
-                                type="text"
-                                name="billing_minimums[{{ $posture->value }}][shortfall_rate]"
-                                value="{{ $customRate }}"
-                                inputmode="decimal"
-                                class="form-control font-monospace"
-                                aria-label="{{ $label }} shortfall custom rate"
-                            >
+                            <input type="text" class="form-control font-monospace" x-model="rulesDraft.shortfall_rate" inputmode="decimal">
                         </div>
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" @click="closeRules()">Cancel</button>
+                    <button type="button" class="btn btn-primary" @click="saveRules()">Save rules</button>
+                </div>
             </div>
-        @endforeach
+        </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('arkLaborMatrix', (initial) => ({
+        matrix: initial,
+        selectedWorkType: initial.work_types?.[0]?.key || 'mechanical',
+        status: 'idle',
+        lastRequest: null,
+        rulesColumn: null,
+        rulesDraft: { mode: 'none', hours: '0.00', shortfall_rate_source: 'standard_mechanical', shortfall_rate: '' },
+        rulesModal: null,
+        init() {
+            this.$watch('status', (value) => {
+                if (value === 'saved') {
+                    setTimeout(() => { if (this.status === 'saved') this.status = 'idle'; }, 1800);
+                }
+            });
+        },
+        selectedWorkTypeLabel() {
+            return this.matrix.work_types.find((row) => row.key === this.selectedWorkType)?.label || 'Work type';
+        },
+        cell(workType, billingClass) {
+            this.matrix.cells[workType] ||= {};
+            this.matrix.cells[workType][billingClass] ||= {
+                settings_mode: 'custom',
+                effective_rate_cents: null,
+                rate_display: '—',
+            };
+            return this.matrix.cells[workType][billingClass];
+        },
+        rateInput(workType, billingClass) {
+            const cents = this.cell(workType, billingClass).effective_rate_cents;
+            return cents == null ? '' : (cents / 100).toFixed(2);
+        },
+        setRateInput(workType, billingClass, value) {
+            const cents = Math.round(parseFloat(value || '0') * 100);
+            this.cell(workType, billingClass).effective_rate_cents = Number.isFinite(cents) ? cents : 0;
+            this.cell(workType, billingClass).rate_display = '$' + ((this.cell(workType, billingClass).effective_rate_cents || 0) / 100).toFixed(2);
+        },
+        csrf() {
+            return document.querySelector('meta[name="csrf-token"]')?.content || '';
+        },
+        async request(url, method, body) {
+            this.status = 'saving';
+            this.lastRequest = { url, method, body };
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrf(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        ...body,
+                        expected_version: this.matrix.labor_pricing_profile_version,
+                    }),
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    this.status = 'error';
+                    throw new Error(payload.message || Object.values(payload.errors || {})[0]?.[0] || 'Save failed');
+                }
+                if (payload.matrix) {
+                    const selected = this.selectedWorkType;
+                    this.matrix = payload.matrix;
+                    if (!this.matrix.work_types.some((row) => row.key === selected)) {
+                        this.selectedWorkType = this.matrix.work_types[0]?.key || selected;
+                    } else {
+                        this.selectedWorkType = selected;
+                    }
+                }
+                this.status = 'saved';
+                return payload;
+            } catch (error) {
+                this.status = 'error';
+                throw error;
+            }
+        },
+        async saveRate(workType, billingClass) {
+            const cell = this.cell(workType, billingClass);
+            await this.request(this.matrix.routes.rate, 'PATCH', {
+                work_type: workType,
+                billing_class: billingClass,
+                mode: cell.settings_mode || 'custom',
+                rate: ((cell.effective_rate_cents || 0) / 100).toFixed(2),
+            });
+        },
+        openRules(column) {
+            this.rulesColumn = column;
+            const row = this.matrix.billing_minimums[column.value] || {};
+            this.rulesDraft = {
+                mode: row.mode || 'none',
+                hours: row.hours || '0.00',
+                shortfall_rate_source: row.shortfall_rate_source || 'standard_mechanical',
+                shortfall_rate: row.shortfall_rate_cents != null ? (row.shortfall_rate_cents / 100).toFixed(2) : '',
+            };
+            this.rulesModal ||= new bootstrap.Modal(this.$refs.rulesModal);
+            this.rulesModal.show();
+        },
+        closeRules() {
+            this.rulesModal?.hide();
+            this.rulesColumn = null;
+        },
+        async saveRules() {
+            if (!this.rulesColumn) return;
+            await this.request(this.matrix.routes.minimum, 'PATCH', {
+                billing_class: this.rulesColumn.value,
+                ...this.rulesDraft,
+            });
+            this.closeRules();
+        },
+        async promptAddWorkType() {
+            const name = window.prompt('New work type name');
+            if (!name) return;
+            const payload = await this.request(this.matrix.routes.work_type, 'POST', { name });
+            if (payload.work_type?.key) {
+                this.selectedWorkType = payload.work_type.key;
+            }
+        },
+        async promptAddBillingClass() {
+            const name = window.prompt('New billing class name (example: Extended Warranty)');
+            if (!name) return;
+            await this.request(this.matrix.routes.billing_class, 'POST', {
+                name,
+                base_posture: 'customer_pay',
+            });
+        },
+        async retryLast() {
+            if (!this.lastRequest) return;
+            await this.request(this.lastRequest.url, this.lastRequest.method, this.lastRequest.body);
+        },
+    }));
+});
+</script>

@@ -38,6 +38,7 @@ use InvalidArgumentException;
     'default_labor_rate_cents',
     'labor_pricing_profile_version',
     'labor_billing_minimums',
+    'custom_labor_billing_classes',
     'labor_categories',
     'tax_enabled',
     'tax_label',
@@ -447,6 +448,7 @@ TEXT;
         'parts_matrices' => 'array',
         'labor_categories' => 'array',
         'labor_billing_minimums' => 'array',
+        'custom_labor_billing_classes' => 'array',
         'labor_pricing_profile_version' => 'integer',
         'customer_types' => 'array',
         'customer_type_disclaimers' => 'array',
@@ -849,6 +851,32 @@ TEXT;
             ->filter(fn (array $category): bool => $category['is_active'])
             ->values()
             ->all();
+    }
+
+    /**
+     * Shop-defined billing classes with independent labor_policies keys.
+     * Special fee/parts behavior uses base_posture (a built-in ConcernBillingPosture value).
+     *
+     * @return list<array{key: string, label: string, base_posture: string, is_active: bool}>
+     */
+    public function customLaborBillingClasses(): array
+    {
+        return collect(is_array($this->custom_labor_billing_classes) ? $this->custom_labor_billing_classes : [])
+            ->filter(fn ($row): bool => is_array($row) && filled($row['key'] ?? null) && filled($row['label'] ?? null))
+            ->map(fn (array $row): array => [
+                'key' => (string) $row['key'],
+                'label' => (string) $row['label'],
+                'base_posture' => (string) ($row['base_posture'] ?? ConcernBillingPosture::CustomerPay->value),
+                'is_active' => (bool) ($row['is_active'] ?? true),
+            ])
+            ->filter(fn (array $row): bool => $row['is_active'])
+            ->values()
+            ->all();
+    }
+
+    public function customLaborBillingClass(string $key): ?array
+    {
+        return collect($this->customLaborBillingClasses())->firstWhere('key', $key);
     }
 
     /**
