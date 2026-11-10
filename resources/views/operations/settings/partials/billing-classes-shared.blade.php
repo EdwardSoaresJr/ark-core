@@ -87,107 +87,112 @@
                         </template>
                     </div>
 
-                    <div class="mb-3" style="max-width: 36rem">
-                        <label class="form-label">Customer document presentation</label>
-                        <select class="form-select" x-model="draft.document_presentation_profile">
+                    <div class="mb-3">
+                        <div class="subheader mb-2">Identity</div>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label mb-1">Billing class name</label>
+                                <input type="text" class="form-control form-control-sm" x-model="draft.name" maxlength="255">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label mb-1">Pill color</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <select class="form-select form-select-sm" x-model="draft.pill_color">
+                                        <template x-for="color in catalog.pill_colors" :key="color.key">
+                                            <option :value="color.key" x-text="color.label"></option>
+                                        </template>
+                                    </select>
+                                    <span class="badge" :class="pillBadgeClass(draft)" x-text="draft.name || 'Preview'"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="subheader mb-2">Pricing</div>
+                        <template x-if="billingProfile(draft) === 'warranty'">
+                            <p class="form-hint mb-0">Warranty never collects shop fees. Parts matrix is under Defaults.</p>
+                        </template>
+                        <template x-if="billingProfile(draft) !== 'warranty'">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label mb-1" x-text="billingProfile(draft) === 'fleet' ? 'Fleet shop fees' : 'Shop fees'"></label>
+                                    <select
+                                        class="form-select form-select-sm"
+                                        :value="draft.shop_fees_enabled ? '1' : '0'"
+                                        @change="draft.shop_fees_enabled = $event.target.value === '1'"
+                                    >
+                                        <option value="1">Use shop rate</option>
+                                        <option value="0">None</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label mb-1" x-text="billingProfile(draft) === 'fleet' ? 'Fleet fee rate override %' : 'Fee rate override %'"></label>
+                                    <input type="text" class="form-control form-control-sm" inputmode="decimal" placeholder="Shop default" x-model="draft.shop_fee_rate_override" :disabled="! draft.shop_fees_enabled">
+                                </div>
+                                <template x-if="billingProfile(draft) !== 'fleet'">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label mb-1">Standing discount</label>
+                                        <select class="form-select form-select-sm" x-model="draft.discount_type">
+                                            <option value="none">None</option>
+                                            <option value="labor">Labor</option>
+                                            <option value="parts">Parts</option>
+                                            <option value="both">Labor &amp; parts</option>
+                                        </select>
+                                    </div>
+                                </template>
+                                <template x-if="billingProfile(draft) !== 'fleet'">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label mb-1">Discount %</label>
+                                        <input type="text" class="form-control form-control-sm" inputmode="decimal" x-model="draft.discount_amount" placeholder="No discount">
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="subheader mb-2">Defaults</div>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label mb-1" x-text="billingProfile(draft) === 'warranty' ? 'Warranty parts matrix' : (billingProfile(draft) === 'fleet' ? 'Fleet parts matrix' : 'Default parts matrix')"></label>
+                                <select class="form-select form-select-sm" x-model="draft.default_parts_matrix_key">
+                                    <option value="">Shop default</option>
+                                    <template x-for="matrix in catalog.parts_matrices" :key="'m-'+matrix.key">
+                                        <option :value="matrix.key" x-text="matrix.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <template x-if="billingProfile(draft) !== 'fleet' && billingProfile(draft) !== 'warranty'">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label mb-1">New concerns bill as</label>
+                                    <select class="form-select form-select-sm" x-model="draft.concern_billing_posture">
+                                        <option value="">Shop default (from the class name)</option>
+                                        <template x-for="posture in catalog.postures" :key="posture.value">
+                                            <option :value="posture.value" x-text="posture.label"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="subheader mb-2">Customer Documents</div>
+                        <label class="form-label mb-1">Customer document presentation</label>
+                        <select class="form-select form-select-sm" x-model="draft.document_presentation_profile">
                             <template x-for="profile in catalog.presentation_profiles" :key="profile.value">
                                 <option :value="profile.value" x-text="profile.label + ' - ' + profile.help"></option>
                             </template>
                         </select>
                     </div>
 
-                    <div class="row g-3">
-                        <div class="col-12 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Billing class name</label>
-                                <input type="text" class="form-control" x-model="draft.name" maxlength="255">
-                            </div>
-                            <div>
-                                <label class="form-label">Pill color</label>
-                                <select class="form-select" x-model="draft.pill_color">
-                                    <template x-for="color in catalog.pill_colors" :key="color.key">
-                                        <option :value="color.key" x-text="color.label"></option>
-                                    </template>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-8">
-                            <template x-if="billingProfile(draft) === 'warranty'">
-                                <div>
-                                    <label class="form-label">Warranty parts matrix</label>
-                                    <select class="form-select" x-model="draft.default_parts_matrix_key">
-                                        <option value="">Shop default</option>
-                                        <template x-for="matrix in catalog.parts_matrices" :key="matrix.key">
-                                            <option :value="matrix.key" x-text="matrix.name"></option>
-                                        </template>
-                                    </select>
-                                    <input type="hidden" x-model="draft.shop_fees_enabled" :value="0">
-                                </div>
-                            </template>
-                            <template x-if="billingProfile(draft) !== 'warranty'">
-                                <div class="row g-3">
-                                    <div class="col-12 col-sm-6">
-                                        <label class="form-label" x-text="billingProfile(draft) === 'fleet' ? 'Fleet shop fees' : 'Shop fees'"></label>
-                                        <select
-                                            class="form-select"
-                                            :value="draft.shop_fees_enabled ? '1' : '0'"
-                                            @change="draft.shop_fees_enabled = $event.target.value === '1'"
-                                        >
-                                            <option value="1">Use shop rate</option>
-                                            <option value="0">None</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-12 col-sm-6">
-                                        <label class="form-label" x-text="billingProfile(draft) === 'fleet' ? 'Fleet fee rate override %' : 'Fee rate override %'"></label>
-                                        <input type="text" class="form-control" inputmode="decimal" placeholder="Shop default" x-model="draft.shop_fee_rate_override" :disabled="! draft.shop_fees_enabled">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label" x-text="billingProfile(draft) === 'fleet' ? 'Fleet parts matrix' : 'Default parts matrix'"></label>
-                                        <select class="form-select" x-model="draft.default_parts_matrix_key">
-                                            <option value="">Shop default</option>
-                                            <template x-for="matrix in catalog.parts_matrices" :key="'m-'+matrix.key">
-                                                <option :value="matrix.key" x-text="matrix.name"></option>
-                                            </template>
-                                        </select>
-                                    </div>
-                                    <template x-if="billingProfile(draft) !== 'fleet'">
-                                        <div class="col-12 col-sm-6">
-                                            <label class="form-label">Standing discount</label>
-                                            <select class="form-select" x-model="draft.discount_type">
-                                                <option value="none">None</option>
-                                                <option value="labor">Labor</option>
-                                                <option value="parts">Parts</option>
-                                                <option value="both">Labor &amp; parts</option>
-                                            </select>
-                                        </div>
-                                    </template>
-                                    <template x-if="billingProfile(draft) !== 'fleet'">
-                                        <div class="col-12 col-sm-6">
-                                            <label class="form-label">Discount %</label>
-                                            <input type="text" class="form-control" inputmode="decimal" x-model="draft.discount_amount" placeholder="No discount">
-                                        </div>
-                                    </template>
-                                    <template x-if="billingProfile(draft) !== 'fleet'">
-                                        <div class="col-12 col-sm-6">
-                                            <label class="form-label">New concerns bill as</label>
-                                            <select class="form-select" x-model="draft.concern_billing_posture">
-                                                <option value="">Shop default (from the class name)</option>
-                                                <template x-for="posture in catalog.postures" :key="posture.value">
-                                                    <option :value="posture.value" x-text="posture.label"></option>
-                                                </template>
-                                            </select>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-                            <p class="form-hint mb-0 mt-3" x-show="draft.labor_column_key">
-                                Linked labor column: <span class="font-monospace" x-text="draft.labor_column_key"></span> (rates/Rules stay on Labor).
-                            </p>
-                            <p class="form-hint mb-0 mt-3" x-show="!draft.labor_column_key">
-                                Customer-only class — no Labor matrix column. Use Add Labor Column on Labor if you need rates for a separate posture.
-                            </p>
-                        </div>
-                    </div>
+                    <p class="form-hint mb-0 mt-3" x-show="draft.labor_column_key" :title="'Key: ' + draft.labor_column_key">
+                        Linked labor pricing: <span x-text="draft.name"></span>
+                    </p>
+                    <p class="form-hint mb-0 mt-3" x-show="!draft.labor_column_key">
+                        Customer-only class — no Labor matrix column. Use Add Labor Column on Labor if you need rates for a separate posture.
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn" @click="closeEditor()">Cancel</button>
@@ -234,6 +239,18 @@ document.addEventListener('alpine:init', () => {
             if (name === 'fleet') return 'fleet';
             if (name === 'warranty') return 'warranty';
             return 'standard';
+        },
+        pillBadgeClass(row) {
+            const map = {
+                slate: 'bg-secondary-lt',
+                blue: 'bg-blue-lt',
+                green: 'bg-green-lt',
+                amber: 'bg-yellow-lt',
+                orange: 'bg-orange-lt',
+                rose: 'bg-red-lt',
+                violet: 'bg-purple-lt',
+            };
+            return map[row?.pill_color] || 'bg-secondary-lt';
         },
         openManage() {
             this.manageOpen = true;

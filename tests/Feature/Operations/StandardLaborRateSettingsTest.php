@@ -38,7 +38,7 @@ test('labor settings show vertical matrix with Mechanical Retail as the visible 
         ->assertSee('Labor rate matrix')
         ->assertSee('Default Labor Rate')
         ->assertSee('Default Work Type')
-        ->assertSee('Billing Classes for')
+        ->assertSee('Rates for')
         ->assertSee('Use Default Labor Rate')
         ->assertSee('Custom Rate')
         ->assertSee('No Charge')

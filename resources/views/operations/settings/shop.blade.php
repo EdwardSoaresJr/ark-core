@@ -231,7 +231,7 @@
                 </ul>
             </div>
         @endif
-        <p class="text-secondary small">Parts matrix changes save as you edit. Every other section has its own Save button.</p>
+        <p class="text-secondary small">Labor rates and the Parts Matrix save as you edit. Tax, Shop Fees, Deposits, and Class Settings use their own Save buttons.</p>
 
         <div class="row g-3">
             @include('operations.settings.partials.section-nav')

@@ -125,8 +125,9 @@ test('labor settings page uses shared billing classes editor and renamed labor c
         ->assertSee('data-billing-classes-shared', false)
         ->assertSee('+ Add Labor Column')
         ->assertSee('Manage Billing Classes')
-        ->assertSee('Class Settings')
         ->assertSee('data-labor-class-settings', false)
+        ->assertSee('aria-label="Class Settings"', false)
+        ->assertSee('Linked labor pricing:', false)
         ->assertSee('Does not create a customer Billing Class', false);
 });
 

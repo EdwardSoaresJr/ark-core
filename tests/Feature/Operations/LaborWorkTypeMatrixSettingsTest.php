@@ -36,7 +36,8 @@ test('labor settings show vertical work-type matrix without a save button', func
         ->assertSee('Manage Billing Classes')
         ->assertSee('Default Labor Rate')
         ->assertSee('Default Work Type')
-        ->assertSee('Billing Classes for')
+        ->assertSee('Rates for')
+        ->assertSee('Billing Policy')
         ->assertSee('Use Default Labor Rate')
         ->assertDontSee('Save Labor Settings')
         ->assertDontSee('Standard hourly rate');
