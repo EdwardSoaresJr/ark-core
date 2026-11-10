@@ -72,6 +72,20 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/*
+ * The docked footer is sticky at the bottom of the page. Without clearance, concern
+ * compose actions (Add Labor / Part / Note) sit under it and cannot be clicked.
+ * Keep the sticky design; only leave scroll room above the dock.
+ */
+.page-body:has(> [data-ro-orientation-header]) .ops-estimate-layout {
+    padding-bottom: max(6.75rem, calc(5.25rem + env(safe-area-inset-bottom, 0px)));
+}
+
+.page-body:has(> [data-ro-orientation-header]) [data-scope-compose],
+.page-body:has(> [data-ro-orientation-header]) [data-repair-action] .btn-list {
+    scroll-margin-bottom: max(7.5rem, calc(6rem + env(safe-area-inset-bottom, 0px)));
+}
+
 @media (max-width: 767.98px) {
     [data-ro-footer] .btn {
         min-height: 2.75rem;
