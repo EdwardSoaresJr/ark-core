@@ -129,8 +129,8 @@
         x-ref="rulesModal"
         data-labor-rules-modal
         x-show="!!rulesColumn"
-        x-transition.opacity
-        style="background: rgba(22, 28, 45, 0.35);"
+        :class="{ show: !!rulesColumn }"
+        :style="rulesColumn ? 'display:block; background: rgba(22, 28, 45, 0.35);' : 'display:none'"
     >
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">
@@ -177,8 +177,8 @@
         tabindex="-1"
         data-labor-add-dialog
         x-show="!!addDialog"
-        x-transition.opacity
-        style="background: rgba(22, 28, 45, 0.35);"
+        :class="{ show: !!addDialog }"
+        :style="addDialog ? 'display:block; background: rgba(22, 28, 45, 0.35);' : 'display:none'"
     >
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">
