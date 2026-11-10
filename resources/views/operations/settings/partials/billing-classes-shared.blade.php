@@ -46,7 +46,11 @@
                             <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" @click="openClassSettings(row.key)">
                                 <span>
                                     <span class="fw-medium" x-text="row.name"></span>
-                                    <span class="form-hint d-block mb-0" x-text="row.labor_column_key ? ('Linked labor column · ' + row.labor_column_key) : 'Customer only — no labor column'"></span>
+                                    <span
+                                        class="form-hint d-block mb-0"
+                                        :title="row.labor_column_key ? ('Key: ' + row.labor_column_key) : null"
+                                        x-text="row.labor_column_key ? ('Linked labor pricing · ' + row.name) : 'Customer only — no labor column'"
+                                    ></span>
                                 </span>
                                 <span class="btn btn-outline-primary btn-sm">Class Settings</span>
                             </button>
