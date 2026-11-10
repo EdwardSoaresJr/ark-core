@@ -1,18 +1,24 @@
 # Staging integration plan — Labor Matrix + Billing Minimums
 
-**Status:** Ready for owner-authorized **staging-only** SaaS Core pin.  
+**Status:** Staging pin live for owner visual review.  
 **Not authorized:** production merge cutover, production pin, or LugsNPlugs deploy.
 
-## Corrected Core SHA
+## Pinned SHAs (staging only)
 
-Confirm tip before pinning:
+| Layer | SHA | Branch |
+|---|---|---|
+| Core | `ee2753d4435bdf5793c6a0e313a2b635188b03f6` | `settings/labor-matrix-billing-minimums` |
+| SaaS | `436770ee358b61a34dc97a4ec02a7381ddd37f65` | `pin/core-ee2753d-labor-matrix` |
+| Screenshots | `8b767c6c979799028125401af0aec5cd054a1e25` | `review-artifacts` |
+
+Confirm tip before any re-pin:
 
 ```bash
 git fetch origin settings/labor-matrix-billing-minimums
 git rev-parse origin/settings/labor-matrix-billing-minimums
 ```
 
-Use the tip SHA returned by that command. Do not merge Core `main` merely to create the staging preview.
+Do not merge Core `main` merely to create the staging preview.
 
 ## What staging gets
 
