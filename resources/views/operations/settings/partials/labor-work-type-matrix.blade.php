@@ -123,9 +123,18 @@
         </div>
     </div>
 
-    <div class="modal modal-blur fade" tabindex="-1" x-ref="rulesModal" data-labor-rules-modal>
+    <div
+        class="modal modal-blur fade"
+        tabindex="-1"
+        x-ref="rulesModal"
+        data-labor-rules-modal
+        :class="{ show: !!rulesColumn }"
+        :style="rulesColumn ? 'display:block' : 'display:none'"
+        x-show="!!rulesColumn"
+        x-cloak
+    >
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
-            <div class="modal-content" x-show="rulesColumn">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
                         <span x-text="rulesColumn?.label"></span> rules
@@ -164,6 +173,35 @@
             </div>
         </div>
     </div>
+    <div class="modal-backdrop fade show" x-show="!!rulesColumn || !!addDialog" x-cloak></div>
+
+    <div
+        class="modal modal-blur fade"
+        tabindex="-1"
+        data-labor-add-dialog
+        :class="{ show: !!addDialog }"
+        :style="addDialog ? 'display:block' : 'display:none'"
+        x-show="!!addDialog"
+        x-cloak
+    >
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" x-text="addDialog?.title"></h5>
+                    <button type="button" class="btn-close" @click="addDialog = null"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" x-text="addDialog?.label"></label>
+                    <input type="text" class="form-control" x-model="addDialogName" @keydown.enter.prevent="confirmAddDialog()" maxlength="64">
+                    <p class="form-hint mb-0 mt-2" x-show="addDialog?.hint" x-text="addDialog?.hint"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" @click="addDialog = null">Cancel</button>
+                    <button type="button" class="btn btn-primary" @click="confirmAddDialog()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -175,7 +213,8 @@ document.addEventListener('alpine:init', () => {
         lastRequest: null,
         rulesColumn: null,
         rulesDraft: { mode: 'none', hours: '0.00', shortfall_rate_source: 'standard_mechanical', shortfall_rate: '' },
-        rulesModal: null,
+        addDialog: null,
+        addDialogName: '',
         init() {
             this.$watch('status', (value) => {
                 if (value === 'saved') {
@@ -255,6 +294,7 @@ document.addEventListener('alpine:init', () => {
             });
         },
         openRules(column) {
+            this.addDialog = null;
             this.rulesColumn = column;
             const row = this.matrix.billing_minimums[column.value] || {};
             this.rulesDraft = {
@@ -263,11 +303,8 @@ document.addEventListener('alpine:init', () => {
                 shortfall_rate_source: row.shortfall_rate_source || 'standard_mechanical',
                 shortfall_rate: row.shortfall_rate_cents != null ? (row.shortfall_rate_cents / 100).toFixed(2) : '',
             };
-            this.rulesModal ||= new bootstrap.Modal(this.$refs.rulesModal);
-            this.rulesModal.show();
         },
         closeRules() {
-            this.rulesModal?.hide();
             this.rulesColumn = null;
         },
         async saveRules() {
@@ -278,17 +315,38 @@ document.addEventListener('alpine:init', () => {
             });
             this.closeRules();
         },
-        async promptAddWorkType() {
-            const name = window.prompt('New work type name');
-            if (!name) return;
-            const payload = await this.request(this.matrix.routes.work_type, 'POST', { name });
-            if (payload.work_type?.key) {
-                this.selectedWorkType = payload.work_type.key;
-            }
+        promptAddWorkType() {
+            this.rulesColumn = null;
+            this.addDialogName = '';
+            this.addDialog = {
+                kind: 'work_type',
+                title: 'Add work type',
+                label: 'Work type name',
+                hint: 'Creates a selectable work type with rates for every billing class. Applies to new repair orders only.',
+            };
         },
-        async promptAddBillingClass() {
-            const name = window.prompt('New billing class name (example: Extended Warranty)');
-            if (!name) return;
+        promptAddBillingClass() {
+            this.rulesColumn = null;
+            this.addDialogName = '';
+            this.addDialog = {
+                kind: 'billing_class',
+                title: 'Add billing class',
+                label: 'Billing class name',
+                hint: 'Example: Extended Warranty. Creates a shop-scoped class with its own rates and minimums.',
+            };
+        },
+        async confirmAddDialog() {
+            const name = (this.addDialogName || '').trim();
+            if (!name || !this.addDialog) return;
+            const kind = this.addDialog.kind;
+            this.addDialog = null;
+            if (kind === 'work_type') {
+                const payload = await this.request(this.matrix.routes.work_type, 'POST', { name });
+                if (payload.work_type?.key) {
+                    this.selectedWorkType = payload.work_type.key;
+                }
+                return;
+            }
             await this.request(this.matrix.routes.billing_class, 'POST', {
                 name,
                 base_posture: 'customer_pay',
