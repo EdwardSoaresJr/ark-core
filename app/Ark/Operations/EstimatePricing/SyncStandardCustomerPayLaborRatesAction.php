@@ -4,11 +4,14 @@ namespace App\Ark\Operations\EstimatePricing;
 
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 /**
- * Applies a shop standard hourly rate to Customer Pay policies that still match the previous standard.
- * Operation classes with a deliberately different Customer Pay rate are left alone.
+ * Ensures Customer Pay policies that explicitly follow the shop standard stay on
+ * rate_type=standard. Specialty custom / zero / contract cells are never overwritten.
+ *
+ * Standard policies resolve dynamically from ShopSettings::defaultLaborRateCents(),
+ * so changing the standard rate does not require rewriting every Standard policy row
+ * beyond keeping rate_type=standard and a display mirror of the cents.
  */
 class SyncStandardCustomerPayLaborRatesAction
 {
@@ -41,17 +44,19 @@ class SyncStandardCustomerPayLaborRatesAction
         foreach ($matrix['operation_classes'] as $class) {
             $classKey = $class['key'];
             $cell = $matrix['cells'][$classKey][ConcernBillingPosture::CustomerPay->value] ?? null;
+            $rateType = LaborRateType::tryFrom((string) ($cell['rate_type'] ?? '')) ?? LaborRateType::Hourly;
             $currentCents = $cell['hourly_rate_cents'] ?? null;
 
-            $matchesPreviousStandard = $currentCents === null || (int) $currentCents === $previousStandardCents;
+            $followsStandard = $rateType === LaborRateType::Standard
+                || (
+                    // Pre-migration / legacy: Customer Pay hourly that still matched the prior standard.
+                    $rateType === LaborRateType::Hourly
+                    && ($currentCents === null || (int) $currentCents === $previousStandardCents)
+                );
 
-            if (! $matchesPreviousStandard) {
+            if (! $followsStandard) {
                 $preserved[] = $classKey;
 
-                continue;
-            }
-
-            if ((int) $currentCents === $nextStandardCents) {
                 continue;
             }
 
@@ -62,6 +67,7 @@ class SyncStandardCustomerPayLaborRatesAction
                 $nextStandardCents / 100,
                 $effectiveFrom,
                 $reason,
+                LaborRateType::Standard,
             );
             $updated[] = $classKey;
         }
@@ -72,25 +78,5 @@ class SyncStandardCustomerPayLaborRatesAction
             'previous_standard_cents' => $previousStandardCents,
             'next_standard_cents' => $nextStandardCents,
         ];
-    }
-
-    /**
-     * @param  Collection<int, OperationClass>|null  $classes
-     * @return list<string>
-     */
-    public function customerPayClassKeysMatching(int $rateCents, ?Collection $classes = null): array
-    {
-        $classes ??= OperationClass::query()->orderBy('sort_order')->orderBy('id')->get();
-        $matrix = $this->matrixProjection->build();
-        $keys = [];
-
-        foreach ($classes as $class) {
-            $cell = $matrix['cells'][$class->key][ConcernBillingPosture::CustomerPay->value] ?? null;
-            if (($cell['hourly_rate_cents'] ?? null) === $rateCents) {
-                $keys[] = $class->key;
-            }
-        }
-
-        return $keys;
     }
 }

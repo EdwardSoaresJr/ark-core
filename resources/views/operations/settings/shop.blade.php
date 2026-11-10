@@ -18,11 +18,19 @@
                     return 'billing-classes';
                 }
 
-                if (['labor', 'labor-policies', 'tax', 'shop-fees', 'deposits', 'parts'].includes(fromUrl)) {
+                if (fromUrl === 'labor-policies') {
+                    return 'labor';
+                }
+
+                if (['labor', 'tax', 'shop-fees', 'deposits', 'parts'].includes(fromUrl)) {
                     return fromUrl;
                 }
 
                 const stored = localStorage.getItem('ark:shop-settings:financial-tab') || 'labor';
+
+                if (stored === 'labor-policies') {
+                    return 'labor';
+                }
 
                 if (stored === 'customer-types' || stored === 'customer-tags') {
                     return 'billing-classes';
@@ -609,7 +617,6 @@
                         <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Financial Rules">
                             @foreach ([
                                 'labor' => 'Labor',
-                                'labor-policies' => 'Labor Policies',
                                 'tax' => 'Tax Rules',
                                 'shop-fees' => 'Shop Fees',
                                 'deposits' => 'Deposits',
@@ -675,9 +682,10 @@
                                 <div class="card-body">
                                     <h3 class="mb-1">Standard hourly rate</h3>
                                     <p class="text-secondary small mb-3">
-                                        This is the rate new <strong>Customer Pay</strong> estimates use for operation classes that still follow the shop standard.
-                                        Saving updates the default labor category and those Customer Pay policy rates together.
-                                        Advanced Labor Policies can still charge a different rate by operation class; specialty rates are not overwritten.
+                                        This is the shop’s primary hourly rate. New <strong>Customer Pay</strong> work that
+                                        <strong>Uses Standard</strong> follows this number. Saving updates the default labor
+                                        category and marks those Customer Pay policies as Standard (they resolve from this rate).
+                                        Specialty custom rates under Advanced billing rates are not overwritten.
                                     </p>
                                     <div class="row g-3 align-items-end">
                                         <div class="col-12 col-sm-6 col-lg-4" style="max-width: 16rem">
@@ -710,52 +718,69 @@
                                                     <span class="fs-5 text-secondary fw-normal">/hr</span>
                                                 </div>
                                                 <div class="small text-secondary">
-                                                    Resolved from Labor Policies
+                                                    Effective rate from Labor Settings pricing
                                                     @if (! empty($laborPoliciesMatrix['shop_default']['operation_class_name']))
                                                         ({{ $laborPoliciesMatrix['shop_default']['operation_class_name'] }} · Customer Pay)
                                                     @endif
-                                                    — not only the number above until you save.
+                                                    — preview updates after you save.
                                                 </div>
                                             @endif
                                         </div>
                                     </div>
-                                    <div class="mt-3">
-                                        <button type="button" class="btn btn-link p-0" @click="setFinancialTab('labor-policies')">
-                                            Open Labor Policies for operation-class and billing-type rates
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
 
-                            <details class="mb-3" data-settings-labor-advanced open>
-                                <summary class="fw-medium mb-2" style="cursor: pointer">Advanced labor rules</summary>
-                                <p class="text-secondary small">
-                                    Categories are Core-defined (rename allowed; new categories cannot be added here).
-                                    <strong>Min hrs</strong> is the floor billed when entered hours are lower.
-                                    <strong>Round to</strong> always rounds <strong>up</strong> (never down); choose None to skip.
-                                    <strong>Allow modifiers</strong> permits difficulty, hour override, and manual rate on the worksheet.
-                                    Existing repair-order line rates stay snapshotted until the line category changes or an authorized reprice.
+                            <div class="mb-4" data-settings-labor-categories>
+                                <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+                                    <div>
+                                        <h3 class="mb-1">Labor categories</h3>
+                                        <p class="text-secondary small mb-0">
+                                            Familiar work types from the RO builder. Edit name, rate, minimum hours, rounding, and modifiers.
+                                            <strong>Min hrs</strong> is the floor billed when entered hours are lower.
+                                            <strong>Round to</strong> always rounds <strong>up</strong> (never down); choose None to skip.
+                                            <strong>Allow modifiers</strong> permits difficulty, hour override, and manual rate on the worksheet.
+                                            Archive hides a category from new lines; historical repair orders keep their references.
+                                            The default category cannot be archived — pick a replacement default first.
+                                        </p>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Adding a new category requires an Operations catalog entry tied to an operation class.">
+                                        Add category
+                                    </button>
+                                </div>
+                                <p class="form-hint mb-3">
+                                    Add is not available here yet: categories are Core-defined and must map to an Operation.
+                                    You can rename, edit rates/rules, set the default, and Archive / Restore.
                                 </p>
                                 @error('labor_categories')
+                                    <div class="alert alert-danger" role="alert">{{ $message }}</div>
+                                @enderror
+                                @error('default_labor_category_key')
                                     <div class="alert alert-danger" role="alert">{{ $message }}</div>
                                 @enderror
                                 <div class="row g-2 px-3 mb-1 d-none d-xl-flex subheader" aria-hidden="true">
                                     <div class="col-xl-2">Category</div>
                                     <div class="col-xl-2">Rate / hr</div>
                                     <div class="col-xl-1">Min hrs</div>
-                                    <div class="col-xl-4">Round to</div>
+                                    <div class="col-xl-3">Round to</div>
                                     <div class="col-xl-2">Adjust labor</div>
                                     <div class="col-xl-1">Default</div>
+                                    <div class="col-xl-1">Status</div>
                                 </div>
                                 <div class="list-group">
                                     @foreach ($settings->laborCategories() as $index => $category)
                                         @php
                                             $allowsModifiers = (string) old('labor_categories.'.$index.'.allows_modifiers', $category['allows_modifiers'] ? '1' : '0') === '1';
+                                            $isActiveCategory = (string) old('labor_categories.'.$index.'.is_active', ($category['is_active'] ?? true) ? '1' : '0') === '1';
                                             $laborField = 'labor-category-'.$index;
                                             $isDefaultCategory = $defaultLaborCategoryKey === $category['key'];
                                             $isCoreCategory = in_array($category['key'], $coreLaborCategoryKeys, true);
                                         @endphp
-                                        <div class="list-group-item" data-labor-category="{{ $category['key'] }}">
+                                        <div
+                                            class="list-group-item"
+                                            data-labor-category="{{ $category['key'] }}"
+                                            @class(['opacity-75' => ! $isActiveCategory])
+                                            x-data="{ active: @js($isActiveCategory) }"
+                                        >
                                             <div class="row g-2 align-items-center">
                                                 <div class="col-12 col-xl-2">
                                                     <label for="{{ $laborField }}-name" class="form-label d-xl-none">Category</label>
@@ -788,7 +813,7 @@
                                                     <label for="{{ $laborField }}-minimum" class="form-label d-xl-none">Min hrs</label>
                                                     <input id="{{ $laborField }}-minimum" name="labor_categories[{{ $index }}][minimum_hours]" value="{{ old('labor_categories.'.$index.'.minimum_hours', $category['minimum_hours']) }}" required inputmode="decimal" aria-label="Minimum hours for {{ $category['name'] }}" class="form-control font-monospace px-2">
                                                 </div>
-                                                <div class="col-12 col-xl-4">
+                                                <div class="col-12 col-xl-3">
                                                     <div class="form-label d-xl-none">Round to</div>
                                                     <div class="btn-group w-100" role="radiogroup" aria-label="Round billable hours for {{ $category['name'] }}">
                                                         @foreach (['exact' => 'None', 'tenth' => '0.1', 'quarter' => '0.25', 'half' => '0.5'] as $ruleKey => $ruleLabel)
@@ -804,7 +829,7 @@
                                                         @endforeach
                                                     </div>
                                                 </div>
-                                                <div class="col-8 col-xl-2">
+                                                <div class="col-6 col-xl-2">
                                                     <input type="hidden" name="labor_categories[{{ $index }}][allows_modifiers]" value="0">
                                                     <label class="form-check mb-0">
                                                         <input
@@ -817,26 +842,56 @@
                                                         <span class="form-check-label">Allow modifiers</span>
                                                     </label>
                                                 </div>
-                                                <div class="col-4 col-xl-1">
+                                                <div class="col-3 col-xl-1">
                                                     <label class="form-check mb-0">
                                                         <input type="radio" name="default_labor_category_key" value="{{ $category['key'] }}" @checked($defaultLaborCategoryKey === $category['key']) class="form-check-input" @change="defaultKey = $event.target.value; $nextTick(() => syncDefaultCategoryRate())">
                                                         <span class="form-check-label">Default</span>
                                                     </label>
                                                 </div>
+                                                <div class="col-3 col-xl-1">
+                                                    <input type="hidden" name="labor_categories[{{ $index }}][is_active]" :value="active ? '1' : '0'">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm"
+                                                        :class="active ? 'btn-outline-secondary' : 'btn-outline-primary'"
+                                                        :disabled="defaultKey === @js($category['key'])"
+                                                        :title="defaultKey === @js($category['key']) ? 'Choose another default before archiving' : (active ? 'Archive category' : 'Restore category')"
+                                                        @click="if (defaultKey !== @js($category['key'])) { active = !active }"
+                                                    >
+                                                        <span x-text="active ? 'Archive' : 'Restore'"></span>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
                                 </div>
+                            </div>
+
+                            <details class="mb-3" data-settings-labor-advanced open>
+                                <summary class="fw-medium mb-2" style="cursor: pointer">Advanced billing rates</summary>
+                                @include('operations.settings.partials.labor-advanced-rates')
                             </details>
 
-                            <div class="d-flex justify-content-end border-top pt-3 mt-3">
-                                <button type="submit" class="btn btn-primary">Save Labor</button>
+                            <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-3">
+                                <a href="{{ route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']) }}" class="btn">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Save Labor Settings</button>
                             </div>
                         </form>
-                    </div>
 
-                    <div class="card-body" id="financial-panel-labor-policies" role="tabpanel" aria-labelledby="financial-tab-labor-policies" x-show="financialTab === 'labor-policies'" x-cloak>
-                        @include('operations.settings.partials.labor-policies')
+                        <details class="mt-4" data-settings-labor-specialty-matrix>
+                            <summary class="fw-medium mb-2" style="cursor: pointer">
+                                Operation-class specialty rates
+                            </summary>
+                            <p class="text-secondary small">
+                                Operation classes are Core-defined work types (not the same as Labor Categories).
+                                Use this when one class — for example Diagnostics — needs a different Customer Pay rate
+                                than the shop standard. Edit one cell at a time; specialty rates are not overwritten
+                                when you change Standard. Saves separately from the Labor Settings form above.
+                            </p>
+                            @include('operations.settings.partials.labor-policies-matrix', [
+                                'embedInLaborSettings' => true,
+                            ])
+                        </details>
                     </div>
 
                     <div class="card-body" id="financial-panel-tax" role="tabpanel" aria-labelledby="financial-tab-tax" x-show="financialTab === 'tax'" x-cloak>

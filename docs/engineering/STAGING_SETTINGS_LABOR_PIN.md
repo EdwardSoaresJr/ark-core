@@ -1,4 +1,4 @@
-# Staging integration plan — Settings labor clarity (Core PR #172)
+# Staging integration plan — Consolidated Labor Settings (Core PR #172 continuation)
 
 **Status:** Ready for owner-authorized **staging-only** SaaS Core pin.  
 **Not authorized:** production merge cutover, production pin, or LugsNPlugs deploy.
@@ -8,34 +8,40 @@
 Confirm tip before pinning:
 
 ```bash
-git fetch origin settings/new-shop-labor-clarity
-git rev-parse origin/settings/new-shop-labor-clarity
+git fetch origin settings/consolidated-labor-settings
+git rev-parse origin/settings/consolidated-labor-settings
 ```
 
-This plan’s atomicity + station-prompt fixes are on that branch (PR #172). Use the tip SHA returned by the command above.
+Use the tip SHA returned by the command above. Do not merge Core `main` merely to create the staging preview.
 
 ## What staging gets
 
-- Standard hourly rate + atomic Customer Pay sync (match previous standard; preserve specialty)
-- Labor / Labor Policies clarity copy and Edit affordance
-- Settings nav Basic / Optional / Advanced
-- Station bind auto-prompt **off** (no suitable explicit enablement setting yet; see dependency below)
+- One Labor Settings area: Standard hourly rate, Labor categories, Advanced billing rates
+- Explicit inheritance via `LaborRateType::Standard` (Use Standard / Custom / Intentional Zero)
+- Migration marks Customer Pay policies that already matched the shop default as `standard`
+- Specialty operation-class rates preserved; historical line snapshots unchanged
+- Category Archive / Restore (no hard delete; Add remains unavailable without Operations catalog)
+- Station bind auto-prompt remains off
 
-## Station enablement dependency
+## Pricing behavior (honest)
 
-`ShopSettings` only has `workstation_idle_lock_minutes` (retired lock). There is **no** existing “stations enabled” / “require browser binding” flag to reuse. Inventing a second system was declined. Safe default remains: **never auto-prompt**. Binding and Stations & Phones management stay available. Explicit Advanced Settings enablement is a follow-on after owner approval of a single shop setting.
+- **Authoritative for new lines:** `LaborPolicyResolver` → policy `rate_type` + (for Standard) `ShopSettings::defaultLaborRateCents()`
+- **Labor Categories** still store display/default rates, min hours, rounding, modifiers — they are not interchangeable with Operation Classes
+- Existing shops keep effective prices until the owner intentionally changes a mode or rate
+- Specialty matrix cells save separately from the main Labor Settings form (same Settings page)
 
 ## Staging pin procedure (SaaS / ark-stancl)
 
 1. Owner authorizes staging Core pin to the tip SHA from the command above.
-2. On the staging host only (`demo.staging.arksms.com` / staging droplet), update the Core pin the same way other staging Core pins are applied (`vendor/ark/core` pin / `deploy/deploy.sh <sha>` per `docs/ARK-STANCL.md`). Do **not** run production `deploy.sh` or Landlord shop-release for LugsNPlugs.
-3. Run `bin/build-shop-assets` when the pin change requires it (per stancl README).
-4. Smoke on `demo.staging.arksms.com` as demo owner: Settings → Financial Rules → Labor (standard rate + effective rate), Labor Policies (Edit cells), Settings nav groups Basic / Optional / Advanced, first entry without station modal.
-5. Capture full-page staging screenshots; commit to `review-artifacts` (never merge that branch).
+2. On a **separately pinned** ark-stancl branch (do not merge stancl `main`), set `composer.json` / `composer.lock` `ark/core` reference to that SHA.
+3. On the staging host only (`demo.staging.arksms.com` / staging droplet), deploy that stancl branch SHA with `deploy/deploy.sh <sha>`. Do **not** run production `deploy.sh` or Landlord shop-release for LugsNPlugs.
+4. Run `bin/build-shop-assets` when the pin change requires it (per stancl README).
+5. Smoke on `demo.staging.arksms.com` as demo owner: Settings → Financial Rules → Labor.
+6. Capture full-page staging screenshots (desktop + mobile); commit to `review-artifacts` (never merge that branch).
 
 ## Rollback
 
-Repin staging to the previous Core SHA that staging was running before this pin.
+Repin staging to the previous Core SHA / stancl deploy SHA that staging was running before this pin.
 
 ## Production
 

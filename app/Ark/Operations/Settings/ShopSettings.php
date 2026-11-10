@@ -200,6 +200,7 @@ class ShopSettings extends Model
             'rounding_rule' => 'quarter',
             'is_default' => true,
             'allows_modifiers' => true,
+            'is_active' => true,
         ],
         [
             'key' => 'diagnostic',
@@ -209,6 +210,7 @@ class ShopSettings extends Model
             'rounding_rule' => 'quarter',
             'is_default' => false,
             'allows_modifiers' => true,
+            'is_active' => true,
         ],
         [
             'key' => 'programming',
@@ -218,6 +220,7 @@ class ShopSettings extends Model
             'rounding_rule' => 'quarter',
             'is_default' => false,
             'allows_modifiers' => true,
+            'is_active' => true,
         ],
         [
             'key' => 'fabrication',
@@ -227,6 +230,7 @@ class ShopSettings extends Model
             'rounding_rule' => 'quarter',
             'is_default' => false,
             'allows_modifiers' => true,
+            'is_active' => true,
         ],
         [
             'key' => 'courtesy',
@@ -236,6 +240,7 @@ class ShopSettings extends Model
             'rounding_rule' => 'tenth',
             'is_default' => false,
             'allows_modifiers' => true,
+            'is_active' => true,
         ],
         [
             'key' => self::COMEBACK_LABOR_CATEGORY_KEY,
@@ -245,6 +250,7 @@ class ShopSettings extends Model
             'rounding_rule' => 'tenth',
             'is_default' => false,
             'allows_modifiers' => true,
+            'is_active' => true,
         ],
         [
             'key' => self::WARRANTY_REPAIRPAL_LABOR_CATEGORY_KEY,
@@ -254,6 +260,7 @@ class ShopSettings extends Model
             'rounding_rule' => 'quarter',
             'is_default' => false,
             'allows_modifiers' => false,
+            'is_active' => true,
         ],
         [
             'key' => self::WARRANTY_OTHER_LABOR_CATEGORY_KEY,
@@ -263,6 +270,7 @@ class ShopSettings extends Model
             'rounding_rule' => 'quarter',
             'is_default' => false,
             'allows_modifiers' => false,
+            'is_active' => true,
         ],
     ];
 
@@ -804,7 +812,9 @@ TEXT;
     }
 
     /**
-     * @return array<int, array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool}>
+     * All labor categories including archived (is_active=false). Settings uses this.
+     *
+     * @return array<int, array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool, is_active: bool}>
      */
     public function laborCategories(): array
     {
@@ -817,6 +827,7 @@ TEXT;
                 'rounding_rule' => (string) $category['rounding_rule'],
                 'is_default' => (bool) ($category['is_default'] ?? false),
                 'allows_modifiers' => $this->resolveAllowsModifiers($category),
+                'is_active' => (bool) ($category['is_active'] ?? true),
             ])
             ->sortBy(fn (array $category): string => mb_strtolower($category['name']))
             ->values()
@@ -824,13 +835,30 @@ TEXT;
     }
 
     /**
-     * @return array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool}
+     * Categories available on new estimate lines. Archived categories stay on historical lines.
+     *
+     * @return array<int, array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool, is_active: bool}>
+     */
+    public function activeLaborCategories(): array
+    {
+        return collect($this->laborCategories())
+            ->filter(fn (array $category): bool => $category['is_active'])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool, is_active: bool}
      */
     public function defaultLaborCategory(): array
     {
-        return collect($this->laborCategories())
-            ->firstWhere('is_default', true)
-            ?? $this->laborCategories()[0];
+        $categories = $this->laborCategories();
+
+        return collect($categories)->first(
+            fn (array $category): bool => $category['is_default'] && $category['is_active'],
+        )
+            ?? collect($categories)->firstWhere('is_active', true)
+            ?? $categories[0];
     }
 
     /**
@@ -995,7 +1023,7 @@ TEXT;
 
     /**
      * @param  array<int, array<string, mixed>>  $categories
-     * @return array<int, array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool}>
+     * @return array<int, array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool, is_active: bool}>
      */
     public function normalizeLaborCategories(array $categories, string $defaultCategoryKey): array
     {
@@ -1007,6 +1035,15 @@ TEXT;
                 $key = (string) $category['key'];
                 $existing = $existingCategories->get($key, []);
                 $isDefault = $key === $defaultCategoryKey;
+                $isActive = filter_var(
+                    $category['is_active'] ?? $existing['is_active'] ?? true,
+                    FILTER_VALIDATE_BOOLEAN,
+                );
+
+                // The shop default must remain available for new labor lines.
+                if ($isDefault) {
+                    $isActive = true;
+                }
 
                 return [
                     'key' => $key,
@@ -1019,6 +1056,7 @@ TEXT;
                         $category['allows_modifiers'] ?? $existing['allows_modifiers'] ?? $this->defaultAllowsModifiersForCategoryKey($key),
                         FILTER_VALIDATE_BOOLEAN,
                     ),
+                    'is_active' => $isActive,
                 ];
             })
             ->sortBy(fn (array $category): string => mb_strtolower($category['name']))

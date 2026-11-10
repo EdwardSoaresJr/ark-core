@@ -3,9 +3,12 @@
 namespace App\Ark\Operations\Settings;
 
 use App\Ark\Operations\Documents\EstimateDocumentService;
+use App\Ark\Operations\EstimatePricing\LaborPoliciesMatrixProjection;
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
+use App\Ark\Operations\EstimatePricing\LaborRateType;
 use App\Ark\Operations\EstimatePricing\OperationClass;
 use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
+use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\ManualPaymentMethods;
 use App\Ark\Operations\OperationAuthority\Operation;
@@ -24,11 +27,13 @@ use Illuminate\Validation\ValidationException;
 class ShopFinancialSettingsController
 {
     use Concerns\InteractsWithShopSettingsPersistence, Concerns\NormalizesShopPartsMatrices;
+
     public function __construct(
         private readonly EstimateDocumentService $estimateDocumentService,
         private readonly EstimateTotalsCalculator $estimateTotalsCalculator,
         private readonly SyncStandardCustomerPayLaborRatesAction $syncStandardCustomerPayLaborRates,
         private readonly LaborPolicyResolver $laborPolicyResolver,
+        private readonly UpsertLaborPolicyAction $upsertLaborPolicy,
     ) {}
 
     protected function estimateDocuments(): EstimateDocumentService
@@ -41,10 +46,13 @@ class ShopFinancialSettingsController
         return $this->estimateTotalsCalculator;
     }
 
-public function updateLabor(Request $request): RedirectResponse
+    public function updateLabor(Request $request): RedirectResponse
     {
         $settings = ShopSettings::current();
         $allowedCategoryKeys = collect($settings->laborCategories())->pluck('key')->all();
+        $postureValues = collect(LaborPoliciesMatrixProjection::matrixPostures())
+            ->map(fn (ConcernBillingPosture $posture): string => $posture->value)
+            ->all();
 
         $data = $request->validate([
             'standard_hourly_rate' => ['required', 'numeric', 'min:0', 'max:999999.99'],
@@ -56,6 +64,10 @@ public function updateLabor(Request $request): RedirectResponse
             'labor_categories.*.minimum_hours' => ['required', 'numeric', 'min:0', 'max:99.99'],
             'labor_categories.*.rounding_rule' => ['required', 'string', Rule::in(['exact', 'tenth', 'quarter', 'half'])],
             'labor_categories.*.allows_modifiers' => ['nullable', 'boolean'],
+            'labor_categories.*.is_active' => ['nullable', 'boolean'],
+            'advanced_rates' => ['nullable', 'array'],
+            'advanced_rates.*.mode' => ['nullable', 'string', Rule::in(['standard', 'custom', 'zero'])],
+            'advanced_rates.*.rate' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
         ]);
 
         $previousStandardCents = (int) $settings->default_labor_rate_cents;
@@ -87,7 +99,18 @@ public function updateLabor(Request $request): RedirectResponse
             ]);
         }
 
+        $activeDefaults = collect($laborCategories)
+            ->filter(fn (array $category): bool => $category['is_default'] && $category['is_active']);
+
+        if ($activeDefaults->isEmpty()) {
+            throw ValidationException::withMessages([
+                'default_labor_category_key' => 'Choose an active default labor category before archiving the current default.',
+            ]);
+        }
+
         $defaultClassKey = $this->defaultOperationClassKey($data['default_labor_category_key']);
+        $advancedRates = $data['advanced_rates'] ?? [];
+        $effectiveFrom = Carbon::now()->startOfDay();
 
         /** @var array{sync: array{updated_class_keys: list<string>, preserved_class_keys: list<string>, previous_standard_cents: int, next_standard_cents: int}, resolved_cents: int} $committed */
         $committed = DB::transaction(function () use (
@@ -97,6 +120,9 @@ public function updateLabor(Request $request): RedirectResponse
             $previousStandardCents,
             $standardRateCents,
             $defaultClassKey,
+            $advancedRates,
+            $postureValues,
+            $effectiveFrom,
         ): array {
             $settings->update([
                 'default_labor_rate_cents' => $defaultRateCents,
@@ -106,8 +132,16 @@ public function updateLabor(Request $request): RedirectResponse
             $syncResult = $this->syncStandardCustomerPayLaborRates->execute(
                 $previousStandardCents,
                 $standardRateCents,
-                Carbon::now()->startOfDay(),
+                $effectiveFrom,
                 'Standard hourly rate',
+            );
+
+            $this->applyAdvancedRates(
+                $advancedRates,
+                $postureValues,
+                $defaultClassKey,
+                $standardRateCents,
+                $effectiveFrom,
             );
 
             try {
@@ -121,11 +155,22 @@ public function updateLabor(Request $request): RedirectResponse
                 ]);
             }
 
-            if ($resolved->hourlyRateCents !== $standardRateCents
-                && ! in_array($defaultClassKey, $syncResult['preserved_class_keys'], true)
+            $advancedCustomerPay = $advancedRates[ConcernBillingPosture::CustomerPay->value] ?? null;
+            $customerPayMode = is_array($advancedCustomerPay) ? ($advancedCustomerPay['mode'] ?? null) : null;
+            $expectedCustomerPayCents = match ($customerPayMode) {
+                'zero' => 0,
+                'custom' => (int) round(((float) ($advancedCustomerPay['rate'] ?? 0)) * 100),
+                default => $standardRateCents,
+            };
+
+            $defaultClassPreservedAsSpecialty = $customerPayMode === null
+                && in_array($defaultClassKey, $syncResult['preserved_class_keys'], true);
+
+            if (! $defaultClassPreservedAsSpecialty
+                && $resolved->hourlyRateCents !== $expectedCustomerPayCents
             ) {
                 throw ValidationException::withMessages([
-                    'standard_hourly_rate' => 'Customer Pay estimate rate did not match the standard hourly rate.',
+                    'standard_hourly_rate' => 'Customer Pay estimate rate did not match the expected Labor Settings rate.',
                 ]);
             }
 
@@ -147,6 +192,57 @@ public function updateLabor(Request $request): RedirectResponse
         return $this->redirectWithStatus($status);
     }
 
+    /**
+     * @param  array<string, array{mode?: string, rate?: mixed}>  $advancedRates
+     * @param  list<string>  $postureValues
+     */
+    private function applyAdvancedRates(
+        array $advancedRates,
+        array $postureValues,
+        string $defaultClassKey,
+        int $standardRateCents,
+        Carbon $effectiveFrom,
+    ): void {
+        if ($advancedRates === []) {
+            return;
+        }
+
+        $operationClass = OperationClass::query()->where('key', $defaultClassKey)->firstOrFail();
+
+        foreach ($postureValues as $postureValue) {
+            $row = $advancedRates[$postureValue] ?? null;
+
+            if (! is_array($row) || ! filled($row['mode'] ?? null)) {
+                continue;
+            }
+
+            $mode = (string) $row['mode'];
+            $posture = ConcernBillingPosture::from($postureValue);
+            $rateType = match ($mode) {
+                'standard' => LaborRateType::Standard,
+                'zero' => LaborRateType::Zero,
+                default => in_array($posture, [ConcernBillingPosture::WarrantyOther, ConcernBillingPosture::RepairPal], true)
+                    ? LaborRateType::Contract
+                    : LaborRateType::Hourly,
+            };
+
+            $hourlyRate = match ($mode) {
+                'standard' => $standardRateCents / 100,
+                'zero' => 0.0,
+                default => (float) ($row['rate'] ?? 0),
+            };
+
+            $this->upsertLaborPolicy->execute(
+                $posture,
+                $operationClass,
+                $hourlyRate,
+                $effectiveFrom,
+                'Labor Settings advanced billing rate',
+                $rateType,
+            );
+        }
+    }
+
     private function defaultOperationClassKey(string $defaultCategoryKey): string
     {
         $operation = Operation::query()
@@ -160,7 +256,7 @@ public function updateLabor(Request $request): RedirectResponse
             ?? 'general_repair';
     }
 
-public function updateTax(Request $request): RedirectResponse
+    public function updateTax(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'tax_enabled' => ['nullable', 'boolean'],
@@ -186,7 +282,7 @@ public function updateTax(Request $request): RedirectResponse
         return $this->redirectWithStatus('Tax settings saved.');
     }
 
-public function updateFees(Request $request): RedirectResponse
+    public function updateFees(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'shop_fee_enabled' => ['nullable', 'boolean'],
@@ -239,7 +335,7 @@ public function updateFees(Request $request): RedirectResponse
         return $this->redirectWithStatus('Deposit settings saved.');
     }
 
-public function updateCustomerTypes(Request $request): RedirectResponse
+    public function updateCustomerTypes(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'customer_types' => ['nullable', 'array', 'max:20'],
@@ -269,7 +365,7 @@ public function updateCustomerTypes(Request $request): RedirectResponse
         return $this->redirectWithStatus('Billing class settings saved.');
     }
 
-public function updatePartsMatrix(Request $request, string $matrixKey): RedirectResponse
+    public function updatePartsMatrix(Request $request, string $matrixKey): RedirectResponse
     {
         $data = $request->validate([
             ...$this->partsMatrixValidationRules(),
@@ -299,7 +395,7 @@ public function updatePartsMatrix(Request $request, string $matrixKey): Redirect
             ->with('status', 'Parts matrix saved.');
     }
 
-public function destroyPartsMatrix(Request $request, string $matrixKey): RedirectResponse
+    public function destroyPartsMatrix(Request $request, string $matrixKey): RedirectResponse
     {
         $settings = ShopSettings::current();
         $matrices = $settings->parts_matrices ?: ShopSettings::DEFAULT_PARTS_MATRICES;

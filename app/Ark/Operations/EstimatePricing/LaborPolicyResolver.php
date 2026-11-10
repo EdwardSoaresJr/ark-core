@@ -4,6 +4,7 @@ namespace App\Ark\Operations\EstimatePricing;
 
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
+use App\Ark\Operations\Settings\ShopSettings;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -95,8 +96,8 @@ final class LaborPolicyResolver
     {
         return match ($policy->rate_type) {
             LaborRateType::Zero => 0,
-            LaborRateType::Hourly, LaborRateType::Contract => (int) ($policy->hourly_rate_cents ?? 0),
-            LaborRateType::Cost => (int) ($policy->hourly_rate_cents ?? 0),
+            LaborRateType::Standard => ShopSettings::current()->defaultLaborRateCents(),
+            LaborRateType::Hourly, LaborRateType::Contract, LaborRateType::Cost => (int) ($policy->hourly_rate_cents ?? 0),
         };
     }
 }

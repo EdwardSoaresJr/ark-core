@@ -102,7 +102,7 @@ test('financial rules is a tabler card outside the legacy island with every tab 
         $keys[] = substr($panelId, strlen('financial-panel-'));
     }
 
-    expect($keys)->toBe(['labor', 'labor-policies', 'tax', 'shop-fees', 'deposits', 'parts', 'billing-classes']);
+    expect($keys)->toBe(['labor', 'tax', 'shop-fees', 'deposits', 'parts', 'billing-classes']);
 });
 
 test('financial forms keep their routes, field names, and parts matrix autosave hooks', function (): void {

@@ -188,7 +188,7 @@ test('every financial rules tab opens from the financial-tab link that save redi
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor-policies']))
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']))
         ->assertOk()
         ->getContent();
 
@@ -198,7 +198,8 @@ test('every financial rules tab opens from the financial-tab link that save redi
     $honoredTabs = collect(explode(',', $honored[1]))->map(fn (string $tab): string => trim($tab, " '"))->all();
     $renderedTabs = collect($tabs[1])->unique()->reject(fn (string $tab): bool => in_array($tab, ['billing-classes', 'customer-types', 'customer-tags'], true))->values()->all();
 
-    expect($renderedTabs)->toContain('labor-policies', 'deposits');
+    expect($renderedTabs)->toContain('labor', 'deposits')
+        ->and($renderedTabs)->not->toContain('labor-policies');
 
     foreach ($renderedTabs as $tab) {
         expect($honoredTabs)->toContain($tab);

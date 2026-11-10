@@ -8,12 +8,28 @@ enum LaborRateType: string
     case Zero = 'zero';
     case Contract = 'contract';
     case Cost = 'cost';
+    /** Follows the shop Standard hourly rate from ShopSettings at resolve time. */
+    case Standard = 'standard';
 
     public function resolvesToHourlyCents(): bool
     {
         return match ($this) {
-            self::Hourly, self::Contract, self::Zero => true,
+            self::Hourly, self::Contract, self::Zero, self::Standard => true,
             self::Cost => false,
+        };
+    }
+
+    public function followsShopStandard(): bool
+    {
+        return $this === self::Standard;
+    }
+
+    public function settingsMode(): string
+    {
+        return match ($this) {
+            self::Standard => 'standard',
+            self::Zero => 'zero',
+            default => 'custom',
         };
     }
 }
