@@ -3,8 +3,12 @@
 namespace App\Ark\Operations\Settings;
 
 use App\Ark\Operations\Documents\EstimateDocumentService;
+use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
+use App\Ark\Operations\EstimatePricing\OperationClass;
+use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\ManualPaymentMethods;
+use App\Ark\Operations\OperationAuthority\Operation;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
@@ -12,6 +16,8 @@ use App\Ark\Operations\Settings\Concerns\NormalizesShopPartsMatrices;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -21,6 +27,8 @@ class ShopFinancialSettingsController
     public function __construct(
         private readonly EstimateDocumentService $estimateDocumentService,
         private readonly EstimateTotalsCalculator $estimateTotalsCalculator,
+        private readonly SyncStandardCustomerPayLaborRatesAction $syncStandardCustomerPayLaborRates,
+        private readonly LaborPolicyResolver $laborPolicyResolver,
     ) {}
 
     protected function estimateDocuments(): EstimateDocumentService
@@ -39,6 +47,7 @@ public function updateLabor(Request $request): RedirectResponse
         $allowedCategoryKeys = collect($settings->laborCategories())->pluck('key')->all();
 
         $data = $request->validate([
+            'standard_hourly_rate' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'default_labor_category_key' => ['required', 'string', Rule::in($allowedCategoryKeys)],
             'labor_categories' => ['required', 'array', 'min:1', 'max:20'],
             'labor_categories.*.key' => ['required', 'string', Rule::in($allowedCategoryKeys)],
@@ -49,22 +58,99 @@ public function updateLabor(Request $request): RedirectResponse
             'labor_categories.*.allows_modifiers' => ['nullable', 'boolean'],
         ]);
 
+        $previousStandardCents = (int) $settings->default_labor_rate_cents;
+        $standardRateCents = (int) round(((float) $data['standard_hourly_rate']) * 100);
+        $standardRateDisplay = number_format($standardRateCents / 100, 2, '.', '');
+
+        // Keep the default category Rate / hr locked to the Standard hourly rate control.
+        $categoriesInput = collect($data['labor_categories'])
+            ->map(function (array $category) use ($data, $standardRateDisplay): array {
+                if ((string) ($category['key'] ?? '') === (string) $data['default_labor_category_key']) {
+                    $category['rate'] = $standardRateDisplay;
+                }
+
+                return $category;
+            })
+            ->all();
+
         $laborCategories = $settings->normalizeLaborCategories(
-            $data['labor_categories'],
+            $categoriesInput,
             $data['default_labor_category_key'],
         );
 
         $defaultRateCents = (int) collect($laborCategories)
             ->firstWhere('is_default', true)['rate_cents'];
 
-        $settings->update([
-            'default_labor_rate_cents' => $defaultRateCents,
-            'labor_categories' => $laborCategories,
-        ]);
+        if ($defaultRateCents !== $standardRateCents) {
+            throw ValidationException::withMessages([
+                'standard_hourly_rate' => 'Standard hourly rate must match the default labor category rate.',
+            ]);
+        }
+
+        $syncResult = DB::transaction(function () use (
+            $settings,
+            $laborCategories,
+            $defaultRateCents,
+            $previousStandardCents,
+            $standardRateCents,
+        ): array {
+            $settings->update([
+                'default_labor_rate_cents' => $defaultRateCents,
+                'labor_categories' => $laborCategories,
+            ]);
+
+            return $this->syncStandardCustomerPayLaborRates->execute(
+                $previousStandardCents,
+                $standardRateCents,
+                Carbon::now()->startOfDay(),
+                'Standard hourly rate',
+            );
+        });
+
+        $defaultClassKey = $this->defaultOperationClassKey($data['default_labor_category_key']);
+
+        try {
+            $resolved = $this->laborPolicyResolver->resolve(
+                ConcernBillingPosture::CustomerPay,
+                $defaultClassKey,
+            );
+        } catch (\Throwable $e) {
+            throw ValidationException::withMessages([
+                'standard_hourly_rate' => 'Labor settings saved but Customer Pay rate could not be resolved: '.$e->getMessage(),
+            ]);
+        }
+
+        if ($resolved->hourlyRateCents !== $standardRateCents
+            && ! in_array($defaultClassKey, $syncResult['preserved_class_keys'], true)
+        ) {
+            throw ValidationException::withMessages([
+                'standard_hourly_rate' => 'Customer Pay estimate rate did not match the standard hourly rate after save.',
+            ]);
+        }
 
         $this->syncOpenEstimateDocuments();
 
-        return $this->redirectWithStatus('Labor settings saved.');
+        $status = 'Labor settings saved. New Customer Pay estimates use $'
+            .number_format($resolved->hourlyRateCents / 100, 2)
+            .'/hr';
+        if ($syncResult['preserved_class_keys'] !== []) {
+            $status .= ' Specialty operation-class rates were left unchanged.';
+        }
+
+        return $this->redirectWithStatus($status);
+    }
+
+    private function defaultOperationClassKey(string $defaultCategoryKey): string
+    {
+        $operation = Operation::query()
+            ->with('operationClass')
+            ->where('code', $defaultCategoryKey)
+            ->where('is_active', true)
+            ->first();
+
+        return $operation?->operationClass?->key
+            ?? OperationClass::query()->orderBy('sort_order')->value('key')
+            ?? 'general_repair';
     }
 
 public function updateTax(Request $request): RedirectResponse

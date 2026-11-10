@@ -33,7 +33,13 @@ function laborSettingsPayload(array $overrides = []): array
         ])
         ->all();
 
+    $defaultKey = $overrides['default_labor_category_key'] ?? ShopSettings::DEFAULT_LABOR_CATEGORY_KEY;
+    $defaultCategory = collect($categories)->firstWhere('key', $defaultKey) ?? $categories[0] ?? null;
+    $standardHourlyRate = $overrides['standard_hourly_rate']
+        ?? ($defaultCategory['rate'] ?? number_format($settings->default_labor_rate_cents / 100, 2, '.', ''));
+
     return array_merge([
+        'standard_hourly_rate' => $standardHourlyRate,
         'default_labor_category_key' => ShopSettings::DEFAULT_LABOR_CATEGORY_KEY,
         'labor_categories' => $categories,
     ], $overrides);
@@ -50,7 +56,9 @@ test('admin can view operational shop settings defaults', function () {
         ->assertDontSee('Operational Domains')
         ->assertDontSee('Current outcomes')
         ->assertDontSee('Financial rules, estimate defaults, and document language')
-        ->assertSeeInOrder(['Your shop', 'Shop Identity', 'Appointments &amp; Setup', 'Money', 'Financial Rules', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Documents &amp; workflow', 'Documents / Disclaimers', 'Workflow Defaults', 'Label Printing', 'Connected services', 'Square Payments', 'Parts catalogs', 'Communications', 'Stations &amp; Phones'], false)
+        ->assertSeeInOrder(['Basic', 'Shop Identity', 'Appointments &amp; Setup', 'Financial Rules', 'Documents / Disclaimers', 'Optional', 'Online Requests', 'Square Payments', 'Parts catalogs', 'Advanced', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Workflow Defaults', 'Label Printing'], false)
+        ->assertSee('Communications')
+        ->assertSee('Stations & Phones')
         ->assertSee("@click=\"setActive('operations')\"", false)
         ->assertSee('<div class="subheader">Appointments &amp; Setup</div>', false)
         ->assertSee('Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.')
@@ -70,7 +78,9 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Worksheet notes')
         ->assertSee('Estimate logo')
         ->assertDontSee('name="default_labor_rate"', false)
-        ->assertSee('is the shop default labor rate', false)
+        ->assertSee('Standard hourly rate')
+        ->assertSee('name="standard_hourly_rate"', false)
+        ->assertSee('What a new Customer Pay estimate uses now')
         ->assertSee('Sales tax rate')
         ->assertSee('Tax display name')
         ->assertSee('Tax labor')
@@ -286,6 +296,7 @@ test('admin can persist authoritative operational defaults', function () {
     ])->assertRedirect(route('operations.settings.shop.edit'));
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
+        'standard_hourly_rate' => '175.50',
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -984,6 +995,7 @@ test('admin can update labor categories from shop settings', function () {
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
+        'standard_hourly_rate' => '180.00',
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -1015,7 +1027,9 @@ test('the default category rate row is the shop default labor rate', function ()
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    $payload = laborSettingsPayload();
+    $payload = laborSettingsPayload([
+        'standard_hourly_rate' => '172.25',
+    ]);
     $payload['labor_categories'] = collect($payload['labor_categories'])
         ->map(function (array $category): array {
             if ($category['key'] === ShopSettings::DEFAULT_LABOR_CATEGORY_KEY) {

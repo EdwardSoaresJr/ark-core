@@ -32,10 +32,12 @@
 >
     <h3 class="mb-1">Labor Policies</h3>
     <p class="text-secondary small">
-        Rows are operation classes. Columns are billing types. Each cell is an independent policy rate.
-        Click a cell to edit one policy. The shop currently keeps
-        <strong>RepairPal, Warranty, Comeback, and Internal</strong>
-        equal across classes by configuration - the matrix does not force that.
+        Advanced pricing by <strong>operation class</strong> (rows — Core-defined) and <strong>billing type</strong>
+        (columns — Core-defined). Each cell is an independent policy rate.
+        <strong>Click Edit on a cell</strong> to change one rate. Specialty cells (for example Diagnostics at a higher rate)
+        stay when you change the Standard hourly rate on the Labor tab.
+        Internal and Comeback policies default to <strong>$0.00</strong> customer price.
+        Existing estimate lines keep their snapshotted rates.
     </p>
 
     @if ($shopDefault)
@@ -94,7 +96,7 @@
                                 <td class="p-0">
                                     <button
                                         type="button"
-                                        class="btn btn-ghost-secondary w-100 justify-content-start rounded-0 font-monospace text-body"
+                                        class="btn btn-ghost-secondary w-100 justify-content-between rounded-0 text-body"
                                         aria-label="Edit {{ $class['name'] }} · {{ $posture['label'] }} rate, now {{ $cell['rate_display'] ?? 'not set' }}"
                                         @click="openEditor(
                                             @js($class['key']),
@@ -105,7 +107,8 @@
                                             @js($cell['effective_from'] ?? null)
                                         )"
                                     >
-                                        {{ $cell['rate_display'] ?? '-' }}
+                                        <span class="font-monospace">{{ $cell['rate_display'] ?? '-' }}</span>
+                                        <span class="small text-secondary ms-2">Edit</span>
                                     </button>
                                 </td>
                             @endforeach

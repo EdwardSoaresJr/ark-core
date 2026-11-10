@@ -638,92 +638,196 @@
                     </div>
 
                     <div class="card-body" id="financial-panel-labor" role="tabpanel" aria-labelledby="financial-tab-labor" x-show="financialTab === 'labor'">
-                        <form method="POST" action="{{ route('operations.settings.shop.labor.update') }}" data-settings-labor>
+                        @php
+                            $defaultLaborCategoryKey = old(
+                                'default_labor_category_key',
+                                collect($settings->laborCategories())->firstWhere('is_default', true)['key'] ?? 'mechanical',
+                            );
+                            $defaultLaborCategory = collect($settings->laborCategories())->firstWhere('key', $defaultLaborCategoryKey)
+                                ?? $settings->defaultLaborCategory();
+                            $standardHourlyRate = old(
+                                'standard_hourly_rate',
+                                number_format(($defaultLaborCategory['rate_cents'] ?? $settings->default_labor_rate_cents) / 100, 2, '.', ''),
+                            );
+                            $laborStandardPreview = $laborStandardPreview ?? ['rate_display' => null, 'hourly_rate_cents' => null, 'operation_class_key' => null, 'error' => null];
+                            $coreLaborCategoryKeys = collect(\App\Ark\Operations\Settings\ShopSettings::DEFAULT_LABOR_CATEGORIES)->pluck('key')->all();
+                        @endphp
+                        <form
+                            method="POST"
+                            action="{{ route('operations.settings.shop.labor.update') }}"
+                            data-settings-labor
+                            x-data="{
+                                standardRate: @js($standardHourlyRate),
+                                defaultKey: @js($defaultLaborCategoryKey),
+                                syncDefaultCategoryRate() {
+                                    const field = this.$root.querySelector('[data-labor-default-rate]');
+                                    if (field) {
+                                        field.value = this.standardRate;
+                                    }
+                                },
+                            }"
+                            @submit="syncDefaultCategoryRate()"
+                        >
                             @csrf
                             @method('PATCH')
-                            @php
-                                $defaultLaborCategoryKey = old(
-                                    'default_labor_category_key',
-                                    collect($settings->laborCategories())->firstWhere('is_default', true)['key'] ?? 'mechanical',
-                                );
-                            @endphp
-                            <h3 class="mb-1">Labor categories</h3>
-                            <p class="text-secondary small">Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet. The <strong>Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked); its <strong>Rate / hr</strong> is the shop default labor rate. Rounding always rounds <strong>up</strong> to the increment - never down. Set <strong>None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
-                            @error('labor_categories')
-                                <div class="alert alert-danger" role="alert">{{ $message }}</div>
-                            @enderror
-                            <div class="row g-2 px-3 mb-1 d-none d-xl-flex subheader" aria-hidden="true">
-                                <div class="col-xl-2">Category</div>
-                                <div class="col-xl-2">Rate / hr</div>
-                                <div class="col-xl-1">Min hrs</div>
-                                <div class="col-xl-4">Round to</div>
-                                <div class="col-xl-2">Adjust labor</div>
-                                <div class="col-xl-1">Default</div>
-                            </div>
-                            <div class="list-group">
-                                @foreach ($settings->laborCategories() as $index => $category)
-                                    @php
-                                        $allowsModifiers = (string) old('labor_categories.'.$index.'.allows_modifiers', $category['allows_modifiers'] ? '1' : '0') === '1';
-                                        $laborField = 'labor-category-'.$index;
-                                    @endphp
-                                    <div class="list-group-item" data-labor-category="{{ $category['key'] }}">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-12 col-xl-2">
-                                                <label for="{{ $laborField }}-name" class="form-label d-xl-none">Category</label>
-                                                <input type="hidden" name="labor_categories[{{ $index }}][key]" value="{{ $category['key'] }}">
-                                                <input id="{{ $laborField }}-name" name="labor_categories[{{ $index }}][name]" value="{{ old('labor_categories.'.$index.'.name', $category['name']) }}" required maxlength="64" aria-label="Category name" class="form-control fw-medium">
+
+                            <div class="card card-sm mb-4" data-settings-labor-standard>
+                                <div class="card-body">
+                                    <h3 class="mb-1">Standard hourly rate</h3>
+                                    <p class="text-secondary small mb-3">
+                                        This is the rate new <strong>Customer Pay</strong> estimates use for operation classes that still follow the shop standard.
+                                        Saving updates the default labor category and those Customer Pay policy rates together.
+                                        Advanced Labor Policies can still charge a different rate by operation class; specialty rates are not overwritten.
+                                    </p>
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-12 col-sm-6 col-lg-4" style="max-width: 16rem">
+                                            <label for="standard-hourly-rate" class="form-label">Standard hourly rate</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input
+                                                    id="standard-hourly-rate"
+                                                    name="standard_hourly_rate"
+                                                    x-model="standardRate"
+                                                    @input="syncDefaultCategoryRate()"
+                                                    required
+                                                    inputmode="decimal"
+                                                    class="form-control form-control-lg font-monospace @error('standard_hourly_rate') is-invalid @enderror"
+                                                    aria-describedby="standard-hourly-rate-help"
+                                                >
                                             </div>
-                                            <div class="col-6 col-xl-2">
-                                                <label for="{{ $laborField }}-rate" class="form-label d-xl-none">Rate / hr</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">$</span>
-                                                    <input id="{{ $laborField }}-rate" name="labor_categories[{{ $index }}][rate]" value="{{ old('labor_categories.'.$index.'.rate', number_format($category['rate_cents'] / 100, 2, '.', '')) }}" required inputmode="decimal" aria-label="Rate per hour for {{ $category['name'] }}" class="form-control font-monospace">
+                                            @error('standard_hourly_rate')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-12 col-lg">
+                                            <div class="subheader mb-1">What a new Customer Pay estimate uses now</div>
+                                            @if (! empty($laborStandardPreview['error']))
+                                                <div class="text-danger small" id="standard-hourly-rate-help">{{ $laborStandardPreview['error'] }}</div>
+                                            @else
+                                                <div class="h2 mb-0 font-monospace" id="standard-hourly-rate-help" data-labor-effective-rate>
+                                                    {{ $laborStandardPreview['rate_display'] ?? '—' }}
+                                                    <span class="fs-5 text-secondary fw-normal">/hr</span>
                                                 </div>
-                                            </div>
-                                            <div class="col-6 col-xl-1">
-                                                <label for="{{ $laborField }}-minimum" class="form-label d-xl-none">Min hrs</label>
-                                                <input id="{{ $laborField }}-minimum" name="labor_categories[{{ $index }}][minimum_hours]" value="{{ old('labor_categories.'.$index.'.minimum_hours', $category['minimum_hours']) }}" required inputmode="decimal" aria-label="Minimum hours for {{ $category['name'] }}" class="form-control font-monospace px-2">
-                                            </div>
-                                            <div class="col-12 col-xl-4">
-                                                <div class="form-label d-xl-none">Round to</div>
-                                                <div class="btn-group w-100" role="radiogroup" aria-label="Round billable hours for {{ $category['name'] }}">
-                                                    @foreach (['exact' => 'None', 'tenth' => '0.1', 'quarter' => '0.25', 'half' => '0.5'] as $ruleKey => $ruleLabel)
-                                                        <input
-                                                            type="radio"
-                                                            id="{{ $laborField }}-rounding-{{ $ruleKey }}"
-                                                            name="labor_categories[{{ $index }}][rounding_rule]"
-                                                            value="{{ $ruleKey }}"
-                                                            @checked(old('labor_categories.'.$index.'.rounding_rule', $category['rounding_rule']) === $ruleKey)
-                                                            class="btn-check"
-                                                        >
-                                                        <label for="{{ $laborField }}-rounding-{{ $ruleKey }}" class="btn btn-sm btn-outline-primary">{{ $ruleLabel }}@if ($ruleKey !== 'exact')<span class="ms-1 small">hr</span>@endif</label>
-                                                    @endforeach
+                                                <div class="small text-secondary">
+                                                    Resolved from Labor Policies
+                                                    @if (! empty($laborPoliciesMatrix['shop_default']['operation_class_name']))
+                                                        ({{ $laborPoliciesMatrix['shop_default']['operation_class_name'] }} · Customer Pay)
+                                                    @endif
+                                                    — not only the number above until you save.
                                                 </div>
-                                            </div>
-                                            <div class="col-8 col-xl-2">
-                                                <input type="hidden" name="labor_categories[{{ $index }}][allows_modifiers]" value="0">
-                                                <label class="form-check mb-0">
-                                                    <input
-                                                        type="checkbox"
-                                                        name="labor_categories[{{ $index }}][allows_modifiers]"
-                                                        value="1"
-                                                        @checked($allowsModifiers)
-                                                        class="form-check-input"
-                                                    >
-                                                    <span class="form-check-label">Allow modifiers</span>
-                                                    <span class="form-check-description">Difficulty, hour override, manual rate on worksheet.</span>
-                                                </label>
-                                            </div>
-                                            <div class="col-4 col-xl-1">
-                                                <label class="form-check mb-0">
-                                                    <input type="radio" name="default_labor_category_key" value="{{ $category['key'] }}" @checked($defaultLaborCategoryKey === $category['key']) class="form-check-input">
-                                                    <span class="form-check-label">Default</span>
-                                                </label>
-                                            </div>
+                                            @endif
                                         </div>
                                     </div>
-                                @endforeach
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-link p-0" @click="setFinancialTab('labor-policies')">
+                                            Open Labor Policies for operation-class and billing-type rates
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
+
+                            <details class="mb-3" data-settings-labor-advanced open>
+                                <summary class="fw-medium mb-2" style="cursor: pointer">Advanced labor rules</summary>
+                                <p class="text-secondary small">
+                                    Categories are Core-defined (rename allowed; new categories cannot be added here).
+                                    <strong>Min hrs</strong> is the floor billed when entered hours are lower.
+                                    <strong>Round to</strong> always rounds <strong>up</strong> (never down); choose None to skip.
+                                    <strong>Allow modifiers</strong> permits difficulty, hour override, and manual rate on the worksheet.
+                                    Existing repair-order line rates stay snapshotted until the line category changes or an authorized reprice.
+                                </p>
+                                @error('labor_categories')
+                                    <div class="alert alert-danger" role="alert">{{ $message }}</div>
+                                @enderror
+                                <div class="row g-2 px-3 mb-1 d-none d-xl-flex subheader" aria-hidden="true">
+                                    <div class="col-xl-2">Category</div>
+                                    <div class="col-xl-2">Rate / hr</div>
+                                    <div class="col-xl-1">Min hrs</div>
+                                    <div class="col-xl-4">Round to</div>
+                                    <div class="col-xl-2">Adjust labor</div>
+                                    <div class="col-xl-1">Default</div>
+                                </div>
+                                <div class="list-group">
+                                    @foreach ($settings->laborCategories() as $index => $category)
+                                        @php
+                                            $allowsModifiers = (string) old('labor_categories.'.$index.'.allows_modifiers', $category['allows_modifiers'] ? '1' : '0') === '1';
+                                            $laborField = 'labor-category-'.$index;
+                                            $isDefaultCategory = $defaultLaborCategoryKey === $category['key'];
+                                            $isCoreCategory = in_array($category['key'], $coreLaborCategoryKeys, true);
+                                        @endphp
+                                        <div class="list-group-item" data-labor-category="{{ $category['key'] }}">
+                                            <div class="row g-2 align-items-center">
+                                                <div class="col-12 col-xl-2">
+                                                    <label for="{{ $laborField }}-name" class="form-label d-xl-none">Category</label>
+                                                    <input type="hidden" name="labor_categories[{{ $index }}][key]" value="{{ $category['key'] }}">
+                                                    <input id="{{ $laborField }}-name" name="labor_categories[{{ $index }}][name]" value="{{ old('labor_categories.'.$index.'.name', $category['name']) }}" required maxlength="64" aria-label="Category name" class="form-control fw-medium">
+                                                    @if ($isCoreCategory)
+                                                        <div class="form-hint">Core category</div>
+                                                    @endif
+                                                </div>
+                                                <div class="col-6 col-xl-2">
+                                                    <label for="{{ $laborField }}-rate" class="form-label d-xl-none">Rate / hr</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">$</span>
+                                                        <input
+                                                            id="{{ $laborField }}-rate"
+                                                            name="labor_categories[{{ $index }}][rate]"
+                                                            value="{{ old('labor_categories.'.$index.'.rate', number_format($category['rate_cents'] / 100, 2, '.', '')) }}"
+                                                            required
+                                                            inputmode="decimal"
+                                                            aria-label="Rate per hour for {{ $category['name'] }}"
+                                                            class="form-control font-monospace"
+                                                            @if ($isDefaultCategory) data-labor-default-rate @endif
+                                                            :data-labor-default-rate="defaultKey === @js($category['key']) ? true : null"
+                                                            :readonly="defaultKey === @js($category['key'])"
+                                                        >
+                                                    </div>
+                                                    <div class="form-hint" x-show="defaultKey === @js($category['key'])" x-cloak>Matches Standard hourly rate</div>
+                                                </div>
+                                                <div class="col-6 col-xl-1">
+                                                    <label for="{{ $laborField }}-minimum" class="form-label d-xl-none">Min hrs</label>
+                                                    <input id="{{ $laborField }}-minimum" name="labor_categories[{{ $index }}][minimum_hours]" value="{{ old('labor_categories.'.$index.'.minimum_hours', $category['minimum_hours']) }}" required inputmode="decimal" aria-label="Minimum hours for {{ $category['name'] }}" class="form-control font-monospace px-2">
+                                                </div>
+                                                <div class="col-12 col-xl-4">
+                                                    <div class="form-label d-xl-none">Round to</div>
+                                                    <div class="btn-group w-100" role="radiogroup" aria-label="Round billable hours for {{ $category['name'] }}">
+                                                        @foreach (['exact' => 'None', 'tenth' => '0.1', 'quarter' => '0.25', 'half' => '0.5'] as $ruleKey => $ruleLabel)
+                                                            <input
+                                                                type="radio"
+                                                                id="{{ $laborField }}-rounding-{{ $ruleKey }}"
+                                                                name="labor_categories[{{ $index }}][rounding_rule]"
+                                                                value="{{ $ruleKey }}"
+                                                                @checked(old('labor_categories.'.$index.'.rounding_rule', $category['rounding_rule']) === $ruleKey)
+                                                                class="btn-check"
+                                                            >
+                                                            <label for="{{ $laborField }}-rounding-{{ $ruleKey }}" class="btn btn-sm btn-outline-primary">{{ $ruleLabel }}@if ($ruleKey !== 'exact')<span class="ms-1 small">hr</span>@endif</label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                                <div class="col-8 col-xl-2">
+                                                    <input type="hidden" name="labor_categories[{{ $index }}][allows_modifiers]" value="0">
+                                                    <label class="form-check mb-0">
+                                                        <input
+                                                            type="checkbox"
+                                                            name="labor_categories[{{ $index }}][allows_modifiers]"
+                                                            value="1"
+                                                            @checked($allowsModifiers)
+                                                            class="form-check-input"
+                                                        >
+                                                        <span class="form-check-label">Allow modifiers</span>
+                                                    </label>
+                                                </div>
+                                                <div class="col-4 col-xl-1">
+                                                    <label class="form-check mb-0">
+                                                        <input type="radio" name="default_labor_category_key" value="{{ $category['key'] }}" @checked($defaultLaborCategoryKey === $category['key']) class="form-check-input" @change="defaultKey = $event.target.value; $nextTick(() => syncDefaultCategoryRate())">
+                                                        <span class="form-check-label">Default</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </details>
+
                             <div class="d-flex justify-content-end border-top pt-3 mt-3">
                                 <button type="submit" class="btn btn-primary">Save Labor</button>
                             </div>

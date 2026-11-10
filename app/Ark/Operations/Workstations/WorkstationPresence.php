@@ -38,7 +38,11 @@ final class WorkstationPresence
         $request->session()->forget(self::SESSION_LOCKED);
 
         $workstation = self::resolveBoundWorkstation($request);
-        $needsBinding = $workstation === null && ! self::bindPromptDismissed($request);
+        // Basic shops with a single default station (or none) are not interrupted.
+        // Multi-station shops still get the bind prompt until bound or dismissed.
+        $needsBinding = $workstation === null
+            && ! self::bindPromptDismissed($request)
+            && self::stationBindingPromptEnabled();
         $currentOperator = $workstation?->currentOperator;
 
         return new self(
@@ -50,6 +54,15 @@ final class WorkstationPresence
             needsPinSetup: false,
             canManagePresence: true,
         );
+    }
+
+    /**
+     * Station browser binding is optional for basic shop workflows.
+     * Prompt only when the shop has enabled multi-station layout.
+     */
+    public static function stationBindingPromptEnabled(): bool
+    {
+        return Workstation::query()->where('is_active', true)->count() > 1;
     }
 
     public static function bindPromptDismissed(Request $request): bool
