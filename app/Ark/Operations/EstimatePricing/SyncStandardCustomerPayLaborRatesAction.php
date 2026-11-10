@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
  * Applies a shop standard hourly rate to Customer Pay policies that still match the previous standard.
  * Operation classes with a deliberately different Customer Pay rate are left alone.
  */
-final class SyncStandardCustomerPayLaborRatesAction
+class SyncStandardCustomerPayLaborRatesAction
 {
     public function __construct(
         private readonly UpsertLaborPolicyAction $upsertLaborPolicy,

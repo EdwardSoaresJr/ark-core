@@ -87,53 +87,60 @@ public function updateLabor(Request $request): RedirectResponse
             ]);
         }
 
-        $syncResult = DB::transaction(function () use (
+        $defaultClassKey = $this->defaultOperationClassKey($data['default_labor_category_key']);
+
+        /** @var array{sync: array{updated_class_keys: list<string>, preserved_class_keys: list<string>, previous_standard_cents: int, next_standard_cents: int}, resolved_cents: int} $committed */
+        $committed = DB::transaction(function () use (
             $settings,
             $laborCategories,
             $defaultRateCents,
             $previousStandardCents,
             $standardRateCents,
+            $defaultClassKey,
         ): array {
             $settings->update([
                 'default_labor_rate_cents' => $defaultRateCents,
                 'labor_categories' => $laborCategories,
             ]);
 
-            return $this->syncStandardCustomerPayLaborRates->execute(
+            $syncResult = $this->syncStandardCustomerPayLaborRates->execute(
                 $previousStandardCents,
                 $standardRateCents,
                 Carbon::now()->startOfDay(),
                 'Standard hourly rate',
             );
+
+            try {
+                $resolved = $this->laborPolicyResolver->resolve(
+                    ConcernBillingPosture::CustomerPay,
+                    $defaultClassKey,
+                );
+            } catch (\Throwable $e) {
+                throw ValidationException::withMessages([
+                    'standard_hourly_rate' => 'Customer Pay rate could not be resolved: '.$e->getMessage(),
+                ]);
+            }
+
+            if ($resolved->hourlyRateCents !== $standardRateCents
+                && ! in_array($defaultClassKey, $syncResult['preserved_class_keys'], true)
+            ) {
+                throw ValidationException::withMessages([
+                    'standard_hourly_rate' => 'Customer Pay estimate rate did not match the standard hourly rate.',
+                ]);
+            }
+
+            return [
+                'sync' => $syncResult,
+                'resolved_cents' => $resolved->hourlyRateCents,
+            ];
         });
-
-        $defaultClassKey = $this->defaultOperationClassKey($data['default_labor_category_key']);
-
-        try {
-            $resolved = $this->laborPolicyResolver->resolve(
-                ConcernBillingPosture::CustomerPay,
-                $defaultClassKey,
-            );
-        } catch (\Throwable $e) {
-            throw ValidationException::withMessages([
-                'standard_hourly_rate' => 'Labor settings saved but Customer Pay rate could not be resolved: '.$e->getMessage(),
-            ]);
-        }
-
-        if ($resolved->hourlyRateCents !== $standardRateCents
-            && ! in_array($defaultClassKey, $syncResult['preserved_class_keys'], true)
-        ) {
-            throw ValidationException::withMessages([
-                'standard_hourly_rate' => 'Customer Pay estimate rate did not match the standard hourly rate after save.',
-            ]);
-        }
 
         $this->syncOpenEstimateDocuments();
 
         $status = 'Labor settings saved. New Customer Pay estimates use $'
-            .number_format($resolved->hourlyRateCents / 100, 2)
+            .number_format($committed['resolved_cents'] / 100, 2)
             .'/hr';
-        if ($syncResult['preserved_class_keys'] !== []) {
+        if ($committed['sync']['preserved_class_keys'] !== []) {
             $status .= ' Specialty operation-class rates were left unchanged.';
         }
 

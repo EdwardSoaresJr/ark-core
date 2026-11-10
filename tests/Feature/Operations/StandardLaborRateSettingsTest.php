@@ -2,6 +2,7 @@
 
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
 use App\Ark\Operations\EstimatePricing\OperationClass;
+use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
 use App\Ark\Operations\Labor\LaborAdjustment;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
@@ -222,7 +223,7 @@ test('station bind prompt is skipped for a single-station shop', function () {
         ->assertDontSee('data-ws-bind-panel', false);
 });
 
-test('station bind prompt appears when multiple stations are active', function () {
+test('station bind prompt stays off for multi-station and telephony-only shops until explicit enablement exists', function () {
     Workstation::query()->delete();
     $shopId = ShopSettings::current()->id;
     Workstation::query()->create([
@@ -236,11 +237,57 @@ test('station bind prompt appears when multiple stations are active', function (
         'is_active' => true,
     ]);
 
-    expect(WorkstationPresence::stationBindingPromptEnabled())->toBeTrue();
+    // No ShopSettings "stations enabled" flag exists yet (only workstation_idle_lock_minutes).
+    expect(WorkstationPresence::stationBindingPromptEnabled())->toBeFalse();
 
     $this->actingAs($this->admin)
         ->get('/app')
         ->assertOk()
-        ->assertSee('Where are you working?', false)
-        ->assertSee('Choose the station for this browser.', false);
+        ->assertDontSee('data-needs-binding="1"', false)
+        ->assertDontSee('data-ws-bind-panel', false)
+        ->assertDontSee('Choose the station for this browser.', false);
+});
+
+test('failed Customer Pay verification rolls back labor category and policy writes', function () {
+    $beforeCents = (int) ShopSettings::current()->default_labor_rate_cents;
+    $beforePolicyCents = app(LaborPolicyResolver::class)->resolve(
+        ConcernBillingPosture::CustomerPay,
+        'general_repair',
+    )->hourlyRateCents;
+
+    // Sync is a no-op that claims no specialty preserve, so verification must fail and roll back.
+    $this->mock(SyncStandardCustomerPayLaborRatesAction::class, function ($mock) use ($beforeCents): void {
+        $mock->shouldReceive('execute')
+            ->once()
+            ->andReturn([
+                'updated_class_keys' => [],
+                'preserved_class_keys' => [],
+                'previous_standard_cents' => $beforeCents,
+                'next_standard_cents' => 19900,
+            ]);
+    });
+
+    $this->actingAs($this->admin)
+        ->from(route('operations.settings.shop.edit', [
+            'section' => 'financial',
+            'financial-tab' => 'labor',
+        ]))
+        ->patch(route('operations.settings.shop.labor.update'), standardLaborSettingsPayload([
+            'standard_hourly_rate' => '199.00',
+        ]))
+        ->assertRedirect(route('operations.settings.shop.edit', [
+            'section' => 'financial',
+            'financial-tab' => 'labor',
+        ]))
+        ->assertSessionHasErrors('standard_hourly_rate');
+
+    ShopSettings::forgetCurrent();
+
+    expect((int) ShopSettings::current()->default_labor_rate_cents)->toBe($beforeCents)
+        ->and(collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'mechanical')['rate_cents'])
+        ->toBe($beforeCents)
+        ->and(app(LaborPolicyResolver::class)->resolve(
+            ConcernBillingPosture::CustomerPay,
+            'general_repair',
+        )->hourlyRateCents)->toBe($beforePolicyCents);
 });
