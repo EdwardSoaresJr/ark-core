@@ -47,7 +47,9 @@ use InvalidArgumentException;
     'taxable_parts',
     'taxable_shop_fees',
     'shop_fee_enabled',
+    'shop_fee_mode',
     'shop_fee_rate',
+    'shop_fee_flat_cents',
     'shop_fee_cap_cents',
     'default_deposit_enabled',
     'default_deposit_include_parts',
@@ -408,6 +410,7 @@ TEXT;
         'taxable_parts' => 'boolean',
         'taxable_shop_fees' => 'boolean',
         'shop_fee_enabled' => 'boolean',
+        'shop_fee_flat_cents' => 'integer',
         'default_deposit_enabled' => 'boolean',
         'default_deposit_include_parts' => 'boolean',
         'default_deposit_include_diagnostics' => 'boolean',
@@ -583,7 +586,9 @@ TEXT;
             'taxable_parts' => true,
             'taxable_shop_fees' => false,
             'shop_fee_enabled' => false,
+            'shop_fee_mode' => 'percent',
             'shop_fee_rate' => 0,
+            'shop_fee_flat_cents' => null,
             'shop_fee_cap_cents' => null,
             'default_deposit_enabled' => true,
             'default_deposit_include_parts' => true,
@@ -1111,6 +1116,20 @@ TEXT;
         return $this->shop_fee_cap_cents === null
             ? ''
             : number_format($this->shop_fee_cap_cents / 100, 2, '.', '');
+    }
+
+    public function shopFeeFlat(): string
+    {
+        return $this->shop_fee_flat_cents === null
+            ? ''
+            : number_format($this->shop_fee_flat_cents / 100, 2, '.', '');
+    }
+
+    public function shopFeeMode(): string
+    {
+        $mode = (string) ($this->shop_fee_mode ?? 'percent');
+
+        return in_array($mode, ['percent', 'flat'], true) ? $mode : 'percent';
     }
 
     public function defaultDepositEnabled(): bool

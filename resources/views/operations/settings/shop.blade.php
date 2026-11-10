@@ -711,29 +711,59 @@
                     <div class="card-body" id="financial-panel-shop-fees" role="tabpanel" aria-labelledby="financial-tab-shop-fees" x-show="financialTab === 'shop-fees'" x-cloak>
                         @php
                             $shopFeeEnabled = (bool) old('shop_fee_enabled', $settings->shop_fee_enabled);
+                            $shopFeeMode = old('shop_fee_mode', $settings->shopFeeMode());
                         @endphp
-                        <form method="POST" action="{{ route('operations.settings.shop.fees.update') }}" x-data="{ shopFeeEnabled: @js($shopFeeEnabled) }" style="max-width: 48rem" data-settings-fees>
+                        <form
+                            method="POST"
+                            action="{{ route('operations.settings.shop.fees.update') }}"
+                            x-data="{ shopFeeEnabled: @js($shopFeeEnabled), shopFeeMode: @js($shopFeeMode) }"
+                            style="max-width: 48rem"
+                            data-settings-fees
+                        >
                             @csrf
                             @method('PATCH')
                             <p class="text-secondary small">
-                                Shop-wide fee rate and cap for scopes set to <strong>Shop default</strong> or <strong>Customer pay</strong>. Each scope on the estimate has its own Billing setting - billing classes do not turn fees on or off for the whole repair order.
+                                Applies to new repair orders only. Existing open ROs keep the fee rules they were created with.
+                                Billing on each scope still controls whether that work is fee-eligible.
                             </p>
                             <label class="form-check form-switch">
                                 <input type="hidden" name="shop_fee_enabled" value="0">
                                 <input type="checkbox" name="shop_fee_enabled" value="1" x-model="shopFeeEnabled" @checked($shopFeeEnabled) class="form-check-input">
                                 <span class="form-check-label">Charge a shop fee</span>
                             </label>
-                            <p x-show="! shopFeeEnabled" @if ($shopFeeEnabled) x-cloak @endif class="text-secondary small">No shop fee is added to estimates. Turn it on to set the rate and cap.</p>
-                            <div x-show="shopFeeEnabled" @unless ($shopFeeEnabled) x-cloak @endunless class="row g-3">
-                                <div class="col-12 col-md-4">
-                                    <label for="settings-shop-fee-rate" class="form-label">Shop fee rate</label>
-                                    <input id="settings-shop-fee-rate" name="shop_fee_rate" value="{{ old('shop_fee_rate', $settings->shop_fee_rate) }}" required inputmode="decimal" @class(['form-control', 'is-invalid' => $errors->has('shop_fee_rate')])>
-                                    @error('shop_fee_rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-12 col-md-4">
-                                    <label for="settings-shop-fee-cap" class="form-label">Estimate fee cap</label>
-                                    <input id="settings-shop-fee-cap" name="shop_fee_cap" value="{{ old('shop_fee_cap', $settings->shopFeeCap()) }}" inputmode="decimal" placeholder="No cap" @class(['form-control', 'is-invalid' => $errors->has('shop_fee_cap')])>
-                                    @error('shop_fee_cap')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <p x-show="! shopFeeEnabled" @if ($shopFeeEnabled) x-cloak @endif class="text-secondary small">No shop fee is added to estimates. Turn it on to choose percentage or a fixed dollar fee.</p>
+                            <div x-show="shopFeeEnabled" @unless ($shopFeeEnabled) x-cloak @endunless class="vstack gap-3">
+                                <fieldset class="mb-0">
+                                    <legend class="form-label mb-2">Fee type</legend>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <label class="form-check">
+                                            <input type="radio" class="form-check-input" name="shop_fee_mode" value="percent" x-model="shopFeeMode" @checked($shopFeeMode === 'percent')>
+                                            <span class="form-check-label">Percentage of eligible charges</span>
+                                        </label>
+                                        <label class="form-check">
+                                            <input type="radio" class="form-check-input" name="shop_fee_mode" value="flat" x-model="shopFeeMode" @checked($shopFeeMode === 'flat')>
+                                            <span class="form-check-label">Fixed dollar fee per RO</span>
+                                        </label>
+                                    </div>
+                                    @error('shop_fee_mode')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </fieldset>
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-4" x-show="shopFeeMode === 'percent'" @if ($shopFeeMode !== 'percent') x-cloak @endif>
+                                        <label for="settings-shop-fee-rate" class="form-label">Shop fee rate (%)</label>
+                                        <input id="settings-shop-fee-rate" name="shop_fee_rate" value="{{ old('shop_fee_rate', $settings->shop_fee_rate) }}" inputmode="decimal" :disabled="shopFeeMode !== 'percent'" @class(['form-control', 'is-invalid' => $errors->has('shop_fee_rate')])>
+                                        @error('shop_fee_rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-12 col-md-4" x-show="shopFeeMode === 'flat'" @if ($shopFeeMode !== 'flat') x-cloak @endif>
+                                        <label for="settings-shop-fee-flat" class="form-label">Flat fee per RO ($)</label>
+                                        <input id="settings-shop-fee-flat" name="shop_fee_flat" value="{{ old('shop_fee_flat', $settings->shopFeeFlat()) }}" inputmode="decimal" :disabled="shopFeeMode !== 'flat'" @class(['form-control', 'is-invalid' => $errors->has('shop_fee_flat')])>
+                                        @error('shop_fee_flat')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <div class="form-hint">Charged once per repair order, not per concern or line.</div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <label for="settings-shop-fee-cap" class="form-label">Estimate fee cap</label>
+                                        <input id="settings-shop-fee-cap" name="shop_fee_cap" value="{{ old('shop_fee_cap', $settings->shopFeeCap()) }}" inputmode="decimal" placeholder="No cap" @class(['form-control', 'is-invalid' => $errors->has('shop_fee_cap')])>
+                                        @error('shop_fee_cap')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end border-top pt-3 mt-3">

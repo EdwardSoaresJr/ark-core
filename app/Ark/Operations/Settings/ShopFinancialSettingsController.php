@@ -8,12 +8,15 @@ use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
 use App\Ark\Operations\EstimatePricing\LaborRateType;
 use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix;
 use App\Ark\Operations\EstimatePricing\OperationClass;
+use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
 use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\ManualPaymentMethods;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
+use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
 use App\Ark\Operations\Settings\Concerns\NormalizesShopPartsMatrices;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -293,17 +296,48 @@ class ShopFinancialSettingsController
     {
         $data = $request->validate([
             'shop_fee_enabled' => ['nullable', 'boolean'],
+            'shop_fee_mode' => ['nullable', 'string', Rule::in(['percent', 'flat'])],
             'shop_fee_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'shop_fee_flat' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'shop_fee_cap' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
         ]);
 
-        ShopSettings::current()->update([
-            'shop_fee_enabled' => (bool) ($data['shop_fee_enabled'] ?? false),
+        $enabled = (bool) ($data['shop_fee_enabled'] ?? false);
+        $mode = (string) ($data['shop_fee_mode'] ?? ShopSettings::current()->shopFeeMode());
+        if (! in_array($mode, ['percent', 'flat'], true)) {
+            $mode = 'percent';
+        }
+
+        if ($enabled && $mode === 'flat' && ! filled($data['shop_fee_flat'] ?? null)) {
+            throw ValidationException::withMessages([
+                'shop_fee_flat' => 'Enter a fixed dollar fee when using a flat shop fee.',
+            ]);
+        }
+
+        if ($enabled && $mode === 'percent' && ! filled($data['shop_fee_rate'] ?? null)) {
+            throw ValidationException::withMessages([
+                'shop_fee_rate' => 'Enter a shop fee rate when using a percentage fee.',
+            ]);
+        }
+
+        $settings = ShopSettings::current();
+
+        // Stamp living ROs that still use live settings so this save cannot reprice them.
+        $this->stampLivingRepairOrdersWithCurrentShopFeeProfile($settings);
+
+        $settings->update([
+            'shop_fee_enabled' => $enabled,
+            'shop_fee_mode' => $mode,
             'shop_fee_rate' => $data['shop_fee_rate'] ?? 0,
-            'shop_fee_cap_cents' => filled($data['shop_fee_cap'] ?? null) ? (int) round(((float) $data['shop_fee_cap']) * 100) : null,
+            'shop_fee_flat_cents' => filled($data['shop_fee_flat'] ?? null)
+                ? (int) round(((float) $data['shop_fee_flat']) * 100)
+                : null,
+            'shop_fee_cap_cents' => filled($data['shop_fee_cap'] ?? null)
+                ? (int) round(((float) $data['shop_fee_cap']) * 100)
+                : null,
         ]);
 
-        $this->recalculateLivingRepairOrderTotals();
+        // Forward-only: do not recalculate living ROs when fee settings change.
         $this->syncOpenEstimateDocuments();
 
         return $this->redirectWithStatus('Shop fee settings saved.');
@@ -463,5 +497,24 @@ class ShopFinancialSettingsController
         return redirect()
             ->route('operations.settings.shop.edit', ['section' => 'payments'])
             ->with('status', 'Payment methods saved.');
+    }
+
+    /**
+     * Capture current fee settings onto living ROs that still lack a stamp so a subsequent
+     * settings save cannot change their fee math on later recalculation.
+     */
+    private function stampLivingRepairOrdersWithCurrentShopFeeProfile(ShopSettings $settings): void
+    {
+        $profile = ShopFeeProfile::fromShopSettings($settings)->toArray();
+
+        RepairOrder::query()
+            ->where('status', '!=', RepairOrderStatus::Closed->value)
+            ->whereNull('shop_fee_profile')
+            ->orderBy('id')
+            ->chunkById(100, function ($repairOrders) use ($profile): void {
+                foreach ($repairOrders as $repairOrder) {
+                    $repairOrder->forceFill(['shop_fee_profile' => $profile])->saveQuietly();
+                }
+            });
     }
 }
