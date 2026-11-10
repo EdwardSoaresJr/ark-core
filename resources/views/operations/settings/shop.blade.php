@@ -687,6 +687,7 @@
                                                 <input
                                                     id="standard-hourly-rate"
                                                     name="standard_hourly_rate"
+                                                    value="{{ $standardHourlyRate }}"
                                                     x-model="standardRate"
                                                     @input="syncDefaultCategoryRate()"
                                                     required
