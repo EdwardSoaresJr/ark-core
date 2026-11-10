@@ -5,8 +5,14 @@
 
 ## Corrected Core SHA
 
- on  (PR #172).
+Confirm tip before pinning:
 
+```bash
+git fetch origin settings/new-shop-labor-clarity
+git rev-parse origin/settings/new-shop-labor-clarity
+```
+
+This plan’s atomicity + station-prompt fixes are on that branch (PR #172). Use the tip SHA returned by the command above.
 
 ## What staging gets
 
@@ -21,7 +27,7 @@
 
 ## Staging pin procedure (SaaS / ark-stancl)
 
-1. Owner authorizes staging Core pin to .
+1. Owner authorizes staging Core pin to the tip SHA from the command above.
 2. On the staging host only (`demo.staging.arksms.com` / staging droplet), update the Core pin the same way other staging Core pins are applied (`vendor/ark/core` pin / `deploy/deploy.sh <sha>` per `docs/ARK-STANCL.md`). Do **not** run production `deploy.sh` or Landlord shop-release for LugsNPlugs.
 3. Run `bin/build-shop-assets` when the pin change requires it (per stancl README).
 4. Smoke on `demo.staging.arksms.com` as demo owner: Settings → Financial Rules → Labor (standard rate + effective rate), Labor Policies (Edit cells), Settings nav groups Basic / Optional / Advanced, first entry without station modal.
