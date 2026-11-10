@@ -127,8 +127,9 @@ test('saving which billing a class starts concerns with leaves existing concerns
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'billing-classes']))
         ->assertOk()
-        ->assertSee('data-billing-class-concern-billing', false)
-        ->assertSee('New concerns bill as', false);
+        ->assertSee('data-billing-classes-shared', false)
+        ->assertSee('New concerns bill as', false)
+        ->assertSee('concern_billing_posture', false);
 
     $rows[0]['concern_billing_posture'] = 'warranty_repairpal';
     $this->patch(route('operations.settings.shop.customer-types.update'), ['customer_types' => $rows])
