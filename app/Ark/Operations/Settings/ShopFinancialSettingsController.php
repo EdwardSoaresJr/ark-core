@@ -39,6 +39,7 @@ class ShopFinancialSettingsController
         private readonly SyncStandardCustomerPayLaborRatesAction $syncStandardCustomerPayLaborRates,
         private readonly LaborPolicyResolver $laborPolicyResolver,
         private readonly UpsertLaborPolicyAction $upsertLaborPolicy,
+        private readonly PersistCustomerBillingClasses $persistCustomerBillingClasses,
     ) {}
 
     protected function estimateDocuments(): EstimateDocumentService
@@ -389,8 +390,61 @@ class ShopFinancialSettingsController
 
     public function updateCustomerTypes(Request $request): RedirectResponse
     {
-        $data = $request->validate([
+        $data = $request->validate($this->customerTypesValidationRules());
+
+        $this->persistCustomerBillingClasses->replaceAll(
+            ShopSettings::current(),
+            $data['customer_types'] ?? [],
+        );
+
+        // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
+        return $this->redirectWithStatus('Billing class settings saved.');
+    }
+
+    public function showCustomerTypes(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json($this->persistCustomerBillingClasses->catalog(ShopSettings::current()));
+    }
+
+    public function updateCustomerTypeItem(Request $request, string $classKey): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate($this->singleCustomerTypeValidationRules());
+
+        $saved = $this->persistCustomerBillingClasses->upsertOne(
+            ShopSettings::current(),
+            $classKey,
+            $data,
+        );
+
+        return response()->json([
+            'class' => $saved,
+            'catalog' => $this->persistCustomerBillingClasses->catalog(ShopSettings::current()),
+            'status' => 'Billing class saved.',
+        ]);
+    }
+
+    public function storeCustomerType(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate($this->singleCustomerTypeValidationRules());
+
+        $saved = $this->persistCustomerBillingClasses->create(ShopSettings::current(), $data);
+
+        return response()->json([
+            'class' => $saved,
+            'catalog' => $this->persistCustomerBillingClasses->catalog(ShopSettings::current()),
+            'status' => 'Billing class created.',
+        ], 201);
+    }
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    private function customerTypesValidationRules(): array
+    {
+        return [
             'customer_types' => ['nullable', 'array', 'max:20'],
+            'customer_types.*.key' => ['nullable', 'string', 'max:48'],
+            'customer_types.*.labor_column_key' => ['nullable', 'string', 'max:48'],
             'customer_types.*.name' => ['nullable', 'string', 'max:255'],
             'customer_types.*.default_parts_matrix_key' => ['nullable', 'string', 'max:255'],
             'customer_types.*.shop_fees_enabled' => ['nullable', 'boolean'],
@@ -403,27 +457,30 @@ class ShopFinancialSettingsController
                 fn (ConcernBillingPosture $posture): string => $posture->value,
                 ConcernBillingPosture::advisorSelectableCases(),
             ))],
-        ]);
+        ];
+    }
 
-        DB::transaction(function () use ($data): void {
-            ShopSettings::forgetCurrent();
-            $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
-            ShopSettings::bindCurrent($settings);
-
-            // Freeze living ROs that still lack a commercial stamp under the *current* rules
-            // before this save can change discounts / class fee overrides / matrices.
-            $this->stampLivingRepairOrdersWithCurrentCommercialPricingProfile($settings);
-            $this->ensureLivingCommercialProfilesIncludePartsMatrices($settings);
-
-            $settings->update([
-                'customer_types' => $this->normalizeCustomerTypes($data['customer_types'] ?? [], $settings->partsMatrices()),
-                'commercial_pricing_profile_version' => max(1, (int) ($settings->commercial_pricing_profile_version ?? 0) + 1),
-            ]);
-            ShopSettings::forgetCurrent();
-        });
-
-        // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
-        return $this->redirectWithStatus('Billing class settings saved.');
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    private function singleCustomerTypeValidationRules(): array
+    {
+        return [
+            'key' => ['nullable', 'string', 'max:48'],
+            'labor_column_key' => ['nullable', 'string', 'max:48'],
+            'name' => ['required', 'string', 'max:255'],
+            'default_parts_matrix_key' => ['nullable', 'string', 'max:255'],
+            'shop_fees_enabled' => ['nullable', 'boolean'],
+            'shop_fee_rate_override' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount_type' => ['nullable', 'string', Rule::in(['none', 'labor', 'parts', 'both'])],
+            'discount_amount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'document_presentation_profile' => ['nullable', Rule::enum(CustomerPartPresentationProfile::class)],
+            'pill_color' => ['nullable', 'string', Rule::in(\App\Ark\Operations\Settings\BillingClassPillColor::keys())],
+            'concern_billing_posture' => ['nullable', 'string', Rule::in(array_map(
+                fn (ConcernBillingPosture $posture): string => $posture->value,
+                ConcernBillingPosture::advisorSelectableCases(),
+            ))],
+        ];
     }
 
     public function updatePartsMatrix(Request $request, string $matrixKey): RedirectResponse

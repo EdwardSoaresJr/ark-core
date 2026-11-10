@@ -74,8 +74,15 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/deposits', [ShopFinancialSettingsController::class, 'updateDeposits'])
         ->name('operations.settings.shop.deposits.update');
 
+    Route::get('/app/settings/shop/customer-types', [ShopFinancialSettingsController::class, 'showCustomerTypes'])
+        ->name('operations.settings.shop.customer-types.show');
     Route::patch('/app/settings/shop/customer-types', [ShopFinancialSettingsController::class, 'updateCustomerTypes'])
         ->name('operations.settings.shop.customer-types.update');
+    Route::post('/app/settings/shop/customer-types', [ShopFinancialSettingsController::class, 'storeCustomerType'])
+        ->name('operations.settings.shop.customer-types.store');
+    Route::patch('/app/settings/shop/customer-types/{classKey}', [ShopFinancialSettingsController::class, 'updateCustomerTypeItem'])
+        ->where('classKey', '[A-Za-z][A-Za-z0-9_]{0,47}')
+        ->name('operations.settings.shop.customer-types.item.update');
 
     Route::patch('/app/settings/shop/estimates', [ShopOperationsSettingsController::class, 'updateEstimates'])
         ->name('operations.settings.shop.estimates.update');

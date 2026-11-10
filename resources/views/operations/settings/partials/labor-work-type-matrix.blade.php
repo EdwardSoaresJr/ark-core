@@ -7,14 +7,18 @@
         'labor_pricing_profile_version' => 0,
         'routes' => [],
     ];
-    $initialWorkType = $matrix['work_types'][0]['key'] ?? 'mechanical';
+    $workTypeKeys = collect($matrix['work_types'] ?? [])->pluck('key')->all();
+    $requestedWorkType = request()->query('work_type');
+    $initialWorkType = is_string($requestedWorkType) && in_array($requestedWorkType, $workTypeKeys, true)
+        ? $requestedWorkType
+        : ($matrix['work_types'][0]['key'] ?? 'mechanical');
 @endphp
 
 <div
     class="labor-matrix"
     data-settings-labor-matrix
     data-labor-matrix
-    x-data="arkLaborMatrix(@js($matrix))"
+    x-data="arkLaborMatrix(@js($matrix), @js($initialWorkType))"
     x-cloak
 >
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
@@ -68,7 +72,7 @@
                         type="button"
                         class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
                         :class="{ active: selectedWorkType === workType.key }"
-                        @click="selectedWorkType = workType.key"
+                        @click="selectWorkType(workType.key)"
                         :data-labor-work-type="workType.key"
                     >
                         <span x-text="workType.label"></span>
@@ -94,9 +98,9 @@
                 <table class="table table-vcenter table-sm mb-0" data-labor-rate-editor>
                     <thead>
                         <tr>
-                            <th class="bg-light">Billing Class</th>
+                            <th class="bg-light">Labor column</th>
                             <th class="bg-light text-end" style="width: 14rem">Hourly rate</th>
-                            <th class="bg-light text-end" style="width: 6rem">Rules</th>
+                            <th class="bg-light text-end" style="width: 11rem">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -146,22 +150,42 @@
                                     </div>
                                 </td>
                                 <td class="text-end">
-                                    <button
-                                        type="button"
-                                        class="btn btn-outline-secondary btn-sm"
-                                        @click="openRules(column)"
-                                    >
-                                        Rules
-                                    </button>
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                                        <button
+                                            type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            @click="openRules(column)"
+                                        >
+                                            Rules
+                                        </button>
+                                        <template x-if="column.has_customer_class">
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-primary btn-sm"
+                                                @click="openClassSettings(column)"
+                                                data-labor-class-settings
+                                            >
+                                                Class Settings
+                                            </button>
+                                        </template>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
                     </tbody>
                 </table>
             </div>
-            <button type="button" class="btn btn-outline-primary btn-sm mt-2" @click="promptAddBillingClass()">
-                + Add Billing Class
-            </button>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" @click="promptAddLaborColumn()" data-labor-add-column>
+                    + Add Labor Column
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" @click="openManageBillingClasses()" data-labor-manage-billing-classes>
+                    Manage Billing Classes
+                </button>
+            </div>
+            <p class="form-hint mb-0 mt-1">
+                Labor columns set rates and Rules for this work type. Billing Classes hold shared commercial settings (fees, discounts, parts, documents).
+            </p>
         </div>
     </div>
 
@@ -248,9 +272,9 @@
 
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('arkLaborMatrix', (initial) => ({
+    Alpine.data('arkLaborMatrix', (initial, initialWorkType = null) => ({
         matrix: initial,
-        selectedWorkType: initial.work_types?.[0]?.key || 'mechanical',
+        selectedWorkType: initialWorkType || initial.work_types?.[0]?.key || 'mechanical',
         status: 'idle',
         lastRequest: null,
         rulesColumn: null,
@@ -258,11 +282,39 @@ document.addEventListener('alpine:init', () => {
         addDialog: null,
         addDialogName: '',
         init() {
+            if (!this.matrix.work_types.some((row) => row.key === this.selectedWorkType)) {
+                this.selectedWorkType = this.matrix.work_types[0]?.key || 'mechanical';
+            }
+            this.syncWorkTypeUrl(false);
             this.$watch('status', (value) => {
                 if (value === 'saved') {
                     setTimeout(() => { if (this.status === 'saved') this.status = 'idle'; }, 1800);
                 }
             });
+            window.addEventListener('popstate', () => {
+                const fromUrl = new URLSearchParams(window.location.search).get('work_type');
+                if (fromUrl && this.matrix.work_types.some((row) => row.key === fromUrl)) {
+                    this.selectedWorkType = fromUrl;
+                }
+            });
+        },
+        selectWorkType(key) {
+            if (!this.matrix.work_types.some((row) => row.key === key)) {
+                return;
+            }
+            this.selectedWorkType = key;
+            this.syncWorkTypeUrl(true);
+        },
+        syncWorkTypeUrl(push) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('section', 'financial');
+            url.searchParams.set('financial-tab', 'labor');
+            url.searchParams.set('work_type', this.selectedWorkType);
+            if (push) {
+                window.history.pushState({}, '', url);
+            } else {
+                window.history.replaceState({}, '', url);
+            }
         },
         selectedWorkTypeLabel() {
             return this.matrix.work_types.find((row) => row.key === this.selectedWorkType)?.label || 'Work type';
@@ -393,15 +445,24 @@ document.addEventListener('alpine:init', () => {
                 hint: 'Creates a selectable work type with rates for every billing class. Applies to new repair orders only.',
             };
         },
-        promptAddBillingClass() {
+        promptAddLaborColumn() {
             this.rulesColumn = null;
             this.addDialogName = '';
             this.addDialog = {
                 kind: 'billing_class',
-                title: 'Add billing class',
-                label: 'Billing class name',
-                hint: 'Example: Extended Warranty. Creates a shop-scoped class with its own rates and minimums.',
+                title: 'Add labor column',
+                label: 'Labor column name',
+                hint: 'Creates a labor-pricing column with its own rates and Rules. Does not create a customer Billing Class — use Manage Billing Classes for that.',
             };
+        },
+        promptAddBillingClass() {
+            this.promptAddLaborColumn();
+        },
+        openClassSettings(column) {
+            this.$dispatch('labor-open-class-settings', { key: column.customer_class_key || null, label: column.label });
+        },
+        openManageBillingClasses() {
+            this.$dispatch('labor-open-manage-billing-classes');
         },
         async confirmAddDialog() {
             const name = (this.addDialogName || '').trim();
@@ -411,7 +472,7 @@ document.addEventListener('alpine:init', () => {
             if (kind === 'work_type') {
                 const payload = await this.request(this.matrix.routes.work_type, 'POST', { name });
                 if (payload.work_type?.key) {
-                    this.selectedWorkType = payload.work_type.key;
+                    this.selectWorkType(payload.work_type.key);
                 }
                 return;
             }
