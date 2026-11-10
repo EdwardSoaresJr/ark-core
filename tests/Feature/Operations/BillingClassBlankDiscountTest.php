@@ -218,14 +218,59 @@ test('a blank Military discount saves no override and inherits the built-in 10 p
     );
     expect(blankDiscountTotals($newer)['line_discount'])->toBe(1000);
 
-    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial']))
+    // Class Settings / JSON API is the commercial editor after #180 tab retirement.
+    // Built-in Military 10% is resolver behavior when the override is blank — not a retired tab placeholder.
+    $catalogClasses = $this->getJson(route('operations.settings.shop.customer-types.show'))
         ->assertOk()
-        ->assertSee('Uses the built-in 10% when blank. Enter 0 for no discount.')
-        ->assertSee('No discount when blank.')
-        ->getContent();
+        ->json('classes');
+    $militaryRow = collect($catalogClasses)->first(
+        fn (array $row): bool => strcasecmp((string) ($row['name'] ?? ''), 'Military') === 0
+            || ($row['key'] ?? null) === 'military',
+    );
+    $veteranRow = collect($catalogClasses)->firstWhere('name', 'Veteran');
+    $militaryKey = (string) ($militaryRow['key'] ?? blankDiscountStoredRow('Military')['key'] ?? 'military');
 
-    expect($html)->toMatch('/name="customer_types\[3\]\[discount_amount\]"\s+value=""\s+inputmode="decimal"\s+placeholder="Built-in 10%"/')
-        ->and($html)->toMatch('/name="customer_types\[4\]\[discount_amount\]"\s+value="15.00"\s+inputmode="decimal"\s+placeholder="No discount"/');
+    expect($militaryRow)->not->toBeNull()
+        ->and($militaryRow['discount_type'] ?? null)->toBe('labor')
+        // JSON may omit null overrides; storage still has an explicit null (asserted above).
+        ->and($militaryRow['discount_amount'] ?? null)->toBeNull()
+        ->and(ShopSettings::builtInDiscountAmountFor('Military'))->toBe('10.00')
+        ->and($veteranRow['discount_amount'] ?? null)->toBe('15.00');
+
+    $this->get(route('operations.settings.shop.edit', [
+        'section' => 'financial',
+        'financial-tab' => 'labor',
+    ]))
+        ->assertOk()
+        ->assertSee('data-billing-classes-shared', false)
+        ->assertSee('placeholder="No discount"', false)
+        ->assertDontSee('Uses the built-in 10% when blank. Enter 0 for no discount.', false)
+        ->assertDontSee('id="financial-panel-billing-classes"', false);
+
+    // Class Settings item update with a blank amount keeps the same Military inheritance.
+    $this->patchJson(route('operations.settings.shop.customer-types.item.update', ['classKey' => $militaryKey]), [
+        'name' => 'Military',
+        'pill_color' => $militaryRow['pill_color'] ?? 'slate',
+        'document_presentation_profile' => $militaryRow['document_presentation_profile'] ?? 'retail',
+        'shop_fees_enabled' => true,
+        'shop_fee_rate_override' => null,
+        'default_parts_matrix_key' => null,
+        'discount_type' => 'labor',
+        'discount_amount' => '',
+        'concern_billing_posture' => null,
+    ])
+        ->assertOk();
+
+    expect(blankDiscountStoredRow('Military')['discount_amount'])->toBeNull();
+
+    expect(ShopSettings::current()->standingDiscountPolicy('Military'))->toBe(['type' => 'labor', 'percent' => '10.00'])
+        ->and(blankDiscountTotals($line)['line_discount'])->toBe(1500);
+
+    $afterBlankApi = blankDiscountRepairOrder('Military');
+    app(EstimateTotalsCalculator::class)->ensureFinancialTotalsAreCurrent(
+        RepairOrder::query()->with(['lines', 'customer', 'concerns'])->findOrFail($afterBlankApi->repair_order_id),
+    );
+    expect(blankDiscountTotals($afterBlankApi)['line_discount'])->toBe(1000);
 });
 
 test('an unrelated billing class save leaves every other class and its pricing untouched', function () {
