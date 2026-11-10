@@ -1,6 +1,6 @@
 # Staging integration plan — Labor Matrix + Billing Minimums
 
-**Status:** Final vertical matrix implementation committed; **awaiting owner-authorized staging re-pin**.  
+**Status:** Final vertical matrix **deployed to staging** for owner review. Production still blocked.  
 Prior live staging pin remains the interim grid (`ee2753d` / SaaS `436770ee`) until re-pin.  
 **Not authorized:** production merge cutover, production pin, or LugsNPlugs deploy.
 
@@ -19,7 +19,8 @@ Record the tip SHA in the table below after push + owner authorization.
 |---|---|---|
 | Core (prior live staging) | `ee2753d4435bdf5793c6a0e313a2b635188b03f6` | interim grid still on staging until re-pin |
 | SaaS (prior live staging) | `436770ee358b61a34dc97a4ec02a7381ddd37f65` | `pin/core-ee2753d-labor-matrix` |
-| Core (this implementation) | `349d7faaae9c5a870cc7286bccf60dc0d04451d2` | `settings/labor-matrix-billing-minimums` tip |
+| Core (this implementation) | `39828cb4e3b044aa5aef8e79ed284b49342834e3` | `settings/labor-matrix-billing-minimums` tip |
+| SaaS (live staging pin) | `8210b75803e3264584a968a349887b1a196b22e1` | `pin/core-39828cb-labor-matrix-final` |
 | Review artifacts | `review-artifacts/labor-rate-matrix-final-2026-11-10/` | local desktop/mobile + Rules screenshots |
 
 Do not merge Core `main` merely to create the staging preview.
