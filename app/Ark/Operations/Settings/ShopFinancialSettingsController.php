@@ -3,15 +3,15 @@
 namespace App\Ark\Operations\Settings;
 
 use App\Ark\Operations\Documents\EstimateDocumentService;
-use App\Ark\Operations\EstimatePricing\LaborPoliciesMatrixProjection;
+use App\Ark\Operations\EstimatePricing\LaborBillingMinimums;
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
 use App\Ark\Operations\EstimatePricing\LaborRateType;
+use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix;
 use App\Ark\Operations\EstimatePricing\OperationClass;
 use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\ManualPaymentMethods;
-use App\Ark\Operations\OperationAuthority\Operation;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
@@ -49,84 +49,76 @@ class ShopFinancialSettingsController
     public function updateLabor(Request $request): RedirectResponse
     {
         $settings = ShopSettings::current();
-        $allowedCategoryKeys = collect($settings->laborCategories())->pluck('key')->all();
-        $postureValues = collect(LaborPoliciesMatrixProjection::matrixPostures())
+        $workTypeKeys = collect(LaborWorkTypeMatrix::workTypes())->pluck('key')->all();
+        $columnValues = collect(LaborWorkTypeMatrix::primaryBillingColumns())->pluck('value')->all();
+        $minimumPostures = collect(LaborWorkTypeMatrix::minimumConfigurablePostures())
             ->map(fn (ConcernBillingPosture $posture): string => $posture->value)
             ->all();
 
         $data = $request->validate([
             'standard_hourly_rate' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-            'default_labor_category_key' => ['required', 'string', Rule::in($allowedCategoryKeys)],
-            'labor_categories' => ['required', 'array', 'min:1', 'max:20'],
-            'labor_categories.*.key' => ['required', 'string', Rule::in($allowedCategoryKeys)],
-            'labor_categories.*.name' => ['required', 'string', 'max:64'],
-            'labor_categories.*.rate' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-            'labor_categories.*.minimum_hours' => ['required', 'numeric', 'min:0', 'max:99.99'],
-            'labor_categories.*.rounding_rule' => ['required', 'string', Rule::in(['exact', 'tenth', 'quarter', 'half'])],
-            'labor_categories.*.allows_modifiers' => ['nullable', 'boolean'],
-            'labor_categories.*.is_active' => ['nullable', 'boolean'],
-            'advanced_rates' => ['nullable', 'array'],
-            'advanced_rates.*.mode' => ['nullable', 'string', Rule::in(['standard', 'custom', 'zero'])],
-            'advanced_rates.*.rate' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'matrix' => ['nullable', 'array'],
+            'matrix.*.*.mode' => ['nullable', 'string', Rule::in(['standard', 'custom', 'zero'])],
+            'matrix.*.*.rate' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'billing_minimums' => ['nullable', 'array'],
+            'billing_minimums.*.mode' => ['nullable', 'string', Rule::in(['none', 'per_line', 'per_ro'])],
+            'billing_minimums.*.hours' => ['nullable', 'numeric', 'min:0', 'max:99.99'],
+            'billing_minimums.*.shortfall_rate_source' => ['nullable', 'string', Rule::in(['standard_mechanical', 'custom'])],
+            'billing_minimums.*.shortfall_rate' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
         ]);
 
         $previousStandardCents = (int) $settings->default_labor_rate_cents;
         $standardRateCents = (int) round(((float) $data['standard_hourly_rate']) * 100);
         $standardRateDisplay = number_format($standardRateCents / 100, 2, '.', '');
+        $effectiveFrom = Carbon::now()->startOfDay();
 
-        // Keep the default category Rate / hr locked to the Standard hourly rate control.
-        $categoriesInput = collect($data['labor_categories'])
-            ->map(function (array $category) use ($data, $standardRateDisplay): array {
-                if ((string) ($category['key'] ?? '') === (string) $data['default_labor_category_key']) {
-                    $category['rate'] = $standardRateDisplay;
-                }
-
-                return $category;
+        $defaultCategoryKey = $settings->defaultLaborCategory()['key'];
+        $categoriesInput = collect($settings->laborCategories())
+            ->map(function (array $category) use ($defaultCategoryKey, $standardRateDisplay): array {
+                return [
+                    'key' => $category['key'],
+                    'name' => $category['name'],
+                    'rate' => $category['key'] === $defaultCategoryKey
+                        ? $standardRateDisplay
+                        : number_format($category['rate_cents'] / 100, 2, '.', ''),
+                    'minimum_hours' => $category['minimum_hours'],
+                    'rounding_rule' => $category['rounding_rule'],
+                    'allows_modifiers' => $category['allows_modifiers'] ? '1' : '0',
+                    'is_active' => ($category['is_active'] ?? true) ? '1' : '0',
+                ];
             })
             ->all();
 
-        $laborCategories = $settings->normalizeLaborCategories(
-            $categoriesInput,
-            $data['default_labor_category_key'],
-        );
+        $laborCategories = $settings->normalizeLaborCategories($categoriesInput, $defaultCategoryKey);
+        $billingMinimums = LaborBillingMinimums::normalizeInput($data['billing_minimums'] ?? [], $settings);
+        $minimumsModel = LaborBillingMinimums::fromStored($billingMinimums);
+        // Keep null when every class is "No minimum" so unchanged shops stay clean.
+        $storedMinimums = $minimumsModel->enablesAnyMinimum() ? $billingMinimums : null;
+        $matrixInput = $data['matrix'] ?? [];
 
-        $defaultRateCents = (int) collect($laborCategories)
-            ->firstWhere('is_default', true)['rate_cents'];
-
-        if ($defaultRateCents !== $standardRateCents) {
-            throw ValidationException::withMessages([
-                'standard_hourly_rate' => 'Standard hourly rate must match the default labor category rate.',
-            ]);
-        }
-
-        $activeDefaults = collect($laborCategories)
-            ->filter(fn (array $category): bool => $category['is_default'] && $category['is_active']);
-
-        if ($activeDefaults->isEmpty()) {
-            throw ValidationException::withMessages([
-                'default_labor_category_key' => 'Choose an active default labor category before archiving the current default.',
-            ]);
-        }
-
-        $defaultClassKey = $this->defaultOperationClassKey($data['default_labor_category_key']);
-        $advancedRates = $data['advanced_rates'] ?? [];
-        $effectiveFrom = Carbon::now()->startOfDay();
-
-        /** @var array{sync: array{updated_class_keys: list<string>, preserved_class_keys: list<string>, previous_standard_cents: int, next_standard_cents: int}, resolved_cents: int} $committed */
         $committed = DB::transaction(function () use (
             $settings,
             $laborCategories,
-            $defaultRateCents,
-            $previousStandardCents,
             $standardRateCents,
-            $defaultClassKey,
-            $advancedRates,
-            $postureValues,
+            $previousStandardCents,
             $effectiveFrom,
+            $storedMinimums,
+            $minimumsModel,
+            $matrixInput,
+            $workTypeKeys,
+            $columnValues,
         ): array {
+            $profileVersion = (int) ($settings->labor_pricing_profile_version ?? 0);
+
+            if ($minimumsModel->enablesAnyMinimum() && $profileVersion < 1) {
+                $profileVersion = 1;
+            }
+
             $settings->update([
-                'default_labor_rate_cents' => $defaultRateCents,
+                'default_labor_rate_cents' => $standardRateCents,
                 'labor_categories' => $laborCategories,
+                'labor_billing_minimums' => $storedMinimums,
+                'labor_pricing_profile_version' => $profileVersion,
             ]);
 
             $syncResult = $this->syncStandardCustomerPayLaborRates->execute(
@@ -136,124 +128,139 @@ class ShopFinancialSettingsController
                 'Standard hourly rate',
             );
 
-            $this->applyAdvancedRates(
-                $advancedRates,
-                $postureValues,
-                $defaultClassKey,
+            $this->applyWorkTypeMatrixRates(
+                $matrixInput,
+                $workTypeKeys,
+                $columnValues,
                 $standardRateCents,
                 $effectiveFrom,
             );
 
-            try {
-                $resolved = $this->laborPolicyResolver->resolve(
-                    ConcernBillingPosture::CustomerPay,
-                    $defaultClassKey,
-                );
-            } catch (\Throwable $e) {
+            $resolved = $this->laborPolicyResolver->resolve(
+                ConcernBillingPosture::CustomerPay,
+                'general_repair',
+            );
+
+            if ($resolved->hourlyRateCents !== $standardRateCents
+                && $resolved->rateType !== LaborRateType::Standard
+                && ! in_array('general_repair', $syncResult['preserved_class_keys'], true)
+            ) {
                 throw ValidationException::withMessages([
-                    'standard_hourly_rate' => 'Customer Pay rate could not be resolved: '.$e->getMessage(),
+                    'standard_hourly_rate' => 'Retail Mechanical rate did not match the standard hourly rate.',
                 ]);
             }
 
-            $advancedCustomerPay = $advancedRates[ConcernBillingPosture::CustomerPay->value] ?? null;
-            $customerPayMode = is_array($advancedCustomerPay) ? ($advancedCustomerPay['mode'] ?? null) : null;
-            $expectedCustomerPayCents = match ($customerPayMode) {
-                'zero' => 0,
-                'custom' => (int) round(((float) ($advancedCustomerPay['rate'] ?? 0)) * 100),
-                default => $standardRateCents,
-            };
-
-            $defaultClassPreservedAsSpecialty = $customerPayMode === null
-                && in_array($defaultClassKey, $syncResult['preserved_class_keys'], true);
-
-            if (! $defaultClassPreservedAsSpecialty
-                && $resolved->hourlyRateCents !== $expectedCustomerPayCents
+            if ($resolved->rateType === LaborRateType::Standard
+                && $resolved->hourlyRateCents !== $standardRateCents
             ) {
                 throw ValidationException::withMessages([
-                    'standard_hourly_rate' => 'Customer Pay estimate rate did not match the expected Labor Settings rate.',
+                    'standard_hourly_rate' => 'Retail Mechanical rate did not match the standard hourly rate.',
                 ]);
             }
 
             return [
                 'sync' => $syncResult,
                 'resolved_cents' => $resolved->hourlyRateCents,
+                'profile_version' => $profileVersion,
             ];
         });
 
         $this->syncOpenEstimateDocuments();
 
-        $status = 'Labor settings saved. New Customer Pay estimates use $'
+        $status = 'Labor settings saved. New Retail estimates use $'
             .number_format($committed['resolved_cents'] / 100, 2)
             .'/hr';
-        if ($committed['sync']['preserved_class_keys'] !== []) {
-            $status .= ' Specialty operation-class rates were left unchanged.';
+        if ($committed['profile_version'] >= 1) {
+            $status .= ' Billing-class minimums apply only to repair orders created after activation.';
         }
 
         return $this->redirectWithStatus($status);
     }
 
     /**
-     * @param  array<string, array{mode?: string, rate?: mixed}>  $advancedRates
-     * @param  list<string>  $postureValues
+     * @param  array<string, array<string, array{mode?: string, rate?: mixed}>>  $matrixInput
+     * @param  list<string>  $workTypeKeys
+     * @param  list<string>  $columnValues
      */
-    private function applyAdvancedRates(
-        array $advancedRates,
-        array $postureValues,
-        string $defaultClassKey,
+    private function applyWorkTypeMatrixRates(
+        array $matrixInput,
+        array $workTypeKeys,
+        array $columnValues,
         int $standardRateCents,
         Carbon $effectiveFrom,
     ): void {
-        if ($advancedRates === []) {
+        if ($matrixInput === []) {
             return;
         }
 
-        $operationClass = OperationClass::query()->where('key', $defaultClassKey)->firstOrFail();
+        $workTypes = collect(LaborWorkTypeMatrix::workTypes())
+            ->keyBy('key');
 
-        foreach ($postureValues as $postureValue) {
-            $row = $advancedRates[$postureValue] ?? null;
+        $written = [];
 
-            if (! is_array($row) || ! filled($row['mode'] ?? null)) {
+        foreach ($workTypeKeys as $workTypeKey) {
+            $definition = $workTypes->get($workTypeKey);
+
+            if ($definition === null || ($definition['shares_class_with'] ?? null) !== null) {
+                // Shared-class rows (e.g. Programming → diagnostics) follow the source row.
                 continue;
             }
 
-            $mode = (string) $row['mode'];
-            $posture = ConcernBillingPosture::from($postureValue);
-            $rateType = match ($mode) {
-                'standard' => LaborRateType::Standard,
-                'zero' => LaborRateType::Zero,
-                default => in_array($posture, [ConcernBillingPosture::WarrantyOther, ConcernBillingPosture::RepairPal], true)
-                    ? LaborRateType::Contract
-                    : LaborRateType::Hourly,
-            };
+            $operationClass = OperationClass::query()
+                ->where('key', $definition['operation_class_key'])
+                ->first();
 
-            $hourlyRate = match ($mode) {
-                'standard' => $standardRateCents / 100,
-                'zero' => 0.0,
-                default => (float) ($row['rate'] ?? 0),
-            };
+            if ($operationClass === null) {
+                continue;
+            }
 
-            $this->upsertLaborPolicy->execute(
-                $posture,
-                $operationClass,
-                $hourlyRate,
-                $effectiveFrom,
-                'Labor Settings advanced billing rate',
-                $rateType,
-            );
+            $rowInput = $matrixInput[$workTypeKey] ?? [];
+
+            if (! is_array($rowInput)) {
+                continue;
+            }
+
+            foreach ($columnValues as $postureValue) {
+                $cell = $rowInput[$postureValue] ?? null;
+
+                if (! is_array($cell) || ! filled($cell['mode'] ?? null)) {
+                    continue;
+                }
+
+                $writeKey = $definition['operation_class_key'].'|'.$postureValue;
+
+                if (isset($written[$writeKey])) {
+                    continue;
+                }
+
+                $mode = (string) $cell['mode'];
+                $posture = ConcernBillingPosture::from($postureValue);
+                $rateType = match ($mode) {
+                    'standard' => LaborRateType::Standard,
+                    'zero' => LaborRateType::Zero,
+                    default => in_array($posture, [ConcernBillingPosture::WarrantyOther, ConcernBillingPosture::RepairPal], true)
+                        ? LaborRateType::Contract
+                        : LaborRateType::Hourly,
+                };
+
+                $hourlyRate = match ($mode) {
+                    'standard' => $standardRateCents / 100,
+                    'zero' => 0.0,
+                    default => (float) ($cell['rate'] ?? 0),
+                };
+
+                $this->upsertLaborPolicy->execute(
+                    $posture,
+                    $operationClass,
+                    $hourlyRate,
+                    $effectiveFrom,
+                    'Labor rate matrix',
+                    $rateType,
+                );
+
+                $written[$writeKey] = true;
+            }
         }
-    }
-
-    private function defaultOperationClassKey(string $defaultCategoryKey): string
-    {
-        $operation = Operation::query()
-            ->with('operationClass')
-            ->where('code', $defaultCategoryKey)
-            ->where('is_active', true)
-            ->first();
-
-        return $operation?->operationClass?->key
-            ?? OperationClass::query()->orderBy('sort_order')->value('key')
-            ?? 'general_repair';
     }
 
     public function updateTax(Request $request): RedirectResponse

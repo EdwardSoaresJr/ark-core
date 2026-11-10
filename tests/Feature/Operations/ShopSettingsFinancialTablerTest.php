@@ -114,7 +114,7 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
     $section = '//section[@data-settings-section="financial"]';
 
     foreach ([
-        route('operations.settings.shop.labor.update') => ['standard_hourly_rate', 'labor_categories[0][key]', 'labor_categories[0][name]', 'labor_categories[0][rate]', 'labor_categories[0][minimum_hours]', 'labor_categories[0][rounding_rule]', 'labor_categories[0][allows_modifiers]', 'default_labor_category_key'],
+        route('operations.settings.shop.labor.update') => ['standard_hourly_rate', 'matrix[mechanical][customer_pay][mode]', 'billing_minimums[customer_pay][mode]'],
         route('operations.settings.shop.tax.update') => ['tax_enabled', 'tax_label', 'default_tax_rate', 'taxable_labor', 'taxable_parts', 'taxable_shop_fees'],
         route('operations.settings.shop.fees.update') => ['shop_fee_enabled', 'shop_fee_rate', 'shop_fee_cap'],
         route('operations.settings.shop.deposits.update') => ['default_deposit_enabled', 'default_deposit_include_parts', 'default_deposit_include_diagnostics', 'default_deposit_diagnostic_labor_category_keys[]'],
@@ -128,7 +128,7 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
     }
 
     expect($xpath->query($section.'//form[@id="parts-matrix-form"]')->length)->toBe(1)
-        ->and($xpath->query($section.'//form[@action="'.route('operations.settings.shop.labor-policies.update').'"]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-labor-rate-matrix]')->length)->toBe(1)
         ->and(preg_match_all('/<input data-matrix-name-input name="parts_matrices\[\d+\]\[name\]" x-model="matrixName" @input="autosaveMatrix\(/', $html))->toBe(count($settings->partsMatrices()));
 
     expect($html)

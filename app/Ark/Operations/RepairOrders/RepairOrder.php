@@ -35,7 +35,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
+#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'labor_pricing_profile', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
 class RepairOrder extends Model
 {
     protected static function booted(): void
@@ -58,6 +58,22 @@ class RepairOrder extends Model
         static::creating(function (RepairOrder $repairOrder): void {
             if (! array_key_exists('shop_fee_rules', $repairOrder->getAttributes())) {
                 $repairOrder->setAttribute('shop_fee_rules', self::SHOP_FEES_PER_LINE);
+            }
+
+            // Forward-only labor pricing profile: null means legacy (no billing-class minimums).
+            // Existing ROs are never backfilled; only newly created ROs receive a stamp.
+            if (! array_key_exists('labor_pricing_profile', $repairOrder->getAttributes())
+                || $repairOrder->getAttribute('labor_pricing_profile') === null
+            ) {
+                $settings = \App\Ark\Operations\Settings\ShopSettings::current();
+                $version = (int) ($settings->labor_pricing_profile_version ?? 0);
+
+                if ($version >= 1) {
+                    $repairOrder->setAttribute(
+                        'labor_pricing_profile',
+                        \App\Ark\Operations\EstimatePricing\LaborPricingProfile::fromShopSettings($settings)->toArray(),
+                    );
+                }
             }
         });
     }
@@ -99,6 +115,7 @@ class RepairOrder extends Model
             'opened_at' => 'datetime',
             'closed_at' => 'datetime',
             'posted_at' => 'datetime',
+            'labor_pricing_profile' => 'array',
             'lost_reason_key' => RepairOrderLostReason::class,
             'lost_reason_recorded_at' => 'datetime',
             'review_request_sent' => 'boolean',

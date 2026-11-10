@@ -1605,6 +1605,15 @@
                 </div>
             @endif
 
+            @if (session(\App\Ark\Operations\EstimatePricing\SynchronizeRepairOrderBillingMinimums::SESSION_NOTICES))
+                @foreach ((array) session(\App\Ark\Operations\EstimatePricing\SynchronizeRepairOrderBillingMinimums::SESSION_NOTICES) as $notice)
+                    <div class="alert alert-info" role="status" data-billing-minimum-notice>
+                        {{ $notice['label'] ?? 'Billing' }} minimum recalculated:
+                        +{{ $notice['from_hours'] ?? '0.00' }} hr → +{{ $notice['to_hours'] ?? '0.00' }} hr
+                    </div>
+                @endforeach
+            @endif
+
             @if (session('worksheet_focus_concern_id'))
                 <span data-worksheet-focus-concern="{{ session('worksheet_focus_concern_id') }}" hidden></span>
             @endif

@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
+use App\Ark\Operations\EstimatePricing\LaborRateType;
 use App\Ark\Operations\EstimatePricing\OperationClass;
 use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
@@ -62,18 +63,13 @@ test('labor settings show standard hourly rate and effective estimate rate', fun
         ]))
         ->assertOk()
         ->assertSee('Standard hourly rate')
-        ->assertSee('What a new Customer Pay estimate uses now')
-        ->assertSee('Labor categories')
-        ->assertSee('Advanced billing rates')
+        ->assertSee('Labor rate matrix')
+        ->assertSee('Billing-class minimums')
         ->assertSee('Use Standard')
-        ->assertSee('Intentional Zero')
-        ->assertSee('Core category')
-        ->assertSee('Archive')
+        ->assertSee('data-labor-rate-matrix', false)
         ->assertDontSee('>Labor Policies</button>', false)
-        ->assertSee('data-labor-effective-rate', false)
-        ->assertSee('Basic')
-        ->assertSee('Optional')
-        ->assertSee('Advanced');
+        ->assertDontSee('Labor categories')
+        ->assertDontSee('Advanced billing rates');
 });
 
 test('saving standard hourly rate syncs matching Customer Pay policies atomically', function () {
@@ -200,39 +196,60 @@ test('existing labor line snapshot is unchanged after standard rate save', funct
         )->hourlyRateCents)->toBe(20000);
 });
 
-test('labor policies matrix cells expose an Edit affordance under Labor Settings', function () {
+test('standard rate inheritance is explicit via LaborRateType::Standard in the matrix', function () {
     $this->actingAs($this->admin)
-        ->get(route('operations.settings.shop.edit', [
-            'section' => 'financial',
-            'financial-tab' => 'labor',
-        ]))
-        ->assertOk()
-        ->assertSee('>Edit</span>', false)
-        ->assertSee('Operation-class specialty rates')
-        ->assertSee('Core-defined');
-});
-
-test('standard rate inheritance is explicit via LaborRateType::Standard', function () {
-    $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), standardLaborSettingsPayload([
+        ->patch(route('operations.settings.shop.labor.update'), [
             'standard_hourly_rate' => '175.00',
-            'advanced_rates' => [
-                ConcernBillingPosture::CustomerPay->value => [
-                    'mode' => 'standard',
-                    'rate' => '175.00',
-                ],
-                ConcernBillingPosture::Fleet->value => [
-                    'mode' => 'custom',
-                    'rate' => '140.00',
-                ],
-                ConcernBillingPosture::Internal->value => [
-                    'mode' => 'zero',
-                    'rate' => '0.00',
+            'matrix' => [
+                'mechanical' => [
+                    ConcernBillingPosture::CustomerPay->value => [
+                        'mode' => 'standard',
+                        'rate' => '175.00',
+                    ],
+                    ConcernBillingPosture::Fleet->value => [
+                        'mode' => 'custom',
+                        'rate' => '140.00',
+                    ],
                 ],
             ],
-        ]))
+            'billing_minimums' => [
+                ConcernBillingPosture::CustomerPay->value => [
+                    'mode' => 'none',
+                    'hours' => '0.00',
+                ],
+                ConcernBillingPosture::Internal->value => [
+                    'mode' => 'none',
+                    'hours' => '0.00',
+                ],
+            ],
+        ])
         ->assertRedirect(route('operations.settings.shop.edit'))
         ->assertSessionHas('status');
+
+    // Intentional zero for Internal is configured under billing-class minimums shortfall,
+    // but Internal rate zero goes through the matrix Internal column when present.
+    $this->actingAs($this->admin)
+        ->patch(route('operations.settings.shop.labor.update'), [
+            'standard_hourly_rate' => '175.00',
+            'matrix' => [
+                'mechanical' => [
+                    ConcernBillingPosture::CustomerPay->value => ['mode' => 'standard'],
+                    ConcernBillingPosture::Fleet->value => ['mode' => 'custom', 'rate' => '140.00'],
+                ],
+            ],
+        ])
+        ->assertRedirect();
+
+    // Upsert Internal zero via dedicated UpsertLaborPolicyAction (matrix primary columns only).
+    $operationClass = OperationClass::query()->where('key', 'general_repair')->firstOrFail();
+    app(UpsertLaborPolicyAction::class)->execute(
+        ConcernBillingPosture::Internal,
+        $operationClass,
+        0.0,
+        Carbon::now()->startOfDay(),
+        'Test intentional zero',
+        LaborRateType::Zero,
+    );
 
     $resolver = app(LaborPolicyResolver::class);
 
@@ -248,64 +265,21 @@ test('standard rate inheritance is explicit via LaborRateType::Standard', functi
     expect($internal->rateType->value)->toBe('zero')
         ->and($internal->hourlyRateCents)->toBe(0);
 
-    // Changing standard updates Standard policies without touching custom/zero.
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), standardLaborSettingsPayload([
+        ->patch(route('operations.settings.shop.labor.update'), [
             'standard_hourly_rate' => '188.00',
-            'advanced_rates' => [
-                ConcernBillingPosture::CustomerPay->value => [
-                    'mode' => 'standard',
-                    'rate' => '188.00',
-                ],
-                ConcernBillingPosture::Fleet->value => [
-                    'mode' => 'custom',
-                    'rate' => '140.00',
-                ],
-                ConcernBillingPosture::Internal->value => [
-                    'mode' => 'zero',
-                    'rate' => '0.00',
+            'matrix' => [
+                'mechanical' => [
+                    ConcernBillingPosture::CustomerPay->value => ['mode' => 'standard'],
+                    ConcernBillingPosture::Fleet->value => ['mode' => 'custom', 'rate' => '140.00'],
                 ],
             ],
-        ]))
+        ])
         ->assertRedirect(route('operations.settings.shop.edit'));
 
     expect($resolver->resolve(ConcernBillingPosture::CustomerPay, 'general_repair')->hourlyRateCents)->toBe(18800)
         ->and($resolver->resolve(ConcernBillingPosture::Fleet, 'general_repair')->hourlyRateCents)->toBe(14000)
         ->and($resolver->resolve(ConcernBillingPosture::Internal, 'general_repair')->hourlyRateCents)->toBe(0);
-});
-
-test('labor category can be archived and restored without hard delete', function () {
-    $payload = standardLaborSettingsPayload();
-    $payload['labor_categories'] = collect($payload['labor_categories'])
-        ->map(function (array $category): array {
-            $category['is_active'] = $category['key'] === 'fabrication' ? '0' : '1';
-
-            return $category;
-        })
-        ->all();
-
-    $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), $payload)
-        ->assertRedirect(route('operations.settings.shop.edit'));
-
-    $fabrication = collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'fabrication');
-    expect($fabrication['is_active'])->toBeFalse()
-        ->and(collect(ShopSettings::current()->activeLaborCategories())->pluck('key')->all())
-        ->not->toContain('fabrication');
-
-    $payload['labor_categories'] = collect($payload['labor_categories'])
-        ->map(function (array $category): array {
-            $category['is_active'] = '1';
-
-            return $category;
-        })
-        ->all();
-
-    $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.labor.update'), $payload)
-        ->assertRedirect(route('operations.settings.shop.edit'));
-
-    expect(collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'fabrication')['is_active'])->toBeTrue();
 });
 
 test('station bind prompt is skipped for a single-station shop', function () {

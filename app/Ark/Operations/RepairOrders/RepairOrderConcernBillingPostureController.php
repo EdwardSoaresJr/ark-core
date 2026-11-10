@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\EstimatePricing\SynchronizeRepairOrderBillingMinimums;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class RepairOrderConcernBillingPostureController
         RepairOrderConcern $concern,
         ChangeConcernBillingPostureAction $changeBilling,
         RepairOrderConcurrency $concurrency,
+        SynchronizeRepairOrderBillingMinimums $billingMinimums,
     ): RedirectResponse|JsonResponse {
         abort_unless($concern->repair_order_id === $repairOrder->id, 404);
 
@@ -32,6 +34,7 @@ class RepairOrderConcernBillingPostureController
             $request->user(),
         );
         $concern->refresh();
+        $billingMinimums->execute($repairOrder);
 
         if ($request->expectsJson()) {
             return response()->json([
