@@ -128,9 +128,11 @@
         tabindex="-1"
         x-ref="rulesModal"
         data-labor-rules-modal
-        x-show="!!rulesColumn"
+        x-cloak
         :class="{ show: !!rulesColumn }"
-        :style="rulesColumn ? 'display:block; background: rgba(22, 28, 45, 0.35);' : 'display:none'"
+        :style="rulesColumn
+            ? 'display: block !important; background: rgba(22, 28, 45, 0.35);'
+            : 'display: none !important'"
     >
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">
@@ -176,9 +178,11 @@
         class="modal modal-blur"
         tabindex="-1"
         data-labor-add-dialog
-        x-show="!!addDialog"
+        x-cloak
         :class="{ show: !!addDialog }"
-        :style="addDialog ? 'display:block; background: rgba(22, 28, 45, 0.35);' : 'display:none'"
+        :style="addDialog
+            ? 'display: block !important; background: rgba(22, 28, 45, 0.35);'
+            : 'display: none !important'"
     >
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">
