@@ -124,14 +124,13 @@
     </div>
 
     <div
-        class="modal modal-blur fade"
+        class="modal modal-blur"
         tabindex="-1"
         x-ref="rulesModal"
         data-labor-rules-modal
-        :class="{ show: !!rulesColumn }"
-        :style="rulesColumn ? 'display:block' : 'display:none'"
         x-show="!!rulesColumn"
-        x-cloak
+        x-transition.opacity
+        style="background: rgba(22, 28, 45, 0.35);"
     >
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">
@@ -173,16 +172,13 @@
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show" x-show="!!rulesColumn || !!addDialog" x-cloak></div>
-
     <div
-        class="modal modal-blur fade"
+        class="modal modal-blur"
         tabindex="-1"
         data-labor-add-dialog
-        :class="{ show: !!addDialog }"
-        :style="addDialog ? 'display:block' : 'display:none'"
         x-show="!!addDialog"
-        x-cloak
+        x-transition.opacity
+        style="background: rgba(22, 28, 45, 0.35);"
     >
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">
