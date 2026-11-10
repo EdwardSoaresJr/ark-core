@@ -236,25 +236,38 @@ class RepairOrderConcern extends Model
     {
         $settings ??= ShopSettings::current();
         $repairOrder = $this->repairOrder;
-        $commercial = $repairOrder?->resolvedCommercialPricingProfile($settings);
+        $context = $repairOrder?->pricingContext($settings);
+        $commercial = $context?->commercialProfile();
+
+        $resolveKey = function (?string $className) use ($commercial, $context, $settings): array {
+            $matrixKey = $commercial?->defaultPartsMatrixKeyFor($className);
+            if (filled($matrixKey)) {
+                return $context?->partsMatrixByKey($matrixKey)
+                    ?? $settings->partsMatrixByKey($matrixKey)
+                    ?? $settings->defaultPartsMatrix();
+            }
+
+            if ($commercial !== null && $commercial->partsMatrices !== []) {
+                return $commercial->partsMatrixByKey($matrixKey)
+                    ?? $settings->defaultPartsMatrix();
+            }
+
+            return $settings->partsMatrixForCustomerTypeProfile($className) ?? $settings->defaultPartsMatrix();
+        };
 
         if ($this->billing_posture === ConcernBillingPosture::Default) {
             $customerType = ($customer ?? $repairOrder?->customer)?->customer_type;
-            $matrixKey = $commercial?->defaultPartsMatrixKeyFor($customerType);
 
-            if (filled($matrixKey)) {
-                return $settings->partsMatrixByKey($matrixKey) ?? $settings->defaultPartsMatrix();
-            }
-
-            return $settings->partsMatrixForCustomerTypeProfile($customerType) ?? $settings->defaultPartsMatrix();
+            return $resolveKey($customerType);
         }
 
         $billingClass = $this->billing_posture->billingClassName();
-        if ($billingClass !== null && $commercial !== null) {
-            $matrixKey = $commercial->defaultPartsMatrixKeyFor($billingClass);
-            if (filled($matrixKey)) {
-                return $settings->partsMatrixByKey($matrixKey) ?? $settings->defaultPartsMatrix();
-            }
+        if ($billingClass !== null) {
+            return $resolveKey($billingClass);
+        }
+
+        if ($context !== null && ! $context->allowsLiveCommercialFallback && $commercial !== null) {
+            return $commercial->partsMatrixByKey(null) ?? $settings->defaultPartsMatrix();
         }
 
         return $this->billing_posture->defaultPartsMatrix($settings);

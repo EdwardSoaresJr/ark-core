@@ -8,24 +8,26 @@ use App\Ark\Operations\Settings\ShopSettings;
 /**
  * Immutable billing-class commercial rules stamped on a repair order at creation.
  *
- * Freezes standing discounts, per-class shop-fee overrides, default parts-matrix keys,
- * and document presentation profiles so Billing Classes settings changes cannot reprice
- * an existing RO (including newly added lines on that RO).
+ * Schema 1: customer_types commercial slice (discounts, fee overrides, matrix keys, presentation).
+ * Schema 2: also freezes parts_matrices definitions so tier/markup edits cannot reprice old ROs.
  *
- * null on the RO means legacy live-settings behavior until stamped (e.g. before the first
- * forward-only Billing Classes save after this feature).
+ * null on the RO means legacy live-settings behavior until stamped (living only).
+ * Terminal ROs must not invent rules from live settings — see RepairOrderPricingContext.
  */
 final class CommercialPricingProfile
 {
-    public const CURRENT_SCHEMA = 1;
+    public const CURRENT_SCHEMA = 2;
 
     /**
      * @param  list<array<string, mixed>>  $customerTypes
+     * @param  list<array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>}>  $partsMatrices
      */
     public function __construct(
         public readonly array $customerTypes,
         public readonly int $version = 1,
         public readonly int $schema = self::CURRENT_SCHEMA,
+        public readonly array $partsMatrices = [],
+        public readonly ?string $defaultPartsMatrixKey = null,
     ) {}
 
     public static function fromShopSettings(ShopSettings $settings): self
@@ -35,9 +37,17 @@ final class CommercialPricingProfile
             ->values()
             ->all();
 
+        $matrices = collect($settings->partsMatrices())
+            ->map(fn (array $matrix): array => self::matrixSlice($matrix))
+            ->values()
+            ->all();
+
         return new self(
             customerTypes: $rows,
             version: max(1, (int) ($settings->commercial_pricing_profile_version ?? 1)),
+            schema: self::CURRENT_SCHEMA,
+            partsMatrices: $matrices,
+            defaultPartsMatrixKey: $settings->defaultPartsMatrix()['key'] ?? null,
         );
     }
 
@@ -60,10 +70,44 @@ final class CommercialPricingProfile
             return null;
         }
 
+        $matrices = collect($stored['parts_matrices'] ?? [])
+            ->filter(fn ($matrix): bool => is_array($matrix) && filled($matrix['key'] ?? null))
+            ->map(fn (array $matrix): array => self::matrixSlice($matrix))
+            ->values()
+            ->all();
+
         return new self(
             customerTypes: $rows,
             version: (int) ($stored['version'] ?? 1),
-            schema: (int) ($stored['schema'] ?? self::CURRENT_SCHEMA),
+            schema: (int) ($stored['schema'] ?? 1),
+            partsMatrices: $matrices,
+            defaultPartsMatrixKey: filled($stored['default_parts_matrix_key'] ?? null)
+                ? (string) $stored['default_parts_matrix_key']
+                : null,
+        );
+    }
+
+    /**
+     * Merge current shop parts matrices into an existing stamp that only has keys (schema 1).
+     */
+    public function withPartsMatricesFrom(ShopSettings $settings): self
+    {
+        if ($this->partsMatrices !== []) {
+            return $this;
+        }
+
+        $matrices = collect($settings->partsMatrices())
+            ->map(fn (array $matrix): array => self::matrixSlice($matrix))
+            ->values()
+            ->all();
+
+        return new self(
+            customerTypes: $this->customerTypes,
+            version: $this->version,
+            schema: max($this->schema, self::CURRENT_SCHEMA),
+            partsMatrices: $matrices,
+            defaultPartsMatrixKey: $this->defaultPartsMatrixKey
+                ?? ($settings->defaultPartsMatrix()['key'] ?? null),
         );
     }
 
@@ -112,8 +156,31 @@ final class CommercialPricingProfile
     }
 
     /**
-     * Rows suitable for overlaying onto a ShopSettings replicate's customer_types attribute.
-     *
+     * @return array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>}|null
+     */
+    public function partsMatrixByKey(?string $key): ?array
+    {
+        if ($this->partsMatrices === []) {
+            return null;
+        }
+
+        if (! filled($key)) {
+            $key = $this->defaultPartsMatrixKey;
+        }
+
+        if (filled($key)) {
+            $match = collect($this->partsMatrices)->firstWhere('key', $key);
+            if (is_array($match)) {
+                return $match;
+            }
+        }
+
+        return collect($this->partsMatrices)->firstWhere('is_default', true)
+            ?? $this->partsMatrices[0]
+            ?? null;
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function customerTypeRows(): array
@@ -125,7 +192,9 @@ final class CommercialPricingProfile
      * @return array{
      *     schema: int,
      *     version: int,
-     *     customer_types: list<array<string, mixed>>
+     *     customer_types: list<array<string, mixed>>,
+     *     parts_matrices: list<array<string, mixed>>,
+     *     default_parts_matrix_key: string|null
      * }
      */
     public function toArray(): array
@@ -134,6 +203,8 @@ final class CommercialPricingProfile
             'schema' => $this->schema,
             'version' => $this->version,
             'customer_types' => $this->customerTypes,
+            'parts_matrices' => $this->partsMatrices,
+            'default_parts_matrix_key' => $this->defaultPartsMatrixKey,
         ];
     }
 
@@ -174,6 +245,40 @@ final class CommercialPricingProfile
                 ? (string) $row['concern_billing_posture']
                 : null,
             'pill_color' => $row['pill_color'] ?? null,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $matrix
+     * @return array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>}
+     */
+    private static function matrixSlice(array $matrix): array
+    {
+        $rows = collect($matrix['rows'] ?? [])
+            ->filter(fn ($row): bool => is_array($row))
+            ->map(function (array $row): array {
+                return [
+                    'min_cost' => (string) ($row['min_cost'] ?? '0.00'),
+                    'max_cost' => array_key_exists('max_cost', $row) && $row['max_cost'] !== null
+                        ? (string) $row['max_cost']
+                        : null,
+                    'markup_percentage' => isset($row['markup_percentage'])
+                        ? (string) $row['markup_percentage']
+                        : null,
+                    'margin_percentage' => isset($row['margin_percentage'])
+                        ? (string) $row['margin_percentage']
+                        : null,
+                    'sort_order' => (int) ($row['sort_order'] ?? 0),
+                ];
+            })
+            ->values()
+            ->all();
+
+        return [
+            'key' => (string) $matrix['key'],
+            'name' => (string) ($matrix['name'] ?? $matrix['key']),
+            'is_default' => (bool) ($matrix['is_default'] ?? false),
+            'rows' => $rows,
         ];
     }
 

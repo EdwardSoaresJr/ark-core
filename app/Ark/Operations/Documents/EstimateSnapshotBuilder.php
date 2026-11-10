@@ -60,8 +60,10 @@ class EstimateSnapshotBuilder
         $repairOrder->load(['customer', 'vehicle', 'assignedTechnician', 'encounter.creator', 'concerns.workGroups.lines', 'concerns.lines', 'lines', 'approvalEvents.revocation', 'communicationEvents']);
 
         $settings = ShopSettings::current();
+        $pricingContext = $repairOrder->pricingContext($settings);
         $totals = $this->calculator->totalsFor($repairOrder);
         $generatedAt = now();
+        $presentation = $pricingContext->documentPresentationProfileFor($repairOrder->customer?->customer_type);
 
         return RepairOrderFreeText::normalizeSnapshot([
             'schema_version' => 2,
@@ -71,8 +73,16 @@ class EstimateSnapshotBuilder
             'generated_by' => $this->generatedBy($user),
             'shop' => $this->shopSnapshot($settings),
             'settings' => $this->settingsSnapshot($settings),
+            'commercial_pricing_profile' => $pricingContext->commercialProfile()?->toArray(),
+            'pricing' => [
+                'provenance' => $pricingContext->provenance(),
+                'commercial_pricing_profile' => $pricingContext->commercialProfile()?->toArray(),
+            ],
             'repair_order' => $this->documentRepairOrderSnapshot($repairOrder, $totals),
-            'customer' => $this->customerSnapshot($repairOrder),
+            'customer' => [
+                ...$this->customerSnapshot($repairOrder),
+                'document_presentation_profile' => $presentation->value,
+            ],
             'vehicle' => $this->vehicleSnapshot($repairOrder),
             'intake' => [
                 'concern_summary' => $repairOrder->concern_summary,

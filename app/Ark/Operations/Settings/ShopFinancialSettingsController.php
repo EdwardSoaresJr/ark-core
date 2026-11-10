@@ -395,16 +395,22 @@ class ShopFinancialSettingsController
             ))],
         ]);
 
-        $settings = ShopSettings::current();
+        DB::transaction(function () use ($data): void {
+            ShopSettings::forgetCurrent();
+            $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
+            ShopSettings::bindCurrent($settings);
 
-        // Freeze living ROs that still lack a commercial stamp under the *current* rules
-        // before this save can change discounts / class fee overrides.
-        $this->stampLivingRepairOrdersWithCurrentCommercialPricingProfile($settings);
+            // Freeze living ROs that still lack a commercial stamp under the *current* rules
+            // before this save can change discounts / class fee overrides / matrices.
+            $this->stampLivingRepairOrdersWithCurrentCommercialPricingProfile($settings);
+            $this->ensureLivingCommercialProfilesIncludePartsMatrices($settings);
 
-        $settings->update([
-            'customer_types' => $this->normalizeCustomerTypes($data['customer_types'] ?? [], $settings->partsMatrices()),
-            'commercial_pricing_profile_version' => max(1, (int) ($settings->commercial_pricing_profile_version ?? 0) + 1),
-        ]);
+            $settings->update([
+                'customer_types' => $this->normalizeCustomerTypes($data['customer_types'] ?? [], $settings->partsMatrices()),
+                'commercial_pricing_profile_version' => max(1, (int) ($settings->commercial_pricing_profile_version ?? 0) + 1),
+            ]);
+            ShopSettings::forgetCurrent();
+        });
 
         // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
         return $this->redirectWithStatus('Billing class settings saved.');
@@ -428,13 +434,23 @@ class ShopFinancialSettingsController
 
         abort_unless(collect($partsMatrices)->contains(fn (array $matrix): bool => $matrix['key'] === $matrixKey), 404);
 
-        ShopSettings::current()->update([
-            'parts_matrix' => ShopSettings::DEFAULT_PARTS_MATRIX,
-            'parts_matrices' => $partsMatrices,
-        ]);
+        DB::transaction(function () use ($partsMatrices): void {
+            ShopSettings::forgetCurrent();
+            $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
+            ShopSettings::bindCurrent($settings);
 
-        $this->syncOpenEstimateDocuments();
+            // Freeze matrix tier definitions onto living ROs before shop-wide matrix edits.
+            $this->stampLivingRepairOrdersWithCurrentCommercialPricingProfile($settings);
+            $this->ensureLivingCommercialProfilesIncludePartsMatrices($settings);
 
+            $settings->update([
+                'parts_matrix' => ShopSettings::DEFAULT_PARTS_MATRIX,
+                'parts_matrices' => $partsMatrices,
+            ]);
+            ShopSettings::forgetCurrent();
+        });
+
+        // Forward-only: do not rewrite open estimate snapshots on matrix edits.
         return redirect()
             ->route('operations.settings.shop.edit')
             ->with('status', 'Parts matrix saved.');
@@ -538,6 +554,33 @@ class ShopFinancialSettingsController
             ->chunkById(100, function ($repairOrders) use ($profile): void {
                 foreach ($repairOrders as $repairOrder) {
                     $repairOrder->forceFill(['commercial_pricing_profile' => $profile])->saveQuietly();
+                }
+            });
+    }
+
+    /**
+     * Schema-1 commercial stamps only stored matrix keys. Before matrix tier edits, freeze the
+     * then-current matrix definitions onto those living ROs without rewriting line amounts.
+     */
+    private function ensureLivingCommercialProfilesIncludePartsMatrices(ShopSettings $settings): void
+    {
+        RepairOrder::query()
+            ->where('status', '!=', RepairOrderStatus::Closed->value)
+            ->whereNotNull('commercial_pricing_profile')
+            ->orderBy('id')
+            ->chunkById(100, function ($repairOrders) use ($settings): void {
+                foreach ($repairOrders as $repairOrder) {
+                    $stored = is_array($repairOrder->commercial_pricing_profile)
+                        ? $repairOrder->commercial_pricing_profile
+                        : null;
+                    $profile = CommercialPricingProfile::tryFromStored($stored);
+                    if ($profile === null || $profile->partsMatrices !== []) {
+                        continue;
+                    }
+
+                    $repairOrder->forceFill([
+                        'commercial_pricing_profile' => $profile->withPartsMatricesFrom($settings)->toArray(),
+                    ])->saveQuietly();
                 }
             });
     }

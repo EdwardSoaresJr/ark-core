@@ -340,14 +340,21 @@ class EstimateTotalsCalculator
      *     suggested_price_cents: int,
      * }|null
      */
-    public function matrixSuggestionForCost(int $costCents, ?ShopSettings $settings = null, ?string $matrixKey = null): ?array
-    {
+    /**
+     * @param  array{key: string, name: string, rows: array<int, array<string, mixed>>}|null  $matrixOverride
+     */
+    public function matrixSuggestionForCost(
+        int $costCents,
+        ?ShopSettings $settings = null,
+        ?string $matrixKey = null,
+        ?array $matrixOverride = null,
+    ): ?array {
         if ($costCents < 0) {
             return null;
         }
 
         $settings ??= ShopSettings::current();
-        $matrix = $settings->partsMatrixByKey($matrixKey);
+        $matrix = $matrixOverride ?? $settings->partsMatrixByKey($matrixKey);
 
         if (! $matrix) {
             return null;
@@ -403,10 +410,17 @@ class EstimateTotalsCalculator
 
     public function recalculateRepairOrder(RepairOrder $repairOrder): void
     {
+        // Hard stop: terminal ROs never reprice from live or stamped rules.
+        // Stored line cents remain the financial authority for closed/archived work.
+        if ($repairOrder->isTerminal()) {
+            return;
+        }
+
         $repairOrder->load(['lines', 'customer', 'concerns']);
 
         $settings = ShopSettings::current();
-        $shopFeeProfile = $this->shopFeeProfileFor($repairOrder, $settings);
+        $pricingContext = $repairOrder->pricingContext($settings);
+        $shopFeeProfile = $pricingContext->shopFeeProfile();
 
         if ($shopFeeProfile->enabled) {
             $repairOrder->lines
@@ -421,7 +435,7 @@ class EstimateTotalsCalculator
             ->mapWithKeys(fn (RepairOrderLine $line): array => [
                 $line->id => $this->subtotalForLine($line),
             ]);
-        $commercialProfile = $this->commercialPricingProfileFor($repairOrder, $settings);
+        $commercialProfile = $pricingContext->commercialProfile();
         $standingDiscounts = $this->standingDiscountAllocations(
             $repairOrder,
             $repairOrder->lines,
@@ -630,14 +644,12 @@ class EstimateTotalsCalculator
 
     private function shopFeeProfileFor(RepairOrder $repairOrder, ShopSettings $settings): ShopFeeProfile
     {
-        return ShopFeeProfile::tryFromStored(
-            is_array($repairOrder->shop_fee_profile) ? $repairOrder->shop_fee_profile : null,
-        ) ?? ShopFeeProfile::fromShopSettings($settings);
+        return $repairOrder->pricingContext($settings)->shopFeeProfile();
     }
 
-    private function commercialPricingProfileFor(RepairOrder $repairOrder, ShopSettings $settings): CommercialPricingProfile
+    private function commercialPricingProfileFor(RepairOrder $repairOrder, ShopSettings $settings): ?CommercialPricingProfile
     {
-        return $repairOrder->resolvedCommercialPricingProfile($settings);
+        return $repairOrder->pricingContext($settings)->commercialProfile();
     }
 
     /**
@@ -843,7 +855,7 @@ class EstimateTotalsCalculator
         ?CommercialPricingProfile $commercialProfile = null,
     ): array {
         $commercialProfile ??= $this->commercialPricingProfileFor($repairOrder, $settings);
-        $policy = $commercialProfile->standingDiscountPolicy($repairOrder->customer?->customer_type);
+        $policy = $commercialProfile?->standingDiscountPolicy($repairOrder->customer?->customer_type);
 
         if ($policy === null) {
             return [];

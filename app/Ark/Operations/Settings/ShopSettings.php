@@ -522,6 +522,11 @@ TEXT;
         ShopDisplayTimezone::forget();
     }
 
+    public static function bindCurrent(self $settings): void
+    {
+        self::$current = $settings;
+    }
+
     /**
      * Street line formatted to match Google Business Profile prominence (suite as trailing token).
      */

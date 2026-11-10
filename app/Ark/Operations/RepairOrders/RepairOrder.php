@@ -712,18 +712,28 @@ class RepairOrder extends Model
      */
     public function shopFeePolicyFor(ConcernBillingPosture $posture, ShopSettings $settings): array
     {
-        if (! $settings->shop_fee_enabled) {
+        $context = $this->pricingContext($settings);
+        $shopFee = $context->shopFeeProfile();
+
+        if (! $shopFee->enabled) {
             return ['enabled' => false, 'rate' => null];
         }
 
-        $commercial = $this->resolvedCommercialPricingProfile($settings);
+        $commercial = $context->commercialProfile();
+        if ($commercial === null) {
+            // Terminal legacy without stamp: do not invent fee rules from live class tables.
+            return ['enabled' => false, 'rate' => null];
+        }
 
         if ($posture === ConcernBillingPosture::Default && $this->usesPerLineShopFees()) {
             $this->loadMissing('customer');
             $policy = $commercial->shopFeePolicyForCustomerType($this->customer?->customer_type);
 
             return $policy['enabled'] && $policy['rate'] === null
-                ? $settings->shopFeePolicyForBillingDefault()
+                ? [
+                    'enabled' => true,
+                    'rate' => filled($shopFee->rate) ? (string) $shopFee->rate : null,
+                ]
                 : $policy;
         }
 
@@ -733,17 +743,24 @@ class RepairOrder extends Model
             return $commercial->shopFeePolicyForCustomerType($billingClass);
         }
 
-        return match ($posture) {
-            ConcernBillingPosture::Default, ConcernBillingPosture::CustomerPay => $settings->shopFeePolicyForBillingDefault(),
-            default => $settings->shopFeePolicyForBillingDefault(),
-        };
+        return [
+            'enabled' => true,
+            'rate' => filled($shopFee->rate) ? (string) $shopFee->rate : null,
+        ];
     }
 
-    public function resolvedCommercialPricingProfile(ShopSettings $settings): \App\Ark\Operations\EstimatePricing\CommercialPricingProfile
+    public function pricingContext(?ShopSettings $settings = null): \App\Ark\Operations\EstimatePricing\RepairOrderPricingContext
     {
-        return \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::tryFromStored(
-            is_array($this->commercial_pricing_profile) ? $this->commercial_pricing_profile : null,
-        ) ?? \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::fromShopSettings($settings);
+        return \App\Ark\Operations\EstimatePricing\RepairOrderPricingContext::for($this, $settings);
+    }
+
+    /**
+     * Prefer stamped commercial rules. Terminal ROs never invent rules from live settings.
+     * Living ROs without a stamp still fall back to live settings until the next activation stamps them.
+     */
+    public function resolvedCommercialPricingProfile(ShopSettings $settings): ?\App\Ark\Operations\EstimatePricing\CommercialPricingProfile
+    {
+        return $this->pricingContext($settings)->commercialProfile();
     }
 
     /**

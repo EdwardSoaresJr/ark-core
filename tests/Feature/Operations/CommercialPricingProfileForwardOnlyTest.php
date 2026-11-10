@@ -291,5 +291,6 @@ test('commercial pricing profile serializes from shop settings', function () {
     expect($profile->standingDiscountPolicy('Military'))->toBe(['type' => 'labor', 'percent' => '10.00'])
         ->and($profile->shopFeePolicyForCustomerType('Fleet'))->toBe(['enabled' => true, 'rate' => '2.000'])
         ->and($profile->shopFeePolicyForCustomerType('Warranty')['enabled'])->toBeFalse()
-        ->and($profile->toArray()['schema'])->toBe(1);
+        ->and($profile->toArray()['schema'])->toBe(2)
+        ->and($profile->partsMatrices)->not->toBeEmpty();
 });

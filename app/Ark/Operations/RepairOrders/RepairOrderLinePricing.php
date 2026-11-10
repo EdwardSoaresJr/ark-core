@@ -185,6 +185,7 @@ class RepairOrderLinePricing
     public function previewFor(array $data, RepairOrder $repairOrder): array
     {
         $settings = ShopSettings::current();
+        $pricingContext = $repairOrder->pricingContext($settings);
         $partCostCents = filled($data['part_cost'] ?? null)
             ? $this->calculator->unitPriceCents($data['part_cost'])
             : null;
@@ -194,13 +195,14 @@ class RepairOrderLinePricing
             ?->setRelation('repairOrder', $repairOrder);
         $posture = $concern?->billing_posture ?? ConcernBillingPosture::Default;
         $matrix = $this->explicitMatrixSelected($data)
-            ? $settings->partsMatrixByKey($data['pricing_matrix_key'])
+            ? ($pricingContext->partsMatrixByKey($data['pricing_matrix_key'])
+                ?? $settings->partsMatrixByKey($data['pricing_matrix_key']))
             : ($concern?->defaultPartsMatrix($settings) ?? $settings->defaultPartsMatrix());
         abort_if($matrix === null, 422, 'Selected parts matrix is not available.');
 
         $suggestion = $partCostCents === null
             ? null
-            : $this->calculator->matrixSuggestionForCost($partCostCents, $settings, $matrix['key']);
+            : $this->calculator->matrixSuggestionForCost($partCostCents, $settings, $matrix['key'], $matrix);
         $suggestedPriceCents = $suggestion['suggested_price_cents'] ?? null;
         $pricingMode = $data['pricing_mode'] ?? ($posture->prefersManualPartPricing() ? 'manual' : 'matrix');
         $submittedUnitPriceCents = $this->submittedSellCents($data);
