@@ -3,6 +3,13 @@
 **Status:** Ready for owner-authorized **staging-only** SaaS Core pin.  
 **Not authorized:** production merge cutover, production pin, or LugsNPlugs deploy.
 
+## Exact staging SHAs (2026-11-10)
+
+- **Core:** `8f73efefae46b36ad563447c0c68a37351518192` (`settings/consolidated-labor-settings`)
+- **SaaS / ark-stancl:** `4b74b6e3e949039ca9ee0d896d19f5606cd700b6` (`pin/core-8f73efe-labor-settings`)
+- **Screenshots:** `aba35bb6dc7d29bcc6af772309988645c11f2ac1` on `review-artifacts`
+- **Review URL:** https://demo.staging.arksms.com/app/settings/shop?section=financial&financial-tab=labor
+
 ## Corrected Core SHA
 
 Confirm tip before pinning:
