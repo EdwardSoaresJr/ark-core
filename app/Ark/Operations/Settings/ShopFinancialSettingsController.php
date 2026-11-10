@@ -10,6 +10,7 @@ use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix;
 use App\Ark\Operations\EstimatePricing\OperationClass;
 use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
+use App\Ark\Operations\EstimatePricing\TaxProfile;
 use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -278,18 +279,27 @@ class ShopFinancialSettingsController
             'taxable_shop_fees' => ['nullable', 'boolean'],
         ]);
 
-        ShopSettings::current()->update([
-            'tax_enabled' => (bool) ($data['tax_enabled'] ?? false),
-            'tax_label' => trim($data['tax_label']) ?: 'Tax',
-            'default_tax_rate' => $data['default_tax_rate'],
-            'taxable_labor' => (bool) ($data['taxable_labor'] ?? false),
-            'taxable_parts' => (bool) ($data['taxable_parts'] ?? false),
-            'taxable_shop_fees' => (bool) ($data['taxable_shop_fees'] ?? false),
-        ]);
+        DB::transaction(function () use ($data): void {
+            ShopSettings::forgetCurrent();
+            $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
+            ShopSettings::bindCurrent($settings);
 
-        $this->recalculateLivingRepairOrderTotals();
-        $this->syncOpenEstimateDocuments();
+            // Freeze living ROs that still lack a tax stamp under the *current* rules
+            // before this save can change rates / taxable bases.
+            $this->stampLivingRepairOrdersWithCurrentTaxProfile($settings);
 
+            $settings->update([
+                'tax_enabled' => (bool) ($data['tax_enabled'] ?? false),
+                'tax_label' => trim($data['tax_label']) ?: 'Tax',
+                'default_tax_rate' => $data['default_tax_rate'],
+                'taxable_labor' => (bool) ($data['taxable_labor'] ?? false),
+                'taxable_parts' => (bool) ($data['taxable_parts'] ?? false),
+                'taxable_shop_fees' => (bool) ($data['taxable_shop_fees'] ?? false),
+            ]);
+            ShopSettings::forgetCurrent();
+        });
+
+        // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
         return $this->redirectWithStatus('Tax settings saved.');
     }
 
@@ -443,9 +453,12 @@ class ShopFinancialSettingsController
             $this->stampLivingRepairOrdersWithCurrentCommercialPricingProfile($settings);
             $this->ensureLivingCommercialProfilesIncludePartsMatrices($settings);
 
+            // Preserve archived matrix definitions; the form only posts active matrices.
+            $mergedMatrices = $this->mergeArchivedPartsMatrices($partsMatrices, $settings);
+
             $settings->update([
                 'parts_matrix' => ShopSettings::DEFAULT_PARTS_MATRIX,
-                'parts_matrices' => $partsMatrices,
+                'parts_matrices' => $mergedMatrices,
             ]);
             ShopSettings::forgetCurrent();
         });
@@ -458,48 +471,76 @@ class ShopFinancialSettingsController
 
     public function destroyPartsMatrix(Request $request, string $matrixKey): RedirectResponse
     {
-        $settings = ShopSettings::current();
-        $matrices = $settings->parts_matrices ?: ShopSettings::DEFAULT_PARTS_MATRICES;
+        DB::transaction(function () use ($request, $matrixKey): void {
+            ShopSettings::forgetCurrent();
+            $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
+            ShopSettings::bindCurrent($settings);
 
-        $matrix = collect($matrices)->firstWhere('key', $matrixKey);
+            $storedMatrices = collect($settings->parts_matrices ?: ShopSettings::DEFAULT_PARTS_MATRICES)
+                ->filter(fn ($matrix): bool => is_array($matrix) && filled($matrix['key'] ?? null))
+                ->values()
+                ->all();
 
-        abort_unless($matrix !== null, 404);
+            $matrix = collect($storedMatrices)->firstWhere('key', $matrixKey);
+            abort_unless($matrix !== null && ($matrix['is_active'] ?? true) !== false, 404);
 
-        $request->validate([
-            'confirm_name' => ['required', 'string', Rule::in([(string) $matrix['name']])],
-        ]);
-
-        if (count($matrices) <= 1) {
-            throw ValidationException::withMessages([
-                'parts_matrices' => 'At least one parts matrix must remain.',
+            $request->validate([
+                'confirm_name' => ['required', 'string', Rule::in([(string) $matrix['name']])],
             ]);
-        }
 
-        if ($settings->defaultPartsMatrix()['key'] === $matrixKey) {
-            throw ValidationException::withMessages([
-                'parts_matrices' => 'Choose a different default matrix before deleting this one.',
+            $activeCount = collect($storedMatrices)
+                ->filter(fn (array $candidate): bool => ($candidate['is_active'] ?? true) !== false)
+                ->count();
+
+            if ($activeCount <= 1) {
+                throw ValidationException::withMessages([
+                    'parts_matrices' => 'At least one parts matrix must remain active.',
+                ]);
+            }
+
+            if ($settings->defaultPartsMatrix()['key'] === $matrixKey) {
+                throw ValidationException::withMessages([
+                    'parts_matrices' => 'Choose a different default matrix before archiving this one.',
+                ]);
+            }
+
+            // Freeze current matrix definitions onto living ROs before soft-archiving.
+            $this->stampLivingRepairOrdersWithCurrentCommercialPricingProfile($settings);
+            $this->ensureLivingCommercialProfilesIncludePartsMatrices($settings);
+
+            $archivedMatrices = collect($storedMatrices)
+                ->map(function (array $candidate) use ($matrixKey): array {
+                    if ($candidate['key'] !== $matrixKey) {
+                        return $candidate;
+                    }
+
+                    $candidate['is_active'] = false;
+                    $candidate['is_default'] = false;
+
+                    return $candidate;
+                })
+                ->values()
+                ->all();
+
+            $activeDefaultKey = collect($archivedMatrices)
+                ->first(fn (array $candidate): bool => ($candidate['is_active'] ?? true) !== false
+                    && (bool) ($candidate['is_default'] ?? false))['key']
+                ?? collect($archivedMatrices)
+                    ->first(fn (array $candidate): bool => ($candidate['is_active'] ?? true) !== false)['key'];
+
+            $settings->update([
+                'parts_matrix' => ShopSettings::DEFAULT_PARTS_MATRIX,
+                'parts_matrices' => $this->normalizePartsMatrices($archivedMatrices, $activeDefaultKey),
+                'customer_types' => $settings->customerTypesWithoutPartsMatrix($matrixKey),
+                'commercial_pricing_profile_version' => max(1, (int) ($settings->commercial_pricing_profile_version ?? 0) + 1),
             ]);
-        }
+            ShopSettings::forgetCurrent();
+        });
 
-        $remainingMatrices = collect($matrices)
-            ->reject(fn (array $matrix): bool => $matrix['key'] === $matrixKey)
-            ->values()
-            ->all();
-
-        $defaultMatrixKey = collect($remainingMatrices)->firstWhere('is_default', true)['key']
-            ?? $remainingMatrices[0]['key'];
-
-        $settings->update([
-            'parts_matrix' => ShopSettings::DEFAULT_PARTS_MATRIX,
-            'parts_matrices' => $this->normalizePartsMatrices($remainingMatrices, $defaultMatrixKey),
-            'customer_types' => $settings->customerTypesWithoutPartsMatrix($matrixKey),
-        ]);
-
-        $this->syncOpenEstimateDocuments();
-
+        // Forward-only: do not rewrite open estimate snapshots when archiving a matrix.
         return redirect()
             ->route('operations.settings.shop.edit', ['section' => 'financial'])
-            ->with('status', 'Parts matrix deleted.');
+            ->with('status', 'Parts matrix archived.');
     }
 
     public function updateManualPaymentMethods(Request $request): RedirectResponse
@@ -536,6 +577,48 @@ class ShopFinancialSettingsController
                     $repairOrder->forceFill(['shop_fee_profile' => $profile])->saveQuietly();
                 }
             });
+    }
+
+    /**
+     * Capture current tax rules onto living ROs that still lack a stamp so a subsequent
+     * Tax settings save cannot change their tax math on later recalculation.
+     */
+    private function stampLivingRepairOrdersWithCurrentTaxProfile(ShopSettings $settings): void
+    {
+        $profile = TaxProfile::fromShopSettings($settings)->toArray();
+
+        RepairOrder::query()
+            ->where('status', '!=', RepairOrderStatus::Closed->value)
+            ->whereNull('tax_profile')
+            ->orderBy('id')
+            ->chunkById(100, function ($repairOrders) use ($profile): void {
+                foreach ($repairOrders as $repairOrder) {
+                    $repairOrder->forceFill(['tax_profile' => $profile])->saveQuietly();
+                }
+            });
+    }
+
+    /**
+     * Keep soft-archived matrix definitions when the active editor posts only live matrices.
+     *
+     * @param  list<array<string, mixed>>  $activeMatrices
+     * @return list<array<string, mixed>>
+     */
+    private function mergeArchivedPartsMatrices(array $activeMatrices, ShopSettings $settings): array
+    {
+        $activeKeys = collect($activeMatrices)->pluck('key')->all();
+        $archived = collect($settings->archivedPartsMatrices())
+            ->reject(fn (array $matrix): bool => in_array($matrix['key'], $activeKeys, true))
+            ->map(function (array $matrix): array {
+                $matrix['is_active'] = false;
+                $matrix['is_default'] = false;
+
+                return $matrix;
+            })
+            ->values()
+            ->all();
+
+        return $this->normalizePartsMatrices([...$activeMatrices, ...$archived]);
     }
 
     /**

@@ -1203,11 +1203,15 @@ TEXT;
     }
 
     /**
-     * @return array<int, array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>}>
+     * Active parts matrices for shop UI and new-RO stamps.
+     * Archived matrices remain in storage for historical RO stamps but are excluded here.
+     *
+     * @return array<int, array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>, is_active?: bool}>
      */
     public function partsMatrices(): array
     {
         return collect($this->parts_matrices ?: self::DEFAULT_PARTS_MATRICES)
+            ->filter(fn (array $matrix): bool => ($matrix['is_active'] ?? true) !== false)
             ->map(function (array $matrix): array {
                 $matrix['rows'] = collect($matrix['rows'])
                     ->map(function (array $row): array {
@@ -1218,10 +1222,24 @@ TEXT;
                     ->sortBy(fn (array $row): float => (float) $row['min_cost'])
                     ->values()
                     ->all();
+                $matrix['is_active'] = true;
 
                 return $matrix;
             })
             ->sortBy(fn (array $matrix): string => mb_strtolower($matrix['name']))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>, is_active?: bool}>
+     */
+    public function archivedPartsMatrices(): array
+    {
+        return collect($this->parts_matrices ?: [])
+            ->filter(fn ($matrix): bool => is_array($matrix)
+                && filled($matrix['key'] ?? null)
+                && ($matrix['is_active'] ?? true) === false)
             ->values()
             ->all();
     }

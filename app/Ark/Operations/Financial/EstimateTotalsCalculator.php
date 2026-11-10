@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
+use App\Ark\Operations\EstimatePricing\TaxProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\EstimateTotals;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -58,7 +59,7 @@ class EstimateTotalsCalculator
     {
         $repairOrder->loadMissing(['lines.concern']);
 
-        $settings = ShopSettings::current();
+        $settings = $this->settingsWithTaxOverlay($repairOrder, ShopSettings::current());
         $billableLines = $this->billableLines($repairOrder->lines);
 
         return $this->totalsForLines($repairOrder->lines, $billableLines, $settings);
@@ -71,7 +72,7 @@ class EstimateTotalsCalculator
         $this->recalculateRepairOrder($repairOrder);
         $repairOrder->load(['lines.concern']);
 
-        $settings = ShopSettings::current();
+        $settings = $this->settingsWithTaxOverlay($repairOrder, ShopSettings::current());
         $approvedLines = $this->approvedInvoiceableLines($repairOrder);
 
         return $this->totalsForLines($approvedLines, $approvedLines, $settings);
@@ -94,7 +95,7 @@ class EstimateTotalsCalculator
     {
         $repairOrder->loadMissing(['lines.concern']);
 
-        $settings = ShopSettings::current();
+        $settings = $this->settingsWithTaxOverlay($repairOrder, ShopSettings::current());
         $approvedLines = $this->approvedInvoiceableLines($repairOrder);
 
         return $this->totalsForLines($approvedLines, $approvedLines, $settings);
@@ -236,7 +237,14 @@ class EstimateTotalsCalculator
         $standingDiscountCents = $scale((int) $line->standing_discount_cents);
         $shopFeeCents = $scale((int) $line->shop_fee_cents);
         $netSubtotalCents = max(0, $approvedSubtotalCents - $standingDiscountCents);
-        $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $settings);
+        $line->loadMissing('repairOrder');
+        $taxSettings = $line->repairOrder instanceof RepairOrder
+            ? $this->settingsWithTaxOverlay($line->repairOrder, $settings)
+            : $settings;
+        $shopFeeProfile = $line->repairOrder instanceof RepairOrder
+            ? $line->repairOrder->pricingContext($settings)->shopFeeProfile()
+            : null;
+        $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $taxSettings, $shopFeeProfile);
 
         $portion = clone $line;
         $portion->setRawAttributes([
@@ -421,6 +429,7 @@ class EstimateTotalsCalculator
         $settings = ShopSettings::current();
         $pricingContext = $repairOrder->pricingContext($settings);
         $shopFeeProfile = $pricingContext->shopFeeProfile();
+        $taxSettings = $this->settingsWithTaxOverlay($repairOrder, $settings, $pricingContext->taxProfile());
 
         if ($shopFeeProfile->enabled) {
             $repairOrder->lines
@@ -459,7 +468,7 @@ class EstimateTotalsCalculator
             $standingDiscountCents = $standingDiscounts[$line->id] ?? 0;
             $netSubtotalCents = max(0, $subtotalCents - $standingDiscountCents);
             $shopFeeCents = $shopFees[$line->id] ?? 0;
-            $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $settings, $shopFeeProfile);
+            $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $taxSettings, $shopFeeProfile);
 
             $line->forceFill([
                 'subtotal_cents' => $subtotalCents,
@@ -667,6 +676,31 @@ class EstimateTotalsCalculator
         $overlay->taxable_shop_fees = $profile->taxable;
 
         return $overlay;
+    }
+
+    private function settingsWithTaxProfile(ShopSettings $settings, TaxProfile $profile): ShopSettings
+    {
+        $overlay = $settings->replicate();
+        $overlay->tax_enabled = $profile->enabled;
+        $overlay->tax_label = $profile->label;
+        $overlay->default_tax_rate = $profile->rate;
+        $overlay->taxable_labor = $profile->taxableLabor;
+        $overlay->taxable_parts = $profile->taxableParts;
+        $overlay->taxable_shop_fees = $profile->taxableShopFees;
+
+        return $overlay;
+    }
+
+    private function settingsWithTaxOverlay(
+        RepairOrder $repairOrder,
+        ShopSettings $settings,
+        ?TaxProfile $taxProfile = null,
+    ): ShopSettings {
+        $taxProfile ??= $repairOrder->pricingContext($settings)->taxProfile();
+
+        return $taxProfile !== null
+            ? $this->settingsWithTaxProfile($settings, $taxProfile)
+            : $settings;
     }
 
     /**

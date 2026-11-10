@@ -156,6 +156,10 @@ final class CommercialPricingProfile
     }
 
     /**
+     * Resolve a matrix by key. Unknown keys fall back to the stamped default matrix
+     * (advisor convenience for omitted keys). Use {@see partsMatrixExact()} when an
+     * explicit key must either match or fail.
+     *
      * @return array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>}|null
      */
     public function partsMatrixByKey(?string $key): ?array
@@ -169,8 +173,8 @@ final class CommercialPricingProfile
         }
 
         if (filled($key)) {
-            $match = collect($this->partsMatrices)->firstWhere('key', $key);
-            if (is_array($match)) {
+            $match = $this->partsMatrixExact($key);
+            if ($match !== null) {
                 return $match;
             }
         }
@@ -178,6 +182,23 @@ final class CommercialPricingProfile
         return collect($this->partsMatrices)->firstWhere('is_default', true)
             ?? $this->partsMatrices[0]
             ?? null;
+    }
+
+    /**
+     * Exact key match only — no default fallback. Returns null for unknown keys so
+     * advisors cannot silently price against a matrix created after this RO opened.
+     *
+     * @return array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>}|null
+     */
+    public function partsMatrixExact(?string $key): ?array
+    {
+        if ($this->partsMatrices === [] || ! filled($key)) {
+            return null;
+        }
+
+        $match = collect($this->partsMatrices)->firstWhere('key', $key);
+
+        return is_array($match) ? $match : null;
     }
 
     /**

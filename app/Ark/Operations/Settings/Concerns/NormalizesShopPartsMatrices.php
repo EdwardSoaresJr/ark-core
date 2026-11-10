@@ -34,12 +34,17 @@ trait NormalizesShopPartsMatrices
         return collect($matrices)
             ->values()
             ->map(function (array $matrix) use ($defaultMatrixKey): array {
+                $isActive = array_key_exists('is_active', $matrix)
+                    ? (bool) $matrix['is_active']
+                    : true;
+
                 return [
                     'key' => $matrix['key'],
                     'name' => $matrix['name'],
-                    'is_default' => $defaultMatrixKey !== null
+                    'is_default' => $isActive && ($defaultMatrixKey !== null
                         ? $matrix['key'] === $defaultMatrixKey
-                        : (bool) ($matrix['is_default'] ?? false),
+                        : (bool) ($matrix['is_default'] ?? false)),
+                    'is_active' => $isActive,
                     'rows' => collect($matrix['rows'])
                         ->map(fn (array $row): array => [
                             'min_cost' => number_format((float) $row['min_cost'], 2, '.', ''),

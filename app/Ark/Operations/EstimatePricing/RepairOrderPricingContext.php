@@ -9,15 +9,9 @@ use App\Ark\Operations\Settings\ShopSettings;
 /**
  * Authoritative pricing inputs for one repair order.
  *
- * Specialized profiles (labor / shop fee / commercial) remain the storage shape;
- * this context is the single resolution entry point so calculators never silently
- * mix frozen RO rules with today's ShopSettings for an existing RO.
- *
- * Legacy null profiles:
- * - Living RO: may still resolve commercial/fee from live settings until stamped
- *   (transition window before the next settings activation).
- * - Terminal RO: never falls back to live commercial/fee/labor rules that would
- *   reprice stored line amounts — callers must treat stored line cents as truth.
+ * Specialized profiles remain the storage shape; this context is the single
+ * resolution entry so calculators never silently mix frozen RO rules with
+ * today's ShopSettings for an existing RO.
  */
 final class RepairOrderPricingContext
 {
@@ -27,6 +21,7 @@ final class RepairOrderPricingContext
         public readonly ?LaborPricingProfile $labor,
         public readonly ?ShopFeeProfile $shopFee,
         public readonly ?CommercialPricingProfile $commercial,
+        public readonly ?TaxProfile $tax,
         public readonly bool $terminal,
         public readonly bool $allowsLiveCommercialFallback,
     ) {}
@@ -45,6 +40,9 @@ final class RepairOrderPricingContext
         $commercial = CommercialPricingProfile::tryFromStored(
             is_array($repairOrder->commercial_pricing_profile) ? $repairOrder->commercial_pricing_profile : null,
         );
+        $tax = TaxProfile::tryFromStored(
+            is_array($repairOrder->tax_profile) ? $repairOrder->tax_profile : null,
+        );
 
         // Terminal + missing profile: do not invent historical rules from live settings.
         $allowsLiveCommercialFallback = ! $terminal;
@@ -57,12 +55,17 @@ final class RepairOrderPricingContext
             $shopFee = ShopFeeProfile::fromShopSettings($settings);
         }
 
+        if ($tax === null && $allowsLiveCommercialFallback) {
+            $tax = TaxProfile::fromShopSettings($settings);
+        }
+
         return new self(
             repairOrder: $repairOrder,
             shopSettings: $settings,
             labor: $labor,
             shopFee: $shopFee,
             commercial: $commercial,
+            tax: $tax,
             terminal: $terminal,
             allowsLiveCommercialFallback: $allowsLiveCommercialFallback,
         );
@@ -73,9 +76,23 @@ final class RepairOrderPricingContext
         return $this->shopFee ?? ShopFeeProfile::fromShopSettings($this->shopSettings);
     }
 
+    public function taxProfile(): ?TaxProfile
+    {
+        return $this->tax;
+    }
+
     public function commercialProfile(): ?CommercialPricingProfile
     {
         return $this->commercial;
+    }
+
+    /**
+     * True when this RO's commercial stamp carries frozen matrix definitions.
+     * Unknown matrix keys must fail visibly — never silently use live ShopSettings.
+     */
+    public function hasFrozenPartsMatrices(): bool
+    {
+        return $this->commercial !== null && $this->commercial->partsMatrices !== [];
     }
 
     /**
@@ -84,7 +101,6 @@ final class RepairOrderPricingContext
     public function standingDiscountPolicy(?string $customerType): ?array
     {
         if ($this->commercial === null) {
-            // Terminal legacy: no live discount policy — preserve stored line discounts.
             return null;
         }
 
@@ -117,35 +133,64 @@ final class RepairOrderPricingContext
     }
 
     /**
-     * @return array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>}|null
+     * Resolve a parts matrix for this RO.
+     *
+     * When the RO carries its own commercial stamp, only stamped matrix definitions apply.
+     * Explicit unknown keys return null (no silent default, no live shop fallback).
+     * Schema-1 stamps without frozen tiers cannot reconstruct historical brackets; null.
+     *
+     * @return array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>, is_active?: bool}|null
      */
     public function partsMatrixByKey(?string $key): ?array
     {
-        if ($this->commercial !== null) {
-            $fromStamp = $this->commercial->partsMatrixByKey($key);
-            if ($fromStamp !== null) {
-                return $fromStamp;
+        $roHasCommercialStamp = is_array($this->repairOrder->commercial_pricing_profile)
+            && $this->repairOrder->commercial_pricing_profile !== [];
+
+        if ($roHasCommercialStamp) {
+            if ($this->commercial === null) {
+                return null;
             }
+
+            // Explicit key: exact match only so post-open shop matrices cannot sneak in.
+            if (filled($key)) {
+                return $this->commercial->partsMatrixExact($key);
+            }
+
+            return $this->commercial->partsMatrixByKey(null);
         }
 
         if (! $this->allowsLiveCommercialFallback) {
             return null;
         }
 
+        if ($this->commercial !== null) {
+            if (filled($key)) {
+                $exact = $this->commercial->partsMatrixExact($key);
+                if ($exact !== null) {
+                    return $exact;
+                }
+            } else {
+                $fromSynthesized = $this->commercial->partsMatrixByKey(null);
+                if ($fromSynthesized !== null) {
+                    return $fromSynthesized;
+                }
+            }
+        }
+
         return $this->shopSettings->partsMatrixByKey($key);
     }
 
     /**
-     * Provenance bag for future explainability surfaces (no second pricing system).
-     *
      * @return array{
      *     repair_order_id: int|null,
      *     terminal: bool,
      *     allows_live_commercial_fallback: bool,
+     *     has_frozen_parts_matrices: bool,
      *     labor_schema: int|null,
      *     shop_fee_schema: int|null,
      *     commercial_schema: int|null,
-     *     commercial_version: int|null
+     *     commercial_version: int|null,
+     *     tax_schema: int|null
      * }
      */
     public function provenance(): array
@@ -154,10 +199,12 @@ final class RepairOrderPricingContext
             'repair_order_id' => $this->repairOrder->id,
             'terminal' => $this->terminal,
             'allows_live_commercial_fallback' => $this->allowsLiveCommercialFallback,
+            'has_frozen_parts_matrices' => $this->hasFrozenPartsMatrices(),
             'labor_schema' => $this->labor?->schema,
             'shop_fee_schema' => $this->shopFee?->schema,
             'commercial_schema' => $this->commercial?->schema,
             'commercial_version' => $this->commercial?->version,
+            'tax_schema' => $this->tax?->schema,
         ];
     }
 }

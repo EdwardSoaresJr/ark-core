@@ -239,7 +239,29 @@ class RepairOrderConcern extends Model
         $context = $repairOrder?->pricingContext($settings);
         $commercial = $context?->commercialProfile();
 
-        $resolveKey = function (?string $className) use ($commercial, $context, $settings): array {
+        $roHasCommercialStamp = is_array($repairOrder?->commercial_pricing_profile)
+            && $repairOrder->commercial_pricing_profile !== [];
+
+        $resolveKey = function (?string $className) use ($commercial, $context, $settings, $roHasCommercialStamp): array {
+            if ($roHasCommercialStamp) {
+                $matrixKey = $commercial?->defaultPartsMatrixKeyFor($className);
+                $matrix = filled($matrixKey)
+                    ? $context?->partsMatrixByKey($matrixKey)
+                    : null;
+                $matrix ??= $context?->partsMatrixByKey(null);
+                $matrix ??= $commercial?->partsMatrixByKey(null);
+
+                // Stamped RO: never invent from live shop matrices. Schema-1 without frozen
+                // tiers cannot reconstruct historical brackets — fail visibly.
+                abort_if(
+                    $matrix === null || ($matrix['rows'] ?? []) === [],
+                    422,
+                    'This repair order\'s frozen pricing does not include a usable parts matrix. Schema-1 stamps without tier definitions cannot reconstruct historical brackets.',
+                );
+
+                return $matrix;
+            }
+
             $matrixKey = $commercial?->defaultPartsMatrixKeyFor($className);
             if (filled($matrixKey)) {
                 return $context?->partsMatrixByKey($matrixKey)
@@ -264,6 +286,10 @@ class RepairOrderConcern extends Model
         $billingClass = $this->billing_posture->billingClassName();
         if ($billingClass !== null) {
             return $resolveKey($billingClass);
+        }
+
+        if ($roHasCommercialStamp) {
+            return $resolveKey(null);
         }
 
         if ($context !== null && ! $context->allowsLiveCommercialFallback && $commercial !== null) {

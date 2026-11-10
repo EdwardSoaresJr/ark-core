@@ -74,9 +74,11 @@ class EstimateSnapshotBuilder
             'shop' => $this->shopSnapshot($settings),
             'settings' => $this->settingsSnapshot($settings),
             'commercial_pricing_profile' => $pricingContext->commercialProfile()?->toArray(),
+            'tax_profile' => $pricingContext->taxProfile()?->toArray(),
             'pricing' => [
                 'provenance' => $pricingContext->provenance(),
                 'commercial_pricing_profile' => $pricingContext->commercialProfile()?->toArray(),
+                'tax_profile' => $pricingContext->taxProfile()?->toArray(),
             ],
             'repair_order' => $this->documentRepairOrderSnapshot($repairOrder, $totals),
             'customer' => [

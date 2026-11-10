@@ -194,11 +194,22 @@ class RepairOrderLinePricing
         $concern = $repairOrder->concerns->firstWhere('id', $data['repair_order_concern_id'] ?? null)
             ?->setRelation('repairOrder', $repairOrder);
         $posture = $concern?->billing_posture ?? ConcernBillingPosture::Default;
-        $matrix = $this->explicitMatrixSelected($data)
-            ? ($pricingContext->partsMatrixByKey($data['pricing_matrix_key'])
-                ?? $settings->partsMatrixByKey($data['pricing_matrix_key']))
-            : ($concern?->defaultPartsMatrix($settings) ?? $settings->defaultPartsMatrix());
-        abort_if($matrix === null, 422, 'Selected parts matrix is not available.');
+        if ($this->explicitMatrixSelected($data)) {
+            $matrix = $pricingContext->partsMatrixByKey($data['pricing_matrix_key']);
+            abort_if(
+                $matrix === null,
+                422,
+                $pricingContext->hasFrozenPartsMatrices() || is_array($repairOrder->commercial_pricing_profile)
+                    ? 'That parts matrix is not part of this repair order\'s frozen pricing. Choose a matrix that belonged to this RO when it was opened, or open a new repair order to use newer shop matrices.'
+                    : 'Selected parts matrix is not available.',
+            );
+        } else {
+            $matrix = $concern?->defaultPartsMatrix($settings);
+            if ($matrix === null && ! is_array($repairOrder->commercial_pricing_profile)) {
+                $matrix = $settings->defaultPartsMatrix();
+            }
+            abort_if($matrix === null, 422, 'No parts matrix is available for this repair order\'s pricing rules.');
+        }
 
         $suggestion = $partCostCents === null
             ? null

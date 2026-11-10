@@ -20,10 +20,11 @@ use App\Models\User;
  * Explicit advisor action on the customer record — not a shop Settings edit.
  * Open ROs restamp commercial_pricing_profile from current shop settings, then recalculate.
  *
- * Approved-dollar protection: invoice/authorization layers continue to use approved portions.
- * When recalculation increases the RO total after approved work exists, the event is flagged
- * so advisors know additional customer authorization may be required. Approved amounts are
- * never silently expanded.
+ * Approved-dollar protection: invoice refresh uses approvedTotals / approved line portions
+ * (`WorkCompletionAuthorization`), not raw post-recalc line totals. When recalculation
+ * increases the RO total after approved work exists, the event is flagged
+ * `requires_additional_authorization` so advisors know more customer approval is needed.
+ * Approved invoice dollars are never silently expanded by this action.
  */
 final class ApplyCustomerBillingClassChangeAction
 {
