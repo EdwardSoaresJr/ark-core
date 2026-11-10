@@ -284,7 +284,7 @@ test('open estimate pdf refreshes on view without manual regenerate', function (
     expect($document->fresh()->needs_pdf_refresh)->toBeFalse();
 });
 
-test('shop settings changes refresh open estimate snapshots with current fees and labor authority', function () {
+test('tax settings changes do not rewrite open estimate snapshots', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     Storage::fake('local');
 
@@ -308,9 +308,10 @@ test('shop settings changes refresh open estimate snapshots with current fees an
 
     $document->refresh();
 
-    expect($document->snapshot_json['settings']['default_tax_rate'])->toBe('10.000')
-        ->and($document->snapshot_json['settings']['tax_label'])->toBe('Sales Tax')
-        ->and($document->needs_pdf_refresh)->toBeTrue();
+    // Forward-only tax: existing customer documents keep the snapshot they were issued with.
+    expect($document->snapshot_json['settings']['default_tax_rate'])->toBe('8.250')
+        ->and($document->needs_pdf_refresh)->toBeFalse()
+        ->and((string) ShopSettings::current()->default_tax_rate)->toBe('10.000');
 });
 
 test('estimate pdf shows recommendation intent with customer facing label', function () {

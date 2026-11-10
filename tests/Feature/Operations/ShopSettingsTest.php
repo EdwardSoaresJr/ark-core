@@ -422,13 +422,13 @@ test('shop settings rejects more than one default parts matrix', function () {
     ])->assertSessionHasErrors('parts_matrices');
 });
 
-test('saving tax settings recalculates living repair order line tax without taxing shop fees', function () {
+test('saving tax settings does not recalculate living repair order line tax', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     ShopSettings::current()->update([
         'tax_enabled' => true,
-        'default_tax_rate' => '10.000',
+        'default_tax_rate' => '11.000',
         'taxable_labor' => false,
         'taxable_parts' => true,
         'taxable_shop_fees' => false,
@@ -438,6 +438,8 @@ test('saving tax settings recalculates living repair order line tax without taxi
     ]);
 
     $repairOrder = repairOrderForFinancialAuthority();
+    expect($repairOrder->tax_profile['rate'])->toBe('11.000');
+
     $concern = concernForFinancialAuthority($repairOrder);
 
     $part = RepairOrderLine::query()->create([
@@ -464,9 +466,12 @@ test('saving tax settings recalculates living repair order line tax without taxi
 
     $part->refresh();
 
+    // Forward-only: living line amounts stay put; RO keeps the pre-change tax stamp.
     expect($part->shop_fee_cents)->toBe(1000)
-        ->and($part->tax_cents)->toBe(1000)
-        ->and($part->total_cents)->toBe(12000);
+        ->and($part->tax_cents)->toBe(1100)
+        ->and($part->total_cents)->toBe(12100)
+        ->and($repairOrder->fresh()->tax_profile['rate'])->toBe('11.000')
+        ->and((string) ShopSettings::current()->default_tax_rate)->toBe('10.000');
 });
 
 test('saving tax settings does not rewrite unrelated settings', function () {
@@ -1132,6 +1137,7 @@ test('admin can delete a non-default parts matrix', function () {
 
     expect(collect($settings->partsMatrices())->pluck('key')->all())
         ->not->toContain('filters')
+        ->and(collect($settings->parts_matrices)->firstWhere('key', 'filters')['is_active'] ?? true)->toBeFalse()
         ->and(collect($settings->customer_types)->firstWhere('name', 'Fleet')['default_parts_matrix_key'])->toBeNull()
         ->and($settings->defaultPartsMatrix()['key'])->toBe('aft-parts');
 });
