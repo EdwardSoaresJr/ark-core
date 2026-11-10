@@ -54,3 +54,18 @@ Outbound safety preflight on staging: **APP_ENV=staging**, **Outbound limits on 
 - `demo.staging.arksms.com` is a locked demonstration shop: settings PATCH returns 403. Matrix UI evidence is from demo; autosave Saved + RO pricing evidence from temporarily reactivated `alpha` staging tenant.
 - Modal visibility required `display: block !important` because Tabler `.modal { display: none }` is not overridden by Alpine `x-show` alone.
 - Rollback staging: `deploy/deploy.sh refs/pins/core-63296b2-labor-matrix-final` (or prior `436770ee` / Core `ee2753d`).
+
+
+## Phase 1 polish (Core #178 / #179) — deployed
+
+| Item | Value |
+|---|---|
+| Core | `3dee0eeeec9dc6b4df062af293d8a236ec5338a1` |
+| SaaS pin | `d131c3404f9b3acd9f4fcb1a5dc4bd90aeaea870` |
+
+Additional screenshots:
+- `10-default-labor-rate-mechanical.png` — Default Labor Rate strip, Default Work Type badge, Use Default Labor Rate / Custom Rate / No Charge
+- `11-billing-classes-troubleshooting.png` — Contextual **Billing Classes for Troubleshooting**
+- `12-rules-modal-polish.png` — Rules pop-up after terminology polish
+
+Focused tests: LaborWorkTypeMatrixSettingsTest + StandardLaborRateSettingsTest + ApplyBillingClassMinimumsActionTest — all passed.
