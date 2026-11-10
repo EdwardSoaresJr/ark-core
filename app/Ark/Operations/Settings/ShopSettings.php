@@ -356,15 +356,15 @@ class ShopSettings extends Model
     ];
 
     public const DEFAULT_CUSTOMER_TYPES = [
-        ['name' => 'Retail', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['name' => 'Fleet', 'document_presentation_profile' => 'fleet', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['name' => 'Warranty', 'document_presentation_profile' => 'warranty', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['name' => 'RepairPal', 'document_presentation_profile' => 'repairpal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['name' => 'Internal', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['name' => 'Wholesale', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['name' => 'Comeback', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['name' => 'Business', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['name' => 'Military', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'labor', 'discount_amount' => '10.00', 'default_parts_matrix_key' => null],
+        ['key' => 'retail', 'labor_column_key' => 'customer_pay', 'name' => 'Retail', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
+        ['key' => 'fleet', 'labor_column_key' => 'fleet', 'name' => 'Fleet', 'document_presentation_profile' => 'fleet', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
+        ['key' => 'warranty', 'labor_column_key' => 'warranty_other', 'name' => 'Warranty', 'document_presentation_profile' => 'warranty', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
+        ['key' => 'repairpal', 'labor_column_key' => 'repairpal', 'name' => 'RepairPal', 'document_presentation_profile' => 'repairpal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
+        ['key' => 'internal', 'labor_column_key' => 'internal', 'name' => 'Internal', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
+        ['key' => 'wholesale', 'labor_column_key' => 'wholesale', 'name' => 'Wholesale', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
+        ['key' => 'comeback', 'labor_column_key' => 'comeback', 'name' => 'Comeback', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
+        ['key' => 'business', 'name' => 'Business', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
+        ['key' => 'military', 'name' => 'Military', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'labor', 'discount_amount' => '10.00', 'default_parts_matrix_key' => null],
     ];
 
     public const DEFAULT_ESTIMATE_DISCLAIMER = <<<'TEXT'
@@ -1522,10 +1522,13 @@ TEXT;
      */
     public function customerTypeRows(): array
     {
-        return collect($this->customer_types ?: self::DEFAULT_CUSTOMER_TYPES)
+        $normalized = collect($this->customer_types ?: self::DEFAULT_CUSTOMER_TYPES)
+            ->filter(fn ($row): bool => is_array($row))
             ->map(fn (array $row): array => $this->normalizeCustomerTypeRow($row))
             ->values()
             ->all();
+
+        return \App\Ark\Operations\EstimatePricing\CustomerBillingClassIdentity::ensureKeysOnRows($normalized);
     }
 
     /**
@@ -1536,10 +1539,110 @@ TEXT;
      */
     public function storedCustomerTypeRows(): array
     {
-        return collect($this->customer_types ?: self::DEFAULT_CUSTOMER_TYPES)
+        $normalized = collect($this->customer_types ?: self::DEFAULT_CUSTOMER_TYPES)
+            ->filter(fn ($row): bool => is_array($row))
             ->map(fn (array $row): array => $this->normalizeStoredCustomerTypeRow($row))
             ->values()
             ->all();
+
+        return \App\Ark\Operations\EstimatePricing\CustomerBillingClassIdentity::ensureKeysOnRows($normalized);
+    }
+
+    /**
+     * Locate a customer billing class by stable key (preferred) or display name.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function customerTypeRowByKeyOrName(?string $key, ?string $name = null): ?array
+    {
+        $rows = $this->customerTypeRows();
+        $key = trim((string) $key);
+        if ($key !== '') {
+            $match = collect($rows)->first(fn (array $row): bool => ($row['key'] ?? '') === $key);
+            if (is_array($match)) {
+                return $match;
+            }
+        }
+
+        $name = trim((string) $name);
+        if ($name === '') {
+            return null;
+        }
+
+        return collect($rows)->first(
+            fn (array $row): bool => strcasecmp((string) $row['name'], $name) === 0,
+        );
+    }
+
+    /**
+     * Normalize posted/API customer_types payloads for persistence (stable keys included).
+     *
+     * @param  list<array<string, mixed>>  $customerTypes
+     * @param  list<array<string, mixed>>|null  $partsMatrices
+     * @return list<array<string, mixed>>
+     */
+    public function normalizeCustomerTypesInput(array $customerTypes, ?array $partsMatrices = null): array
+    {
+        $partsMatrices ??= $this->partsMatrices();
+        $existingRows = $this->storedCustomerTypeRows();
+        $existingByKey = collect($existingRows)
+            ->filter(fn (array $row): bool => filled($row['key'] ?? null))
+            ->keyBy(fn (array $row): string => (string) $row['key']);
+        $existingByName = collect($existingRows)
+            ->keyBy(fn (array $row): string => mb_strtolower($row['name']));
+        $matrixKeys = collect($partsMatrices)->pluck('key');
+        $reservedKeys = [];
+
+        $normalized = collect($customerTypes)
+            ->filter(fn (array $row): bool => filled($row['name'] ?? null))
+            ->map(function (array $row) use ($existingByKey, $existingByName, $matrixKeys, &$reservedKeys): array {
+                $name = trim((string) $row['name']);
+                $postedKey = filled($row['key'] ?? null) ? (string) $row['key'] : null;
+                $existing = ($postedKey !== null ? $existingByKey->get($postedKey) : null)
+                    ?? $existingByName->get(mb_strtolower($name), []);
+                $matrixKey = filled($row['default_parts_matrix_key'] ?? null)
+                    ? $row['default_parts_matrix_key']
+                    : null;
+
+                $stableKey = \App\Ark\Operations\EstimatePricing\CustomerBillingClassIdentity::keyForRow([
+                    'key' => $postedKey ?? ($existing['key'] ?? null),
+                    'name' => $name,
+                ], $reservedKeys);
+                $reservedKeys[] = $stableKey;
+
+                $payload = [
+                    'key' => $stableKey,
+                    'name' => $name,
+                    'document_presentation_profile' => filled($row['document_presentation_profile'] ?? null)
+                        ? $row['document_presentation_profile']
+                        : ($existing['document_presentation_profile'] ?? null),
+                    'shop_fees_enabled' => (bool) ($row['shop_fees_enabled'] ?? $existing['shop_fees_enabled'] ?? true),
+                    'shop_fee_rate_override' => array_key_exists('shop_fee_rate_override', $row)
+                        ? $row['shop_fee_rate_override']
+                        : ($existing['shop_fee_rate_override'] ?? null),
+                    'discount_type' => $row['discount_type'] ?? $existing['discount_type'] ?? 'none',
+                    'discount_amount' => array_key_exists('discount_amount', $row)
+                        ? $row['discount_amount']
+                        : ($existing['discount_amount'] ?? null),
+                    'default_parts_matrix_key' => $matrixKey !== null && $matrixKeys->contains($matrixKey) ? $matrixKey : null,
+                    'pill_color' => $row['pill_color'] ?? $existing['pill_color'] ?? null,
+                    'concern_billing_posture' => array_key_exists('concern_billing_posture', $row)
+                        ? $row['concern_billing_posture']
+                        : ($existing['concern_billing_posture'] ?? null),
+                ];
+
+                if (filled($row['labor_column_key'] ?? null)) {
+                    $payload['labor_column_key'] = (string) $row['labor_column_key'];
+                } elseif (filled($existing['labor_column_key'] ?? null)) {
+                    $payload['labor_column_key'] = (string) $existing['labor_column_key'];
+                }
+
+                return $this->normalizeStoredCustomerTypeRow($payload);
+            })
+            ->values()
+            ->all();
+
+        return \App\Ark\Operations\EstimatePricing\CustomerBillingClassIdentity::ensureKeysOnRows($normalized);
     }
 
     /**
@@ -1729,7 +1832,7 @@ TEXT;
         $resolvedName = $name !== '' ? $name : 'Retail';
         $concernBillingPosture = self::selectableConcernBillingPosture($row['concern_billing_posture'] ?? null);
 
-        return [
+        $normalized = [
             'name' => $resolvedName,
             'document_presentation_profile' => CustomerPartPresentationProfile::fromStored(
                 $row['document_presentation_profile']
@@ -1749,6 +1852,20 @@ TEXT;
             'pill_color' => BillingClassPillColor::resolve($row['pill_color'] ?? null, $resolvedName),
             ...($concernBillingPosture !== null ? ['concern_billing_posture' => $concernBillingPosture->value] : []),
         ];
+
+        if (filled($row['key'] ?? null)) {
+            $normalized['key'] = (string) $row['key'];
+        } elseif (filled($defaults['key'] ?? null)) {
+            $normalized['key'] = (string) $defaults['key'];
+        }
+
+        if (filled($row['labor_column_key'] ?? null)) {
+            $normalized['labor_column_key'] = (string) $row['labor_column_key'];
+        } elseif (filled($defaults['labor_column_key'] ?? null)) {
+            $normalized['labor_column_key'] = (string) $defaults['labor_column_key'];
+        }
+
+        return $normalized;
     }
 
     /**

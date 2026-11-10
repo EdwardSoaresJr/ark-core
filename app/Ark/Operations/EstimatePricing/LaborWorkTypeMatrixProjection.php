@@ -59,11 +59,14 @@ final class LaborWorkTypeMatrixProjection
         $columns = [];
 
         foreach (LaborWorkTypeMatrix::matrixBillingColumns($settings) as $column) {
+            $customerClassKey = CustomerBillingClassIdentity::classKeyForLaborColumn($column['value']);
             $columns[] = [
                 'value' => $column['value'],
                 'label' => $column['label'],
                 'is_system' => $column['is_system'],
                 'is_default' => $column['is_default'],
+                'customer_class_key' => $customerClassKey,
+                'has_customer_class' => $customerClassKey !== null,
             ];
             $key = LaborBillingMinimums::postureKey($column['posture']);
             $minimumRows[$key] = $minimums->forPosture($key) ?? [
@@ -74,18 +77,32 @@ final class LaborWorkTypeMatrixProjection
             ];
         }
 
+        $billingClasses = collect($settings->customerTypeRows())
+            ->map(fn (array $row): array => [
+                'key' => $row['key'],
+                'name' => $row['name'],
+                'labor_column_key' => $row['labor_column_key'] ?? null,
+                'customer_only' => CustomerBillingClassIdentity::isCustomerOnlyClassKey($row['key'] ?? null),
+            ])
+            ->values()
+            ->all();
+
         return [
             'work_types' => $workTypes,
             'columns' => $columns,
             'cells' => $cells,
             'standard_rate_cents' => $standardCents,
             'billing_minimums' => $minimumRows,
+            'billing_classes' => $billingClasses,
             'labor_pricing_profile_version' => (int) ($settings->labor_pricing_profile_version ?? 0),
             'routes' => [
                 'rate' => route('operations.settings.shop.labor-matrix.rate'),
                 'minimum' => route('operations.settings.shop.labor-matrix.minimum'),
                 'work_type' => route('operations.settings.shop.labor-matrix.work-types.store'),
                 'billing_class' => route('operations.settings.shop.labor-matrix.billing-classes.store'),
+                'customer_types_show' => route('operations.settings.shop.customer-types.show'),
+                'customer_type_update' => route('operations.settings.shop.customer-types.item.update', ['classKey' => '__KEY__']),
+                'customer_types_store' => route('operations.settings.shop.customer-types.store'),
             ],
         ];
     }

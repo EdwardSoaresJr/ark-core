@@ -70,42 +70,7 @@ trait NormalizesShopPartsMatrices
      */
     protected function normalizeCustomerTypes(array $customerTypes, array $partsMatrices): array
     {
-        $settings = ShopSettings::current();
-        $existingTypes = collect($settings->storedCustomerTypeRows())
-            ->keyBy(fn (array $row): string => mb_strtolower($row['name']));
-        $matrixKeys = collect($partsMatrices)->pluck('key');
-
-        return collect($customerTypes)
-            ->filter(fn (array $row): bool => filled($row['name'] ?? null))
-            ->map(function (array $row) use ($existingTypes, $matrixKeys, $settings): array {
-                $name = trim($row['name']);
-                $existing = $existingTypes->get(mb_strtolower($name), []);
-                $matrixKey = filled($row['default_parts_matrix_key'] ?? null)
-                    ? $row['default_parts_matrix_key']
-                    : null;
-
-                return $settings->normalizeStoredCustomerTypeRow([
-                    'name' => $name,
-                    'document_presentation_profile' => filled($row['document_presentation_profile'] ?? null)
-                        ? $row['document_presentation_profile']
-                        : ($existing['document_presentation_profile'] ?? null),
-                    'shop_fees_enabled' => (bool) ($row['shop_fees_enabled'] ?? $existing['shop_fees_enabled'] ?? true),
-                    'shop_fee_rate_override' => array_key_exists('shop_fee_rate_override', $row)
-                        ? $row['shop_fee_rate_override']
-                        : ($existing['shop_fee_rate_override'] ?? null),
-                    'discount_type' => $row['discount_type'] ?? $existing['discount_type'] ?? 'none',
-                    'discount_amount' => array_key_exists('discount_amount', $row)
-                        ? $row['discount_amount']
-                        : ($existing['discount_amount'] ?? null),
-                    'default_parts_matrix_key' => $matrixKey !== null && $matrixKeys->contains($matrixKey) ? $matrixKey : null,
-                    'pill_color' => $row['pill_color'] ?? $existing['pill_color'] ?? null,
-                    'concern_billing_posture' => array_key_exists('concern_billing_posture', $row)
-                        ? $row['concern_billing_posture']
-                        : ($existing['concern_billing_posture'] ?? null),
-                ]);
-            })
-            ->values()
-            ->all();
+        return ShopSettings::current()->normalizeCustomerTypesInput($customerTypes, $partsMatrices);
     }
 
     /**
