@@ -98,7 +98,7 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('AFT Parts')
         ->assertSee('OEM Parts')
         ->assertSee('Warranty (No Markup)')
-        ->assertSee('Billing Classes')
+        ->assertSee('Manage Billing Classes')
         ->assertSee('Warranty')
         ->assertSee('Military')
         ->assertSee('Markup is the editable pricing policy')
@@ -729,44 +729,22 @@ test('deposit diagnostic categories fall back to the default list only when none
     expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['programming', 'diagnostic']);
 });
 
-test('billing class fee rate override enables and disables as soon as shop fees is changed', function () {
+test('billing class fee rate override disables when shop fees are off in the shared Labor editor', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    ShopSettings::current()->update([
-        'customer_types' => [
-            ['name' => 'Retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => '4.500', 'discount_type' => 'none'],
-            ['name' => 'Internal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'discount_type' => 'none'],
-            ['name' => 'Fleet', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'discount_type' => 'none'],
-        ],
-    ]);
-
-    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'billing-classes']))
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']))
         ->assertOk()
+        ->assertSee('data-billing-classes-shared', false)
+        ->assertSee('data-billing-class-settings-modal', false)
         ->getContent();
 
-    $rowFor = function (int $index) use ($html): string {
-        $start = strpos($html, 'name="customer_types['.$index.'][shop_fees_enabled]"');
-        expect($start)->not->toBeFalse();
-        $scopeStart = strrpos(substr($html, 0, $start), 'x-data="{ shopFeesOn:');
-        $end = strpos($html, 'name="customer_types['.$index.'][default_parts_matrix_key]"', $start);
-
-        return substr($html, $scopeStart, $end - $scopeStart);
-    };
-
-    foreach ([0 => true, 1 => false, 2 => false] as $index => $on) {
-        $row = $rowFor($index);
-
-        expect($row)
-            ->toStartWith('x-data="{ shopFeesOn: '.($on ? 'true' : 'false').' }"')
-            ->toContain('@change="shopFeesOn = $event.target.value === \'1\'"')
-            ->toContain(':disabled="! shopFeesOn"');
-
-        $override = substr($row, strpos($row, 'name="customer_types['.$index.'][shop_fee_rate_override]"'));
-        $override = substr($override, 0, strpos($override, '>'));
-
-        expect(preg_match('/\sdisabled\s/', $override) === 1)->toBe(! $on);
-    }
+    expect($html)
+        ->toContain("draft.shop_fees_enabled = \$event.target.value === '1'")
+        ->toContain(':disabled="! draft.shop_fees_enabled"')
+        ->toContain('Fee rate override')
+        ->not->toContain('name="customer_types[0][shop_fees_enabled]"')
+        ->not->toContain('id="financial-tab-billing-classes"');
 });
 
 test('saving billing classes after switching shop fees stores the override only when fees are on', function () {

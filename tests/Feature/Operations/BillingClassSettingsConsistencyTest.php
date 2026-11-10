@@ -125,9 +125,10 @@ test('saving which billing a class starts concerns with leaves existing concerns
         ->and($existing->fresh()->billing_posture)->toBe(ConcernBillingPosture::Default)
         ->and(classSettingsConcern($rideshare, 'New rideshare concern')->billing_posture)->toBe(ConcernBillingPosture::Fleet);
 
-    $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'billing-classes']))
+    $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']))
         ->assertOk()
         ->assertSee('data-billing-classes-shared', false)
+        ->assertSee('Manage Billing Classes')
         ->assertSee('New concerns bill as', false)
         ->assertSee('concern_billing_posture', false);
 

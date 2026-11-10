@@ -15,11 +15,8 @@
             financialTab: (() => {
                 const fromUrl = new URLSearchParams(window.location.search).get('financial-tab');
 
-                if (fromUrl === 'billing-classes' || fromUrl === 'customer-types' || fromUrl === 'customer-tags') {
-                    return 'billing-classes';
-                }
-
-                if (fromUrl === 'labor-policies') {
+                // Retired Financial → Billing Classes tab (#180): deep links land on Labor.
+                if (fromUrl === 'billing-classes' || fromUrl === 'customer-types' || fromUrl === 'customer-tags' || fromUrl === 'labor-policies') {
                     return 'labor';
                 }
 
@@ -29,15 +26,20 @@
 
                 const stored = localStorage.getItem('ark:shop-settings:financial-tab') || 'labor';
 
-                if (stored === 'labor-policies') {
+                if (stored === 'labor-policies' || stored === 'billing-classes' || stored === 'customer-types' || stored === 'customer-tags') {
                     return 'labor';
                 }
 
-                if (stored === 'customer-types' || stored === 'customer-tags') {
-                    return 'billing-classes';
-                }
-
                 return stored;
+            })(),
+            openManageBillingClassesOnLoad: (() => {
+                const fromUrl = new URLSearchParams(window.location.search).get('financial-tab');
+                const explicit = new URLSearchParams(window.location.search).get('manage-billing-classes');
+
+                return explicit === '1'
+                    || fromUrl === 'billing-classes'
+                    || fromUrl === 'customer-types'
+                    || fromUrl === 'customer-tags';
             })(),
             printingTab: localStorage.getItem('ark:shop-settings:printing-tab') || 'printers',
             communicationsTab: (() => {
@@ -66,11 +68,34 @@
                 url.searchParams.set('section', section);
                 window.history.replaceState({}, '', url);
             },
+            init() {
+                const fromUrl = new URLSearchParams(window.location.search).get('financial-tab');
+                if (fromUrl === 'billing-classes' || fromUrl === 'customer-types' || fromUrl === 'customer-tags') {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('section', 'financial');
+                    url.searchParams.set('financial-tab', 'labor');
+                    url.searchParams.set('manage-billing-classes', '1');
+                    window.history.replaceState({}, '', url);
+                    localStorage.setItem('ark:shop-settings:financial-tab', 'labor');
+                }
+            },
             setFinancialTab(tab) {
+                if (tab === 'billing-classes' || tab === 'customer-types' || tab === 'customer-tags') {
+                    this.financialTab = 'labor';
+                    this.openManageBillingClassesOnLoad = true;
+                    localStorage.setItem('ark:shop-settings:financial-tab', 'labor');
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('financial-tab', 'labor');
+                    url.searchParams.set('manage-billing-classes', '1');
+                    window.history.replaceState({}, '', url);
+                    window.dispatchEvent(new CustomEvent('labor-open-manage-billing-classes'));
+                    return;
+                }
                 this.financialTab = tab;
                 localStorage.setItem('ark:shop-settings:financial-tab', tab);
                 const url = new URL(window.location.href);
                 url.searchParams.set('financial-tab', tab);
+                url.searchParams.delete('manage-billing-classes');
                 window.history.replaceState({}, '', url);
             },
             setPrintingTab(tab) {
@@ -621,13 +646,7 @@
                                 'shop-fees' => 'Shop Fees',
                                 'deposits' => 'Deposits',
                                 'parts' => 'Parts Matrix',
-                                'billing-classes' => 'Billing Classes',
                             ] as $financialTabKey => $financialTabLabel)
-                                @php
-                                    $financialTabActive = $financialTabKey === 'billing-classes'
-                                        ? "['billing-classes', 'customer-tags', 'customer-types'].includes(financialTab)"
-                                        : 'financialTab === '.\Illuminate\Support\Js::from($financialTabKey);
-                                @endphp
                                 <li class="nav-item" role="presentation">
                                     <button
                                         type="button"
@@ -635,8 +654,8 @@
                                         role="tab"
                                         id="financial-tab-{{ $financialTabKey }}"
                                         aria-controls="financial-panel-{{ $financialTabKey }}"
-                                        :class="{ 'active': {{ $financialTabActive }} }"
-                                        :aria-selected="({{ $financialTabActive }}).toString()"
+                                        :class="{ 'active': financialTab === @js($financialTabKey) }"
+                                        :aria-selected="(financialTab === @js($financialTabKey)).toString()"
                                         @click="setFinancialTab(@js($financialTabKey))"
                                     >{{ $financialTabLabel }}</button>
                                 </li>
@@ -1021,7 +1040,7 @@
                         </form>
                     </div>
 
-                    {{-- Shared Billing Classes authority: display:contents keeps card-body layout; modals stay outside x-show so Labor can open them. --}}
+                    {{-- Shared Billing Classes modals for Labor Class Settings / Manage (#180). No separate Financial tab. --}}
                     @include('operations.settings.partials.billing-classes-shared')
                 </section>
 

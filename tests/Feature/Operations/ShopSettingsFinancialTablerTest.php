@@ -102,7 +102,7 @@ test('financial rules is a tabler card outside the legacy island with every tab 
         $keys[] = substr($panelId, strlen('financial-panel-'));
     }
 
-    expect($keys)->toBe(['labor', 'tax', 'shop-fees', 'deposits', 'parts', 'billing-classes']);
+    expect($keys)->toBe(['labor', 'tax', 'shop-fees', 'deposits', 'parts']);
 });
 
 test('financial forms keep their routes, field names, and parts matrix autosave hooks', function (): void {
@@ -117,7 +117,6 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         route('operations.settings.shop.tax.update') => ['tax_enabled', 'tax_label', 'default_tax_rate', 'taxable_labor', 'taxable_parts', 'taxable_shop_fees'],
         route('operations.settings.shop.fees.update') => ['shop_fee_enabled', 'shop_fee_rate', 'shop_fee_cap'],
         route('operations.settings.shop.deposits.update') => ['default_deposit_enabled', 'default_deposit_include_parts', 'default_deposit_include_diagnostics', 'default_deposit_diagnostic_labor_category_keys[]'],
-        route('operations.settings.shop.customer-types.update') => ['customer_types[0][document_presentation_profile]', 'customer_types[0][name]', 'customer_types[0][pill_color]', 'customer_types[0][shop_fees_enabled]', 'customer_types[0][shop_fee_rate_override]', 'customer_types[0][default_parts_matrix_key]', 'customer_types[0][discount_type]', 'customer_types[0][discount_amount]'],
         route('operations.settings.shop.parts-matrices.update', $settings->defaultPartsMatrix()['key']) => ['parts_matrices[0][key]', 'parts_matrices[0][name]', 'default_parts_matrix_key'],
     ] as $action => $fields) {
         foreach ($fields as $field) {
@@ -128,7 +127,11 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
 
     expect($xpath->query($section.'//form[@id="parts-matrix-form"]')->length)->toBe(1)
         ->and($xpath->query($section.'//*[@data-labor-matrix]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-billing-classes-shared]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@id="financial-tab-billing-classes" or @id="financial-panel-billing-classes"]')->length)->toBe(0)
         ->and($html)->toContain('arkLaborMatrix')
+        ->and($html)->toContain('arkBillingClasses')
+        ->and($html)->toContain('Manage Billing Classes')
         ->and(preg_match('/labor-matrix\\\\+\/rate/', $html))->toBe(1)
         ->and(preg_match('/labor-matrix\\\\+\/minimum/', $html))->toBe(1)
         ->and(preg_match_all('/<input data-matrix-name-input name="parts_matrices\[\d+\]\[name\]" x-model="matrixName" @input="autosaveMatrix\(/', $html))->toBe(count($settings->partsMatrices()));
@@ -170,8 +173,8 @@ test('submitting each rendered financial form unchanged keeps every stored value
     $submitRenderedForms = function (): void {
         $xpath = financialSettingsXpath($this->get(route('operations.settings.shop.edit', ['section' => 'financial']))->assertOk()->getContent());
 
-        // Labor settings autosave through labor-matrix JSON endpoints (no bulk form).
-        foreach (['tax', 'fees', 'deposits', 'customer-types'] as $form) {
+        // Labor + Billing Classes save through JSON authorities (no bulk customer-types form).
+        foreach (['tax', 'fees', 'deposits'] as $form) {
             $action = route('operations.settings.shop.'.$form.'.update');
             $element = $xpath->query('//section[@data-settings-section="financial"]//form[@action="'.$action.'"]')->item(0);
 
@@ -189,9 +192,9 @@ test('submitting each rendered financial form unchanged keeps every stored value
     $afterFirstSave = $stored();
     $submitRenderedForms();
 
+    // Billing Classes no longer round-trip through a Financial tab form; tax/fees/deposits must not rewrite them.
     expect($meaning($afterFirstSave))->toBe($meaning($before))
-        ->and(collect(json_decode($afterFirstSave['customer_types'], true))->pluck('pill_color')->all())
-        ->toBe(collect(json_decode($before['customer_types'], true))->map(fn (array $type): string => BillingClassPillColor::resolve($type['pill_color'] ?? null, $type['name']))->all())
+        ->and(json_decode($afterFirstSave['customer_types'], true))->toBe(json_decode($before['customer_types'], true))
         ->and($stored())->toBe($afterFirstSave);
 });
 

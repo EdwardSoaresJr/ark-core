@@ -130,7 +130,7 @@ test('labor settings page uses shared billing classes editor and renamed labor c
         ->assertSee('Does not create a customer Billing Class', false);
 });
 
-test('billing classes tab still renders shared editor entry point', function () {
+test('legacy billing-classes deep link lands on Labor with Manage Billing Classes', function () {
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', [
             'section' => 'financial',
@@ -138,7 +138,9 @@ test('billing classes tab still renders shared editor entry point', function () 
         ]))
         ->assertOk()
         ->assertSee('data-billing-classes-shared', false)
-        ->assertSee('data-settings-billing-classes', false)
-        ->assertSee('+ Add Billing Class')
-        ->assertSee('Customer only');
+        ->assertSee('data-labor-matrix', false)
+        ->assertSee('Manage Billing Classes')
+        ->assertSee('openManageBillingClassesOnLoad', false)
+        ->assertDontSee('id="financial-tab-billing-classes"', false)
+        ->assertDontSee('id="financial-panel-billing-classes"', false);
 });

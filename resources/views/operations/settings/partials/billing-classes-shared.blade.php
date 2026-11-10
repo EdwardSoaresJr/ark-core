@@ -1,7 +1,7 @@
 {{--
-  Shared Billing Classes authority UI (#180).
-  One Alpine component powers: Financial → Billing Classes tab, Labor Class Settings, Manage Billing Classes.
-  Wrapper uses display:contents so the tab card-body stays a direct card child; modals are siblings (not under x-show).
+  Shared Billing Classes authority UI (#180 Phase 5).
+  One Alpine component: Labor Class Settings + Manage Billing Classes.
+  No Financial Rules tab panel — deep links open Labor and this Manage modal.
 --}}
 @php
     $billingClassesBootstrap = app(\App\Ark\Operations\Settings\PersistCustomerBillingClasses::class)
@@ -15,53 +15,6 @@
     @labor-open-class-settings.window="openClassSettings($event.detail?.key)"
     @labor-open-manage-billing-classes.window="openManage()"
 >
-    {{-- Financial Rules → Billing Classes thin entry (same catalog + editor) --}}
-    <div
-        class="card-body"
-        id="financial-panel-billing-classes"
-        role="tabpanel"
-        aria-labelledby="financial-tab-billing-classes"
-        x-show="showInlineTabList()"
-        x-cloak
-        data-settings-billing-classes
-    >
-        <p class="text-secondary small">
-            Billing classes identify the customer for billing and set the default when a new scope is added.
-            Fees, parts matrix, and <strong>customer document presentation</strong> follow the billing class unless a scope's <strong>Billing</strong> setting on the estimate overrides it.
-            Shared commercial settings also open from <strong>Financial Rules → Labor</strong> via Class Settings / Manage Billing Classes.
-        </p>
-        <div class="alert alert-warning small">
-            Named billing profiles: class <strong>Fleet</strong> supplies fee rates for Fleet scopes; class <strong>Warranty</strong> supplies the parts matrix for Warranty scopes. Standing discounts on classes such as <strong>Military</strong> apply to eligible lines on non-warranty scopes. Partner leads (RepairPal) belong under <strong>Referral source</strong> on the customer - not billing class.
-        </div>
-
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div class="small" aria-live="polite">
-                <span class="text-secondary" x-show="status === 'idle'">Ready</span>
-                <span class="text-secondary" x-show="status === 'loading'">Loading…</span>
-                <span class="text-secondary" x-show="status === 'saving'">Saving…</span>
-                <span class="text-success" x-show="status === 'saved'" x-text="statusMessage || 'Saved'"></span>
-                <span class="text-danger" x-show="status === 'error'" x-text="statusMessage || 'Not saved'"></span>
-            </div>
-            <button type="button" class="btn btn-primary btn-sm" @click="openCreate()">+ Add Billing Class</button>
-        </div>
-
-        <template x-for="row in catalog.classes" :key="row.key">
-            <section class="card card-sm mb-3" :data-billing-class-key="row.key">
-                <div class="card-header">
-                    <h4 class="card-title mb-0" x-text="row.name"></h4>
-                    <div class="card-actions">
-                        <span class="badge bg-secondary-lt" x-show="!row.labor_column_key">Customer only</span>
-                        <span class="badge bg-blue-lt" x-show="row.labor_column_key" x-text="laborColumnBadge(row)"></span>
-                        <button type="button" class="btn btn-outline-primary btn-sm" @click="openClassSettings(row.key)">Edit</button>
-                    </div>
-                </div>
-                <div class="card-body small text-secondary">
-                    <span x-text="summaryLine(row)"></span>
-                </div>
-            </section>
-        </template>
-    </div>
-
     {{-- Manage Billing Classes modal --}}
     <div
         class="modal modal-blur"
@@ -263,14 +216,15 @@ document.addEventListener('alpine:init', () => {
                     setTimeout(() => { if (this.status === 'saved') this.status = 'idle'; }, 1800);
                 }
             });
+            const shop = this.shopSettings();
+            if (shop?.openManageBillingClassesOnLoad) {
+                shop.openManageBillingClassesOnLoad = false;
+                this.$nextTick(() => this.openManage());
+            }
         },
         shopSettings() {
             const el = this.$el.closest('[data-shop-settings]');
             return el ? Alpine.$data(el) : null;
-        },
-        showInlineTabList() {
-            const tab = this.shopSettings()?.financialTab;
-            return tab === 'billing-classes' || tab === 'customer-tags' || tab === 'customer-types';
         },
         csrf() {
             return document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -281,21 +235,14 @@ document.addEventListener('alpine:init', () => {
             if (name === 'warranty') return 'warranty';
             return 'standard';
         },
-        laborColumnBadge(row) {
-            return row.labor_column_key ? ('Labor · ' + row.labor_column_key) : 'Customer only';
-        },
-        summaryLine(row) {
-            const bits = [];
-            bits.push(row.discount_type && row.discount_type !== 'none'
-                ? (`Discount ${row.discount_type}${row.discount_amount != null ? ' ' + row.discount_amount + '%' : ''}`)
-                : 'No standing discount');
-            bits.push(row.shop_fees_enabled ? 'Shop fees on' : 'Shop fees off');
-            if (row.default_parts_matrix_key) bits.push('Parts · ' + row.default_parts_matrix_key);
-            return bits.join(' · ');
-        },
         openManage() {
             this.manageOpen = true;
             this.refreshCatalog();
+            const url = new URL(window.location.href);
+            if (url.searchParams.get('manage-billing-classes') === '1') {
+                url.searchParams.delete('manage-billing-classes');
+                window.history.replaceState({}, '', url);
+            }
         },
         closeManage() {
             this.manageOpen = false;
