@@ -19,7 +19,7 @@ Record the tip SHA in the table below after push + owner authorization.
 |---|---|---|
 | Core (prior live staging) | `ee2753d4435bdf5793c6a0e313a2b635188b03f6` | interim grid still on staging until re-pin |
 | SaaS (prior live staging) | `436770ee358b61a34dc97a4ec02a7381ddd37f65` | `pin/core-ee2753d-labor-matrix` |
-| Core (this implementation) | _(fill after push)_ | `settings/labor-matrix-billing-minimums` |
+| Core (this implementation) | `f68dc428bbd435d33dfe2ec5c4dd928b6c7e512b` | `settings/labor-matrix-billing-minimums` |
 | Review artifacts | `review-artifacts/labor-rate-matrix-final-2026-11-10/` | local desktop/mobile + Rules screenshots |
 
 Do not merge Core `main` merely to create the staging preview.
