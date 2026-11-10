@@ -117,68 +117,106 @@ test('a blank discount percent saves no override instead of keeping the previous
         'Veteran' => ['discount_amount' => ''],
     ]))->assertRedirect();
 
+    $repairOrder = RepairOrder::query()->findOrFail($line->repair_order_id);
+    app(EstimateTotalsCalculator::class)->ensureFinancialTotalsAreCurrent($repairOrder->fresh(['lines', 'customer', 'concerns']));
+
     expect(blankDiscountStoredRow('Veteran')['discount_type'])->toBe('labor')
         ->and(blankDiscountStoredRow('Veteran')['discount_amount'])->toBeNull()
         ->and(ShopSettings::current()->standingDiscountPolicy('Veteran'))->toBeNull()
+        // Forward-only (#181): existing RO keeps the stamped 15% commercial rules.
         ->and(blankDiscountTotals($line))->toBe([
-            'line_discount' => 0,
-            'line_total' => 10000,
-            'estimate_discount' => 0,
-            'estimate_total' => 10000,
+            'line_discount' => 1500,
+            'line_total' => 8500,
+            'estimate_discount' => 1500,
+            'estimate_total' => 8500,
         ]);
+
+    $newer = blankDiscountRepairOrder('Veteran');
+    app(EstimateTotalsCalculator::class)->ensureFinancialTotalsAreCurrent(
+        RepairOrder::query()->with(['lines', 'customer', 'concerns'])->findOrFail($newer->repair_order_id),
+    );
+    expect(blankDiscountTotals($newer)['line_discount'])->toBe(0);
 });
 
-test('a typed zero saves zero and applies no discount, even on Military', function () {
+test('a typed zero saves for new ROs only; existing ROs keep stamped discounts', function () {
     $veteranLine = blankDiscountRepairOrder('Veteran');
     $militaryLine = blankDiscountRepairOrder('Military');
+    app(EstimateTotalsCalculator::class)->recalculateLivingRepairOrders();
 
     $this->patch(route('operations.settings.shop.customer-types.update'), blankDiscountFormPayload([
         'Veteran' => ['discount_amount' => '0'],
         'Military' => ['discount_amount' => '0'],
     ]))->assertRedirect();
 
+    app(EstimateTotalsCalculator::class)->recalculateLivingRepairOrders();
+
     expect(blankDiscountStoredRow('Veteran')['discount_amount'])->toBe('0.00')
         ->and(blankDiscountStoredRow('Military')['discount_amount'])->toBe('0.00')
         ->and(ShopSettings::current()->standingDiscountPolicy('Military'))->toBeNull()
-        ->and(blankDiscountTotals($veteranLine)['line_discount'])->toBe(0)
-        ->and(blankDiscountTotals($veteranLine)['estimate_total'])->toBe(10000)
-        ->and(blankDiscountTotals($militaryLine)['line_discount'])->toBe(0)
-        ->and(blankDiscountTotals($militaryLine)['estimate_total'])->toBe(10000);
+        ->and(blankDiscountTotals($veteranLine)['line_discount'])->toBe(1500)
+        ->and(blankDiscountTotals($militaryLine)['line_discount'])->toBe(1500);
+
+    $newVeteran = blankDiscountRepairOrder('Veteran');
+    app(EstimateTotalsCalculator::class)->ensureFinancialTotalsAreCurrent(
+        RepairOrder::query()->with(['lines', 'customer', 'concerns'])->findOrFail($newVeteran->repair_order_id),
+    );
+    expect(blankDiscountTotals($newVeteran)['line_discount'])->toBe(0);
 });
 
-test('a typed discount percent saves and prices at that percent', function () {
+test('a typed discount percent saves for future ROs without repricing existing ones', function () {
     $line = blankDiscountRepairOrder('Veteran');
+    app(EstimateTotalsCalculator::class)->recalculateLivingRepairOrders();
+    expect(blankDiscountTotals($line)['line_discount'])->toBe(1500);
 
     $this->patch(route('operations.settings.shop.customer-types.update'), blankDiscountFormPayload([
         'Veteran' => ['discount_amount' => '12.5'],
     ]))->assertRedirect();
 
+    app(EstimateTotalsCalculator::class)->recalculateLivingRepairOrders();
+
     expect(blankDiscountStoredRow('Veteran')['discount_amount'])->toBe('12.50')
         ->and(ShopSettings::current()->standingDiscountPolicy('Veteran'))->toBe(['type' => 'labor', 'percent' => '12.50'])
         ->and(blankDiscountTotals($line))->toBe([
-            'line_discount' => 1250,
-            'line_total' => 8750,
-            'estimate_discount' => 1250,
-            'estimate_total' => 8750,
+            'line_discount' => 1500,
+            'line_total' => 8500,
+            'estimate_discount' => 1500,
+            'estimate_total' => 8500,
         ]);
+
+    $newer = blankDiscountRepairOrder('Veteran');
+    app(EstimateTotalsCalculator::class)->ensureFinancialTotalsAreCurrent(
+        RepairOrder::query()->with(['lines', 'customer', 'concerns'])->findOrFail($newer->repair_order_id),
+    );
+    expect(blankDiscountTotals($newer))->toBe([
+        'line_discount' => 1250,
+        'line_total' => 8750,
+        'estimate_discount' => 1250,
+        'estimate_total' => 8750,
+    ]);
 });
 
 test('a blank Military discount saves no override and inherits the built-in 10 percent shown on the form', function () {
     $line = blankDiscountRepairOrder('Military');
+    app(EstimateTotalsCalculator::class)->recalculateLivingRepairOrders();
+    expect(blankDiscountTotals($line)['line_discount'])->toBe(1500); // stamped 15% from beforeEach
 
     $this->patch(route('operations.settings.shop.customer-types.update'), blankDiscountFormPayload([
         'Military' => ['discount_amount' => ''],
     ]))->assertRedirect();
 
+    app(EstimateTotalsCalculator::class)->recalculateLivingRepairOrders();
+
     expect(blankDiscountStoredRow('Military')['discount_type'])->toBe('labor')
         ->and(blankDiscountStoredRow('Military')['discount_amount'])->toBeNull()
         ->and(ShopSettings::current()->standingDiscountPolicy('Military'))->toBe(['type' => 'labor', 'percent' => '10.00'])
-        ->and(blankDiscountTotals($line))->toBe([
-            'line_discount' => 1000,
-            'line_total' => 9000,
-            'estimate_discount' => 1000,
-            'estimate_total' => 9000,
-        ]);
+        // Existing RO keeps stamped 15%; live settings now resolve built-in 10% for new ROs.
+        ->and(blankDiscountTotals($line)['line_discount'])->toBe(1500);
+
+    $newer = blankDiscountRepairOrder('Military');
+    app(EstimateTotalsCalculator::class)->ensureFinancialTotalsAreCurrent(
+        RepairOrder::query()->with(['lines', 'customer', 'concerns'])->findOrFail($newer->repair_order_id),
+    );
+    expect(blankDiscountTotals($newer)['line_discount'])->toBe(1000);
 
     $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial']))
         ->assertOk()

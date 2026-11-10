@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Financial;
 
+use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\EstimateTotals;
@@ -420,11 +421,13 @@ class EstimateTotalsCalculator
             ->mapWithKeys(fn (RepairOrderLine $line): array => [
                 $line->id => $this->subtotalForLine($line),
             ]);
+        $commercialProfile = $this->commercialPricingProfileFor($repairOrder, $settings);
         $standingDiscounts = $this->standingDiscountAllocations(
             $repairOrder,
             $repairOrder->lines,
             $subtotals,
             $settings,
+            $commercialProfile,
         );
         $netSubtotals = $subtotals->map(function (int $subtotal, int $lineId) use ($standingDiscounts): int {
             return max(0, $subtotal - ($standingDiscounts[$lineId] ?? 0));
@@ -632,6 +635,11 @@ class EstimateTotalsCalculator
         ) ?? ShopFeeProfile::fromShopSettings($settings);
     }
 
+    private function commercialPricingProfileFor(RepairOrder $repairOrder, ShopSettings $settings): CommercialPricingProfile
+    {
+        return $repairOrder->resolvedCommercialPricingProfile($settings);
+    }
+
     /**
      * Overlay the stamped shop-fee profile onto live settings so posture/customer-type
      * rules keep working without reading later fee-setting edits.
@@ -832,8 +840,10 @@ class EstimateTotalsCalculator
         Collection $lines,
         Collection $subtotals,
         ShopSettings $settings,
+        ?CommercialPricingProfile $commercialProfile = null,
     ): array {
-        $policy = $settings->standingDiscountPolicy($repairOrder->customer?->customer_type);
+        $commercialProfile ??= $this->commercialPricingProfileFor($repairOrder, $settings);
+        $policy = $commercialProfile->standingDiscountPolicy($repairOrder->customer?->customer_type);
 
         if ($policy === null) {
             return [];

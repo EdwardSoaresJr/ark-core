@@ -8,6 +8,7 @@ use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
 use App\Ark\Operations\EstimatePricing\LaborRateType;
 use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix;
 use App\Ark\Operations\EstimatePricing\OperationClass;
+use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
 use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
@@ -396,13 +397,16 @@ class ShopFinancialSettingsController
 
         $settings = ShopSettings::current();
 
+        // Freeze living ROs that still lack a commercial stamp under the *current* rules
+        // before this save can change discounts / class fee overrides.
+        $this->stampLivingRepairOrdersWithCurrentCommercialPricingProfile($settings);
+
         $settings->update([
             'customer_types' => $this->normalizeCustomerTypes($data['customer_types'] ?? [], $settings->partsMatrices()),
+            'commercial_pricing_profile_version' => max(1, (int) ($settings->commercial_pricing_profile_version ?? 0) + 1),
         ]);
 
-        $this->recalculateLivingRepairOrderTotals();
-        $this->syncOpenEstimateDocuments();
-
+        // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
         return $this->redirectWithStatus('Billing class settings saved.');
     }
 
@@ -514,6 +518,26 @@ class ShopFinancialSettingsController
             ->chunkById(100, function ($repairOrders) use ($profile): void {
                 foreach ($repairOrders as $repairOrder) {
                     $repairOrder->forceFill(['shop_fee_profile' => $profile])->saveQuietly();
+                }
+            });
+    }
+
+    /**
+     * Capture current billing-class commercial rules onto living ROs that still lack a stamp
+     * so a Billing Classes settings save cannot change discounts/fees on later recalculation.
+     * Does not rewrite line amounts. Closed ROs are left null (recalc paths skip them).
+     */
+    private function stampLivingRepairOrdersWithCurrentCommercialPricingProfile(ShopSettings $settings): void
+    {
+        $profile = CommercialPricingProfile::fromShopSettings($settings)->toArray();
+
+        RepairOrder::query()
+            ->where('status', '!=', RepairOrderStatus::Closed->value)
+            ->whereNull('commercial_pricing_profile')
+            ->orderBy('id')
+            ->chunkById(100, function ($repairOrders) use ($profile): void {
+                foreach ($repairOrders as $repairOrder) {
+                    $repairOrder->forceFill(['commercial_pricing_profile' => $profile])->saveQuietly();
                 }
             });
     }

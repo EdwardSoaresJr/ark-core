@@ -12,9 +12,12 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Models\User;
 
 /**
- * Re-prices a customer's open repair orders after their billing class changed. Standing discounts
- * follow the customer, so these totals move; each repair order whose total changed gets a new
- * estimate version, a customer_billing_class_changed event and an updated invoice.
+ * Re-prices a customer's open repair orders after their billing class changed.
+ *
+ * This is an explicit advisor action on the customer record — not a shop Settings edit.
+ * Open ROs restamp commercial_pricing_profile from current shop settings, then recalculate
+ * so standing discounts / class fee rules for the new class apply. Shop-wide Billing Classes
+ * settings saves must not use this path.
  */
 final class ApplyCustomerBillingClassChangeAction
 {
@@ -28,11 +31,17 @@ final class ApplyCustomerBillingClassChangeAction
 
     public function execute(Customer $customer, ?string $priorBillingClass, ?User $actor = null): void
     {
+        $settings = \App\Ark\Operations\Settings\ShopSettings::current();
+
         $customer->repairOrders()
             ->where('status', '!=', RepairOrderStatus::Closed->value)
             ->with(['lines.concern', 'customer', 'concerns'])
-            ->each(function (RepairOrder $repairOrder) use ($customer, $priorBillingClass, $actor): void {
+            ->each(function (RepairOrder $repairOrder) use ($customer, $priorBillingClass, $actor, $settings): void {
                 $priorTotalCents = $this->calculator->totalsFor($repairOrder)->totalCents();
+
+                // Adopt current commercial rules for the newly selected customer class.
+                $repairOrder->restampCommercialPricingProfile($settings);
+                $repairOrder->refresh();
 
                 $this->calculator->recalculateRepairOrder($repairOrder);
 

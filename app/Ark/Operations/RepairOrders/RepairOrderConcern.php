@@ -235,11 +235,26 @@ class RepairOrderConcern extends Model
     public function defaultPartsMatrix(?ShopSettings $settings = null, ?Customer $customer = null): array
     {
         $settings ??= ShopSettings::current();
+        $repairOrder = $this->repairOrder;
+        $commercial = $repairOrder?->resolvedCommercialPricingProfile($settings);
 
         if ($this->billing_posture === ConcernBillingPosture::Default) {
-            $customerType = ($customer ?? $this->repairOrder?->customer)?->customer_type;
+            $customerType = ($customer ?? $repairOrder?->customer)?->customer_type;
+            $matrixKey = $commercial?->defaultPartsMatrixKeyFor($customerType);
+
+            if (filled($matrixKey)) {
+                return $settings->partsMatrixByKey($matrixKey) ?? $settings->defaultPartsMatrix();
+            }
 
             return $settings->partsMatrixForCustomerTypeProfile($customerType) ?? $settings->defaultPartsMatrix();
+        }
+
+        $billingClass = $this->billing_posture->billingClassName();
+        if ($billingClass !== null && $commercial !== null) {
+            $matrixKey = $commercial->defaultPartsMatrixKeyFor($billingClass);
+            if (filled($matrixKey)) {
+                return $settings->partsMatrixByKey($matrixKey) ?? $settings->defaultPartsMatrix();
+            }
         }
 
         return $this->billing_posture->defaultPartsMatrix($settings);

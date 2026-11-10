@@ -35,7 +35,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'shop_fee_profile', 'labor_pricing_profile', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
+#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'shop_fee_profile', 'commercial_pricing_profile', 'labor_pricing_profile', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
 class RepairOrder extends Model
 {
     protected static function booted(): void
@@ -84,6 +84,14 @@ class RepairOrder extends Model
                     \App\Ark\Operations\EstimatePricing\ShopFeeProfile::fromShopSettings($settings)->toArray(),
                 );
             }
+
+            // Forward-only billing-class commercial rules (discounts, class fee overrides, parts defaults).
+            if (! array_key_exists('commercial_pricing_profile', $repairOrder->getAttributes())) {
+                $repairOrder->setAttribute(
+                    'commercial_pricing_profile',
+                    \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::fromShopSettings($settings)->toArray(),
+                );
+            }
         });
     }
 
@@ -126,6 +134,7 @@ class RepairOrder extends Model
             'posted_at' => 'datetime',
             'labor_pricing_profile' => 'array',
             'shop_fee_profile' => 'array',
+            'commercial_pricing_profile' => 'array',
             'lost_reason_key' => RepairOrderLostReason::class,
             'lost_reason_recorded_at' => 'datetime',
             'review_request_sent' => 'boolean',
@@ -707,16 +716,44 @@ class RepairOrder extends Model
             return ['enabled' => false, 'rate' => null];
         }
 
+        $commercial = $this->resolvedCommercialPricingProfile($settings);
+
         if ($posture === ConcernBillingPosture::Default && $this->usesPerLineShopFees()) {
             $this->loadMissing('customer');
-            $policy = $settings->shopFeePolicyForCustomerType($this->customer?->customer_type);
+            $policy = $commercial->shopFeePolicyForCustomerType($this->customer?->customer_type);
 
             return $policy['enabled'] && $policy['rate'] === null
                 ? $settings->shopFeePolicyForBillingDefault()
                 : $policy;
         }
 
-        return $posture->shopFeePolicy($settings);
+        $billingClass = $posture->billingClassName();
+
+        if ($billingClass !== null) {
+            return $commercial->shopFeePolicyForCustomerType($billingClass);
+        }
+
+        return match ($posture) {
+            ConcernBillingPosture::Default, ConcernBillingPosture::CustomerPay => $settings->shopFeePolicyForBillingDefault(),
+            default => $settings->shopFeePolicyForBillingDefault(),
+        };
+    }
+
+    public function resolvedCommercialPricingProfile(ShopSettings $settings): \App\Ark\Operations\EstimatePricing\CommercialPricingProfile
+    {
+        return \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::tryFromStored(
+            is_array($this->commercial_pricing_profile) ? $this->commercial_pricing_profile : null,
+        ) ?? \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::fromShopSettings($settings);
+    }
+
+    /**
+     * Advisor explicitly changed the customer's billing class: adopt current shop commercial rules.
+     */
+    public function restampCommercialPricingProfile(ShopSettings $settings): void
+    {
+        $this->forceFill([
+            'commercial_pricing_profile' => \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::fromShopSettings($settings)->toArray(),
+        ])->saveQuietly();
     }
 
     public function ensureOpenForEditing(): void
