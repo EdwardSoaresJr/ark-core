@@ -119,7 +119,6 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         route('operations.settings.shop.fees.update') => ['shop_fee_enabled', 'shop_fee_rate', 'shop_fee_cap'],
         route('operations.settings.shop.deposits.update') => ['default_deposit_enabled', 'default_deposit_include_parts', 'default_deposit_include_diagnostics', 'default_deposit_diagnostic_labor_category_keys[]'],
         route('operations.settings.shop.customer-types.update') => ['customer_types[0][document_presentation_profile]', 'customer_types[0][name]', 'customer_types[0][pill_color]', 'customer_types[0][shop_fees_enabled]', 'customer_types[0][shop_fee_rate_override]', 'customer_types[0][default_parts_matrix_key]', 'customer_types[0][discount_type]', 'customer_types[0][discount_amount]'],
-        route('operations.settings.shop.parts-matrices.update', $settings->defaultPartsMatrix()['key']) => ['parts_matrices[0][key]', 'parts_matrices[0][name]', 'default_parts_matrix_key'],
     ] as $action => $fields) {
         foreach ($fields as $field) {
             expect($xpath->query($section.'//form[@action="'.$action.'"]//*[@name="'.$field.'"]')->length)
@@ -127,15 +126,24 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         }
     }
 
+    $partsUpdateAction = route('operations.settings.shop.parts-matrices.update', $settings->defaultPartsMatrix()['key']);
+
     expect($xpath->query($section.'//form[@id="parts-matrix-form"]')->length)->toBe(1)
+        ->and($xpath->query($section.'//form[@id="parts-matrix-form"][@action="'.$partsUpdateAction.'"]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-parts-matrix-nav]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-parts-matrix-editor]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-settings-parts-matrices]')->length)->toBe(1)
         ->and($xpath->query($section.'//form[@action="'.route('operations.settings.shop.labor-policies.update').'"]')->length)->toBe(1)
-        ->and(preg_match_all('/<input data-matrix-name-input name="parts_matrices\[\d+\]\[name\]" x-model="matrixName" @input="autosaveMatrix\(/', $html))->toBe(count($settings->partsMatrices()));
+        ->and(substr_count($html, 'data-matrix-name-input'))->toBe(1);
 
     expect($html)
-        ->toContain("const form = document.getElementById('parts-matrix-form');")
-        ->toContain("fetch(`/app/settings/shop/parts-matrices/\${matrixKey}`, {\n                        method: 'POST',\n                        body: new FormData(form),")
+        ->toContain('window.partsMatricesPanel = function partsMatricesPanel')
+        ->toContain('buildPartsMatrixFormData()')
+        ->toContain('fetch(`/app/settings/shop/parts-matrices/${matrixKey}`, {')
+        ->toContain('body: this.buildPartsMatrixFormData(),')
         ->toContain('}, immediate ? 0 : 700);')
-        ->toContain('`parts_matrices[0][rows][${rowIndex}][markup_percentage]`');
+        ->toContain('fd.append(`parts_matrices[${matrixIndex}][rows][${rowIndex}][markup_percentage]`')
+        ->toContain('localStorage.setItem(storageKey, key)');
 });
 
 test('submitting each rendered financial form unchanged keeps every stored value', function (): void {
