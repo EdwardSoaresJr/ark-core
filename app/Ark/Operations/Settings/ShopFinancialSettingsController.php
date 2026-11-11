@@ -10,6 +10,7 @@ use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
 use App\Ark\Operations\Settings\Concerns\NormalizesShopPartsMatrices;
 use App\Ark\Operations\Settings\ShopSettings;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -176,7 +177,7 @@ public function updateCustomerTypes(Request $request): RedirectResponse
         return $this->redirectWithStatus('Billing class settings saved.');
     }
 
-public function updatePartsMatrix(Request $request, string $matrixKey): RedirectResponse
+public function updatePartsMatrix(Request $request, string $matrixKey): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             ...$this->partsMatrixValidationRules(),
@@ -200,6 +201,20 @@ public function updatePartsMatrix(Request $request, string $matrixKey): Redirect
         ]);
 
         $this->syncOpenEstimateDocuments();
+
+        // Autosave clients must not infer success from redirects. JSON commits are explicit.
+        if ($request->expectsJson()) {
+            $persisted = ShopSettings::current()->fresh()->partsMatrices();
+
+            return response()->json([
+                'ok' => true,
+                'committed' => true,
+                'matrix_key' => $matrixKey,
+                'default_parts_matrix_key' => ShopSettings::current()->defaultPartsMatrix()['key'],
+                'parts_matrices' => $persisted,
+                'message' => 'Parts matrix saved.',
+            ]);
+        }
 
         return redirect()
             ->route('operations.settings.shop.edit')

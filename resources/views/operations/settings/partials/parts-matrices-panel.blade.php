@@ -62,7 +62,8 @@
             deleteMatrixName: '',
             deleteMatrixKey: null,
             autosaveTimer: null,
-            autosaveRequestId: 0,
+            autosaveGeneration: 0,
+            saveTail: Promise.resolve(),
             get selectedMatrix() {
                 return this.matrices.find((matrix) => matrix.key === this.selectedKey) || this.matrices[0] || null;
             },
@@ -197,72 +198,82 @@
 
                 return fd;
             },
-            autosaveSucceeded(response) {
-                // Prefer JSON Accept so validation is 422 (not a followed HTML redirect that looks OK).
-                // Success remains a redirect. Chromium exposes same-origin manual redirects as
-                // type "opaqueredirect" with status 0; treat that as success.
-                if (response.type === 'opaqueredirect') {
-                    return true;
-                }
-
-                if (response.status === 422 || response.status >= 400) {
+            parseAutosaveCommit(response, payload) {
+                // Only an explicit server commit counts as success. Redirects (login, HTML) do not.
+                if (! response.ok || response.type === 'opaqueredirect') {
                     return false;
                 }
 
-                return response.status === 302
-                    || response.status === 303
-                    || response.status === 201
-                    || response.ok;
+                return !! payload
+                    && payload.ok === true
+                    && payload.committed === true;
             },
-            autosave(immediate = false) {
+            enqueueAutosave() {
+                this.saveTail = this.saveTail.catch(() => {}).then(() => this.performAutosave());
+
+                return this.saveTail;
+            },
+            performAutosave() {
                 const matrixKey = this.selectedKey;
 
                 if (! matrixKey) {
                     return Promise.resolve();
                 }
 
+                // Serialize saves and build the body at execution time so older in-flight
+                // payloads cannot overwrite newer matrix state on the server.
+                const generation = ++this.autosaveGeneration;
+                const body = this.buildPartsMatrixFormData();
+                this.statusText = 'Saving...';
+
+                return fetch(`/app/settings/shop/parts-matrices/${matrixKey}`, {
+                    method: 'POST',
+                    body,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                }).then(async (response) => {
+                    let payload = null;
+                    const contentType = response.headers.get('Content-Type') || '';
+
+                    if (contentType.includes('application/json')) {
+                        try {
+                            payload = await response.json();
+                        } catch (error) {
+                            payload = null;
+                        }
+                    }
+
+                    if (! this.parseAutosaveCommit(response, payload)) {
+                        throw new Error('Save failed');
+                    }
+
+                    if (generation === this.autosaveGeneration) {
+                        this.statusText = 'Saved';
+                    }
+                }).catch(() => {
+                    if (generation === this.autosaveGeneration) {
+                        this.statusText = 'Save needed';
+                    }
+                });
+            },
+            autosave(immediate = false) {
+                if (! this.selectedKey) {
+                    return Promise.resolve();
+                }
+
                 clearTimeout(this.autosaveTimer);
                 this.autosaveTimer = null;
 
-                const run = () => {
-                    const requestId = ++this.autosaveRequestId;
-                    this.statusText = 'Saving...';
-
-                    return fetch(`/app/settings/shop/parts-matrices/${matrixKey}`, {
-                        method: 'POST',
-                        body: this.buildPartsMatrixFormData(),
-                        redirect: 'manual',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json',
-                        },
-                    }).then((response) => {
-                        if (requestId !== this.autosaveRequestId) {
-                            return;
-                        }
-
-                        if (! this.autosaveSucceeded(response)) {
-                            throw new Error('Save failed');
-                        }
-
-                        this.statusText = 'Saved';
-                    }).catch(() => {
-                        if (requestId !== this.autosaveRequestId) {
-                            return;
-                        }
-
-                        this.statusText = 'Save needed';
-                    });
-                };
-
                 if (immediate) {
-                    return run();
+                    return this.enqueueAutosave();
                 }
 
                 return new Promise((resolve) => {
                     this.autosaveTimer = setTimeout(() => {
                         this.autosaveTimer = null;
-                        resolve(run());
+                        resolve(this.enqueueAutosave());
                     }, 700);
                 });
             },
