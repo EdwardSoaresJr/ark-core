@@ -140,6 +140,7 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         ->toContain('window.partsMatricesPanel = function partsMatricesPanel')
         ->toContain('buildPartsMatrixFormData()')
         ->toContain('autosaveSucceeded(response)')
+        ->toContain("response.type === 'opaqueredirect'")
         ->toContain('fetch(`/app/settings/shop/parts-matrices/${matrixKey}`, {')
         ->toContain('body: this.buildPartsMatrixFormData(),')
         ->toContain("redirect: 'manual',")

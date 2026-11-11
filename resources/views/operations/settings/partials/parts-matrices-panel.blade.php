@@ -199,7 +199,12 @@
             },
             autosaveSucceeded(response) {
                 // Prefer JSON Accept so validation is 422 (not a followed HTML redirect that looks OK).
-                // Success remains a redirect; with redirect:'manual' that is 302/303.
+                // Success remains a redirect. Chromium exposes same-origin manual redirects as
+                // type "opaqueredirect" with status 0; treat that as success.
+                if (response.type === 'opaqueredirect') {
+                    return true;
+                }
+
                 if (response.status === 422 || response.status >= 400) {
                     return false;
                 }
