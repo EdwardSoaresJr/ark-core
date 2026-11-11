@@ -117,11 +117,10 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Remove')
         ->assertSee('Fleet shop fees')
         ->assertSee('Warranty parts matrix')
-        ->assertSee('Standard billing class')
         ->assertSee('Pill color')
-        ->assertSee('name="customer_types[0][pill_color]"', false)
-        ->assertSee('name="customer_types[0][shop_fees_enabled]"', false)
-        ->assertSee('name="customer_types[2][shop_fees_enabled]"', false)
+        ->assertSee('data-billing-classes-shared', false)
+        ->assertDontSee('id="financial-tab-billing-classes"', false)
+        ->assertDontSee('id="financial-tab-labor-policies"', false)
         ->assertDontSee('Default estimate state')
         ->assertDontSee('name="parts_matrices[1][rows][0][margin_percentage]"', false)
         ->assertSee(ShopSettings::DEFAULT_ESTIMATE_DISCLAIMER)
@@ -171,9 +170,9 @@ test('settings pages use plain labels instead of posture, authority, truth, surf
     $response
         ->assertSee('Default visit type')
         ->assertSee('Billing at Check In')
-        ->assertSee('Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet.')
-        ->assertSee('Columns are billing types.')
-        ->assertSee('Rate preview')
+        ->assertSee('Labor rate matrix')
+        ->assertSee('Select a work type, edit hourly rates inline, and open Rules for billing-policy minimums.')
+        ->assertSee('Manage Billing Classes')
         ->assertSee('Time zone sources')
         ->assertSee('Where card payments are offered')
         ->assertSee('Save card payment options')
@@ -181,7 +180,7 @@ test('settings pages use plain labels instead of posture, authority, truth, surf
         ->assertSee('Creates customer and vehicle records only. Repair history is not imported.')
         ->assertSee('Technicians record findings on each checklist item.')
         ->assertSee('name="default_visit_mode"', false)
-        ->assertSee('name="lp_posture"', false)
+        ->assertDontSee('name="lp_posture"', false)
         ->assertSee(route('operations.settings.shop.payments.update'), false);
 });
 
@@ -536,7 +535,8 @@ test('tax and shop fee switches are checkboxes that post 0 when off and 1 when o
         ->assertSee('Charge sales tax')
         ->assertSee('Charge a shop fee')
         ->assertSee('x-data="{ taxEnabled: true }"', false)
-        ->assertSee('x-data="{ shopFeeEnabled: false }"', false);
+        ->assertSee('shopFeeEnabled: false', false)
+        ->assertSee('shopFeeMode:', false);
 });
 
 test('saving tax with the switch on or off persists exactly the posted values', function (string $posted, bool $expected) {
@@ -1163,12 +1163,15 @@ test('shop settings seeder provides current business defaults without wiping ope
         ->and($settings->fresh()->shop_fee_cap_cents)->toBe(4200);
 });
 
-test('admin can update labor categories from shop settings', function () {
+test('labor settings save applies the standard hourly rate and ignores obsolete category form fields', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
+    $beforeDiagnostic = collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'diagnostic');
+
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
         'standard_hourly_rate' => '180.00',
+        // Obsolete Labor-categories table fields must not drive persistence after the Work Types matrix redesign.
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -1191,9 +1194,10 @@ test('admin can update labor categories from shop settings', function () {
     expect($settings->default_labor_rate_cents)->toBe(18000)
         ->and($mechanical['rate_cents'])->toBe(18000)
         ->and($mechanical['is_default'])->toBeTrue()
-        ->and($diagnostic['rate_cents'])->toBe(19500)
-        ->and($diagnostic['minimum_hours'])->toBe('1.25')
-        ->and(collect($settings->laborCategories())->firstWhere('key', 'courtesy')['rounding_rule'])->toBe('tenth');
+        ->and($diagnostic['rate_cents'])->toBe($beforeDiagnostic['rate_cents'])
+        ->and($diagnostic['minimum_hours'])->toBe($beforeDiagnostic['minimum_hours'])
+        ->and(collect($settings->laborCategories())->firstWhere('key', 'courtesy')['rounding_rule'])
+        ->toBe(collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->firstWhere('key', 'courtesy')['rounding_rule']);
 });
 
 test('the default category rate row is the shop default labor rate', function () {
@@ -1224,20 +1228,19 @@ test('the default category rate row is the shop default labor rate', function ()
         ->and(collect($settings->laborCategories())->firstWhere('key', ShopSettings::DEFAULT_LABOR_CATEGORY_KEY)['rate_cents'])->toBe(17225);
 });
 
-test('changing the default labor category keeps every category rate', function () {
+test('labor settings save does not change the default category from obsolete form fields', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     $before = collect(ShopSettings::current()->laborCategories())->mapWithKeys(
         fn (array $category): array => [$category['key'] => $category['rate_cents']],
     );
-    $newDefault = $before->keys()->first(fn (string $key): bool => $key !== ShopSettings::DEFAULT_LABOR_CATEGORY_KEY
-        && $before[$key] !== $before[ShopSettings::DEFAULT_LABOR_CATEGORY_KEY]);
-
-    expect($newDefault)->not->toBeNull();
+    $mechanicalRate = number_format($before[ShopSettings::DEFAULT_LABOR_CATEGORY_KEY] / 100, 2, '.', '');
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
-        'default_labor_category_key' => $newDefault,
+        'standard_hourly_rate' => $mechanicalRate,
+        // Retired table field — must not reassign which category is default.
+        'default_labor_category_key' => 'diagnostic',
     ]))->assertRedirect(route('operations.settings.shop.edit'))
         ->assertSessionHasNoErrors();
 
@@ -1246,9 +1249,11 @@ test('changing the default labor category keeps every category rate', function (
         fn (array $category): array => [$category['key'] => $category['rate_cents']],
     );
 
+    // Default category ownership stays on the Labor Matrix / category authority, not the retired table form.
     expect($after->all())->toEqual($before->all())
-        ->and(collect($settings->laborCategories())->firstWhere('is_default', true)['key'])->toBe($newDefault)
-        ->and($settings->default_labor_rate_cents)->toBe($before[$newDefault]);
+        ->and(collect($settings->laborCategories())->firstWhere('is_default', true)['key'])
+        ->toBe(ShopSettings::DEFAULT_LABOR_CATEGORY_KEY)
+        ->and($settings->default_labor_rate_cents)->toBe($before[ShopSettings::DEFAULT_LABOR_CATEGORY_KEY]);
 });
 
 test('labor categories default repairpal and warranty with adjust labor off', function () {
@@ -1261,7 +1266,7 @@ test('labor categories default repairpal and warranty with adjust labor off', fu
         ->and(collect($settings->laborCategories())->firstWhere('key', 'mechanical')['allows_modifiers'])->toBeTrue();
 });
 
-test('admin can enable adjust labor on a program category', function () {
+test('labor settings save ignores obsolete adjust-labor category form fields', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
@@ -1279,7 +1284,7 @@ test('admin can enable adjust labor on a program category', function () {
     $this->patch(route('operations.settings.shop.labor.update'), $payload)
         ->assertRedirect(route('operations.settings.shop.edit'));
 
-    expect(collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'repairpal')['allows_modifiers'])->toBeTrue();
+    expect(collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'repairpal')['allows_modifiers'])->toBeFalse();
 });
 
 test('admin can delete a non-default parts matrix', function () {

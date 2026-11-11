@@ -22,13 +22,14 @@ test('admin can view labor policies matrix on shop settings', function () {
             'financial-tab' => 'labor',
         ]))
         ->assertOk()
-        ->assertSee('Operation-class specialty rates')
-        ->assertSee('Rate preview')
-        ->assertSee('Maintenance')
-        ->assertSee('Customer pay')
-        ->assertSee('Hourly rate')
+        ->assertSee('Labor rate matrix')
+        ->assertSee('Default Labor Rate')
+        ->assertSee('Manage Billing Classes')
+        ->assertSee('Class Settings')
+        ->assertSee('Rules')
         ->assertDontSee('Resolver Preview')
-        ->assertDontSee('Billing Posture');
+        ->assertDontSee('id="financial-tab-labor-policies"', false)
+        ->assertDontSee('id="financial-tab-billing-classes"', false);
 });
 
 test('admin can save a single labor policy cell', function () {
@@ -125,9 +126,9 @@ test('labor policies shows default labor category as read-only from labor catego
             'financial-tab' => 'labor',
         ]))
         ->assertOk()
-        ->assertSee('Labor categories')
+        ->assertSee('Default Labor Rate')
         ->assertSee('Mechanical')
-        ->assertSee('Default')
+        ->assertSee('Use Default Labor Rate')
         ->assertDontSee('Save default');
 
     expect(\Illuminate\Support\Facades\Route::has('operations.settings.shop.labor-policies.default'))->toBeFalse();

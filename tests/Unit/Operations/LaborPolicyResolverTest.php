@@ -26,7 +26,7 @@ test('labor policy resolver returns retail maintenance hourly rate', function ()
         ->and($resolved->hourlyRateCents)->toBeGreaterThan(0);
 });
 
-test('labor policy resolver follows shop standard for LaborRateType::Standard', function () {
+test('labor policy resolver keeps stamped Standard cents instead of a later shop default', function () {
     $class = OperationClass::query()->where('key', 'maintenance')->firstOrFail();
     $settings = \App\Ark\Operations\Settings\ShopSettings::current();
     $categories = collect($settings->laborCategories())
@@ -55,11 +55,57 @@ test('labor policy resolver follows shop standard for LaborRateType::Standard', 
         'billing_posture' => 'customer_pay',
         'operation_class_id' => $class->id,
         'rate_type' => LaborRateType::Standard,
+        // Stamped when the Standard cell was versioned — must not silently track a later shop default.
         'hourly_rate_cents' => 16500,
         'effective_from' => '2026-01-01',
         'effective_until' => null,
         'priority' => 1,
         'version' => 99,
+    ]);
+
+    $resolved = app(LaborPolicyResolver::class)->resolve(
+        ConcernBillingPosture::CustomerPay,
+        'maintenance',
+        Carbon::parse('2026-07-20'),
+    );
+
+    expect($resolved->rateType)->toBe(LaborRateType::Standard)
+        ->and($resolved->hourlyRateCents)->toBe(16500);
+});
+
+test('labor policy resolver follows shop standard when Standard cents are null', function () {
+    $class = OperationClass::query()->where('key', 'maintenance')->firstOrFail();
+    $settings = \App\Ark\Operations\Settings\ShopSettings::current();
+    $categories = collect($settings->laborCategories())
+        ->map(function (array $category): array {
+            if ($category['is_default']) {
+                $category['rate_cents'] = 17700;
+            }
+
+            return $category;
+        })
+        ->all();
+    $settings->update([
+        'default_labor_rate_cents' => 17700,
+        'labor_categories' => $categories,
+    ]);
+    \App\Ark\Operations\Settings\ShopSettings::forgetCurrent();
+
+    LaborPolicy::query()
+        ->where('billing_posture', 'customer_pay')
+        ->where('operation_class_id', $class->id)
+        ->whereNull('effective_until')
+        ->update(['effective_until' => '2025-12-31']);
+
+    LaborPolicy::query()->create([
+        'billing_posture' => 'customer_pay',
+        'operation_class_id' => $class->id,
+        'rate_type' => LaborRateType::Standard,
+        'hourly_rate_cents' => null,
+        'effective_from' => '2026-01-01',
+        'effective_until' => null,
+        'priority' => 1,
+        'version' => 100,
     ]);
 
     $resolved = app(LaborPolicyResolver::class)->resolve(
