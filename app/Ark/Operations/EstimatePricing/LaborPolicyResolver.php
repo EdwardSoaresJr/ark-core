@@ -95,7 +95,7 @@ final class LaborPolicyResolver
     {
         return match ($policy->rate_type) {
             LaborRateType::Zero => 0,
-            LaborRateType::Hourly, LaborRateType::Contract => (int) ($policy->hourly_rate_cents ?? 0),
+            LaborRateType::Standard, LaborRateType::Hourly, LaborRateType::Contract => (int) ($policy->hourly_rate_cents ?? 0),
             LaborRateType::Cost => (int) ($policy->hourly_rate_cents ?? 0),
         };
     }

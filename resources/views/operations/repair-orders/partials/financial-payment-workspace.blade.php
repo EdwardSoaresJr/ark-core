@@ -139,6 +139,9 @@
                     @endif
 
                     @if ($ledgerKind === 'deposit')
+                        <p class="small text-secondary mb-0">
+                            Deposit is payment against authorized work — not a change to what the customer authorized.
+                        </p>
                         @if (filled($financial['remainingSuggestedDeposit'] ?? null))
                             <p class="small text-secondary mb-0">Up to {{ $financial['remainingSuggestedDeposit'] }} remaining on suggested deposit.</p>
                         @elseif (filled($financial['remainingCollectableDeposit'] ?? null))
