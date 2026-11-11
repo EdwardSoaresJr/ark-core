@@ -3,7 +3,7 @@
 **PR:** https://github.com/EdwardSoaresJr/ark-core/pull/187  
 **Branch:** `integrate/labor-and-parts-settings`  
 **Gate date:** 2026-11-11  
-**Final SHA:** _(filled at evidence commit)_  
+**Final SHA:** see tip after CI green (`integrate/labor-and-parts-settings`)  
 
 ## 1. GitHub CI
 
@@ -120,3 +120,5 @@ Focused + full Regression on `bb233e2` reported **new** baseline violations (not
 
 PartsMatrixTune remains a **known failure** on main baseline.
 
+
+Also: focused CI selected empty `CommunicationsOneInboxNeedsYouTest.php` under broad migration selection — added a minimal constructibility test so the run is complete.

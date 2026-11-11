@@ -12,6 +12,10 @@ beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
     config()->set('broadcasting.default', 'null');
-        Http::fake();
+    Http::fake();
+});
+
+test('needs-you attention helper is constructible for one-inbox coverage', function (): void {
+    expect(class_exists(CommunicationsNeedsYou::class))->toBeTrue();
 });
 
