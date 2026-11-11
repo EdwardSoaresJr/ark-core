@@ -2,10 +2,10 @@
 
 **Host:** `alpha.staging.arksms.com`  
 **SaaS:** `eb859c21` (`dev-pin`)  
-**Core:** `7be2a4daf323459a2812e53a3e52bbe37fbe6e94` (`integrate/labor-and-parts-settings`)  
-**Captured:** 2026-11-11
+**Core staged for review:** `f405bee` (`integrate/labor-and-parts-settings` tip)  
+**UI capture:** Labor + Parts screenshots taken on this lineage at `7d0c9d8` (subsequent commits are review docs/screenshots only; Financial Rules UI unchanged).
 
-Both images are from this single Core pin (not separate branches).
+Both images are from this single Core lineage (not separate branches).
 
 | File | URL | What it proves |
 |---|---|---|
