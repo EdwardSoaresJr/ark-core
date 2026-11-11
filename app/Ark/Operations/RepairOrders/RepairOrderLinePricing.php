@@ -121,10 +121,10 @@ class RepairOrderLinePricing
         if (! filled($data['billing_posture'] ?? null)) {
             $repairOrder->loadMissing('concerns');
             $concern = $repairOrder->concerns->firstWhere('id', $data['repair_order_concern_id'] ?? null);
-            $data = [...$data, ...LaborAuthority::billingPostureInput($concern?->billing_posture)];
+            $data = [...$data, ...LaborAuthority::billingPostureInputFromConcern($concern)];
         }
 
-        $resolved = $this->laborAuthority->resolveForLine($data, $settings, $existingLine);
+        $resolved = $this->laborAuthority->resolveForLine($data, $settings, $existingLine, $repairOrder);
 
         return [
             'quantity' => $resolved['quantity'],
@@ -185,6 +185,7 @@ class RepairOrderLinePricing
     public function previewFor(array $data, RepairOrder $repairOrder): array
     {
         $settings = ShopSettings::current();
+        $pricingContext = $repairOrder->pricingContext($settings);
         $partCostCents = filled($data['part_cost'] ?? null)
             ? $this->calculator->unitPriceCents($data['part_cost'])
             : null;
@@ -193,14 +194,26 @@ class RepairOrderLinePricing
         $concern = $repairOrder->concerns->firstWhere('id', $data['repair_order_concern_id'] ?? null)
             ?->setRelation('repairOrder', $repairOrder);
         $posture = $concern?->billing_posture ?? ConcernBillingPosture::Default;
-        $matrix = $this->explicitMatrixSelected($data)
-            ? $settings->partsMatrixByKey($data['pricing_matrix_key'])
-            : ($concern?->defaultPartsMatrix($settings) ?? $settings->defaultPartsMatrix());
-        abort_if($matrix === null, 422, 'Selected parts matrix is not available.');
+        if ($this->explicitMatrixSelected($data)) {
+            $matrix = $pricingContext->partsMatrixByKey($data['pricing_matrix_key']);
+            abort_if(
+                $matrix === null,
+                422,
+                $pricingContext->hasFrozenPartsMatrices() || is_array($repairOrder->commercial_pricing_profile)
+                    ? 'That parts matrix is not part of this repair order\'s frozen pricing. Choose a matrix that belonged to this RO when it was opened, or open a new repair order to use newer shop matrices.'
+                    : 'Selected parts matrix is not available.',
+            );
+        } else {
+            $matrix = $concern?->defaultPartsMatrix($settings);
+            if ($matrix === null && ! is_array($repairOrder->commercial_pricing_profile)) {
+                $matrix = $settings->defaultPartsMatrix();
+            }
+            abort_if($matrix === null, 422, 'No parts matrix is available for this repair order\'s pricing rules.');
+        }
 
         $suggestion = $partCostCents === null
             ? null
-            : $this->calculator->matrixSuggestionForCost($partCostCents, $settings, $matrix['key']);
+            : $this->calculator->matrixSuggestionForCost($partCostCents, $settings, $matrix['key'], $matrix);
         $suggestedPriceCents = $suggestion['suggested_price_cents'] ?? null;
         $pricingMode = $data['pricing_mode'] ?? ($posture->prefersManualPartPricing() ? 'manual' : 'matrix');
         $submittedUnitPriceCents = $this->submittedSellCents($data);

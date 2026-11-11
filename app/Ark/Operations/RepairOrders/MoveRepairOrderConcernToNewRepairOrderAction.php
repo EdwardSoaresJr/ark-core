@@ -45,6 +45,10 @@ final class MoveRepairOrderConcernToNewRepairOrderAction
                 'customer_id' => $source->customer_id,
                 'vehicle_id' => $source->vehicle_id,
                 'shop_fee_rules' => $source->getAttribute('shop_fee_rules'),
+                'shop_fee_profile' => $source->getAttribute('shop_fee_profile'),
+                'commercial_pricing_profile' => $source->getAttribute('commercial_pricing_profile'),
+                'tax_profile' => $source->getAttribute('tax_profile'),
+                'labor_pricing_profile' => $source->getAttribute('labor_pricing_profile'),
                 'status' => RepairOrderStatus::Draft,
                 'concern_summary' => $concern->summary !== ''
                     ? $concern->summary

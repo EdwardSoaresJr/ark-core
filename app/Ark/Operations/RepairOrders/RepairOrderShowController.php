@@ -113,7 +113,7 @@ class RepairOrderShowController
             'partsMatrices' => $settings->partsMatrices(),
             'defaultPartsMatrixKey' => $settings->defaultPartsMatrix()['key'],
             'defaultLaborRate' => $settings->defaultLaborRate(),
-            'laborCategories' => $settings->laborCategories(),
+            'laborCategories' => $settings->activeLaborCategories(),
             'defaultLaborCategoryKey' => $settings->defaultLaborCategory()['key'],
             'defaultRecommendationIntent' => $settings->default_recommendation_intent,
             'defaultNotesPrivate' => (bool) $settings->default_notes_private,

@@ -21,7 +21,7 @@
         <div class="col-12 col-md-6 small text-secondary">
             <div class="fw-medium text-body">Billing at Check In</div>
             <p class="mb-2">Fleet and warranty billing follow the billing class. Advisors can override per visit at Check In.</p>
-            <p class="mb-2">Fees and parts matrices: <button type="button" class="btn btn-link p-0 align-baseline small" @click="setActive('financial'); setFinancialTab('billing-classes')">Financial Rules → Billing classes</button>.</p>
+            <p class="mb-2">Fees and parts matrices: <button type="button" class="btn btn-link p-0 align-baseline small" @click="setActive('financial'); setFinancialTab('labor'); $dispatch('labor-open-manage-billing-classes')">Financial Rules → Labor → Manage Billing Classes</button>.</p>
             <p class="mb-0">Whether a key tag needs mileage in before it prints: <button type="button" class="btn btn-link p-0 align-baseline small" @click="setActive('printing'); setPrintingTab('printers')">Label Printing → Printers &amp; labels</button>.</p>
         </div>
     </div>

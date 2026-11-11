@@ -7,31 +7,28 @@
 @php
     $current ??= null;
     $productUrl = fn (string $route): ?string => \Illuminate\Support\Facades\Route::has($route) ? route($route) : null;
+    // Lightweight Basic / Optional / Advanced grouping. Keys, routes, and permissions are unchanged.
     $settingsNav = [
-        'Your shop' => [
+        'Basic' => [
             ['key' => 'general', 'label' => 'Shop Identity'],
             ['key' => 'operations', 'label' => 'Appointments & Setup'],
             ['key' => 'staff', 'label' => 'Staff', 'can' => App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value],
+            ['key' => 'financial', 'label' => 'Financial Rules'],
+            ['key' => 'estimates', 'label' => 'Documents / Disclaimers'],
         ],
-        'Website & booking' => [
+        'Optional' => [
             ['key' => 'website', 'label' => 'Website', 'href' => $productUrl('sites.settings.index'), 'hidden' => $productUrl('sites.settings.index') === null, 'can' => App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value],
             ['key' => 'booking-builder', 'label' => 'Book Service Builder', 'href' => $productUrl('booking.builder'), 'hidden' => $productUrl('booking.builder') === null, 'can' => App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value],
             ['key' => 'booking', 'label' => 'Online Requests', 'href' => route('operations.settings.booking')],
-        ],
-        'Money' => [
-            ['key' => 'financial', 'label' => 'Financial Rules'],
-            ['key' => 'overhead', 'label' => 'Shop Overhead'],
-            ['key' => 'excellence', 'label' => 'Owner Targets & Reporting'],
-        ],
-        'Documents & workflow' => [
-            ['key' => 'estimates', 'label' => 'Documents / Disclaimers'],
-            ['key' => 'workflow', 'label' => 'Workflow Defaults'],
-            ['key' => 'printing', 'label' => 'Label Printing'],
-        ],
-        'Connected services' => [
             ['key' => 'payments', 'label' => 'Square Payments'],
             ['key' => 'partstech', 'label' => 'Parts catalogs'],
             ['key' => 'communications', 'label' => 'Communications'],
+        ],
+        'Advanced' => [
+            ['key' => 'overhead', 'label' => 'Shop Overhead'],
+            ['key' => 'excellence', 'label' => 'Owner Targets & Reporting'],
+            ['key' => 'workflow', 'label' => 'Workflow Defaults'],
+            ['key' => 'printing', 'label' => 'Label Printing'],
             ['key' => 'stations', 'label' => 'Stations & Phones', 'href' => route('operations.shop.communications')],
             ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
         ],
@@ -71,7 +68,9 @@
 <div class="col-12 col-lg-3 col-xxl-2 d-none d-lg-block">
     <nav class="card sticky-lg-top" style="top: 1rem" aria-label="Shop settings sections">
         @foreach ($settingsNav as $group => $items)
-            <div class="card-header py-2"><div class="subheader">{{ $group }}</div></div>
+            <div class="card-header py-2">
+                <div class="subheader text-uppercase fw-semibold" style="font-weight: 600; letter-spacing: .04em;">{{ $group }}</div>
+            </div>
             <div class="list-group list-group-flush">
                 @foreach ($items as $item)
                     @if ($current !== null)

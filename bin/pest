@@ -326,6 +326,11 @@ function testingConfiguration(string $rootPath): string
         'bootstrap="'.$rootPath.'/vendor/autoload.php"',
         $configured,
     );
+    $configured = str_replace(
+        'bootstrap="tests/bootstrap.php"',
+        'bootstrap="'.$rootPath.'/tests/bootstrap.php"',
+        $configured,
+    );
     $configured = preg_replace_callback(
         '/<directory>([^<]+)<\/directory>/',
         static fn (array $matches): string => '<directory>'.$rootPath.'/'.$matches[1].'</directory>',

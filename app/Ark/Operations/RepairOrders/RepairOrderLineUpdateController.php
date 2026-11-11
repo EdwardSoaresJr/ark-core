@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\EstimatePricing\SynchronizeRepairOrderBillingMinimums;
 use App\Ark\Operations\Parts\CustomerPartDescriptionAttributes;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\Documents\EstimateDocumentService;
@@ -18,7 +19,7 @@ use Illuminate\Validation\Rule;
 class RepairOrderLineUpdateController
 {
     use RecordsRepairOrderEstimateMutation;
-    public function __invoke(Request $request, RepairOrder $repairOrder, RepairOrderLine $line, EstimateTotalsCalculator $calculator, EstimateDocumentService $documents, OperationalEventRecorder $events, RteLaborObservationRecorder $rteObservations, RepairOrderLinePricing $pricing, RepairOrderConcurrency $concurrency, RefreshCustomerInvoiceAction $refreshInvoice, CustomerPartDescriptionAttributes $customerDescriptions): RedirectResponse
+    public function __invoke(Request $request, RepairOrder $repairOrder, RepairOrderLine $line, EstimateTotalsCalculator $calculator, EstimateDocumentService $documents, OperationalEventRecorder $events, RteLaborObservationRecorder $rteObservations, RepairOrderLinePricing $pricing, RepairOrderConcurrency $concurrency, RefreshCustomerInvoiceAction $refreshInvoice, CustomerPartDescriptionAttributes $customerDescriptions, SynchronizeRepairOrderBillingMinimums $billingMinimums): RedirectResponse
     {
         abort_unless($line->repair_order_id === $repairOrder->id, 404);
         $repairOrder->ensureOpenForEditing();
@@ -124,6 +125,11 @@ class RepairOrderLineUpdateController
         ]);
 
         $calculator->recalculateRepairOrder($repairOrder);
+
+        if ($lineType === RepairOrderLineType::Labor) {
+            $billingMinimums->execute($repairOrder);
+        }
+
         $documents->markDirtyForRepairOrder($repairOrder);
 
         $line->refresh();

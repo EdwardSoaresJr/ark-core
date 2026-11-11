@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>#180 Mock-up — Labor Matrix + Billing Class details</title>
+  <style>
+    :root {
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --panel: #f8fafc;
+      --accent: #206bc4;
+      --ok: #2f9e44;
+    }
+    body { font: 14px/1.45 system-ui, sans-serif; color: var(--ink); margin: 24px; background: #fff; }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    .note { color: var(--muted); max-width: 52rem; margin-bottom: 20px; }
+    .shell { display: grid; grid-template-columns: 11rem 1fr; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-width: 920px; }
+    .work-types { background: var(--panel); border-right: 1px solid var(--line); padding: 12px; }
+    .work-types h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 0 0 8px; }
+    .wt { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px 10px; border-radius: 6px; margin-bottom: 4px; cursor: default; }
+    .wt.active { background: #fff; box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); font-weight: 600; }
+    .badge { font-size: 0.65rem; background: #e7f1ff; color: var(--accent); border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
+    .matrix { padding: 16px 18px 20px; }
+    .matrix h2 { margin: 0 0 4px; font-size: 1.05rem; }
+    .hint { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--line); padding: 10px 8px; text-align: left; }
+    th { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+    .rate { font-variant-numeric: tabular-nums; }
+    .inherit { color: var(--muted); font-size: 0.8rem; }
+    .linkish { color: var(--accent); font-size: 0.75rem; text-decoration: none; }
+    .toolbar { display: flex; gap: 8px; margin-top: 14px; }
+    .btn { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .saved { color: var(--ok); font-size: 0.8rem; margin-left: auto; align-self: center; }
+    .modal-wrap { margin-top: 28px; max-width: 520px; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); }
+    .modal-wrap header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .modal-wrap header strong { font-size: 0.95rem; }
+    .modal-body { padding: 14px 16px 18px; display: grid; gap: 10px; }
+    label { display: grid; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+    input, select { border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: inherit; color: var(--ink); }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .checks { display: grid; gap: 6px; color: var(--ink); font-size: 0.85rem; }
+    .sep { height: 1px; background: var(--line); margin: 4px 0; }
+    .callout { margin-top: 24px; padding: 12px 14px; background: #fff8e6; border: 1px solid #ffe8a3; border-radius: 8px; max-width: 920px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>Mock-up only — not shipped UI</h1>
+  <p class="note">
+    Preserves the approved vertical Labor Matrix. Commercial rules (fees, discounts, parts default, PDF presentation)
+    open in a compact class-details modal — they are not edited inside each rate cell. Audit: Core #180.
+  </p>
+
+  <div class="shell" aria-label="Labor matrix mock">
+    <aside class="work-types">
+      <h2>Work types</h2>
+      <button class="wt active" type="button">Mechanical <span class="badge">Default Work Type</span></button>
+      <button class="wt" type="button">Troubleshooting</button>
+      <button class="wt" type="button">Programming</button>
+      <button class="wt" type="button">+ Add Work Type</button>
+    </aside>
+    <section class="matrix">
+      <h2>Billing Classes for Mechanical</h2>
+      <p class="hint">Inline rates autosave. Rules stay in a pop-up. Class commercial details open separately.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Billing class</th>
+            <th>Rate</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Retail <span class="badge">Default</span></td>
+            <td class="rate">Use Default Labor Rate <span class="inherit">→ $165.00</span></td>
+            <td><a class="linkish" href="#fleet-modal">Details…</a></td>
+          </tr>
+          <tr>
+            <td>Warranty</td>
+            <td class="rate">Custom Rate $120.00</td>
+            <td><a class="linkish" href="#fleet-modal">Details…</a></td>
+          </tr>
+          <tr>
+            <td>Fleet</td>
+            <td class="rate">Custom Rate $145.00</td>
+            <td><a class="linkish" href="#fleet-modal">Details…</a></td>
+          </tr>
+          <tr>
+            <td>RepairPal</td>
+            <td class="rate">Custom Rate $110.00</td>
+            <td><a class="linkish" href="#fleet-modal">Details…</a></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="toolbar">
+        <button class="btn" type="button">Rules…</button>
+        <button class="btn" type="button">+ Add Billing Class</button>
+        <span class="saved">Saved</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-wrap" id="fleet-modal" aria-label="Billing class details mock">
+    <header>
+      <strong>Billing class · Fleet</strong>
+      <span class="saved">Saved</span>
+    </header>
+    <div class="modal-body">
+      <div class="row2">
+        <label>Display name<input value="Fleet" readonly></label>
+        <label>Pill color
+          <select disabled><option>Teal</option></select>
+        </label>
+      </div>
+      <label>Default concern billing for customers in this class
+        <select disabled><option>Fleet</option></select>
+      </label>
+      <div class="sep"></div>
+      <div class="row2">
+        <label>Shop fees
+          <select disabled><option>Enabled · use shop rate</option></select>
+        </label>
+        <label>Standing discount
+          <select disabled><option>None</option></select>
+        </label>
+      </div>
+      <div class="row2">
+        <label>Default parts matrix
+          <select disabled><option>Retail Parts</option></select>
+        </label>
+        <label>Document presentation
+          <select disabled><option>Fleet</option></select>
+        </label>
+      </div>
+      <div class="sep"></div>
+      <div class="checks">
+        <label><input type="checkbox" checked disabled> Show as customer billing class</label>
+        <label><input type="checkbox" checked disabled> Show as Labor Matrix column</label>
+      </div>
+      <p class="hint" style="margin:0">Military-style classes can be customer-only (discount, no labor column). Custom labor columns can exist without a customer class.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Safety (not shown in UI):</strong> Today, saving Billing Classes recalculates all non-closed ROs and refreshes open estimate snapshots.
+    Recommended Phase A: stop that side effect; apply commercial rule changes forward-only, matching Labor profiles and Shop Fees.
+  </div>
+</body>
+</html>

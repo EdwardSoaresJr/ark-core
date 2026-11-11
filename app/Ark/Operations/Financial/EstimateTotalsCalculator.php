@@ -2,6 +2,9 @@
 
 namespace App\Ark\Operations\Financial;
 
+use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
+use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
+use App\Ark\Operations\EstimatePricing\TaxProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\EstimateTotals;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -56,7 +59,7 @@ class EstimateTotalsCalculator
     {
         $repairOrder->loadMissing(['lines.concern']);
 
-        $settings = ShopSettings::current();
+        $settings = $this->settingsWithTaxOverlay($repairOrder, ShopSettings::current());
         $billableLines = $this->billableLines($repairOrder->lines);
 
         return $this->totalsForLines($repairOrder->lines, $billableLines, $settings);
@@ -69,7 +72,7 @@ class EstimateTotalsCalculator
         $this->recalculateRepairOrder($repairOrder);
         $repairOrder->load(['lines.concern']);
 
-        $settings = ShopSettings::current();
+        $settings = $this->settingsWithTaxOverlay($repairOrder, ShopSettings::current());
         $approvedLines = $this->approvedInvoiceableLines($repairOrder);
 
         return $this->totalsForLines($approvedLines, $approvedLines, $settings);
@@ -92,7 +95,7 @@ class EstimateTotalsCalculator
     {
         $repairOrder->loadMissing(['lines.concern']);
 
-        $settings = ShopSettings::current();
+        $settings = $this->settingsWithTaxOverlay($repairOrder, ShopSettings::current());
         $approvedLines = $this->approvedInvoiceableLines($repairOrder);
 
         return $this->totalsForLines($approvedLines, $approvedLines, $settings);
@@ -234,7 +237,14 @@ class EstimateTotalsCalculator
         $standingDiscountCents = $scale((int) $line->standing_discount_cents);
         $shopFeeCents = $scale((int) $line->shop_fee_cents);
         $netSubtotalCents = max(0, $approvedSubtotalCents - $standingDiscountCents);
-        $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $settings);
+        $line->loadMissing('repairOrder');
+        $taxSettings = $line->repairOrder instanceof RepairOrder
+            ? $this->settingsWithTaxOverlay($line->repairOrder, $settings)
+            : $settings;
+        $shopFeeProfile = $line->repairOrder instanceof RepairOrder
+            ? $line->repairOrder->pricingContext($settings)->shopFeeProfile()
+            : null;
+        $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $taxSettings, $shopFeeProfile);
 
         $portion = clone $line;
         $portion->setRawAttributes([
@@ -338,14 +348,21 @@ class EstimateTotalsCalculator
      *     suggested_price_cents: int,
      * }|null
      */
-    public function matrixSuggestionForCost(int $costCents, ?ShopSettings $settings = null, ?string $matrixKey = null): ?array
-    {
+    /**
+     * @param  array{key: string, name: string, rows: array<int, array<string, mixed>>}|null  $matrixOverride
+     */
+    public function matrixSuggestionForCost(
+        int $costCents,
+        ?ShopSettings $settings = null,
+        ?string $matrixKey = null,
+        ?array $matrixOverride = null,
+    ): ?array {
         if ($costCents < 0) {
             return null;
         }
 
         $settings ??= ShopSettings::current();
-        $matrix = $settings->partsMatrixByKey($matrixKey);
+        $matrix = $matrixOverride ?? $settings->partsMatrixByKey($matrixKey);
 
         if (! $matrix) {
             return null;
@@ -401,11 +418,20 @@ class EstimateTotalsCalculator
 
     public function recalculateRepairOrder(RepairOrder $repairOrder): void
     {
+        // Hard stop: terminal ROs never reprice from live or stamped rules.
+        // Stored line cents remain the financial authority for closed/archived work.
+        if ($repairOrder->isTerminal()) {
+            return;
+        }
+
         $repairOrder->load(['lines', 'customer', 'concerns']);
 
         $settings = ShopSettings::current();
+        $pricingContext = $repairOrder->pricingContext($settings);
+        $shopFeeProfile = $pricingContext->shopFeeProfile();
+        $taxSettings = $this->settingsWithTaxOverlay($repairOrder, $settings, $pricingContext->taxProfile());
 
-        if ($settings->shop_fee_enabled) {
+        if ($shopFeeProfile->enabled) {
             $repairOrder->lines
                 ->filter(fn (RepairOrderLine $line): bool => $line->isAllocatedShopFeeRollupLine())
                 ->each
@@ -418,11 +444,13 @@ class EstimateTotalsCalculator
             ->mapWithKeys(fn (RepairOrderLine $line): array => [
                 $line->id => $this->subtotalForLine($line),
             ]);
+        $commercialProfile = $pricingContext->commercialProfile();
         $standingDiscounts = $this->standingDiscountAllocations(
             $repairOrder,
             $repairOrder->lines,
             $subtotals,
             $settings,
+            $commercialProfile,
         );
         $netSubtotals = $subtotals->map(function (int $subtotal, int $lineId) use ($standingDiscounts): int {
             return max(0, $subtotal - ($standingDiscounts[$lineId] ?? 0));
@@ -432,6 +460,7 @@ class EstimateTotalsCalculator
             $repairOrder->lines,
             $netSubtotals,
             $settings,
+            $shopFeeProfile,
         );
 
         foreach ($repairOrder->lines as $line) {
@@ -439,7 +468,7 @@ class EstimateTotalsCalculator
             $standingDiscountCents = $standingDiscounts[$line->id] ?? 0;
             $netSubtotalCents = max(0, $subtotalCents - $standingDiscountCents);
             $shopFeeCents = $shopFees[$line->id] ?? 0;
-            $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $settings);
+            $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $taxSettings, $shopFeeProfile);
 
             $line->forceFill([
                 'subtotal_cents' => $subtotalCents,
@@ -578,8 +607,13 @@ class EstimateTotalsCalculator
         return $this->lineTotalCents($line->quantity, $line->unit_price_cents);
     }
 
-    private function taxCents(RepairOrderLine $line, int $subtotalCents, int $shopFeeCents, ShopSettings $settings): int
-    {
+    private function taxCents(
+        RepairOrderLine $line,
+        int $subtotalCents,
+        int $shopFeeCents,
+        ShopSettings $settings,
+        ?ShopFeeProfile $shopFeeProfile = null,
+    ): int {
         if (! $settings->tax_enabled) {
             return 0;
         }
@@ -601,8 +635,9 @@ class EstimateTotalsCalculator
         }
 
         $taxableBaseCents = $subtotalCents;
+        $taxableShopFees = $shopFeeProfile?->taxable ?? (bool) $settings->taxable_shop_fees;
 
-        if ($settings->taxable_shop_fees && $shopFeeCents > 0) {
+        if ($taxableShopFees && $shopFeeCents > 0) {
             $taxableBaseCents += $shopFeeCents;
         }
 
@@ -616,6 +651,58 @@ class EstimateTotalsCalculator
             ->toInt();
     }
 
+    private function shopFeeProfileFor(RepairOrder $repairOrder, ShopSettings $settings): ShopFeeProfile
+    {
+        return $repairOrder->pricingContext($settings)->shopFeeProfile();
+    }
+
+    private function commercialPricingProfileFor(RepairOrder $repairOrder, ShopSettings $settings): ?CommercialPricingProfile
+    {
+        return $repairOrder->pricingContext($settings)->commercialProfile();
+    }
+
+    /**
+     * Overlay the stamped shop-fee profile onto live settings so posture/customer-type
+     * rules keep working without reading later fee-setting edits.
+     */
+    private function settingsWithShopFeeProfile(ShopSettings $settings, ShopFeeProfile $profile): ShopSettings
+    {
+        $overlay = $settings->replicate();
+        $overlay->shop_fee_enabled = $profile->enabled;
+        $overlay->shop_fee_mode = $profile->mode;
+        $overlay->shop_fee_rate = $profile->rate;
+        $overlay->shop_fee_flat_cents = $profile->flatCents;
+        $overlay->shop_fee_cap_cents = $profile->capCents;
+        $overlay->taxable_shop_fees = $profile->taxable;
+
+        return $overlay;
+    }
+
+    private function settingsWithTaxProfile(ShopSettings $settings, TaxProfile $profile): ShopSettings
+    {
+        $overlay = $settings->replicate();
+        $overlay->tax_enabled = $profile->enabled;
+        $overlay->tax_label = $profile->label;
+        $overlay->default_tax_rate = $profile->rate;
+        $overlay->taxable_labor = $profile->taxableLabor;
+        $overlay->taxable_parts = $profile->taxableParts;
+        $overlay->taxable_shop_fees = $profile->taxableShopFees;
+
+        return $overlay;
+    }
+
+    private function settingsWithTaxOverlay(
+        RepairOrder $repairOrder,
+        ShopSettings $settings,
+        ?TaxProfile $taxProfile = null,
+    ): ShopSettings {
+        $taxProfile ??= $repairOrder->pricingContext($settings)->taxProfile();
+
+        return $taxProfile !== null
+            ? $this->settingsWithTaxProfile($settings, $taxProfile)
+            : $settings;
+    }
+
     /**
      * @param  Collection<int, RepairOrderLine>  $lines
      * @param  Collection<int, int>  $subtotals
@@ -626,11 +713,13 @@ class EstimateTotalsCalculator
         Collection $lines,
         Collection $subtotals,
         ShopSettings $settings,
+        ShopFeeProfile $shopFeeProfile,
     ): array {
-        if (! $settings->shop_fee_enabled) {
+        if (! $shopFeeProfile->enabled) {
             return [];
         }
 
+        $feeSettings = $this->settingsWithShopFeeProfile($settings, $shopFeeProfile);
         $concernsById = $repairOrder->concerns->keyBy('id');
 
         $eligibleLines = $lines
@@ -640,7 +729,7 @@ class EstimateTotalsCalculator
                 $repairOrder,
                 $line,
                 $concernsById,
-                $settings,
+                $feeSettings,
             ))
             ->values();
 
@@ -648,8 +737,17 @@ class EstimateTotalsCalculator
             return [];
         }
 
-        $rawFees = $eligibleLines->mapWithKeys(function (RepairOrderLine $line) use ($repairOrder, $subtotals, $concernsById, $settings): array {
-            $rate = $this->shopFeeRateForLine($repairOrder, $line, $concernsById, $settings);
+        if ($shopFeeProfile->isFlat()) {
+            return $this->allocateFlatShopFee(
+                $eligibleLines,
+                $subtotals,
+                $shopFeeProfile->flatCents ?? 0,
+                $shopFeeProfile->capCents,
+            );
+        }
+
+        $rawFees = $eligibleLines->mapWithKeys(function (RepairOrderLine $line) use ($repairOrder, $subtotals, $concernsById, $feeSettings): array {
+            $rate = $this->shopFeeRateForLine($repairOrder, $line, $concernsById, $feeSettings);
 
             if (BigDecimal::of($rate)->isZero()) {
                 return [$line->id => 0];
@@ -664,19 +762,58 @@ class EstimateTotalsCalculator
         });
 
         if ($repairOrder->usesPerLineShopFees()) {
-            return $this->perLineShopFees($rawFees, $settings->shop_fee_cap_cents);
+            return $this->perLineShopFees($rawFees, $shopFeeProfile->capCents);
         }
 
         $totalFeeCents = (int) $rawFees->sum();
 
-        if ($settings->shop_fee_cap_cents !== null && $totalFeeCents > $settings->shop_fee_cap_cents) {
-            $totalFeeCents = $settings->shop_fee_cap_cents;
+        if ($shopFeeProfile->capCents !== null && $totalFeeCents > $shopFeeProfile->capCents) {
+            $totalFeeCents = $shopFeeProfile->capCents;
         }
 
         if ($totalFeeCents === 0) {
             return [];
         }
 
+        return $this->allocatePooledShopFee($eligibleLines, $subtotals, $totalFeeCents);
+    }
+
+    /**
+     * Flat dollar fee once per RO, spread across eligible lines by subtotal share.
+     *
+     * @param  Collection<int, RepairOrderLine>  $eligibleLines
+     * @param  Collection<int, int>  $subtotals
+     * @return array<int, int>
+     */
+    private function allocateFlatShopFee(
+        Collection $eligibleLines,
+        Collection $subtotals,
+        int $flatCents,
+        ?int $capCents,
+    ): array {
+        $totalFeeCents = max(0, $flatCents);
+
+        if ($capCents !== null && $totalFeeCents > $capCents) {
+            $totalFeeCents = $capCents;
+        }
+
+        if ($totalFeeCents === 0) {
+            return [];
+        }
+
+        return $this->allocatePooledShopFee($eligibleLines, $subtotals, $totalFeeCents);
+    }
+
+    /**
+     * @param  Collection<int, RepairOrderLine>  $eligibleLines
+     * @param  Collection<int, int>  $subtotals
+     * @return array<int, int>
+     */
+    private function allocatePooledShopFee(
+        Collection $eligibleLines,
+        Collection $subtotals,
+        int $totalFeeCents,
+    ): array {
         $eligibleSubtotalCents = (int) $eligibleLines->sum(fn (RepairOrderLine $line): int => $subtotals[$line->id]);
         $allocated = [];
         $allocatedCents = 0;
@@ -749,8 +886,10 @@ class EstimateTotalsCalculator
         Collection $lines,
         Collection $subtotals,
         ShopSettings $settings,
+        ?CommercialPricingProfile $commercialProfile = null,
     ): array {
-        $policy = $settings->standingDiscountPolicy($repairOrder->customer?->customer_type);
+        $commercialProfile ??= $this->commercialPricingProfileFor($repairOrder, $settings);
+        $policy = $commercialProfile?->standingDiscountPolicy($repairOrder->customer?->customer_type);
 
         if ($policy === null) {
             return [];

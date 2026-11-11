@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'repair_order_concern_id',
     'repair_order_work_group_id',
     'type',
+    'system_line_kind',
+    'system_line_scope',
     'description',
     'customer_description',
     'customer_description_source',

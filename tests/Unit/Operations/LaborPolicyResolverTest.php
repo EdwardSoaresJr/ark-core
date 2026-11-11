@@ -16,12 +16,60 @@ test('labor policy resolver returns retail maintenance hourly rate', function ()
         Carbon::parse('2026-07-20'),
     );
 
-    expect($resolved->rateType)->toBe(LaborRateType::Hourly)
+    // After the Standard-rate migration, Customer Pay cells that matched the shop
+    // default are rate_type=standard and still resolve to a positive hourly amount.
+    expect(in_array($resolved->rateType, [LaborRateType::Hourly, LaborRateType::Standard], true))->toBeTrue()
         ->and($resolved->billingPosture)->toBe('customer_pay')
         ->and($resolved->operationClassKey)->toBe('maintenance')
         ->and($resolved->laborPolicyId)->not->toBeNull()
-        ->and($resolved->laborPolicyVersion)->toBe(1)
+        ->and($resolved->laborPolicyVersion)->toBeGreaterThanOrEqual(1)
         ->and($resolved->hourlyRateCents)->toBeGreaterThan(0);
+});
+
+test('labor policy resolver follows shop standard for LaborRateType::Standard', function () {
+    $class = OperationClass::query()->where('key', 'maintenance')->firstOrFail();
+    $settings = \App\Ark\Operations\Settings\ShopSettings::current();
+    $categories = collect($settings->laborCategories())
+        ->map(function (array $category): array {
+            if ($category['is_default']) {
+                $category['rate_cents'] = 17700;
+            }
+
+            return $category;
+        })
+        ->all();
+    $settings->update([
+        'default_labor_rate_cents' => 17700,
+        'labor_categories' => $categories,
+    ]);
+    \App\Ark\Operations\Settings\ShopSettings::forgetCurrent();
+
+    // Close any open Customer Pay maintenance policies so the Standard row wins.
+    LaborPolicy::query()
+        ->where('billing_posture', 'customer_pay')
+        ->where('operation_class_id', $class->id)
+        ->whereNull('effective_until')
+        ->update(['effective_until' => '2025-12-31']);
+
+    LaborPolicy::query()->create([
+        'billing_posture' => 'customer_pay',
+        'operation_class_id' => $class->id,
+        'rate_type' => LaborRateType::Standard,
+        'hourly_rate_cents' => 16500,
+        'effective_from' => '2026-01-01',
+        'effective_until' => null,
+        'priority' => 1,
+        'version' => 99,
+    ]);
+
+    $resolved = app(LaborPolicyResolver::class)->resolve(
+        ConcernBillingPosture::CustomerPay,
+        'maintenance',
+        Carbon::parse('2026-07-20'),
+    );
+
+    expect($resolved->rateType)->toBe(LaborRateType::Standard)
+        ->and($resolved->hourlyRateCents)->toBe(17700);
 });
 
 test('labor policy resolver maps default posture to customer pay', function () {

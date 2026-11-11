@@ -7,6 +7,7 @@ use App\Ark\Operations\Appointments\UpdateScheduleBayController;
 use App\Ark\Operations\Booking\Http\BookingSettingsController;
 use App\Ark\Operations\Inspections\InspectionTemplateSettingsController;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalogSettingsController;
+use App\Ark\Operations\Settings\LaborMatrixSettingsController;
 use App\Ark\Operations\Settings\LaborPolicySettingsController;
 use App\Ark\Operations\Settings\ShopCommunicationsSettingsController;
 use App\Ark\Operations\Settings\ShopFinancialSettingsController;
@@ -50,6 +51,17 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/labor', [ShopFinancialSettingsController::class, 'updateLabor'])
         ->name('operations.settings.shop.labor.update');
 
+    Route::get('/app/settings/shop/labor-matrix', [LaborMatrixSettingsController::class, 'show'])
+        ->name('operations.settings.shop.labor-matrix.show');
+    Route::patch('/app/settings/shop/labor-matrix/rate', [LaborMatrixSettingsController::class, 'updateRate'])
+        ->name('operations.settings.shop.labor-matrix.rate');
+    Route::patch('/app/settings/shop/labor-matrix/minimum', [LaborMatrixSettingsController::class, 'updateMinimum'])
+        ->name('operations.settings.shop.labor-matrix.minimum');
+    Route::post('/app/settings/shop/labor-matrix/work-types', [LaborMatrixSettingsController::class, 'storeWorkType'])
+        ->name('operations.settings.shop.labor-matrix.work-types.store');
+    Route::post('/app/settings/shop/labor-matrix/billing-classes', [LaborMatrixSettingsController::class, 'storeBillingClass'])
+        ->name('operations.settings.shop.labor-matrix.billing-classes.store');
+
     Route::patch('/app/settings/shop/labor-policies', [LaborPolicySettingsController::class, 'update'])
         ->name('operations.settings.shop.labor-policies.update');
 
@@ -62,8 +74,15 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/deposits', [ShopFinancialSettingsController::class, 'updateDeposits'])
         ->name('operations.settings.shop.deposits.update');
 
+    Route::get('/app/settings/shop/customer-types', [ShopFinancialSettingsController::class, 'showCustomerTypes'])
+        ->name('operations.settings.shop.customer-types.show');
     Route::patch('/app/settings/shop/customer-types', [ShopFinancialSettingsController::class, 'updateCustomerTypes'])
         ->name('operations.settings.shop.customer-types.update');
+    Route::post('/app/settings/shop/customer-types', [ShopFinancialSettingsController::class, 'storeCustomerType'])
+        ->name('operations.settings.shop.customer-types.store');
+    Route::patch('/app/settings/shop/customer-types/{classKey}', [ShopFinancialSettingsController::class, 'updateCustomerTypeItem'])
+        ->where('classKey', '[A-Za-z][A-Za-z0-9_]{0,47}')
+        ->name('operations.settings.shop.customer-types.item.update');
 
     Route::patch('/app/settings/shop/estimates', [ShopOperationsSettingsController::class, 'updateEstimates'])
         ->name('operations.settings.shop.estimates.update');

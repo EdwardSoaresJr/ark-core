@@ -5,6 +5,8 @@ namespace App\Ark\Operations\Settings;
 use App\Ark\Operations\Diagnostics\OperationalClockProjection;
 use App\Ark\Operations\EstimatePricing\LaborPoliciesMatrixProjection;
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolverPreview;
+use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrixProjection;
+use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\Inspections\InspectionTemplateCatalog;
 use App\Ark\Operations\Messaging\MessagingHealth;
 use App\Ark\Operations\Messaging\Messenger\MessengerHealth;
@@ -81,10 +83,15 @@ class ShopSettingsPageController
                 ->orderBy('title')
                 ->get(),
             'operationalClock' => OperationalClockProjection::resolve(),
-            'laborPoliciesMatrix' => app(LaborPoliciesMatrixProjection::class)->build(),
+            'laborPoliciesMatrix' => ($laborPoliciesMatrix = app(LaborPoliciesMatrixProjection::class)->build()),
+            'laborWorkTypeMatrix' => app(LaborWorkTypeMatrixProjection::class)->build(),
             'laborPolicyPreview' => app(LaborPolicyResolverPreview::class)->for(
                 $request->query('lp_posture'),
                 $request->query('lp_class'),
+            ),
+            'laborStandardPreview' => app(LaborPolicyResolverPreview::class)->for(
+                ConcernBillingPosture::CustomerPay->value,
+                $laborPoliciesMatrix['shop_default']['operation_class_key'] ?? null,
             ),
             'scheduleBays' => Workstation::query()
                 ->where('accepts_scheduled_work', true)

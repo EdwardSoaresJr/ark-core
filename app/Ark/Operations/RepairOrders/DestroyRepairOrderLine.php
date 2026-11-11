@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Documents\EstimateDocumentService;
+use App\Ark\Operations\EstimatePricing\SynchronizeRepairOrderBillingMinimums;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -23,11 +24,14 @@ final class DestroyRepairOrderLine
         private readonly EstimateDocumentService $documents,
         private readonly OperationalEventRecorder $events,
         private readonly RefreshCustomerInvoiceAction $refreshInvoice,
+        private readonly SynchronizeRepairOrderBillingMinimums $billingMinimums,
     ) {}
 
     public function destroy(RepairOrder $repairOrder, RepairOrderLine $line, User $actor): void
     {
         abort_unless((int) $line->repair_order_id === (int) $repairOrder->id, 404);
+
+        $wasLabor = $line->type === RepairOrderLineType::Labor;
 
         $payload = [
             'line_id' => $line->id,
@@ -42,6 +46,10 @@ final class DestroyRepairOrderLine
         });
 
         $this->calculator->recalculateRepairOrder($repairOrder);
+
+        if ($wasLabor) {
+            $this->billingMinimums->execute($repairOrder);
+        }
         $this->documents->markDirtyForRepairOrder($repairOrder);
 
         $this->events->record(
