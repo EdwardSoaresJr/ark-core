@@ -139,9 +139,13 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
     expect($html)
         ->toContain('window.partsMatricesPanel = function partsMatricesPanel')
         ->toContain('buildPartsMatrixFormData()')
+        ->toContain('autosaveSucceeded(response)')
         ->toContain('fetch(`/app/settings/shop/parts-matrices/${matrixKey}`, {')
         ->toContain('body: this.buildPartsMatrixFormData(),')
-        ->toContain('}, immediate ? 0 : 700);')
+        ->toContain("redirect: 'manual',")
+        ->toContain("'Accept': 'application/json',")
+        ->toContain('sticky-lg-top')
+        ->toContain('col-lg-3 col-xxl-2')
         ->toContain('fd.append(`parts_matrices[${matrixIndex}][rows][${rowIndex}][markup_percentage]`')
         ->toContain('localStorage.setItem(storageKey, key)');
 });
