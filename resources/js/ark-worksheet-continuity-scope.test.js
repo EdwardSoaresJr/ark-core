@@ -235,6 +235,18 @@ function worksheet({ lineTwo, labor, total, composerValue = '' }) {
         { id: 'authorization-rail', 'data-continuity-region': 'authorization-rail' },
         `Authorization ${total}`,
     ));
+    const amount = h('input', {
+        id: 'authorization-approved-amount',
+        name: 'approved_amount',
+        type: 'text',
+        value: total.replace('$', ''),
+    });
+    amount.defaultValue = total.replace('$', '');
+    root.append(h(
+        'div',
+        { id: 'authorization-record-1', 'data-continuity-region': 'authorization-record', 'data-authorization-record': '' },
+        amount,
+    ));
 
     return root;
 }
@@ -273,11 +285,37 @@ test('lines scope keeps a dirty composer and shows saved labor truth', () => {
     assert.match(current.getElementById('financial-position').textContent, /Owe today \$495\.00/);
     assert.match(current.getElementById('financial-position').textContent, /Deposits \$20\.00/);
     assert.equal(current.getElementById('authorization-rail').textContent, 'Authorization $495.00');
+    assert.equal(current.getElementById('authorization-approved-amount').value, '495.00');
     assert.equal(current.getElementById('line-2').textContent, fresh.getElementById('line-2').textContent);
     assert.equal(
         current.getElementById('estimate-totals-region').textContent,
         fresh.getElementById('estimate-totals-region').textContent,
     );
+});
+
+test('lines scope keeps a dirty authorization amount while totals update', () => {
+    const current = worksheet({
+        lineTwo: 'Qty 1.00 $165.00',
+        labor: '$330.00',
+        total: '$330.00',
+    });
+    const amount = current.getElementById('authorization-approved-amount');
+    amount.value = '200.00';
+
+    const fresh = worksheet({
+        lineTwo: 'Qty 2.00 $330.00',
+        labor: '$495.00',
+        total: '$495.00',
+    });
+
+    const result = applyContinuityScope(current, fresh, 'lines', {
+        requiredIds: ['line-2', 'estimate-totals-region'],
+    });
+
+    assert.equal(result.ok, true);
+    assert.ok(result.preserved.includes('authorization-record-1'));
+    assert.equal(amount.value, '200.00');
+    assert.match(current.getElementById('estimate-totals-region').textContent, /Total \$495\.00/);
 });
 
 test('a dirty sibling line is preserved while the saved line and totals update', () => {
@@ -718,4 +756,6 @@ test('replacing the submitted composer leaves the other composer', () => {
 test('line and authorization saves both refresh the estimate instruments region kind', () => {
     assert.ok(continuityRegionKinds('lines').includes('authorized-money'));
     assert.ok(continuityRegionKinds('authorization').includes('authorized-money'));
+    assert.ok(continuityRegionKinds('lines').includes('authorization-record'));
+    assert.ok(continuityRegionKinds('authorization').includes('authorization-record'));
 });

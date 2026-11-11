@@ -138,6 +138,19 @@ test('a line save refreshes the estimate instruments with the same customer tota
         ->and($panelTotal)->toBeInstanceOf(DOMElement::class)
         ->and(trim($customerTotal->textContent))->toBe(trim($panelTotal->textContent));
 
+    $authRecord = $xpath->query('//*[@data-continuity-region="authorization-record"]')->item(0);
+    $authAmount = $xpath->query('.//input[@name="approved_amount"]', $authRecord)->item(0);
+    $expectedAmount = number_format(
+        (int) preg_replace('/[^0-9]/', '', trim($panelTotal->textContent)) / 100,
+        2,
+        '.',
+        '',
+    );
+
+    expect($authRecord)->toBeInstanceOf(DOMElement::class)
+        ->and($authAmount)->toBeInstanceOf(DOMElement::class)
+        ->and($authAmount->getAttribute('value'))->toBe($expectedAmount);
+
     assertContinuityRegionsDoNotNest($html);
 });
 
