@@ -96,7 +96,7 @@ class RepairOrderAuthorizationStoreController
             if ($mismatch = $this->enteredAmountMismatchMessage(
                 $data,
                 $repairOrder,
-                $concernDispositions,
+                $approvalType,
                 $proposedAuthorizedCents,
                 $totalsCalculator,
             )) {
@@ -217,18 +217,22 @@ class RepairOrderAuthorizationStoreController
     /**
      * Block documentary amounts that disagree with the scopes this form will authorize.
      *
-     * Exact match and the existing "left at default" paths (blank, approvedNow, or
-     * recommendedNow — including diagnostic 0.00 before any approval) may proceed.
-     * A free-typed amount that is none of those is rejected; it does not authorize
-     * a partial line.
+     * Allowed:
+     * - blank amount (server fills from authorized scopes)
+     * - exact match to the proposed authorized-scope total
+     * - diagnostic 0.00 before any approval (existing zero-default → recommended total)
+     *
+     * Not allowed: submitting the current approved total, a stale recommended total, or
+     * any other dollar amount that differs from the scopes this recording authorizes.
+     * Matching an older approved/recommended figure must not bypass when the newly
+     * authorized concern scope differs.
      *
      * @param  array<string, mixed>  $data
-     * @param  array<int, string>  $concernDispositions
      */
     private function enteredAmountMismatchMessage(
         array $data,
         RepairOrder $repairOrder,
-        array $concernDispositions,
+        ApprovalType $approvalType,
         int $proposedAuthorizedCents,
         EstimateTotalsCalculator $totalsCalculator,
     ): ?string {
@@ -243,10 +247,15 @@ class RepairOrderAuthorizationStoreController
         }
 
         $approvedNow = $totalsCalculator->approvedTotalsForRead($repairOrder)->totalCents();
-        $recommendedNow = $totalsCalculator->recommendedTotalsForRead($repairOrder)->totalCents();
-        $leftAsDefault = $posted === $approvedNow || $posted === $recommendedNow;
 
-        if ($concernDispositions !== [] && $leftAsDefault) {
+        // Diagnostic estimates historically treat an explicit 0.00 (matching approvedNow
+        // before any approval) as "use the recommended total." That is the only
+        // non-exact exception; it must not generalize to other approval types or to
+        // posting a non-zero approved total that disagrees with the new scope.
+        if ($approvalType === ApprovalType::Diagnostic
+            && $posted === 0
+            && $approvedNow === 0
+            && $proposedAuthorizedCents > 0) {
             return null;
         }
 
