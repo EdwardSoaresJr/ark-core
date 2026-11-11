@@ -883,6 +883,194 @@ test('admin can save a single parts matrix without touching other shop settings'
         ->and($settings->defaultPartsMatrix()['key'])->toBe('oem-parts');
 });
 
+test('parts matrix autosave accepts json so validation failures are 422 not a successful html redirect', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $before = ShopSettings::current()->parts_matrices;
+
+    $this->withHeaders([
+        'X-Requested-With' => 'XMLHttpRequest',
+        'Accept' => 'application/json',
+    ])->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
+        'parts_matrices' => [
+            [
+                'key' => 'aft-parts',
+                'name' => 'AFT Parts',
+                'rows' => [
+                    ['min_cost' => '', 'max_cost' => '5', 'markup_percentage' => '180', 'sort_order' => '1'],
+                ],
+            ],
+        ],
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertStatus(422)
+        ->assertJsonMissing(['committed' => true]);
+
+    expect(ShopSettings::current()->fresh()->parts_matrices)->toBe($before);
+});
+
+test('parts matrix json autosave returns an explicit committed payload and persists a fresh server read', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $baseline = ShopSettings::DEFAULT_PARTS_MATRICES;
+    ShopSettings::current()->update(['parts_matrices' => $baseline]);
+
+    $payload = collect($baseline)->map(function (array $matrix): array {
+        $rows = collect($matrix['rows'])->map(fn (array $row, int $index): array => [
+            'min_cost' => $row['min_cost'],
+            'max_cost' => $row['max_cost'] ?? '',
+            'markup_percentage' => $matrix['key'] === 'fluids' ? '151' : $row['markup_percentage'],
+            'sort_order' => (string) ($index + 1),
+        ])->all();
+
+        return [
+            'key' => $matrix['key'],
+            'name' => $matrix['name'],
+            'rows' => $rows,
+        ];
+    })->values()->all();
+
+    $response = $this->withHeaders([
+        'X-Requested-With' => 'XMLHttpRequest',
+        'Accept' => 'application/json',
+    ])->patch(route('operations.settings.shop.parts-matrices.update', 'fluids'), [
+        'parts_matrices' => $payload,
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('committed', true)
+        ->assertJsonPath('matrix_key', 'fluids');
+
+    $persisted = ShopSettings::current()->fresh();
+
+    expect($persisted->partsMatrixByKey('fluids')['rows'][0]['markup_percentage'])->toBe('151.00')
+        ->and($persisted->partsMatrixByKey('aft-parts')['rows'][0]['markup_percentage'])->toBe('180.00')
+        ->and($response->json('parts_matrices'))->toBe($persisted->partsMatrices());
+});
+
+test('parts matrix json autosave rejects guests and advisors without committing', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    ShopSettings::current()->update(['parts_matrices' => ShopSettings::DEFAULT_PARTS_MATRICES]);
+    $before = ShopSettings::current()->fresh()->parts_matrices;
+
+    $this->withHeaders([
+        'Accept' => 'application/json',
+    ])->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
+        'parts_matrices' => ShopSettings::DEFAULT_PARTS_MATRICES,
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertUnauthorized();
+
+    expect(ShopSettings::current()->fresh()->parts_matrices)->toBe($before);
+
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    $advisorResponse = $this->withHeaders([
+        'Accept' => 'application/json',
+    ])->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
+        'parts_matrices' => ShopSettings::DEFAULT_PARTS_MATRICES,
+        'default_parts_matrix_key' => 'aft-parts',
+    ]);
+
+    expect(in_array($advisorResponse->status(), [401, 403, 302], true))->toBeTrue()
+        ->and($advisorResponse->json('committed') ?? null)->toBeNull()
+        ->and(ShopSettings::current()->fresh()->parts_matrices)->toBe($before);
+});
+
+test('later parts matrix json save wins when two commits are applied in order', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $baseline = ShopSettings::DEFAULT_PARTS_MATRICES;
+    ShopSettings::current()->update(['parts_matrices' => $baseline]);
+
+    $makePayload = function (string $filtersMarkup) use ($baseline): array {
+        return collect($baseline)->map(function (array $matrix) use ($filtersMarkup): array {
+            $rows = collect($matrix['rows'])->map(fn (array $row, int $index): array => [
+                'min_cost' => $row['min_cost'],
+                'max_cost' => $row['max_cost'] ?? '',
+                'markup_percentage' => $matrix['key'] === 'filters' ? $filtersMarkup : $row['markup_percentage'],
+                'sort_order' => (string) ($index + 1),
+            ])->all();
+
+            return [
+                'key' => $matrix['key'],
+                'name' => $matrix['name'],
+                'rows' => $rows,
+            ];
+        })->values()->all();
+    };
+
+    $headers = [
+        'X-Requested-With' => 'XMLHttpRequest',
+        'Accept' => 'application/json',
+    ];
+
+    $this->withHeaders($headers)->patch(route('operations.settings.shop.parts-matrices.update', 'filters'), [
+        'parts_matrices' => $makePayload('171'),
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertOk()->assertJsonPath('committed', true);
+
+    $this->withHeaders($headers)->patch(route('operations.settings.shop.parts-matrices.update', 'filters'), [
+        'parts_matrices' => $makePayload('174'),
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertOk()->assertJsonPath('committed', true);
+
+    $fresh = ShopSettings::current()->fresh();
+
+    expect($fresh->partsMatrixByKey('filters')['rows'][0]['markup_percentage'])->toBe('174.00')
+        ->and($fresh->partsMatrixByKey('oem-parts')['rows'][0]['markup_percentage'])->toBe('90.00')
+        ->and($fresh->partsMatrixByKey('aft-parts')['rows'][0]['markup_percentage'])->toBe('180.00');
+});
+
+test('parts matrix save keyed to one matrix persists every submitted sibling unchanged except the edited tier', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $baseline = ShopSettings::DEFAULT_PARTS_MATRICES;
+    ShopSettings::current()->update(['parts_matrices' => $baseline]);
+
+    $payload = collect($baseline)->map(function (array $matrix): array {
+        $rows = collect($matrix['rows'])->map(fn (array $row, int $index): array => [
+            'min_cost' => $row['min_cost'],
+            'max_cost' => $row['max_cost'] ?? '',
+            'markup_percentage' => $row['markup_percentage'],
+            'sort_order' => (string) ($index + 1),
+        ])->all();
+
+        if ($matrix['key'] === 'filters') {
+            $rows[0]['markup_percentage'] = '177';
+        }
+
+        return [
+            'key' => $matrix['key'],
+            'name' => $matrix['name'],
+            'rows' => $rows,
+        ];
+    })->values()->all();
+
+    $this->patch(route('operations.settings.shop.parts-matrices.update', 'filters'), [
+        'parts_matrices' => $payload,
+        'default_parts_matrix_key' => collect($baseline)->firstWhere('is_default', true)['key'] ?? $baseline[0]['key'],
+    ])->assertRedirect(route('operations.settings.shop.edit'));
+
+    $settings = ShopSettings::current()->fresh();
+    $expectedKeys = collect($baseline)->pluck('key')->sort()->values()->all();
+    $actualKeys = collect($settings->parts_matrices)->pluck('key')->sort()->values()->all();
+
+    expect($actualKeys)->toBe($expectedKeys)
+        ->and($settings->partsMatrixByKey('filters')['rows'][0]['markup_percentage'])->toBe('177.00');
+
+    foreach ($baseline as $matrix) {
+        if ($matrix['key'] === 'filters') {
+            continue;
+        }
+
+        expect($settings->partsMatrixByKey($matrix['key'])['rows'][0]['markup_percentage'])
+            ->toBe($matrix['rows'][0]['markup_percentage']);
+    }
+});
+
 test('advisor cannot access or edit shop settings', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));

@@ -117,7 +117,6 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         route('operations.settings.shop.tax.update') => ['tax_enabled', 'tax_label', 'default_tax_rate', 'taxable_labor', 'taxable_parts', 'taxable_shop_fees'],
         route('operations.settings.shop.fees.update') => ['shop_fee_enabled', 'shop_fee_rate', 'shop_fee_cap'],
         route('operations.settings.shop.deposits.update') => ['default_deposit_enabled', 'default_deposit_include_parts', 'default_deposit_include_diagnostics', 'default_deposit_diagnostic_labor_category_keys[]'],
-        route('operations.settings.shop.parts-matrices.update', $settings->defaultPartsMatrix()['key']) => ['parts_matrices[0][key]', 'parts_matrices[0][name]', 'default_parts_matrix_key'],
     ] as $action => $fields) {
         foreach ($fields as $field) {
             expect($xpath->query($section.'//form[@action="'.$action.'"]//*[@name="'.$field.'"]')->length)
@@ -125,22 +124,39 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         }
     }
 
+    $partsUpdateAction = route('operations.settings.shop.parts-matrices.update', $settings->defaultPartsMatrix()['key']);
+
     expect($xpath->query($section.'//form[@id="parts-matrix-form"]')->length)->toBe(1)
+        ->and($xpath->query($section.'//form[@id="parts-matrix-form"][@action="'.$partsUpdateAction.'"]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-parts-matrix-nav]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-parts-matrix-editor]')->length)->toBe(1)
+        ->and($xpath->query($section.'//*[@data-settings-parts-matrices]')->length)->toBe(1)
         ->and($xpath->query($section.'//*[@data-labor-matrix]')->length)->toBe(1)
         ->and($xpath->query($section.'//*[@data-billing-classes-shared]')->length)->toBe(1)
         ->and($xpath->query($section.'//*[@id="financial-tab-billing-classes" or @id="financial-panel-billing-classes"]')->length)->toBe(0)
+        ->and($xpath->query($section.'//*[@id="financial-tab-labor-policies" or @id="financial-panel-labor-policies"]')->length)->toBe(0)
         ->and($html)->toContain('arkLaborMatrix')
         ->and($html)->toContain('arkBillingClasses')
         ->and($html)->toContain('Manage Billing Classes')
         ->and(preg_match('/labor-matrix\\\\+\/rate/', $html))->toBe(1)
         ->and(preg_match('/labor-matrix\\\\+\/minimum/', $html))->toBe(1)
-        ->and(preg_match_all('/<input data-matrix-name-input name="parts_matrices\[\d+\]\[name\]" x-model="matrixName" @input="autosaveMatrix\(/', $html))->toBe(count($settings->partsMatrices()));
+        ->and(substr_count($html, 'data-matrix-name-input'))->toBe(1);
 
     expect($html)
-        ->toContain("const form = document.getElementById('parts-matrix-form');")
-        ->toContain("fetch(`/app/settings/shop/parts-matrices/\${matrixKey}`, {\n                        method: 'POST',\n                        body: new FormData(form),")
-        ->toContain('}, immediate ? 0 : 700);')
-        ->toContain('`parts_matrices[0][rows][${rowIndex}][markup_percentage]`');
+        ->toContain('window.partsMatricesPanel = function partsMatricesPanel')
+        ->toContain('buildPartsMatrixFormData()')
+        ->toContain('parseAutosaveCommit(response, payload)')
+        ->toContain('payload.committed === true')
+        ->toContain('enqueueAutosave()')
+        ->toContain('performAutosave()')
+        ->toContain('fetch(`/app/settings/shop/parts-matrices/${matrixKey}`, {')
+        ->toContain("'Accept': 'application/json',")
+        ->toContain("response.type === 'opaqueredirect'") // rejected as failure, never success
+        ->not->toContain("redirect: 'manual',")
+        ->toContain('sticky-lg-top')
+        ->toContain('col-lg-3 col-xxl-2')
+        ->toContain('fd.append(`parts_matrices[${matrixIndex}][rows][${rowIndex}][markup_percentage]`')
+        ->toContain('localStorage.setItem(storageKey, key)');
 });
 
 test('submitting each rendered financial form unchanged keeps every stored value', function (): void {

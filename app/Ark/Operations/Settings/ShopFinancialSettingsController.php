@@ -22,6 +22,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
 use App\Ark\Operations\Settings\Concerns\NormalizesShopPartsMatrices;
 use App\Ark\Operations\Settings\ShopSettings;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -483,7 +484,7 @@ class ShopFinancialSettingsController
         ];
     }
 
-    public function updatePartsMatrix(Request $request, string $matrixKey): RedirectResponse
+    public function updatePartsMatrix(Request $request, string $matrixKey): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             ...$this->partsMatrixValidationRules(),
@@ -521,6 +522,20 @@ class ShopFinancialSettingsController
         });
 
         // Forward-only: do not rewrite open estimate snapshots on matrix edits.
+        // Autosave clients must not infer success from redirects. JSON commits are explicit.
+        if ($request->expectsJson()) {
+            $persisted = ShopSettings::current()->fresh()->partsMatrices();
+
+            return response()->json([
+                'ok' => true,
+                'committed' => true,
+                'matrix_key' => $matrixKey,
+                'default_parts_matrix_key' => ShopSettings::current()->defaultPartsMatrix()['key'],
+                'parts_matrices' => $persisted,
+                'message' => 'Parts matrix saved.',
+            ]);
+        }
+
         return redirect()
             ->route('operations.settings.shop.edit')
             ->with('status', 'Parts matrix saved.');
