@@ -331,6 +331,77 @@ test('mismatched entered authorization amount is rejected and leaves work unauth
         ->and(ApprovedWorkScope::query()->where('repair_order_id', $repairOrder->id)->count())->toBe(0);
 });
 
+test('submitting the current approved total cannot bypass when authorizing a different recommended scope', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $diagnostic, $brakes] = presentedEstimateForAuthorization();
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+
+    $approvedNow = app(EstimateTotalsCalculator::class)
+        ->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+    $recommendedNow = app(EstimateTotalsCalculator::class)
+        ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+
+    expect($approvedNow)->toBe(0)
+        ->and($recommendedNow)->toBeGreaterThan(0);
+
+    // Repair (non-diagnostic) approval: posting the current approved total ($0.00)
+    // must not authorize the recommended scope under the stale-default exception.
+    $this->from(route('operations.repair-orders.show', $repairOrder))
+        ->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
+            'source' => ApprovalSource::InPerson->value,
+            'approved_by' => 'Morgan Brown',
+            'approved_amount' => number_format($approvedNow / 100, 2, '.', ''),
+        ])
+        ->assertRedirect(route('operations.repair-orders.show', $repairOrder))
+        ->assertSessionHasErrors(['approved_amount', 'authorization']);
+
+    expect(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->count())->toBe(0)
+        ->and($diagnostic->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and($brakes->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and(ApprovedWorkScope::query()->where('repair_order_id', $repairOrder->id)->count())->toBe(0);
+});
+
+test('stale recommended total is rejected after the authorized concern scope changes', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $diagnostic, $brakes] = presentedEstimateForAuthorization();
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+
+    $staleRecommendedCents = app(EstimateTotalsCalculator::class)
+        ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+
+    // Advisor defers one concern after the form showed the full recommended total.
+    $brakes->update(['disposition' => RepairOrderConcernDisposition::Deferred]);
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+
+    $proposedCents = app(EstimateTotalsCalculator::class)
+        ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+
+    expect($staleRecommendedCents)->toBeGreaterThan($proposedCents)
+        ->and($proposedCents)->toBeGreaterThan(0);
+
+    $this->from(route('operations.repair-orders.show', $repairOrder))
+        ->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
+            'source' => ApprovalSource::InPerson->value,
+            'approved_by' => 'Morgan Brown',
+            'approved_amount' => number_format($staleRecommendedCents / 100, 2, '.', ''),
+        ])
+        ->assertRedirect(route('operations.repair-orders.show', $repairOrder))
+        ->assertSessionHasErrors(['approved_amount', 'authorization']);
+
+    expect(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->count())->toBe(0)
+        ->and($diagnostic->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and($brakes->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Deferred)
+        ->and(ApprovedWorkScope::query()->where('repair_order_id', $repairOrder->id)->count())->toBe(0);
+});
+
 test('authorization form shows the work total this approval records', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $this->actingAs($advisor);
