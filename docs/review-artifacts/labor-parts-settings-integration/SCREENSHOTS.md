@@ -2,7 +2,7 @@
 
 **Host:** `alpha.staging.arksms.com`  
 **SaaS:** `eb859c21` (`dev-pin`)  
-**Core:** `7d0c9d86107c873cad09a6e169153c9e1c722c74` (`integrate/labor-and-parts-settings`)  
+**Core:** `7be2a4daf323459a2812e53a3e52bbe37fbe6e94` (`integrate/labor-and-parts-settings`)  
 **Captured:** 2026-11-11
 
 Both images are from this single Core pin (not separate branches).

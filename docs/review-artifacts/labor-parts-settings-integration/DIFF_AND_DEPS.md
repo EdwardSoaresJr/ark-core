@@ -7,13 +7,13 @@
 | `main` (base) | `f7cb79c` | Includes auth #185; **old** Labor tabs |
 | Labor redesign tip | `216739a` | Approved Labor/Billing Classes settings |
 | PR #186 tip (frozen) | `d96154c`…`7888183` | Parts UI only; still old Labor |
-| **Integration tip** | `7d0c9d8` | Labor redesign + Parts on one pin |
+| **Integration tip** | `7be2a4d` | Labor redesign + Parts on one pin |
 
 ## Integration commits (on top of main)
 
 1. `c91550b` — merge Labor redesign onto main+#185  
 2. `293df7c` — merge Parts Matrix Labor-aligned UI onto that pin  
-3. `7d0c9d8` — retarget tests + owner review artifacts  
+3. `7be2a4d` — retarget tests + owner review artifacts  
 
 Diff vs main: **128 files**, ~+11.7k / −1.3k (before evidence screenshots).
 
