@@ -235,7 +235,7 @@ test('#66: a raised line keeps exactly the tax and shop fee recorded with its ap
         ->toBe((int) $part->fresh()->total_cents - (int) $authorized->total_cents);
 });
 
-test('#66: a tax or shop fee rise with the subtotal unchanged waits for authorization', function (array $before, array $after) {
+test('#66: a tax or shop fee settings rise does not reprice a stamped RO or invent authorization debt', function (array $before, array $after) {
     ShopSettings::current()->update([
         'tax_enabled' => true,
         'taxable_parts' => true,
@@ -248,6 +248,10 @@ test('#66: a tax or shop fee rise with the subtotal unchanged waits for authoriz
     approveConcern($repairOrder, $concern, $advisor);
     $authorized = $part->fresh();
 
+    // Forward-only tax / shop-fee profiles (#181 lineage on this pin): shop settings changes must not
+    // silently rewrite stamped RO line totals or create authorization debt without a line change.
+    expect($repairOrder->fresh()->tax_profile)->not->toBeNull();
+
     ShopSettings::current()->update($after);
     $calculator = app(EstimateTotalsCalculator::class);
     $calculator->recalculateRepairOrder($repairOrder->fresh());
@@ -256,11 +260,11 @@ test('#66: a tax or shop fee rise with the subtotal unchanged waits for authoriz
     $invoice = app(InvoiceSnapshotBuilder::class)->build($repairOrder->fresh(), $advisor);
 
     expect((int) $current->subtotal_cents)->toBe((int) $authorized->subtotal_cents)
-        ->and((int) $current->total_cents)->toBeGreaterThan((int) $authorized->total_cents)
+        ->and((int) $current->total_cents)->toBe((int) $authorized->total_cents)
         ->and($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe((int) $authorized->total_cents)
         ->and($invoice['totals']['total_cents'])->toBe((int) $authorized->total_cents)
-        ->and($coverage->linesRequiringAuthorization($repairOrder->fresh())->pluck('id')->all())->toBe([$part->id])
-        ->and($coverage->workOutsideApprovedSalesCents($repairOrder->fresh()))->toBe((int) $current->total_cents - (int) $authorized->total_cents);
+        ->and($coverage->linesRequiringAuthorization($repairOrder->fresh()))->toBeEmpty()
+        ->and($coverage->workOutsideApprovedSalesCents($repairOrder->fresh()))->toBe(0);
 })->with([
     'tax rate rises' => [['default_tax_rate' => '5.000', 'shop_fee_enabled' => false], ['default_tax_rate' => '9.000']],
     'shop fee turned on' => [['default_tax_rate' => '5.000', 'shop_fee_enabled' => false], ['shop_fee_enabled' => true]],
