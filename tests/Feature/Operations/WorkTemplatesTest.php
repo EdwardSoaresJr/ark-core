@@ -10,6 +10,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\WorksheetMutationIdempotency;
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\WorkTemplates\ApplyWorkTemplateAction;
 use App\Ark\Operations\WorkTemplates\WorkTemplate;
@@ -50,6 +51,10 @@ function makeWorkTemplateFixture(string $title = 'Front Brake Service'): WorkTem
 
 function makeWorkTemplateRepairOrder(): RepairOrder
 {
+    ShopSettings::current()->update([
+        'parts_matrices' => ShopSettings::DEFAULT_PARTS_MATRICES,
+    ]);
+
     $customer = Customer::query()->create([
         'first_name' => 'Template',
         'last_name' => 'Customer',
@@ -62,11 +67,13 @@ function makeWorkTemplateRepairOrder(): RepairOrder
         'model' => 'F-150',
     ]);
 
+    // Explicit null keeps the live shop matrices path while applying unpriced template part lines.
     return RepairOrder::query()->create([
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
         'status' => RepairOrderStatus::Estimate,
         'concern_summary' => 'Saved work test',
+        'commercial_pricing_profile' => null,
     ]);
 }
 

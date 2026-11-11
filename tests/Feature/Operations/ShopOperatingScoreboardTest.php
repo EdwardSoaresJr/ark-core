@@ -369,6 +369,7 @@ function scoreboardLabor(RepairOrder $repairOrder, RepairOrderConcernDisposition
         'position' => $repairOrder->concerns()->count() + 1,
     ]);
 
+    // Persist money fields directly: recalculate is a no-op on terminal/closed ROs.
     RepairOrderLine::query()->create([
         'repair_order_id' => $repairOrder->id,
         'repair_order_concern_id' => $concern->id,
@@ -376,6 +377,10 @@ function scoreboardLabor(RepairOrder $repairOrder, RepairOrderConcernDisposition
         'description' => $disposition->value.' labor',
         'quantity' => '1.00',
         'unit_price_cents' => $cents,
+        'subtotal_cents' => $cents,
+        'tax_cents' => 0,
+        'shop_fee_cents' => 0,
+        'total_cents' => $cents,
     ]);
 
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());

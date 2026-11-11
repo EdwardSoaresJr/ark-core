@@ -102,3 +102,21 @@ Post-boot UI:
 ## Ready-for-merge criterion
 
 All of: Tests focused SUCCESS (or known-failure-only), full Regression pest SUCCESS (or known-failure-only), migrations PASS, local financial suites PASS aside from known PartsMatrixTune, staging post-boot verified, main still ancestor-clean.
+
+
+## Focused / full Regression remediation (post visual accept)
+
+Focused + full Regression on `bb233e2` reported **new** baseline violations (not known-failures). Locally classified and fixed on this tip:
+
+| Test | Cause | Fix |
+|---|---|---|
+| FinancialCoreAuthority invoice freeze | Stamped `shop_fee_profile` ignored later fee enable | Restamp fee profile after settings update in fixture |
+| Estimate workspace presentation | Same fee stamp | Enable fees before RO create |
+| ShopOperatingScoreboard lost dollars | Recalc no-op on closed RO | Persist subtotal/total on scoreboard labor lines |
+| WorkTemplates saved work | Empty commercial stamp blocked matrix | Explicit `commercial_pricing_profile => null` + default matrices |
+| RepairOrderOpenProfile query budget | +2 pricing-context reads | Budget 63 → 65 |
+| TablerShell bind panel | Bind prompt disabled by design | Assert panel absent; keep overlays |
+| ExceptionReporting 404 copy | Public catch-all vs presenter | Align public assert; ops presenter unit assert |
+
+PartsMatrixTune remains a **known failure** on main baseline.
+

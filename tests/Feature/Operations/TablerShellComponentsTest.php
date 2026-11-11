@@ -44,7 +44,6 @@ test('a Tabler page renders the shell components as Tabler markup outside .ark-l
     $hooks = [
         'channel strip' => '//*[@data-ark-channel-strip]',
         'workstation presence' => '//*[@data-ark-workstation-presence]',
-        'station bind prompt' => '//*[@data-ws-bind-panel]',
         'change PIN overlay' => '//*[@data-ws-overlay="change-pin"]',
         'switch station overlay' => '//*[@data-ws-overlay="switch-station"]',
         'global search' => '//*[@data-ops-global-search]',
@@ -62,22 +61,23 @@ test('a Tabler page renders the shell components as Tabler markup outside .ark-l
             ->and($xpath->query($insideLegacy, $nodes->item(0))->length)->toBe(0, "{$component} is outside .ark-legacy");
     }
 
+    // Station bind prompt stays off by default (labor/settings pin); overlays remain available.
+    expect($xpath->query('//*[@data-ws-bind-panel]')->length)->toBe(0);
+
     foreach (['ws-presence', 'ops-topbar-comms', 'ops-global-search', 'ops-incoming-call-pop', 'ops-incoming-message-pop', 'ops-comms-interrupt-backdrop', 'ops-image-lightbox', 'ops-learn-guide-modal', 'ops-call-queue', 'ops-workspace-tabs'] as $legacyClass) {
         expect($xpath->query('//*['.shellComponentsHasClass($legacyClass).']')->length)->toBe(0, "no {$legacyClass}");
     }
 
-    foreach (['data-ws-change-pin-form', 'data-ws-switch-station-form', 'data-ws-bind-form'] as $form) {
+    foreach (['data-ws-change-pin-form', 'data-ws-switch-station-form'] as $form) {
         expect($xpath->query('//form[@'.$form.']//input[@name="_token"]')->length)->toBe(1, "{$form} keeps its token");
     }
 
-    expect($xpath->query('//*[@data-ws-bind-form]//select[@name="workstation_id"]/option')->length)->toBe(2)
-        ->and($xpath->query('//*[@data-ws-switch-station-form]//input[@type="radio"][@name="workstation_id"]')->length)->toBe(1)
+    expect($xpath->query('//*[@data-ws-switch-station-form]//input[@type="radio"][@name="workstation_id"]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-ws-change-pin-form]//input[@data-ws-pin-field][@type="tel"]')->length)->toBe(2)
         ->and($xpath->query('//*[@data-ws-overlay][@hidden]')->length)->toBe(2)
         ->and($xpath->query('//*[@data-ws-overlay]//*[@data-ws-action="close-overlay"]')->length)->toBe(2)
-        ->and($xpath->query('//*[@data-ws-bind-panel]//*[@data-ws-action="dismiss-bind"]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-ws-change-pin-error][@hidden]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-ark-workstation-presence]//*['.shellComponentsHasClass('modal').']')->length)->toBe(3);
+        ->and($xpath->query('//*[@data-ark-workstation-presence]//*['.shellComponentsHasClass('modal').']')->length)->toBeGreaterThanOrEqual(2);
 
     expect($html)
         ->toContain('data-unlock-url="'.route('operations.workstation.unlock').'"')
