@@ -1,6 +1,5 @@
 @php
     $partsMatrices = $settings->partsMatrices();
-    $partsMatrixCount = count($partsMatrices);
     $defaultPartsMatrixKey = $settings->defaultPartsMatrix()['key'];
     $partsMatricesPayload = collect($partsMatrices)
         ->values()
@@ -63,6 +62,7 @@
             deleteMatrixName: '',
             deleteMatrixKey: null,
             autosaveTimer: null,
+            autosaveRequestId: 0,
             get selectedMatrix() {
                 return this.matrices.find((matrix) => matrix.key === this.selectedKey) || this.matrices[0] || null;
             },
@@ -71,14 +71,21 @@
 
                 return key ? `/app/settings/shop/parts-matrices/${key}` : '#';
             },
-            selectMatrix(key) {
+            async selectMatrix(key) {
                 if (key === this.selectedKey) {
                     return;
                 }
 
-                if (this.statusText === 'Saving...' || this.statusText === 'Save needed') {
-                    if (! window.confirm('This matrix has unsaved changes. Switch anyway?')) {
-                        return;
+                // Flush pending/debounced edits before switching so sibling state is persisted.
+                if (this.autosaveTimer !== null || this.statusText === 'Saving...' || this.statusText === 'Save needed') {
+                    clearTimeout(this.autosaveTimer);
+                    this.autosaveTimer = null;
+                    await this.autosave(true);
+
+                    if (this.statusText === 'Save needed') {
+                        if (! window.confirm('This matrix has unsaved changes. Switch anyway?')) {
+                            return;
+                        }
                     }
                 }
 
@@ -190,34 +197,69 @@
 
                 return fd;
             },
+            autosaveSucceeded(response) {
+                // Prefer JSON Accept so validation is 422 (not a followed HTML redirect that looks OK).
+                // Success remains a redirect; with redirect:'manual' that is 302/303.
+                if (response.status === 422 || response.status >= 400) {
+                    return false;
+                }
+
+                return response.status === 302
+                    || response.status === 303
+                    || response.status === 201
+                    || response.ok;
+            },
             autosave(immediate = false) {
                 const matrixKey = this.selectedKey;
 
                 if (! matrixKey) {
-                    return;
+                    return Promise.resolve();
                 }
 
                 clearTimeout(this.autosaveTimer);
-                this.autosaveTimer = setTimeout(() => {
+                this.autosaveTimer = null;
+
+                const run = () => {
+                    const requestId = ++this.autosaveRequestId;
                     this.statusText = 'Saving...';
 
-                    fetch(`/app/settings/shop/parts-matrices/${matrixKey}`, {
+                    return fetch(`/app/settings/shop/parts-matrices/${matrixKey}`, {
                         method: 'POST',
                         body: this.buildPartsMatrixFormData(),
+                        redirect: 'manual',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'text/html',
+                            'Accept': 'application/json',
                         },
                     }).then((response) => {
-                        if (! response.ok) {
+                        if (requestId !== this.autosaveRequestId) {
+                            return;
+                        }
+
+                        if (! this.autosaveSucceeded(response)) {
                             throw new Error('Save failed');
                         }
 
                         this.statusText = 'Saved';
                     }).catch(() => {
+                        if (requestId !== this.autosaveRequestId) {
+                            return;
+                        }
+
                         this.statusText = 'Save needed';
                     });
-                }, immediate ? 0 : 700);
+                };
+
+                if (immediate) {
+                    return run();
+                }
+
+                return new Promise((resolve) => {
+                    this.autosaveTimer = setTimeout(() => {
+                        this.autosaveTimer = null;
+                        resolve(run());
+                    }, 700);
+                });
             },
         };
     };
@@ -267,9 +309,10 @@
         <div class="alert alert-danger" role="alert">{{ $message }}</div>
     @enderror
 
+    {{-- Match Shop Settings left-tab nav (same pattern Labor content sits beside): card + list-group-flush + active item. --}}
     <div class="row g-3">
-        <div class="col-12 col-lg-3">
-            <nav class="card" aria-label="Parts matrices" data-parts-matrix-nav>
+        <div class="col-12 col-lg-3 col-xxl-2">
+            <nav class="card sticky-lg-top" style="top: 1rem" aria-label="Parts matrices" data-parts-matrix-nav>
                 <div class="card-header py-2">
                     <div class="subheader">Parts matrices</div>
                 </div>
@@ -277,14 +320,14 @@
                     <template x-for="matrix in matrices" :key="matrix.key">
                         <button
                             type="button"
-                            class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-2"
+                            class="list-group-item list-group-item-action"
                             :class="{ 'active': selectedKey === matrix.key }"
                             :aria-current="selectedKey === matrix.key ? 'page' : null"
                             :data-parts-matrix-tab="matrix.key"
                             @click="selectMatrix(matrix.key)"
                         >
-                            <span class="text-truncate" x-text="matrix.name"></span>
-                            <span class="badge bg-blue-lt text-blue" x-show="matrix.key === defaultPartsMatrixKey" x-cloak>Default</span>
+                            <span x-text="matrix.name"></span>
+                            <span class="badge bg-secondary-lt ms-1" x-show="matrix.key === defaultPartsMatrixKey" x-cloak>Default</span>
                         </button>
                     </template>
                 </div>
@@ -292,7 +335,7 @@
             <p class="small text-secondary mt-2 mb-0 d-lg-none">Select a matrix above, then edit its pricing tiers.</p>
         </div>
 
-        <div class="col-12 col-lg-9">
+        <div class="col-12 col-lg-9 col-xxl-10">
             <form
                 id="parts-matrix-form"
                 method="POST"
