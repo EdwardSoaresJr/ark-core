@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyTerminalPayment, chooseReader, nextPaymentAmount, normalizePaymentAmount, payableReader, paymentCalendarCells, paymentWorkspaceIsTransactionBound, presentingTerminalPayment, readerButtonLabel, readerDisplay, readerNotice, rememberReaderChoice, rememberedReader, shiftPaymentCalendarMonth, stampPaymentCaptureFields } from './ark-payment-capture.js';
+import { applyTerminalPayment, chooseReader, nextPaymentAmount, normalizePaymentAmount, payableReader, paymentCalendarCells, paymentWorkspaceIsTransactionBound, presentingTerminalPayment, readerButtonLabel, readerDisplay, readerNotice, rememberReaderChoice, rememberedReader, shiftPaymentCalendarMonth, shouldIgnorePaymentAmountShortcut, stampPaymentCaptureFields } from './ark-payment-capture.js';
 
 function memoryStorage() {
     const values = new Map();
@@ -195,6 +195,25 @@ test('the keypad edits the typed amount and does not invent a balance', () => {
     assert.equal(nextPaymentAmount('12.5', '9', false), '12.59');
     assert.equal(nextPaymentAmount('12.59', '9', false), '12.59');
     assert.equal(nextPaymentAmount('12.59', 'backspace', false), '12.5');
+});
+
+test('amount keypad ignores Square payment iframes and foreign form focus', () => {
+    const iframe = { tagName: 'IFRAME', hasAttribute: () => false };
+    const panInput = { tagName: 'INPUT', hasAttribute: () => false, isContentEditable: false };
+    const amount = {
+        tagName: 'INPUT',
+        hasAttribute: (name) => name === 'data-payment-workspace-amount',
+        isContentEditable: false,
+    };
+    const editable = { tagName: 'DIV', hasAttribute: () => false, isContentEditable: true };
+    const body = { tagName: 'BODY', hasAttribute: () => false, isContentEditable: false };
+
+    assert.equal(shouldIgnorePaymentAmountShortcut({ target: iframe, key: '4' }, { activeElement: iframe }), true);
+    assert.equal(shouldIgnorePaymentAmountShortcut({ target: body, key: '4' }, { activeElement: iframe }), true);
+    assert.equal(shouldIgnorePaymentAmountShortcut({ target: panInput, key: '4' }, { activeElement: panInput }), true);
+    assert.equal(shouldIgnorePaymentAmountShortcut({ target: editable, key: '4' }, { activeElement: editable }), true);
+    assert.equal(shouldIgnorePaymentAmountShortcut({ target: amount, key: '4' }, { activeElement: amount }), false);
+    assert.equal(shouldIgnorePaymentAmountShortcut({ target: body, key: '4' }, { activeElement: body }), false);
 });
 
 test('the paid date calendar stops at today', () => {

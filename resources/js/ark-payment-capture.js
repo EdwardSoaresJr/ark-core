@@ -323,6 +323,38 @@ export function rememberReaderChoice(storage, key, deviceRef) {
 }
 
 /**
+ * Window-level amount keypad must not steal keystrokes meant for form fields,
+ * contenteditable surfaces, or cross-origin payment-provider iframes (Square).
+ * Amount entry remains available when the payment workspace is open and focus is
+ * on the amount field or non-input modal chrome.
+ */
+export function shouldIgnorePaymentAmountShortcut(event, options = {}) {
+    const active = options.activeElement ?? (typeof document !== 'undefined' ? document.activeElement : null);
+    const target = event?.target ?? null;
+    const isAmountField = (el) => Boolean(el?.hasAttribute?.('data-payment-workspace-amount'));
+
+    if (active?.tagName === 'IFRAME' || target?.tagName === 'IFRAME') {
+        return true;
+    }
+
+    if (target?.isContentEditable || active?.isContentEditable) {
+        return ! isAmountField(target) && ! isAmountField(active);
+    }
+
+    for (const el of [target, active]) {
+        const tag = el?.tagName;
+
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+            if (! isAmountField(el)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
  * Take Payment rail - Terminal or Square Web Payments tokenized keyed entry.
  * Core never sees PAN/CVV; only source_token from Square.js.
  */
@@ -461,11 +493,8 @@ export function arkPaymentCapture(config = {}) {
                 return;
             }
 
-            const tag = event.target?.tagName;
-            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-                if (! event.target?.hasAttribute?.('data-payment-workspace-amount')) {
-                    return;
-                }
+            if (shouldIgnorePaymentAmountShortcut(event)) {
+                return;
             }
 
             if (event.key === 'Backspace') {
