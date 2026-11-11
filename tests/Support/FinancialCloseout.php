@@ -21,10 +21,17 @@ function financialSubmissionKey(): string
     return (string) Str::uuid();
 }
 
+/**
+ * @param  array<string, mixed>|null  $shopSettings  Defaults disable fees/tax so most closeout fixtures stay fee-free.
+ */
 function financialCloseoutRepairOrder(
     RepairOrderStatus $status = RepairOrderStatus::ReadyPickup,
+    ?array $shopSettings = null,
 ): RepairOrder {
-    ShopSettings::current()->update(['shop_fee_enabled' => false, 'tax_enabled' => false]);
+    ShopSettings::current()->update($shopSettings ?? [
+        'shop_fee_enabled' => false,
+        'tax_enabled' => false,
+    ]);
 
     $customer = Customer::query()->create([
         'first_name' => 'Closeout',

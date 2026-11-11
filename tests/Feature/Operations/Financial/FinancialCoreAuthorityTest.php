@@ -134,20 +134,18 @@ test('issued final invoice snapshot is immutable', function () {
 
 test('issued invoice snapshot stays frozen when estimate changes after partial payment', function () {
     $calculator = app(EstimateTotalsCalculator::class);
-    $repairOrder = financialCloseoutRepairOrder();
-
-    ShopSettings::current()->update([
+    $repairOrder = financialCloseoutRepairOrder(shopSettings: [
         'tax_enabled' => false,
         'shop_fee_enabled' => true,
+        'shop_fee_mode' => 'percent',
         'shop_fee_rate' => '10.000',
         'shop_fee_cap_cents' => null,
     ]);
 
-    $calculator->recalculateRepairOrder($repairOrder->fresh(['customer', 'concerns', 'lines.concern']));
-
     $withFees = $calculator->totalsForApprovedWork($repairOrder->fresh(['lines.concern']));
     expect($withFees->feesCents())->toBe(1500)
-        ->and($withFees->totalCents())->toBe(16500);
+        ->and($withFees->totalCents())->toBe(16500)
+        ->and($repairOrder->fresh()->shop_fee_profile['enabled'] ?? null)->toBeTrue();
 
     issueFinalInvoiceFor($repairOrder->fresh());
 
@@ -172,6 +170,30 @@ test('issued invoice snapshot stays frozen when estimate changes after partial p
         ->and($balance->paymentsAppliedCents)->toBe(5000)
         ->and($balance->balanceDueCents)->toBe(11500)
         ->and($balance->invoiceStatus)->toBe(InvoiceStatus::PartiallyPaid);
+});
+
+test('enabling shop fees after create does not reprice an existing repair order', function () {
+    $calculator = app(EstimateTotalsCalculator::class);
+    $repairOrder = financialCloseoutRepairOrder();
+
+    expect($repairOrder->fresh()->shop_fee_profile['enabled'] ?? null)->toBeFalse()
+        ->and($calculator->totalsForApprovedWork($repairOrder->fresh(['lines.concern']))->feesCents())->toBe(0)
+        ->and($calculator->totalsForApprovedWork($repairOrder->fresh(['lines.concern']))->totalCents())->toBe(15000);
+
+    ShopSettings::current()->update([
+        'tax_enabled' => false,
+        'shop_fee_enabled' => true,
+        'shop_fee_mode' => 'percent',
+        'shop_fee_rate' => '10.000',
+        'shop_fee_cap_cents' => null,
+    ]);
+
+    $calculator->recalculateRepairOrder($repairOrder->fresh(['customer', 'concerns', 'lines.concern']));
+    $totals = $calculator->totalsForApprovedWork($repairOrder->fresh(['lines.concern']));
+
+    expect($repairOrder->fresh()->shop_fee_profile['enabled'] ?? null)->toBeFalse()
+        ->and($totals->feesCents())->toBe(0)
+        ->and($totals->totalCents())->toBe(15000);
 });
 
 test('balance due calculator applies deposits and partial payments', function () {

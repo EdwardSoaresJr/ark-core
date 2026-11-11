@@ -8,6 +8,7 @@ use App\Ark\Operations\Financial\RepairOrderFinancialPresenter;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentStatus;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -191,6 +192,19 @@ test('presenter with preloaded balance projection does not add BalanceDueCalcula
     $projection = app(BalanceDueCalculator::class)->projectForRepairOrder($repairOrder);
     $presenter = app(RepairOrderFinancialPresenter::class);
 
+    // Request-scoped ReadCache collapses duplicate BalanceDue reads inside one presenter
+    // call (FinancialPositionProjection also loads invoice/ledger). Bypass it here so the
+    // preload contract is still measured as fewer BalanceDue SQL round-trips.
+    $this->app->instance(RepairOrderReadCache::class, new class
+    {
+        public function remember(string $key, callable $resolve): mixed
+        {
+            return $resolve();
+        }
+
+        public function flush(): void {}
+    });
+
     $invoiceQueries = 0;
     $ledgerQueries = 0;
     $listener = function (QueryExecuted $query) use (&$invoiceQueries, &$ledgerQueries): void {
@@ -219,7 +233,9 @@ test('presenter with preloaded balance projection does not add BalanceDueCalcula
     expect($withPreload['settlementBalanceDueCents'])->toBe($withoutPreload['settlementBalanceDueCents'])
         ->and($withPreload['isPaid'])->toBe($withoutPreload['isPaid'])
         ->and($withPreload['oweTodayCents'])->toBe($withoutPreload['oweTodayCents'])
-        // Preload skips BalanceDue invoice+ledger reads; F1 + ledger history remain.
+        // Preload skips projectForRepairOrder invoice+ledger reads; F1 + ledger history remain.
         ->and($preloadInvoice)->toBeLessThan($freshInvoice)
-        ->and($preloadLedger)->toBeLessThan($freshLedger);
+        ->and($preloadLedger)->toBeLessThan($freshLedger)
+        ->and($freshInvoice)->toBeGreaterThan(0)
+        ->and($freshLedger)->toBeGreaterThan(0);
 });
