@@ -232,3 +232,58 @@ test('canceling an open terminal capture records no payment', function () {
         ->and($attempt->fresh()->ledger_entry_id)->toBeNull()
         ->and($repairOrder->fresh()->ledgerEntries()->count())->toBe(0);
 });
+
+test('keyed card decline returns an actionable capture error without ledger payment', function () {
+    $repairOrder = financialCloseoutRepairOrder();
+    app(GenerateInvoiceSnapshotAction::class)->execute($repairOrder);
+    $advisor = staffPaymentCaptureAdvisor();
+    $amountCents = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents;
+    expect($amountCents)->toBeGreaterThan(0);
+
+    Http::fake(function (\Illuminate\Http\Client\Request $request) {
+        if (str_contains($request->url(), '/payments/readiness')) {
+            return Http::response([
+                'ok' => true,
+                'provider' => 'square',
+                'status' => 'connected',
+                'supports_terminal' => false,
+                'supports_keyed' => true,
+                'available_devices' => [],
+                'public_config' => [
+                    'application_id' => 'sandbox-sq0idb-public',
+                    'location_id' => 'LOC_PUBLIC',
+                    'environment' => 'sandbox',
+                    'web_payments_sdk_url' => 'https://sandbox.web.squarecdn.com/v1/square.js',
+                ],
+            ], 200);
+        }
+
+        if ($request->method() === 'POST' && str_contains($request->url(), '/payments/captures')) {
+            return Http::response([
+                'ok' => false,
+                'reason_code' => 'card_declined',
+                'message' => 'The card was declined. Try another card or payment method.',
+            ], 400);
+        }
+
+        return Http::response(['ok' => false], 404);
+    });
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.payment-capture.store', $repairOrder), [
+            'amount' => number_format($amountCents / 100, 2, '.', ''),
+            'context_kind' => 'payment',
+            'capture_method' => 'keyed',
+            'source_token' => 'cnon:card-nonce-declined',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('errors.capture.0', 'The card was declined. Try another card or payment method.');
+
+    $failed = PaymentCaptureAttempt::query()->where('repair_order_id', $repairOrder->id)->first();
+    expect($failed)->not->toBeNull()
+        ->and($failed->status)->toBe(PaymentCaptureAttemptStatus::Failed)
+        ->and($failed->failure_reason)->toBe('card_declined')
+        ->and($failed->ledger_entry_id)->toBeNull()
+        ->and($repairOrder->fresh()->ledgerEntries()->where('entry_type', 'payment')->count())->toBe(0)
+        ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe($amountCents);
+});

@@ -48,6 +48,50 @@ export function stampPaymentCaptureFields(form, state) {
     }
 }
 
+/**
+ * Keyed Take Payment label - always show processing while tokenize/submit runs.
+ */
+export function keyedPaymentSubmitLabel(busy, amount) {
+    if (busy) {
+        return 'Processing…';
+    }
+
+    const value = String(amount ?? '').trim();
+
+    return value !== '' ? `Take $${value}` : 'Take payment';
+}
+
+/**
+ * Surface a capture failure inside the payment panel (not only a distant worksheet toast).
+ */
+export function keyedCaptureFailureMessage(body, responseOk = false) {
+    const captureError = body?.errors?.capture;
+    if (Array.isArray(captureError) && typeof captureError[0] === 'string' && captureError[0] !== '') {
+        return captureError[0];
+    }
+
+    if (typeof body?.message === 'string' && body.message.trim() !== '') {
+        return body.message.trim();
+    }
+
+    const attemptStatus = String(body?.attempt?.status ?? '');
+    if (attemptStatus === 'reconciliation_required' || body?.terminal?.phase === 'reconciliation') {
+        return body?.terminal?.note
+            || body?.terminal?.detail
+            || 'Payment needs reconciliation. Do not charge the same card again until this is resolved.';
+    }
+
+    if (attemptStatus === 'failed') {
+        return 'Payment capture failed. No ledger payment was recorded.';
+    }
+
+    if (! responseOk) {
+        return 'Payment could not be completed. No ledger payment was recorded.';
+    }
+
+    return '';
+}
+
 const TERMINAL_SPINNING = new Set(['presenting', 'waiting', 'processing']);
 const TERMINAL_BLOCKING = new Set(['presenting', 'waiting', 'processing', 'reconciliation']);
 const TERMINAL_BOUND = new Set(['presenting', 'waiting', 'processing', 'reconciliation']);
@@ -919,6 +963,10 @@ export function arkPaymentCapture(config = {}) {
             }
         },
 
+        keyedSubmitLabel() {
+            return keyedPaymentSubmitLabel(this.busy, this.amount);
+        },
+
         async submitTerminalCapture(form) {
             if (! form?.action) {
                 this.clearTerminal();
@@ -967,7 +1015,59 @@ export function arkPaymentCapture(config = {}) {
             }
         },
 
+        async submitKeyedCapture(form) {
+            if (! form?.action) {
+                this.cardError = 'Payment could not start.';
+
+                return;
+            }
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                },
+            });
+            const body = await response.json().catch(() => null);
+            const attemptStatus = String(body?.attempt?.status ?? '');
+            const failure = keyedCaptureFailureMessage(body, response.ok);
+
+            this.sourceToken = '';
+            stampPaymentCaptureFields(form, this);
+
+            if (! response.ok || attemptStatus === 'failed' || attemptStatus === 'reconciliation_required') {
+                this.cardError = failure || 'Payment could not be completed. No ledger payment was recorded.';
+
+                return;
+            }
+
+            if (attemptStatus === 'succeeded' || attemptStatus === 'pending' || attemptStatus === 'accepted' || body?.terminal) {
+                const next = applyTerminalPayment(body?.terminal);
+                if (next?.phase === 'reconciliation') {
+                    this.showTerminal(next);
+                    this.cardError = keyedCaptureFailureMessage(body, true);
+
+                    return;
+                }
+
+                await this.refreshTerminalRail();
+                this.open = false;
+
+                return;
+            }
+
+            this.cardError = failure || 'Payment could not be completed. No ledger payment was recorded.';
+        },
+
         async prepareAndSubmit(event) {
+            if (this.busy) {
+                return;
+            }
+
             if (this.method === 'terminal' && ! this.selectedReader()) {
                 this.cardError = 'Choose a reader.';
 
@@ -991,13 +1091,13 @@ export function arkPaymentCapture(config = {}) {
                     }
                     if (! this.card) {
                         this.cardError = 'Card form is not ready.';
-                        this.busy = false;
+
                         return;
                     }
                     const tokenResult = await this.card.tokenize();
                     if (tokenResult.status !== 'OK' || ! tokenResult.token) {
                         this.cardError = tokenResult.errors?.[0]?.message || 'Card could not be tokenized.';
-                        this.busy = false;
+
                         return;
                     }
                     this.sourceToken = tokenResult.token;
@@ -1016,21 +1116,7 @@ export function arkPaymentCapture(config = {}) {
                     return;
                 }
 
-                // Walk up to the RO worksheet Alpine scope (nested x-data).
-                let el = event.target;
-                let submitted = false;
-                while (el) {
-                    const data = window.Alpine?.$data?.(el);
-                    if (data && typeof data.submitWorksheetForm === 'function') {
-                        await data.submitWorksheetForm(event);
-                        submitted = true;
-                        break;
-                    }
-                    el = el.parentElement;
-                }
-                if (! submitted) {
-                    event.target.submit();
-                }
+                await this.submitKeyedCapture(form);
             } catch {
                 this.cardError = 'Payment could not start.';
                 if (this.method === 'terminal') {

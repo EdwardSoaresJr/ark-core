@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyTerminalPayment, chooseReader, nextPaymentAmount, normalizePaymentAmount, payableReader, paymentCalendarCells, paymentWorkspaceIsTransactionBound, presentingTerminalPayment, readerButtonLabel, readerDisplay, readerNotice, rememberReaderChoice, rememberedReader, shiftPaymentCalendarMonth, shouldIgnorePaymentAmountShortcut, stampPaymentCaptureFields } from './ark-payment-capture.js';
+import { applyTerminalPayment, chooseReader, keyedCaptureFailureMessage, keyedPaymentSubmitLabel, nextPaymentAmount, normalizePaymentAmount, payableReader, paymentCalendarCells, paymentWorkspaceIsTransactionBound, presentingTerminalPayment, readerButtonLabel, readerDisplay, readerNotice, rememberReaderChoice, rememberedReader, shiftPaymentCalendarMonth, shouldIgnorePaymentAmountShortcut, stampPaymentCaptureFields } from './ark-payment-capture.js';
 
 function memoryStorage() {
     const values = new Map();
@@ -101,6 +101,27 @@ function form(values) {
         inputs,
     };
 }
+
+test('keyed take payment shows processing while the charge runs', () => {
+    assert.equal(keyedPaymentSubmitLabel(true, '259.50'), 'Processing…');
+    assert.equal(keyedPaymentSubmitLabel(false, '259.50'), 'Take $259.50');
+});
+
+test('keyed capture failures stay actionable inside the payment panel', () => {
+    assert.equal(
+        keyedCaptureFailureMessage({ errors: { capture: ['The card was declined. Try another card or payment method.'] } }, false),
+        'The card was declined. Try another card or payment method.',
+    );
+    assert.equal(
+        keyedCaptureFailureMessage({ message: 'Card capture is not available.' }, false),
+        'Card capture is not available.',
+    );
+    assert.match(
+        keyedCaptureFailureMessage({ attempt: { status: 'reconciliation_required' } }, true),
+        /reconciliation/i,
+    );
+    assert.equal(keyedCaptureFailureMessage({ attempt: { status: 'succeeded' } }, true), '');
+});
 
 test('first keyed click posts the new card token, not the empty field', () => {
     const captureForm = form({

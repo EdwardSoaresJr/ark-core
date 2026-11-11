@@ -281,7 +281,7 @@
                                 :disabled="busy || !amountCanSubmit() || (method === 'terminal' && !selectedReader())"
                             >
                                 <span x-show="method === 'terminal'" x-text="presentToReaderLabel(amount)" data-payment-reader-button>Present to reader</span>
-                                <span x-show="method === 'keyed'" x-text="'Take $' + amount">Take payment</span>
+                                <span x-show="method === 'keyed'" x-text="keyedSubmitLabel()">Take payment</span>
                             </button>
                         </form>
                     @endif
