@@ -8,7 +8,7 @@ enum LaborRateType: string
     case Zero = 'zero';
     case Contract = 'contract';
     case Cost = 'cost';
-    /** Follows the shop Standard hourly rate from ShopSettings at resolve time. */
+    /** Follows the shop Standard hourly rate from ShopSettings at resolve time. Existing tenants also store this value. */
     case Standard = 'standard';
 
     public function resolvesToHourlyCents(): bool

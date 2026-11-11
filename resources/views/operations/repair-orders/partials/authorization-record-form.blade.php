@@ -80,22 +80,30 @@
 
                 <div class="mb-3">
                     <label class="form-label" for="authorization-approved-amount-{{ $repairOrder->repair_order_id }}">Authorized amount</label>
+                    <p class="small mb-2" data-authorization-scope-total>
+                        Work this approval records: <span class="fw-medium ark-money">${{ $defaultApprovedAmount }}</span>
+                    </p>
                     <input
                         id="authorization-approved-amount-{{ $repairOrder->repair_order_id }}"
                         type="text"
                         name="approved_amount"
                         value="{{ old('approved_amount', $defaultApprovedAmount) }}"
                         inputmode="decimal"
-                        class="form-control ark-money"
+                        class="form-control ark-money @error('approved_amount') is-invalid @enderror"
                         placeholder="0.00"
+                        data-authorization-required-amount="{{ $defaultApprovedAmount }}"
                     >
                     <div class="form-hint">
+                        Must match the work total above. Changing this number does not authorize a partial labor or part line — defer or decline concerns (or split lines) first.
                         @if ($includesRecommendedWork)
                             Defaults to the recommended work on this estimate.
                         @else
-                            Defaults to approved scope total when left blank.
+                            Defaults to the approved scope total when left blank.
                         @endif
                     </div>
+                    @error('approved_amount')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-3">

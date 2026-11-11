@@ -278,24 +278,76 @@ test('a later recording does not authorize recommended work left beside an earli
         ->and(app(WorkCompletionAuthorization::class)->customerApprovalCovers($recommendedConcern->lines()->first()->fresh(['concern'])))->toBeFalse();
 });
 
-test('an entered authorization amount is kept when it is not the presented default', function () {
+test('matching entered authorization amount records the authorized scope total', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $this->actingAs($advisor);
 
     [$repairOrder] = presentedEstimateForAuthorization();
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+    $scopeCents = app(EstimateTotalsCalculator::class)
+        ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
 
-    $this->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+    expect($scopeCents)->toBeGreaterThan(0);
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
         'source' => ApprovalSource::InPerson->value,
         'approved_by' => 'Morgan Brown',
-        'approved_amount' => '10.00',
+        'approved_amount' => number_format($scopeCents / 100, 2, '.', ''),
     ])->assertRedirect();
 
     $approval = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->sole();
     $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']));
 
-    expect($approval->approved_amount_cents)->toBe(1000)
-        ->and($approved->totalCents())->not->toBe(1000)
+    expect($approval->approved_amount_cents)->toBe($scopeCents)
+        ->and($approved->totalCents())->toBe($scopeCents)
         ->and($approved->lines)->toHaveCount(2);
+});
+
+test('mismatched entered authorization amount is rejected and leaves work unauthorized', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $diagnostic, $brakes] = presentedEstimateForAuthorization();
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+    $scopeCents = app(EstimateTotalsCalculator::class)
+        ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+
+    expect($scopeCents)->toBeGreaterThan(10000);
+
+    $this->from(route('operations.repair-orders.show', $repairOrder))
+        ->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
+            'source' => ApprovalSource::InPerson->value,
+            'approved_by' => 'Morgan Brown',
+            'approved_amount' => '100.00',
+        ])
+        ->assertRedirect(route('operations.repair-orders.show', $repairOrder))
+        ->assertSessionHasErrors(['approved_amount', 'authorization']);
+
+    expect(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->count())->toBe(0)
+        ->and($diagnostic->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and($brakes->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and(ApprovedWorkScope::query()->where('repair_order_id', $repairOrder->id)->count())->toBe(0);
+});
+
+test('authorization form shows the work total this approval records', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder] = presentedEstimateForAuthorization();
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+    $scopeCents = app(EstimateTotalsCalculator::class)
+        ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+    $formatted = number_format($scopeCents / 100, 2, '.', '');
+
+    $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
+        ->assertOk()
+        ->assertSee('Work this approval records:', false)
+        ->assertSee('data-authorization-scope-total', false)
+        ->assertSee('data-authorization-required-amount="'.$formatted.'"', false)
+        ->assertSee('does not authorize a partial labor or part line', false);
 });
 
 test('a diagnostic estimate records the recommended amount instead of zero', function () {
@@ -320,6 +372,159 @@ test('a diagnostic estimate records the recommended amount instead of zero', fun
         ->and($approval->approved_amount_cents)->toBe($approved->totalCents())
         ->and($diagnostic->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
         ->and($brakes->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved);
+});
+
+test('historical mismatched approval event amount is preserved without rewriting scopes', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    [$repairOrder, $diagnostic, $brakes] = presentedEstimateForAuthorization();
+
+    $diagnostic->update(['disposition' => RepairOrderConcernDisposition::Approved]);
+    $brakes->update(['disposition' => RepairOrderConcernDisposition::Approved]);
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+
+    $scopeCents = app(EstimateTotalsCalculator::class)
+        ->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+
+    $approval = ApprovalEvent::query()->create([
+        'visit_id' => $repairOrder->id,
+        'approval_type' => ApprovalType::Repair,
+        'approved_amount_cents' => 10000,
+        'source' => ApprovalSource::InPerson,
+        'approved_by' => 'Historical Customer',
+        'approved_at' => now()->subDay(),
+        'notes' => 'Pre-guard documentary amount',
+    ]);
+
+    foreach ([$diagnostic->fresh('lines'), $brakes->fresh('lines')] as $concern) {
+        $lines = $concern->lines
+            ->filter(fn (RepairOrderLine $line): bool => $line->isPart() || $line->type->isLabor())
+            ->values();
+
+        ApprovedWorkScope::query()->create([
+            'repair_order_id' => $repairOrder->id,
+            'repair_order_concern_id' => $concern->id,
+            'line_ids' => $lines->map(fn (RepairOrderLine $line): int => (int) $line->id)->all(),
+            'approved_lines' => $lines->map(fn (RepairOrderLine $line): array => [
+                'id' => (int) $line->id,
+                'description' => (string) $line->description,
+                'customer_description' => (string) ($line->customer_description ?? ''),
+                'subtotal_cents' => (int) $line->subtotal_cents,
+                'quantity' => (string) $line->quantity,
+                'unit_price_cents' => (int) $line->unit_price_cents,
+                'standing_discount_cents' => (int) $line->standing_discount_cents,
+                'shop_fee_cents' => (int) $line->shop_fee_cents,
+                'tax_cents' => (int) $line->tax_cents,
+                'total_cents' => (int) $line->total_cents,
+            ])->all(),
+            'recorded_by_user_id' => $advisor->id,
+        ]);
+    }
+
+    $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']));
+
+    expect($approval->fresh()->approved_amount_cents)->toBe(10000)
+        ->and($approved->totalCents())->toBe($scopeCents)
+        ->and($approved->totalCents())->not->toBe(10000)
+        ->and($approval->fresh()->notes)->toBe('Pre-guard documentary amount');
+});
+
+test('partial deposit against authorized work does not change authorized scope dollars', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder] = presentedEstimateForAuthorization();
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+    $scopeCents = app(EstimateTotalsCalculator::class)
+        ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+
+    expect($scopeCents)->toBeGreaterThan(10000);
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+        'approved_amount' => number_format($scopeCents / 100, 2, '.', ''),
+    ])->assertRedirect();
+
+    $depositCents = 10000;
+
+    app(\App\Ark\Operations\Financial\RecordLedgerEntryAction::class)->recordDeposit(
+        $repairOrder->fresh(),
+        $depositCents,
+        \App\Ark\Operations\Financial\PaymentMethod::Cash,
+    );
+
+    $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']));
+    $approval = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->sole();
+    $deposits = RepairOrderLedgerEntry::query()
+        ->where('repair_order_id', $repairOrder->id)
+        ->where('entry_type', 'deposit')
+        ->sum('amount_cents');
+
+    expect($approval->approved_amount_cents)->toBe($scopeCents)
+        ->and($approved->totalCents())->toBe($scopeCents)
+        ->and((int) $deposits)->toBe($depositCents)
+        ->and((int) $deposits)->not->toBe($scopeCents);
+});
+
+test('subsequent approval of changed work on an approved scope records cumulative authorization', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $diagnostic, $brakes] = presentedEstimateForAuthorization();
+    $brakes->update(['disposition' => RepairOrderConcernDisposition::Deferred]);
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+
+    $firstCents = app(EstimateTotalsCalculator::class)
+        ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+
+    expect($firstCents)->toBeGreaterThan(0);
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+        'approved_amount' => number_format($firstCents / 100, 2, '.', ''),
+    ])->assertRedirect();
+
+    $added = RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $diagnostic->id,
+        'type' => RepairOrderLineType::Labor,
+        'description' => 'Additional follow-up labor',
+        'quantity' => '1.00',
+        'unit_price_cents' => 6500,
+        'subtotal_cents' => 6500,
+        'total_cents' => 6500,
+    ]);
+
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern']));
+    $repairOrder = $repairOrder->fresh(['concerns', 'lines.concern', 'customer']);
+
+    $workAuthorization = app(WorkCompletionAuthorization::class);
+    $outside = $workAuthorization->workOutsideApprovedSalesCents($repairOrder);
+    expect($outside)->toBeGreaterThan(0);
+
+    $requiredCents = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder)->totalCents() + $outside;
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+        'source' => ApprovalSource::Phone->value,
+        'approved_by' => 'Morgan Brown',
+        'approved_amount' => number_format($requiredCents / 100, 2, '.', ''),
+        \App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD => $workAuthorization->pendingChangesFingerprint($repairOrder),
+    ])->assertRedirect();
+
+    $events = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->orderBy('id')->get();
+    $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']));
+
+    expect($events)->toHaveCount(2)
+        ->and($events[0]->approved_amount_cents)->toBe($firstCents)
+        ->and($events[1]->approved_amount_cents)->toBe($requiredCents)
+        ->and($approved->totalCents())->toBe($requiredCents)
+        ->and(app(WorkCompletionAuthorization::class)->customerApprovalCovers($added->fresh(['concern'])))->toBeTrue()
+        ->and($brakes->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Deferred);
 });
 
 test('advisor cannot record authorization when nothing on the estimate is recommended or approved', function () {
