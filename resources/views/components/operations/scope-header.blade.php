@@ -13,7 +13,7 @@
             @if (filled($eyebrow))
                 <div @class(['subheader mb-1', $eyebrowClass])>{{ $eyebrow }}</div>
             @endif
-            <h3 class="card-title">{{ $title }}</h3>
+            <h3 class="card-title mb-0">{{ $title }}</h3>
             @isset($subline)
                 {{ $subline }}
             @endisset

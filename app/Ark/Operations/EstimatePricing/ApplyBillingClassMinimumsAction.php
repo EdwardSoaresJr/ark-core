@@ -312,7 +312,62 @@ final class ApplyBillingClassMinimumsAction
     }
 
     /**
+     * RO-wide billing-class minimum notices (PerRepairOrder mode) — show once near totals.
+     *
+     * @return list<array{label: string, mode: string, required_hours: string, eligible_hours: string, shortfall_hours: string, shortfall_cents: int, applied: bool}>
+     */
+    public function repairOrderWideExplanations(RepairOrder $repairOrder): array
+    {
+        $profile = LaborPricingProfile::tryFromStored(
+            is_array($repairOrder->labor_pricing_profile) ? $repairOrder->labor_pricing_profile : null,
+        );
+
+        if ($profile === null || ! $profile->appliesBillingClassMinimums()) {
+            return [];
+        }
+
+        $seen = [];
+        $explanations = [];
+
+        foreach ($repairOrder->concerns as $concern) {
+            $scope = $this->concernBillingKey($concern);
+            if (isset($seen[$scope])) {
+                continue;
+            }
+
+            $row = $profile->minimums()->forPosture($scope);
+            if ($row === null) {
+                continue;
+            }
+
+            $mode = LaborBillingMinimumMode::tryFrom($row['mode']) ?? LaborBillingMinimumMode::None;
+            if ($mode !== LaborBillingMinimumMode::PerRepairOrder || (float) $row['hours'] <= 0) {
+                continue;
+            }
+
+            $seen[$scope] = true;
+            $required = (float) $row['hours'];
+            $eligible = $this->eligibleLaborHours($repairOrder, $scope);
+            $shortfall = max(0, round($required - $eligible, 2));
+            $rateCents = $profile->minimums()->shortfallRateCents($scope, ShopSettings::current());
+
+            $explanations[] = [
+                'label' => LaborWorkTypeMatrix::billingColumnLabel($scope),
+                'mode' => $mode->value,
+                'required_hours' => number_format($required, 2, '.', ''),
+                'eligible_hours' => number_format($eligible, 2, '.', ''),
+                'shortfall_hours' => number_format($shortfall, 2, '.', ''),
+                'shortfall_cents' => (int) round($shortfall * $rateCents),
+                'applied' => $shortfall >= 0.005,
+            ];
+        }
+
+        return $explanations;
+    }
+
+    /**
      * Persistent advisor explanation for a concern (survives reload).
+     * Per-repair-order minimums are excluded — use {@see repairOrderWideExplanations()}.
      *
      * @return array{label: string, mode: string, required_hours: string, eligible_hours: string, shortfall_hours: string, shortfall_cents: int, applied: bool}|null
      */
@@ -335,46 +390,28 @@ final class ApplyBillingClassMinimumsAction
 
         $mode = LaborBillingMinimumMode::tryFrom($row['mode']) ?? LaborBillingMinimumMode::None;
 
-        if ($mode === LaborBillingMinimumMode::None || (float) $row['hours'] <= 0) {
+        // RO-wide minimums are rendered once near totals, not inside every concern.
+        if ($mode !== LaborBillingMinimumMode::PerLine || (float) $row['hours'] <= 0) {
             return null;
         }
 
-        $label = LaborWorkTypeMatrix::billingColumnLabel($scope);
         $required = (float) $row['hours'];
-        $eligible = $this->eligibleLaborHours($repairOrder, $scope);
-        $shortfall = max(0, round($required - $eligible, 2));
         $rateCents = $profile->minimums()->shortfallRateCents($scope, ShopSettings::current());
-
-        if ($mode === LaborBillingMinimumMode::PerLine) {
-            $lineEligible = $this->eligibleLaborLines($repairOrder, $scope)
-                ->filter(fn (RepairOrderLine $line): bool => (int) $line->repair_order_concern_id === (int) $concern->id)
-                ->sum(fn (RepairOrderLine $line): float => (float) ($line->labor_billed_hours ?? $line->quantity ?? 0));
-            $lineShortfall = $this->systemMinimumFees($repairOrder, $scope)
-                ->filter(fn (RepairOrderLine $fee): bool => (int) $fee->repair_order_concern_id === (int) $concern->id)
-                ->sum(fn (RepairOrderLine $fee): float => (float) $fee->quantity);
-
-            return [
-                'label' => $label,
-                'mode' => $mode->value,
-                'required_hours' => number_format($required, 2, '.', ''),
-                'eligible_hours' => number_format($lineEligible, 2, '.', ''),
-                'shortfall_hours' => number_format($lineShortfall, 2, '.', ''),
-                'shortfall_cents' => (int) round($lineShortfall * $rateCents),
-                'applied' => $lineShortfall >= 0.005,
-            ];
-        }
-
-        $attribution = $this->attributionConcern($repairOrder, $scope);
-        $appliedHere = $attribution !== null && (int) $attribution->id === (int) $concern->id && $shortfall >= 0.005;
+        $lineEligible = $this->eligibleLaborLines($repairOrder, $scope)
+            ->filter(fn (RepairOrderLine $line): bool => (int) $line->repair_order_concern_id === (int) $concern->id)
+            ->sum(fn (RepairOrderLine $line): float => (float) ($line->labor_billed_hours ?? $line->quantity ?? 0));
+        $lineShortfall = $this->systemMinimumFees($repairOrder, $scope)
+            ->filter(fn (RepairOrderLine $fee): bool => (int) $fee->repair_order_concern_id === (int) $concern->id)
+            ->sum(fn (RepairOrderLine $fee): float => (float) $fee->quantity);
 
         return [
-            'label' => $label,
+            'label' => LaborWorkTypeMatrix::billingColumnLabel($scope),
             'mode' => $mode->value,
             'required_hours' => number_format($required, 2, '.', ''),
-            'eligible_hours' => number_format($eligible, 2, '.', ''),
-            'shortfall_hours' => number_format($shortfall, 2, '.', ''),
-            'shortfall_cents' => (int) round($shortfall * $rateCents),
-            'applied' => $appliedHere,
+            'eligible_hours' => number_format($lineEligible, 2, '.', ''),
+            'shortfall_hours' => number_format($lineShortfall, 2, '.', ''),
+            'shortfall_cents' => (int) round($lineShortfall * $rateCents),
+            'applied' => $lineShortfall >= 0.005,
         ];
     }
 

@@ -1813,17 +1813,16 @@
                                 class="card scroll-mt-24"
                                 data-concern-priority="{{ $concern->presentation()->key() }}"
                                 data-concern-disposition="{{ $concern->disposition->value }}"
+                                data-concern-ordinal="{{ $loop->iteration }}"
                             >
-                                <div class="card-status-start bg-{{ $concern->presentation()->tablerColor() }}"></div>
                                 <x-operations.scope-header
                                     ui="tabler"
+                                    class="ops-concern-header-accent"
                                     :continuity-region="'concern-money-'.$concern->id"
                                     :title="$concern->summary"
                                     :total="$totals->format($totals->concernSubtotalCents($concern->id))"
-                                    :eyebrow="($isTerminal || ! $concern->shouldSurfaceRecommendationStatus())
-                                        ? $concern->presentation()->staffLabel()
-                                        : null"
-                                    :eyebrow-class="'text-'.$concern->presentation()->tablerColor()"
+                                    :eyebrow="'Concern '.$loop->iteration.(($isTerminal || ! $concern->shouldSurfaceRecommendationStatus()) ? ' · '.$concern->presentation()->staffLabel() : '')"
+                                    eyebrow-class="text-secondary"
                                 >
                                     <x-slot:subline>
                                         @include('operations.repair-orders.partials.repair-order-concern-meaning-subline', [
@@ -1897,6 +1896,14 @@
             </div>
 
             <aside id="estimate-builder-rail" class="ops-review-rail ops-review-rail--pinned gap-3">
+                @php
+                    $taxJurisdictionInteractive = App\Ark\Operations\Settings\ShopSettings::current()->tax_enabled
+                        && collect(App\Ark\Operations\EstimatePricing\ShopTaxCatalog::profilesFromShopSettings(App\Ark\Operations\Settings\ShopSettings::current()))
+                            ->contains(fn (array $profile): bool => (bool) ($profile['is_active'] ?? true))
+                        && ! $isTerminal
+                        && blank($repairOrder->closed_at)
+                        && ($canAuthorRepairOrder ?? false);
+                @endphp
                 <x-operations.estimate-totals-panel
                     id="estimate-total-panel"
                     :totals="$totals"
@@ -1905,6 +1912,7 @@
                     :repair-order="$repairOrder"
                     :approval-forecast="$approvalForecast ?? null"
                     :lines-needing-authorization="$linesNeedingAuthorization ?? collect()"
+                    :tax-jurisdiction-interactive="$taxJurisdictionInteractive"
                 >
                     @if ($financial['showFinancialRail'])
                         @include('operations.repair-orders.partials.financial-payment-strip', [
@@ -1925,7 +1933,7 @@
                     @endif
                 </x-operations.estimate-totals-panel>
 
-                @include('operations.repair-orders.partials.tax-jurisdiction-card', [
+                @include('operations.repair-orders.partials.tax-jurisdiction-modal', [
                     'repairOrder' => $repairOrder,
                     'estimateVersion' => $estimateVersion,
                 ])

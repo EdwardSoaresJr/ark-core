@@ -1037,3 +1037,14 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
 .ark-comms-thread [data-comms-call-transcript] summary {
     font-size: 0.75rem;
 }
+
+/* Concern cards: same subtle accent wash for every header (user primary preference). */
+.ops-concern-header-accent {
+    background: color-mix(in srgb, var(--tblr-primary) 12%, var(--tblr-bg-surface, #fff));
+    border-bottom-color: color-mix(in srgb, var(--tblr-primary) 22%, var(--tblr-border-color));
+}
+
+[data-bs-theme='dark'] .ops-concern-header-accent {
+    background: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface, #1e1e1e));
+    border-bottom-color: color-mix(in srgb, var(--tblr-primary) 28%, var(--tblr-border-color));
+}

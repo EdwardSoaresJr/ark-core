@@ -5,8 +5,6 @@ namespace App\Ark\Operations\RepairOrders;
 use App\Ark\Operations\Documents\Document;
 use App\Ark\Operations\Inspections\InspectionCaptureLinks;
 use App\Ark\Operations\Inspections\InspectionCoverageProjection;
-use App\Ark\Operations\Inspections\InspectionFindingCardProjection;
-use App\Ark\Operations\Printing\ShopPrintingSettings;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
 
@@ -40,7 +38,7 @@ final readonly class RepairOrderFooterProjection
         return new self(
             workflow: self::workflowAction($repairOrder, $canManage, $canView, $canRecordFindings, $actor),
             present: self::presentActions($repairOrder, $canManage, $canView),
-            utilities: self::utilityActions($repairOrder, $canView),
+            utilities: self::utilityActions($repairOrder, $canView, $actor),
         );
     }
 
@@ -147,68 +145,31 @@ final readonly class RepairOrderFooterProjection
     }
 
     /**
+     * Print utilities — same authoritative list as the header Print menu.
+     *
+     * @param  array<string, mixed>|null  $financial
      * @return list<RepairOrderFooterAction>
      */
-    private static function utilityActions(RepairOrder $repairOrder, bool $canView): array
+    private static function utilityActions(RepairOrder $repairOrder, bool $canView, ?User $actor = null, ?array $financial = null): array
     {
         if (! $canView) {
             return [];
         }
 
-        $actions = [
-            RepairOrderFooterAction::link(
-                key: 'estimate_pdf',
-                label: 'Estimate PDF',
-                href: route('operations.repair-orders.estimate.pdf', $repairOrder),
-                opensInNewTab: true,
-            ),
-        ];
-
-        if (InspectionFindingCardProjection::recordedCountForRepairOrder($repairOrder) > 0) {
-            $actions[] = RepairOrderFooterAction::link(
-                key: 'inspection_pdf',
-                label: 'Inspection PDF',
-                href: route('operations.repair-orders.inspection.pdf', $repairOrder),
-                opensInNewTab: true,
-            );
-        }
-
-        $actions[] = RepairOrderFooterAction::link(
-            key: 'check_in_sheet',
-            label: 'Check In sheet',
-            href: route('operations.repair-orders.sheets.intake.pdf', $repairOrder),
-            opensInNewTab: true,
+        return array_map(
+            static function (array $item): RepairOrderFooterAction {
+                return RepairOrderFooterAction::link(
+                    key: $item['key'],
+                    label: $item['label'],
+                    href: (string) ($item['href'] ?? '#'),
+                    opensInNewTab: (bool) ($item['opens_in_new_tab'] ?? false),
+                    title: $item['blocked_reason'] ?? null,
+                    isPrint: (bool) ($item['is_print'] ?? false),
+                    printDocument: $item['print_document'] ?? null,
+                    blockedReason: $item['blocked_reason'] ?? null,
+                );
+            },
+            RepairOrderPrintMenuProjection::items($repairOrder, $financial, $actor),
         );
-        $actions[] = RepairOrderFooterAction::link(
-            key: 'tech_sheet',
-            label: 'Tech sheet',
-            href: route('operations.repair-orders.sheets.tech.pdf', $repairOrder),
-            opensInNewTab: true,
-        );
-
-        if (ShopPrintingSettings::isEnabled()) {
-            $keyTagBlocked = \App\Ark\Operations\Printing\KeyTagPrintGate::blockedReason($repairOrder);
-            $actions[] = RepairOrderFooterAction::link(
-                key: 'key_tag',
-                label: 'Print Key Tag',
-                href: route('operations.repair-orders.print-key-tag', $repairOrder),
-                opensInNewTab: false,
-                title: $keyTagBlocked ?? 'Print the key tag',
-                isPrint: true,
-                printDocument: 'key_tag',
-                blockedReason: $keyTagBlocked,
-            );
-            $actions[] = RepairOrderFooterAction::link(
-                key: 'oil_sticker',
-                label: 'Print Oil Sticker',
-                href: route('operations.repair-orders.print-oil-change-sticker', $repairOrder),
-                opensInNewTab: false,
-                title: 'Print the oil change sticker',
-                isPrint: true,
-                printDocument: 'oil_change_sticker',
-            );
-        }
-
-        return $actions;
     }
 }

@@ -5,6 +5,7 @@
     'repairOrder' => null,
     'approvalForecast' => null,
     'linesNeedingAuthorization' => null,
+    'taxJurisdictionInteractive' => false,
 ])
 
 @php
@@ -118,6 +119,13 @@
 
     <div id="estimate-totals-region" data-continuity-region="totals">
         <dl class="card-body mb-0">
+            @if ($repairOrder)
+                <div class="mb-1">
+                    @include('operations.repair-orders.partials.repair-order-billing-minimum-summary', [
+                        'repairOrder' => $repairOrder,
+                    ])
+                </div>
+            @endif
             <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
                 <dt class="fw-normal text-secondary">Labor</dt>
                 <dd class="mb-0 fw-semibold ark-money">{{ $totals->format($totals->laborCents()) }}</dd>
@@ -144,8 +152,37 @@
                     <dd class="mb-0 fw-semibold text-green ark-money">−{{ $totals->format($totals->standingDiscountCents()) }}</dd>
                 </div>
             @endif
-            <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
-                <dt class="fw-normal text-secondary">{{ $taxLabel ?? 'Tax' }}</dt>
+            @php
+                $taxStamp = is_array($repairOrder?->tax_profile) ? $repairOrder->tax_profile : [];
+                $taxProfileLabel = (string) ($taxStamp['profile_name'] ?? $taxStamp['label'] ?? '');
+                $taxRateLabel = isset($taxStamp['rate']) ? rtrim(rtrim((string) $taxStamp['rate'], '0'), '.').'%' : '';
+                $taxSummaryBits = array_values(array_filter([$taxProfileLabel, $taxRateLabel]));
+                $taxRowInteractive = (bool) ($taxJurisdictionInteractive ?? false);
+            @endphp
+            <div class="d-flex justify-content-between align-items-baseline gap-3 py-1" data-tax-summary-row>
+                <dt class="fw-normal text-secondary mb-0">
+                    @if ($taxRowInteractive)
+                        <button
+                            type="button"
+                            class="btn btn-link p-0 align-baseline text-secondary text-decoration-none"
+                            data-tax-jurisdiction-trigger
+                            aria-haspopup="dialog"
+                            aria-controls="ro-tax-jurisdiction-modal"
+                            title="Edit tax jurisdiction"
+                            @click="window.dispatchEvent(new CustomEvent('ark-open-tax-jurisdiction'))"
+                        >
+                            {{ $taxLabel ?? 'Tax' }}
+                            @if ($taxSummaryBits !== [])
+                                <span class="d-block small fw-normal text-secondary">{{ implode(' · ', $taxSummaryBits) }}</span>
+                            @endif
+                        </button>
+                    @else
+                        {{ $taxLabel ?? 'Tax' }}
+                        @if ($taxSummaryBits !== [])
+                            <span class="d-block small fw-normal text-secondary">{{ implode(' · ', $taxSummaryBits) }}</span>
+                        @endif
+                    @endif
+                </dt>
                 <dd class="mb-0 fw-semibold ark-money">{{ $totals->format($totals->taxCents()) }}</dd>
             </div>
             <div class="d-flex justify-content-between align-items-baseline gap-3 border-top pt-2 mt-1" data-total-row="final">

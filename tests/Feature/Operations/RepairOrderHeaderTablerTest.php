@@ -81,7 +81,8 @@ test('the Visit panel keeps the labeled status and technician selects; Review Es
         ->and($xpath->query('.//*[@data-ro-print-menu]//button[@data-bs-toggle="dropdown"][@aria-label="Print"]', $actions)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-ro-print-menu]//*[normalize-space()="Estimate PDF"]', $actions)->length)->toBe(1)
         ->and($xpath->query('//*[@data-ro-command-actions]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-ro-print-menu]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-ro-print-menu]')->length)->toBe(2)
+        ->and($xpath->query('//*[@data-ro-footer-print][@data-ro-print-menu]')->length)->toBe(1)
         ->and($xpath->query('//button[@aria-label="Review Estimate Notes"]')->length)->toBe(1)
         ->and($xpath->query('//*[@id="ro-identity-band"]//*[@data-workspace-modal-trigger="document"]')->length)->toBe(0)
         ->and($xpath->query('//*[@data-ro-footer]//*[@data-workspace-modal-trigger="document"]')->length)->toBeGreaterThan(0);

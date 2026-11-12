@@ -3,10 +3,13 @@
     /** @var \App\Ark\Operations\RepairOrders\RepairOrderFooterProjection $footer */
     $footer = $repairOrderFooter;
     $workflow = $footer->workflow;
-    $keyTagUrl = route('operations.repair-orders.print-key-tag', $repairOrder);
-    $oilStickerUrl = route('operations.repair-orders.print-oil-change-sticker', $repairOrder);
     $docked = (bool) ($docked ?? false);
     $estimatingTools = $estimatingTools ?? null;
+    $printItems = App\Ark\Operations\RepairOrders\RepairOrderPrintMenuProjection::items(
+        $repairOrder,
+        $financial ?? null,
+        auth()->user(),
+    );
 @endphp
 
 {{-- Own x-data so @click and the PRINT menu bind wherever the dock renders. --}}
@@ -99,67 +102,31 @@
             x-data="{ open: false }"
             @keydown.escape.window="open = false"
             data-ro-footer-print
+            data-ro-print-menu
         >
             <button
                 type="button"
                 class="btn btn-ghost-secondary btn-sm"
                 @click="open = ! open"
-                :aria-expanded="open"
+                :aria-expanded="open.toString()"
                 aria-haspopup="menu"
                 aria-label="Print"
+                title="Print"
             >
                 <x-tabler.icon name="printer" />
                 <span @class(['d-none d-sm-inline' => $estimatingTools !== null])>PRINT</span>
             </button>
             <div
-                class="dropdown-menu dropdown-menu-end bottom-100 end-0 mb-1"
+                class="dropdown-menu dropdown-menu-end dropup-menu bottom-100 end-0 mb-1"
                 :class="{ show: open }"
                 role="menu"
+                style="max-height: min(70vh, 24rem); overflow-y: auto;"
                 @click.outside="open = false"
             >
-                @foreach ($footer->utilities as $action)
-                    @if ($action->key === 'key_tag')
-                        @if (filled($action->blockedReason))
-                            <button
-                                type="button"
-                                role="menuitem"
-                                class="dropdown-item flex-column align-items-start"
-                                @click="open = false; window.alert(@js($action->blockedReason))"
-                            >
-                                {{ $action->label }}
-                                <span class="small text-secondary text-wrap">{{ $action->blockedReason }}</span>
-                            </button>
-                        @else
-                            <button
-                                type="button"
-                                role="menuitem"
-                                class="dropdown-item"
-                                @click="open = false; window.arkPrintDocument?.(window.ARK_PRINTERS?.keyTag, @js($keyTagUrl), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
-                            >
-                                {{ $action->label }}
-                            </button>
-                        @endif
-                    @elseif ($action->key === 'oil_sticker')
-                        <button
-                            type="button"
-                            role="menuitem"
-                            class="dropdown-item"
-                            @click="open = false; window.arkPrintDocument?.(window.ARK_PRINTERS?.oilSticker, @js($oilStickerUrl), $event.currentTarget, { document: 'oil_change_sticker', resolvePrinter: true })"
-                        >
-                            {{ $action->label }}
-                        </button>
-                    @else
-                        <a
-                            href="{{ $action->href }}"
-                            @if ($action->opensInNewTab) target="_blank" rel="noopener" @endif
-                            role="menuitem"
-                            class="dropdown-item"
-                            @click="open = false"
-                        >
-                            {{ $action->label }}
-                        </a>
-                    @endif
-                @endforeach
+                @include('operations.repair-orders.partials.repair-order-print-menu-items', [
+                    'printItems' => $printItems,
+                    'closeExpr' => 'open = false',
+                ])
             </div>
         </div>
 
