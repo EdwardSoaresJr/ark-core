@@ -52,6 +52,8 @@
                 @include('operations.repair-orders.partials.repair-order-footer', [
                     'repairOrder' => $repairOrder,
                     'repairOrderFooter' => $repairOrderFooter,
+                    'financial' => $financial ?? null,
+                    'estimatingTools' => $estimatingTools ?? null,
                     'docked' => true,
                 ])
             @endisset
