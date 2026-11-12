@@ -196,6 +196,7 @@ use App\Ark\Operations\RepairOrders\EstimateToolbarDefaultController;
 use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationExceptionController;
 use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationRevokeController;
 use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController;
+use App\Ark\Operations\RepairOrders\RepairOrderTaxProfileStoreController;
 use App\Ark\Operations\RepairOrders\RepairOrderBillingPostureController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernBillingPostureController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDestroyController;
@@ -1603,6 +1604,10 @@ SurfaceRouting::appRoutes(function (): void {
         Route::post('/app/repair-orders/{repairOrder}/authorization', RepairOrderAuthorizationStoreController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.authorization.store');
+
+        Route::post('/app/repair-orders/{repairOrder}/tax-profile', RepairOrderTaxProfileStoreController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.tax-profile.store');
 
         Route::post('/app/repair-orders/{repairOrder}/authorization/{approvalEvent}/revoke', RepairOrderAuthorizationRevokeController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

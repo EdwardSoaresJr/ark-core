@@ -693,7 +693,11 @@ class EstimateTotalsCalculator
         return $overlay;
     }
 
-    private function settingsWithTaxOverlay(
+    /**
+     * Settings view for documents and labels: tax fields come from the RO stamp
+     * (or living fallback), never from a later live catalog edit alone.
+     */
+    public function settingsWithTaxOverlay(
         RepairOrder $repairOrder,
         ShopSettings $settings,
         ?TaxProfile $taxProfile = null,

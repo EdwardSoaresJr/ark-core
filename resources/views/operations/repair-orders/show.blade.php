@@ -1925,6 +1925,11 @@
                     @endif
                 </x-operations.estimate-totals-panel>
 
+                @include('operations.repair-orders.partials.tax-jurisdiction-card', [
+                    'repairOrder' => $repairOrder,
+                    'estimateVersion' => $estimateVersion,
+                ])
+
                 @if (($operationalJourney ?? null) !== null)
                     <x-operations.worksheet-island stack>
                         @include('operations.repair-orders.partials.operational-journey-card', [
