@@ -371,6 +371,7 @@ class ShopFinancialSettingsController
                 'is_default' => false,
                 'is_active' => true,
                 'state' => null,
+                'counties' => [],
                 'cities' => [],
                 'zip_codes' => [],
                 'service_area_description' => null,

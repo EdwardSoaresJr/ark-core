@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Shop-level catalog of named tax profiles and components (settings only).
- * RO stamps remain TaxProfile schema 1 in Slice A — projected from the default profile.
+ * RO stamps use TaxProfile schema 2 (frozen catalog snapshot). Schema 1 stamps remain readable.
  */
 final class ShopTaxCatalog
 {
@@ -175,6 +175,7 @@ final class ShopTaxCatalog
                 'is_default' => false,
                 'is_active' => $isActive,
                 'state' => self::nullableTrimmedString($raw['state'] ?? null, 2),
+                'counties' => self::normalizeStringList($raw['counties'] ?? [], 32),
                 'cities' => self::normalizeStringList($raw['cities'] ?? [], 32),
                 'zip_codes' => self::normalizeZipList($raw['zip_codes'] ?? []),
                 'service_area_description' => self::nullableTrimmedString($raw['service_area_description'] ?? null, 255),
@@ -228,6 +229,7 @@ final class ShopTaxCatalog
             'is_default' => true,
             'is_active' => true,
             'state' => null,
+            'counties' => [],
             'cities' => [],
             'zip_codes' => [],
             'service_area_description' => null,

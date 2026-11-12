@@ -14,7 +14,7 @@ beforeEach(function () {
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 });
 
-test('legacy single-rate tax save still projects TaxProfile schema 1 and stamps null living ROs', function () {
+test('legacy single-rate tax save still projects combined rate and stamps null living ROs', function () {
     ShopSettings::current()->update([
         'tax_enabled' => true,
         'tax_label' => 'Old Tax',
@@ -63,10 +63,12 @@ test('legacy single-rate tax save still projects TaxProfile schema 1 and stamps 
         ->and($settings->taxDocumentPresentation())->toBe('combined');
 
     $profile = TaxProfile::fromShopSettings($settings);
-    expect($profile->schema)->toBe(1)
+    expect($profile->schema)->toBe(2)
         ->and($profile->rate)->toStartWith('8.250')
-        ->and($profile->label)->toBe('C/S Tax');
+        ->and($profile->label)->toBe('C/S Tax')
+        ->and($profile->components)->not->toBeEmpty();
 
+    // Living null stamp was frozen to pre-save rules (schema may be 1 or 2 depending on stamp helper).
     expect($ro->fresh()->tax_profile['rate'])->toStartWith('7.000');
 });
 

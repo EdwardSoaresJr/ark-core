@@ -177,17 +177,21 @@
                             </div>
                             <div class="card-body vstack gap-3">
                                 <div class="row g-2">
-                                    <div class="col-6 col-md-3">
+                                    <div class="col-6 col-md-2">
                                         <label class="form-label" for="tax-profile-state-{{ $profile['key'] }}">State</label>
                                         <input id="tax-profile-state-{{ $profile['key'] }}" class="form-control" maxlength="2" name="tax_profiles[{{ $profileIndex }}][state]" value="{{ $profile['state'] }}">
                                     </div>
-                                    <div class="col-12 col-md-5">
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label" for="tax-profile-counties-{{ $profile['key'] }}">Counties</label>
+                                        <input id="tax-profile-counties-{{ $profile['key'] }}" class="form-control" name="tax_profiles[{{ $profileIndex }}][counties]" value="{{ implode(', ', $profile['counties'] ?? []) }}" placeholder="Optional">
+                                    </div>
+                                    <div class="col-12 col-md-4">
                                         <label class="form-label" for="tax-profile-cities-{{ $profile['key'] }}">Cities</label>
                                         <input id="tax-profile-cities-{{ $profile['key'] }}" class="form-control" name="tax_profiles[{{ $profileIndex }}][cities]" value="{{ implode(', ', $profile['cities'] ?? []) }}" placeholder="Comma-separated">
                                     </div>
-                                    <div class="col-12 col-md-4">
+                                    <div class="col-12 col-md-3">
                                         <label class="form-label" for="tax-profile-zips-{{ $profile['key'] }}">ZIP codes</label>
-                                        <input id="tax-profile-zips-{{ $profile['key'] }}" class="form-control" name="tax_profiles[{{ $profileIndex }}][zip_codes]" value="{{ implode(', ', $profile['zip_codes'] ?? []) }}" placeholder="Convenience only">
+                                        <input id="tax-profile-zips-{{ $profile['key'] }}" class="form-control" name="tax_profiles[{{ $profileIndex }}][zip_codes]" value="{{ implode(', ', $profile['zip_codes'] ?? []) }}" placeholder="Suggestive only">
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label" for="tax-profile-area-{{ $profile['key'] }}">Service area notes</label>
