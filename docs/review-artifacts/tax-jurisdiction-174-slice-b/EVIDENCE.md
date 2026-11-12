@@ -1,4 +1,17 @@
-# #174 Slice B — Tax jurisdiction (HOLD MERGE)
+# #174 Slice B — Tax jurisdiction (READY FOR OWNER MERGE)
+
+## Final SHA
+
+| Item | Value |
+|---|---|
+| PR | https://github.com/EdwardSoaresJr/ark-core/pull/190 |
+| Tip | `bf011171e4dd843d2897d7dfab1770e61b46573b` |
+| Base main | `018ef6aaf6debfd00e502a0decec25c39477d962` (#189 merged) |
+| Mergeable | CLEAN / MERGEABLE |
+| Required Checks | PASS |
+| Full Regression | PASS — 0 new failures vs baseline ([run 43309820708](https://github.com/EdwardSoaresJr/ark-core/actions/runs/43309820708)) |
+
+**HOLD:** Do not merge without explicit owner approval in a subsequent message.
 
 ## Phase 1 — #189 merge (complete)
 
@@ -6,56 +19,39 @@
 |---|---|
 | Merged PR | https://github.com/EdwardSoaresJr/ark-core/pull/189 |
 | Merge commit / main | `018ef6aaf6debfd00e502a0decec25c39477d962` |
-| Reviewed head | `a4cffdf064b724414de856947318e4eb29ed6b61` |
-| CI at merge | Focused + Regression pest SUCCESS; known-failure baseline preserved |
 
-Integrated surfaces retained on main: Labor matrix, Parts matrix nav, Shop Fees (percent/flat/per_concern + applies_to), Tax Profiles catalog, shared financial tabs.
+## Phase 2 — #190 deliverables
 
-## Phase 2 — this PR
+- TaxProfile schema 2 freeze + schema 1 readability
+- Affirmative jurisdiction confirmation (`accepted` + checkbox)
+- Matcher suggestions only (never silent ZIP assign)
+- Post-auth tax increase → supplemental auth → invoice ceiling
+- Stamp-freeze tax labels on estimate/invoice snapshots
+- Estimate email body uses document snapshot cents
+- E2E cent reconciliation + penny audit (Molly $0.01 not reproduced as stored-cent defect)
+- **No #190 DB migrations**
+
+Docs: `ARCHITECTURE.md`, `SURFACE_MATRIX.md`, `PENNY_RECONCILIATION.md`, `REGRESSION.md`, `RELEASE_MANIFEST.md`, `PRODUCTION_PRESERVATION_GO_NOGO.md`
+
+## Production discovery (read-only)
+
+See `RELEASE_MANIFEST.md`.
 
 | Item | Value |
 |---|---|
-| Branch | `feat/tax-jurisdiction-slice-b` |
-| Base | `origin/main` @ `018ef6a` |
-| Docs | `ARCHITECTURE.md`, `SURFACE_MATRIX.md`, `PENNY_RECONCILIATION.md`, `PRODUCTION_PRESERVATION_GO_NOGO.md` |
-| Migrations | **None** in #190 |
+| Host | `ark-saas-prod-1` / `165.22.174.183` |
+| Prod SaaS (`ark-stancl`) | `7b5f180…` |
+| Prod Core | `affb186…` (#170) |
+| Gap to tip | 91 commits / **8 migrations** (none unique to #190) |
+| Clone upgrade rehearsal | **NOT DONE** → production **NO-GO** |
 
-### Delivered
+## Alpha
 
-- TaxProfile **schema 2** freeze (profile identity, components, associations, presentation, sourcing)
-- Schema 1 historical readability preserved
-- `TaxJurisdictionMatcher` (suggestive only; never auto-assign)
-- County associations on catalog + settings UI
-- RO tax jurisdiction confirmation card + `SelectTaxProfileOnRepairOrderAction`
-- **Affirmative** `confirm_jurisdiction` (`accepted` + checkbox; missing field rejected)
-- Post-auth tax increase held under approved-dollar ceiling; supplemental auth raises ceiling; invoice cannot collect unapproved
-- Estimate/invoice snapshots freeze tax labels from RO stamp; invoice embeds `tax_profile`
-- Estimate email body prefers document snapshot total cents
-- Penny + pricing-release E2E cent reconciliation regressions
-
-### Explicitly deferred
-
-- Component-level independent taxable bases / itemized document lines (Slice C) — safe unused
-- Portal invoice-pay cent depth; full async mail isolation suite
-- Customer tax exemption independent of Billing Class
-- SaaS automated lookup (never Core)
-
-## Tests (local)
-
-Focused financial subset: **98 passed**  
-(`TaxJurisdictionSliceB` + Slice A tax + ShopFeeAppliesTo + ShopFeePerConcernAuthorization + PricingEngineSafety + AuthorizationIntegrity + ApprovedWorkChangesAfterAuthorization)
-
-## Alpha / screenshots (staging only)
-
-| Pin | SHA |
+| SaaS | Core vendor |
 |---|---|
-| Alpha Core (earlier Slice B UI) | `4d5903b7…` — re-pin to tip after this release-blocker commit if owner wants refreshed evidence |
-| Alpha SaaS | `eb859c2159a1821d87e51721698d4608c3bb20c1` |
+| `eb859c21…` | `a138721…` (behind tip; optional re-pin) |
 
-Prior screenshots remain valid for card/settings chrome. No tenant migration required (JSON stamp only). No production changes.
+## Owner next steps
 
-## Production
-
-See `PRODUCTION_PRESERVATION_GO_NOGO.md` — **NO-GO** for production until #190 merge + fresh prod pin audit + clone rehearsal + explicit owner deploy authorization.
-
-**PR:** https://github.com/EdwardSoaresJr/ark-core/pull/190 — **HOLD MERGE**
+1. Explicitly approve merge of #190 @ `bf011171`.
+2. After merge: SaaS pin + isolated backup restore rehearsal before any production deploy authorization.
