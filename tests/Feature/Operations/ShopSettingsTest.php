@@ -316,7 +316,7 @@ test('admin can persist authoritative operational defaults', function () {
         'default_tax_rate' => '8.250',
         'taxable_labor' => '0',
         'taxable_parts' => '1',
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'tax']));
 
     $this->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
         'parts_matrices' => [
@@ -462,7 +462,7 @@ test('saving tax settings does not recalculate living repair order line tax', fu
         'taxable_labor' => '0',
         'taxable_parts' => '1',
         'taxable_shop_fees' => '0',
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'tax']));
 
     $part->refresh();
 
@@ -503,7 +503,7 @@ test('saving tax settings does not rewrite unrelated settings', function () {
         'default_tax_rate' => '8.250',
         'taxable_labor' => '0',
         'taxable_parts' => '1',
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'tax']));
 
     $settings->refresh();
 
@@ -535,8 +535,10 @@ test('tax and shop fee switches are checkboxes that post 0 when off and 1 when o
     foreach (['taxable_labor', 'taxable_parts', 'taxable_shop_fees'] as $field) {
         $response
             ->assertSee('name="tax_profiles[0]['.$field.']"', false)
-            ->assertSee('type="checkbox" name="tax_profiles[0]['.$field.']" value="1"', false)
+            ->assertSee('name="tax_profiles[0]['.$field.']" value="1"', false)
             ->assertDontSee('<select name="tax_profiles[0]['.$field.']"', false);
+        expect($response->getContent())
+            ->toMatch('/type="checkbox"[^>]*name="tax_profiles\[0\]\['.preg_quote($field, '/').'\]"[^>]*value="1"/');
     }
 
     $response
@@ -562,7 +564,7 @@ test('saving tax with the switch on or off persists exactly the posted values', 
         'taxable_labor' => '1',
         'taxable_parts' => '0',
         'taxable_shop_fees' => '1',
-    ])->assertRedirect(route('operations.settings.shop.edit'))
+    ])->assertRedirect(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'tax']))
         ->assertSessionHasNoErrors();
 
     $settings = ShopSettings::current()->fresh();
