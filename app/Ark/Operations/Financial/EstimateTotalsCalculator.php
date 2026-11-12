@@ -674,6 +674,7 @@ class EstimateTotalsCalculator
         $overlay->shop_fee_rate = $profile->rate;
         $overlay->shop_fee_flat_cents = $profile->flatCents;
         $overlay->shop_fee_cap_cents = $profile->capCents;
+        $overlay->shop_fee_applies_to = $profile->appliesTo;
         $overlay->taxable_shop_fees = $profile->taxable;
 
         return $overlay;
@@ -724,7 +725,7 @@ class EstimateTotalsCalculator
         $concernsById = $repairOrder->concerns->keyBy('id');
 
         $eligibleLines = $lines
-            ->filter(fn (RepairOrderLine $line): bool => $line->type->isShopFeeEligible())
+            ->filter(fn (RepairOrderLine $line): bool => $shopFeeProfile->appliesToLineType($line->type))
             ->filter(fn (RepairOrderLine $line): bool => ($subtotals[$line->id] ?? 0) > 0)
             ->filter(fn (RepairOrderLine $line): bool => $this->shopFeesApplyToLine(
                 $repairOrder,

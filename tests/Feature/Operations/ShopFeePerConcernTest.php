@@ -235,12 +235,13 @@ test('switching fee methods preserves inactive stored values', function () {
         ->and((string) $settings->shop_fee_rate)->toBe('7.000');
 });
 
-test('shop fee profile marks per-concern mode and schema 2', function () {
+test('shop fee profile marks per-concern mode and schema 3 with applies_to', function () {
     $profile = ShopFeeProfile::fromShopSettings(ShopSettings::current());
 
     expect($profile->isPerConcern())->toBeTrue()
         ->and($profile->usesCap())->toBeTrue()
-        ->and($profile->toArray()['schema'])->toBe(2)
+        ->and($profile->toArray()['schema'])->toBe(3)
+        ->and($profile->toArray()['applies_to'])->toBe('both')
         ->and($profile->toArray()['mode'])->toBe('per_concern');
 });
 

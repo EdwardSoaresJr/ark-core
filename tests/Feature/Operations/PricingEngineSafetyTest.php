@@ -236,5 +236,5 @@ test('pricing context provenance exposes schema versions', function () {
 
     expect($provenance['terminal'])->toBeFalse()
         ->and($provenance['commercial_schema'])->toBe(2)
-        ->and($provenance['shop_fee_schema'])->toBe(2);
+        ->and($provenance['shop_fee_schema'])->toBe(3);
 });

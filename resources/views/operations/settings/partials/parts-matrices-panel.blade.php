@@ -325,9 +325,9 @@
         <div class="alert alert-danger" role="alert">{{ $message }}</div>
     @enderror
 
-    {{-- Match Shop Settings left-tab nav (same pattern Labor content sits beside): card + list-group-flush + active item. --}}
-    <div class="row g-3">
-        <div class="col-12 col-lg-3 col-xxl-2">
+    {{-- Shared Financial Rules master-detail (~240px nav) with Labor and Tax. --}}
+    <div class="ops-financial-master-detail">
+        <div class="ops-financial-master-detail__nav">
             <nav class="card sticky-lg-top" style="top: 1rem" aria-label="Parts matrices" data-parts-matrix-nav>
                 <div class="card-header py-2">
                     <div class="subheader">Parts matrices</div>
@@ -336,14 +336,14 @@
                     <template x-for="matrix in matrices" :key="matrix.key">
                         <button
                             type="button"
-                            class="list-group-item list-group-item-action"
+                            class="list-group-item list-group-item-action ops-financial-master-detail__nav-item"
                             :class="{ 'active': selectedKey === matrix.key }"
                             :aria-current="selectedKey === matrix.key ? 'page' : null"
                             :data-parts-matrix-tab="matrix.key"
                             @click="selectMatrix(matrix.key)"
                         >
-                            <span x-text="matrix.name"></span>
-                            <span class="badge bg-secondary-lt ms-1" x-show="matrix.key === defaultPartsMatrixKey" x-cloak>Default</span>
+                            <span class="ops-financial-master-detail__nav-label" x-text="matrix.name"></span>
+                            <span class="badge bg-secondary-lt" x-show="matrix.key === defaultPartsMatrixKey" x-cloak>Default</span>
                         </button>
                     </template>
                 </div>
@@ -351,7 +351,7 @@
             <p class="small text-secondary mt-2 mb-0 d-lg-none">Select a matrix above, then edit its pricing tiers.</p>
         </div>
 
-        <div class="col-12 col-lg-9 col-xxl-10">
+        <div class="ops-financial-master-detail__editor">
             <form
                 id="parts-matrix-form"
                 method="POST"

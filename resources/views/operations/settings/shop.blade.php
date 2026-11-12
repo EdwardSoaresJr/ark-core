@@ -563,74 +563,21 @@
                         </ul>
                     </div>
 
+                    @include('operations.settings.partials.financial-master-detail-styles')
+
                     <div class="card-body" id="financial-panel-labor" role="tabpanel" aria-labelledby="financial-tab-labor" x-show="financialTab === 'labor'" data-settings-labor>
                         @include('operations.settings.partials.labor-work-type-matrix')
                     </div>
 
                     <div class="card-body" id="financial-panel-tax" role="tabpanel" aria-labelledby="financial-tab-tax" x-show="financialTab === 'tax'" x-cloak>
-                        @php
-                            $taxEnabled = (bool) old('tax_enabled', $settings->tax_enabled);
-                        @endphp
-                        <form method="POST" action="{{ route('operations.settings.shop.tax.update') }}" x-data="{ taxEnabled: @js($taxEnabled) }" style="max-width: 48rem" data-settings-tax>
-                            @csrf
-                            @method('PATCH')
-                            <h3 class="mb-1">Tax outcome</h3>
-                            <p class="text-secondary small">Used when calculating taxable estimate/invoice totals. Set rate, label, and which sell amounts tax applies to - including allocated shop fees when enabled.</p>
-
-                            <label class="form-check form-switch">
-                                <input type="hidden" name="tax_enabled" value="0">
-                                <input type="checkbox" name="tax_enabled" value="1" x-model="taxEnabled" @checked($taxEnabled) class="form-check-input">
-                                <span class="form-check-label">Charge sales tax</span>
-                            </label>
-                            <p x-show="! taxEnabled" @if ($taxEnabled) x-cloak @endif class="text-secondary small">Tax is off. Estimates and invoices show no sales tax. Turn it on to set the rate and what it applies to.</p>
-                            <div x-show="taxEnabled" @unless ($taxEnabled) x-cloak @endunless class="row g-3">
-                                <div class="col-12 col-md-6">
-                                    <label for="settings-tax-label" class="form-label">Tax display name</label>
-                                    <input id="settings-tax-label" name="tax_label" value="{{ old('tax_label', $settings->taxLabel()) }}" required maxlength="64" placeholder="Tax" @class(['form-control', 'is-invalid' => $errors->has('tax_label')])>
-                                    @error('tax_label')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="settings-tax-rate" class="form-label">Sales tax rate</label>
-                                    <div @class(['input-group', 'has-validation' => $errors->has('default_tax_rate')])>
-                                        <input id="settings-tax-rate" name="default_tax_rate" value="{{ old('default_tax_rate', $settings->salesTaxRate()) }}" required inputmode="decimal" @class(['form-control', 'is-invalid' => $errors->has('default_tax_rate')])>
-                                        <span class="input-group-text">%</span>
-                                        @error('default_tax_rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                                <fieldset class="col-12">
-                                    <legend class="form-label">Apply tax to</legend>
-                                    <div class="d-flex flex-wrap gap-4">
-                                        <label class="form-check mb-0">
-                                            <input type="hidden" name="taxable_labor" value="0">
-                                            <input type="checkbox" name="taxable_labor" value="1" @checked((bool) old('taxable_labor', $settings->taxable_labor)) class="form-check-input">
-                                            <span class="form-check-label">Tax labor</span>
-                                        </label>
-                                        <label class="form-check mb-0">
-                                            <input type="hidden" name="taxable_parts" value="0">
-                                            <input type="checkbox" name="taxable_parts" value="1" @checked((bool) old('taxable_parts', $settings->taxable_parts)) class="form-check-input">
-                                            <span class="form-check-label">Tax parts</span>
-                                        </label>
-                                        <label class="form-check mb-0">
-                                            <input type="hidden" name="taxable_shop_fees" value="0">
-                                            <input type="checkbox" name="taxable_shop_fees" value="1" @checked((bool) old('taxable_shop_fees', $settings->taxable_shop_fees)) class="form-check-input">
-                                            <span class="form-check-label">Tax shop fees</span>
-                                        </label>
-                                    </div>
-                                </fieldset>
-                            </div>
-                            <div class="border rounded px-3 py-2 mt-3 small text-secondary" data-settings-tax-saved>
-                                Saved tax setup: {{ $settings->tax_enabled ? $settings->salesTaxRate().' '.$settings->taxLabel() : 'Tax disabled' }} · {{ $settings->taxable_labor ? 'labor taxable' : 'labor not taxable' }} · {{ $settings->taxable_parts ? 'parts taxable' : 'parts not taxable' }} · {{ $settings->taxable_shop_fees ? 'shop fees taxable' : 'shop fees not taxable' }}.
-                            </div>
-                            <div class="d-flex justify-content-end border-top pt-3 mt-3">
-                                <button type="submit" class="btn btn-primary">Save Tax Rules</button>
-                            </div>
-                        </form>
+                        @include('operations.settings.partials.tax-profiles-panel')
                     </div>
 
                     <div class="card-body" id="financial-panel-shop-fees" role="tabpanel" aria-labelledby="financial-tab-shop-fees" x-show="financialTab === 'shop-fees'" x-cloak>
                         @php
                             $shopFeeEnabled = (bool) old('shop_fee_enabled', $settings->shop_fee_enabled);
                             $shopFeeMode = old('shop_fee_mode', $settings->shopFeeMode());
+                            $shopFeeAppliesTo = old('shop_fee_applies_to', $settings->shopFeeAppliesTo());
                         @endphp
                         <form
                             method="POST"
@@ -669,6 +616,25 @@
                                         </label>
                                     </div>
                                     @error('shop_fee_mode')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </fieldset>
+                                <fieldset class="mb-0" data-settings-fees-applies-to>
+                                    <legend class="form-label mb-2">Apply shop fees to</legend>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <label class="form-check">
+                                            <input type="radio" class="form-check-input" name="shop_fee_applies_to" value="labor" @checked($shopFeeAppliesTo === 'labor')>
+                                            <span class="form-check-label">Labor only</span>
+                                        </label>
+                                        <label class="form-check">
+                                            <input type="radio" class="form-check-input" name="shop_fee_applies_to" value="parts" @checked($shopFeeAppliesTo === 'parts')>
+                                            <span class="form-check-label">Parts only</span>
+                                        </label>
+                                        <label class="form-check">
+                                            <input type="radio" class="form-check-input" name="shop_fee_applies_to" value="both" @checked($shopFeeAppliesTo === 'both')>
+                                            <span class="form-check-label">Labor and parts</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-hint mb-0">Package lines count with labor. Sublet and fee lines stay outside the shop fee. Applies to every fee type above.</div>
+                                    @error('shop_fee_applies_to')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                 </fieldset>
                                 <div class="row g-3">
                                     <div class="col-12 col-md-4" x-show="shopFeeMode === 'percent'" @if ($shopFeeMode !== 'percent') x-cloak @endif>

@@ -64,19 +64,19 @@
         </div>
     </div>
 
-    <div class="row g-3">
-        <div class="col-12 col-lg-3">
+    <div class="ops-financial-master-detail">
+        <div class="ops-financial-master-detail__nav">
             <div class="list-group list-group-flush border rounded" data-labor-work-type-nav>
                 <template x-for="workType in matrix.work_types" :key="workType.key">
                     <button
                         type="button"
-                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                        class="list-group-item list-group-item-action ops-financial-master-detail__nav-item"
                         :class="{ active: selectedWorkType === workType.key }"
                         @click="selectWorkType(workType.key)"
                         :data-labor-work-type="workType.key"
                     >
-                        <span x-text="workType.label"></span>
-                        <span class="badge bg-azure-lt text-azure" x-show="workType.is_default">Default Work Type</span>
+                        <span class="ops-financial-master-detail__nav-label" x-text="workType.label"></span>
+                        <span class="badge bg-azure-lt text-azure" x-show="workType.is_default">Default</span>
                     </button>
                 </template>
             </div>
@@ -85,7 +85,7 @@
             </button>
         </div>
 
-        <div class="col-12 col-lg-9">
+        <div class="ops-financial-master-detail__editor">
             <div class="mb-2">
                 <h4 class="mb-0" data-labor-selected-heading>
                     Rates for <span x-text="selectedWorkTypeLabel()"></span>

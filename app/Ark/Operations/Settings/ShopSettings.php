@@ -47,8 +47,11 @@ use InvalidArgumentException;
     'taxable_labor',
     'taxable_parts',
     'taxable_shop_fees',
+    'tax_profiles',
+    'tax_document_presentation',
     'shop_fee_enabled',
     'shop_fee_mode',
+    'shop_fee_applies_to',
     'shop_fee_rate',
     'shop_fee_flat_cents',
     'shop_fee_cap_cents',
@@ -410,6 +413,7 @@ TEXT;
         'taxable_labor' => 'boolean',
         'taxable_parts' => 'boolean',
         'taxable_shop_fees' => 'boolean',
+        'tax_profiles' => 'array',
         'shop_fee_enabled' => 'boolean',
         'shop_fee_flat_cents' => 'integer',
         'default_deposit_enabled' => 'boolean',
@@ -592,8 +596,11 @@ TEXT;
             'taxable_labor' => false,
             'taxable_parts' => true,
             'taxable_shop_fees' => false,
+            'tax_profiles' => null,
+            'tax_document_presentation' => 'combined',
             'shop_fee_enabled' => false,
             'shop_fee_mode' => 'percent',
+            'shop_fee_applies_to' => 'both',
             'shop_fee_rate' => 0,
             'shop_fee_flat_cents' => null,
             'shop_fee_cap_cents' => null,
@@ -1128,6 +1135,21 @@ TEXT;
         return filled($this->tax_label) ? $this->tax_label : 'Tax';
     }
 
+    /**
+     * Named tax profiles for settings UI. Falls back to a single legacy-derived profile.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function taxProfiles(): array
+    {
+        return \App\Ark\Operations\EstimatePricing\ShopTaxCatalog::profilesFromShopSettings($this);
+    }
+
+    public function taxDocumentPresentation(): string
+    {
+        return \App\Ark\Operations\EstimatePricing\ShopTaxCatalog::documentPresentation($this);
+    }
+
     public function shopFeeCap(): string
     {
         return $this->shop_fee_cap_cents === null
@@ -1147,6 +1169,17 @@ TEXT;
         $mode = (string) ($this->shop_fee_mode ?? 'percent');
 
         return in_array($mode, ['percent', 'flat', 'per_concern'], true) ? $mode : 'percent';
+    }
+
+    /**
+     * Which line categories feed the shop fee: labor | parts | both.
+     * Default both preserves the historical Labor+Part+Package eligible set.
+     */
+    public function shopFeeAppliesTo(): string
+    {
+        $appliesTo = (string) ($this->shop_fee_applies_to ?? 'both');
+
+        return in_array($appliesTo, ['labor', 'parts', 'both'], true) ? $appliesTo : 'both';
     }
 
     public function defaultDepositEnabled(): bool

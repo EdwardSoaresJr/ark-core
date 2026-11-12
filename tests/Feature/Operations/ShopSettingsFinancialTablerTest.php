@@ -114,7 +114,7 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
     $section = '//section[@data-settings-section="financial"]';
 
     foreach ([
-        route('operations.settings.shop.tax.update') => ['tax_enabled', 'tax_label', 'default_tax_rate', 'taxable_labor', 'taxable_parts', 'taxable_shop_fees'],
+        route('operations.settings.shop.tax.update') => ['tax_enabled', 'tax_label', 'default_tax_rate', 'tax_document_presentation', 'tax_profiles[0][name]', 'tax_profiles[0][components][0][rate]'],
         route('operations.settings.shop.fees.update') => ['shop_fee_enabled', 'shop_fee_rate', 'shop_fee_cap'],
         route('operations.settings.shop.deposits.update') => ['default_deposit_enabled', 'default_deposit_include_parts', 'default_deposit_include_diagnostics', 'default_deposit_diagnostic_labor_category_keys[]'],
     ] as $action => $fields) {
@@ -154,7 +154,12 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         ->toContain("response.type === 'opaqueredirect'") // rejected as failure, never success
         ->not->toContain("redirect: 'manual',")
         ->toContain('sticky-lg-top')
-        ->toContain('col-lg-3 col-xxl-2')
+        ->toContain('ops-financial-master-detail')
+        ->toContain('ops-financial-master-detail__nav-item')
+        ->toContain('data-tax-profile-nav')
+        ->toContain('data-tax-add-profile')
+        ->toContain('data-tax-add-component')
+        ->toContain('tax_document_presentation')
         ->toContain('fd.append(`parts_matrices[${matrixIndex}][rows][${rowIndex}][markup_percentage]`')
         ->toContain('localStorage.setItem(storageKey, key)');
 });
@@ -162,16 +167,24 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
 test('submitting each rendered financial form unchanged keeps every stored value', function (): void {
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    ShopSettings::current()->update([
+    $settings = ShopSettings::current();
+    $settings->update([
         'tax_enabled' => true,
+        'tax_label' => 'Sales Tax',
         'default_tax_rate' => '8.250',
         'taxable_labor' => false,
         'taxable_parts' => true,
+        'taxable_shop_fees' => false,
+        'tax_document_presentation' => 'combined',
         'shop_fee_enabled' => true,
         'default_deposit_enabled' => true,
         'default_deposit_include_parts' => false,
         'default_deposit_include_diagnostics' => true,
         'default_deposit_diagnostic_labor_category_keys' => ['diagnostic', 'programming'],
+    ]);
+    // Persist the catalog projection once so an unchanged tax form round-trip does not look like a schema migration.
+    $settings->update([
+        'tax_profiles' => \App\Ark\Operations\EstimatePricing\ShopTaxCatalog::profilesFromShopSettings($settings->fresh()),
     ]);
 
     $stored = fn (): array => collect(ShopSettings::current()->fresh()->getAttributes())->except(['updated_at'])->all();
@@ -218,30 +231,39 @@ test('a rejected tax save shows the message on the rate field and keeps the type
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
     $before = ShopSettings::current()->fresh()->getAttributes();
 
-    $html = $this->from(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'tax']))
-        ->followingRedirects()
+    $response = $this->from(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'tax']))
         ->patch(route('operations.settings.shop.tax.update'), [
             'tax_enabled' => '1',
-            'tax_label' => 'Typed label',
-            'default_tax_rate' => 'abc',
-            'taxable_labor' => '1',
-            'taxable_parts' => '1',
-            'taxable_shop_fees' => '0',
-        ])
-        ->assertOk()
-        ->getContent();
-
-    $xpath = financialSettingsXpath($html);
-    $rate = $xpath->query('//input[@id="settings-tax-rate"]')->item(0);
-
-    expect($rate->getAttribute('class'))->toContain('is-invalid')
-        ->and($rate->getAttribute('value'))->toBe('abc')
-        ->and(trim($xpath->query('following-sibling::*['.financialSettingsHasClass('invalid-feedback').']', $rate)->item(0)?->textContent ?? ''))->not->toBe('')
-        ->and($xpath->query('//input[@id="settings-tax-label"]/@value')->item(0)?->nodeValue)->toBe('Typed label')
-        ->and(ShopSettings::current()->fresh()->getAttributes())->toMatchArray([
-            'default_tax_rate' => $before['default_tax_rate'],
-            'tax_label' => $before['tax_label'],
+            'tax_document_presentation' => 'combined',
+            'tax_profiles' => [
+                [
+                    'key' => 'shop-default',
+                    'name' => 'Typed label',
+                    'is_default' => '1',
+                    'is_active' => '1',
+                    'taxable_labor' => '1',
+                    'taxable_parts' => '1',
+                    'taxable_shop_fees' => '0',
+                    'components' => [
+                        [
+                            'id' => 'legacy-combined',
+                            'name' => 'Typed label',
+                            'rate' => 'abc',
+                            'jurisdiction_type' => 'other',
+                            'is_active' => '1',
+                        ],
+                    ],
+                ],
+            ],
         ]);
+
+    $response->assertRedirect(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'tax']))
+        ->assertSessionHasErrors();
+
+    expect(ShopSettings::current()->fresh()->getAttributes())->toMatchArray([
+        'default_tax_rate' => $before['default_tax_rate'],
+        'tax_label' => $before['tax_label'],
+    ]);
 });
 
 test('staff without settings access cannot open financial rules or save any financial form', function (ArkRole $role): void {

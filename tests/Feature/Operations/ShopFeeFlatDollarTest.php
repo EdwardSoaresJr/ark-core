@@ -171,6 +171,10 @@ test('shop fee settings page exposes percent flat and per-concern choices', func
         ->assertSee('Fixed dollar fee per RO')
         ->assertSee('Fixed dollar fee per concern')
         ->assertSee('Flat fee per RO ($)')
+        ->assertSee('Apply shop fees to')
+        ->assertSee('Labor only')
+        ->assertSee('Parts only')
+        ->assertSee('Labor and parts')
         ->assertSee('Applies to new repair orders only');
 });
 
@@ -179,7 +183,8 @@ test('shop fee profile serializes from shop settings', function () {
 
     expect($profile->isFlat())->toBeTrue()
         ->and($profile->flatCents)->toBe(2500)
-        ->and($profile->toArray()['schema'])->toBe(2);
+        ->and($profile->toArray()['schema'])->toBe(3)
+        ->and($profile->toArray()['applies_to'])->toBe('both');
 });
 
 test('legacy schema-1 flat profiles are never reinterpreted as per concern', function () {
