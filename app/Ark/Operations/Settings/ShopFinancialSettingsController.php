@@ -533,6 +533,7 @@ class ShopFinancialSettingsController
         $data = $request->validate([
             'shop_fee_enabled' => ['nullable', 'boolean'],
             'shop_fee_mode' => ['nullable', 'string', Rule::in(['percent', 'flat', 'per_concern'])],
+            'shop_fee_applies_to' => ['nullable', 'string', Rule::in(['labor', 'parts', 'both'])],
             'shop_fee_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'shop_fee_flat' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'shop_fee_cap' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
@@ -542,6 +543,11 @@ class ShopFinancialSettingsController
         $mode = (string) ($data['shop_fee_mode'] ?? ShopSettings::current()->shopFeeMode());
         if (! in_array($mode, ['percent', 'flat', 'per_concern'], true)) {
             $mode = 'percent';
+        }
+
+        $appliesTo = (string) ($data['shop_fee_applies_to'] ?? ShopSettings::current()->shopFeeAppliesTo());
+        if (! in_array($appliesTo, ['labor', 'parts', 'both'], true)) {
+            $appliesTo = 'both';
         }
 
         if ($enabled && in_array($mode, ['flat', 'per_concern'], true) && ! filled($data['shop_fee_flat'] ?? null)) {
@@ -583,6 +589,7 @@ class ShopFinancialSettingsController
         $settings->update([
             'shop_fee_enabled' => $enabled,
             'shop_fee_mode' => $mode,
+            'shop_fee_applies_to' => $appliesTo,
             'shop_fee_rate' => $rate,
             'shop_fee_flat_cents' => $flatCents,
             'shop_fee_cap_cents' => $capCents,

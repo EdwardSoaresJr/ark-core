@@ -577,6 +577,7 @@
                         @php
                             $shopFeeEnabled = (bool) old('shop_fee_enabled', $settings->shop_fee_enabled);
                             $shopFeeMode = old('shop_fee_mode', $settings->shopFeeMode());
+                            $shopFeeAppliesTo = old('shop_fee_applies_to', $settings->shopFeeAppliesTo());
                         @endphp
                         <form
                             method="POST"
@@ -615,6 +616,25 @@
                                         </label>
                                     </div>
                                     @error('shop_fee_mode')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </fieldset>
+                                <fieldset class="mb-0" data-settings-fees-applies-to>
+                                    <legend class="form-label mb-2">Apply shop fees to</legend>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <label class="form-check">
+                                            <input type="radio" class="form-check-input" name="shop_fee_applies_to" value="labor" @checked($shopFeeAppliesTo === 'labor')>
+                                            <span class="form-check-label">Labor only</span>
+                                        </label>
+                                        <label class="form-check">
+                                            <input type="radio" class="form-check-input" name="shop_fee_applies_to" value="parts" @checked($shopFeeAppliesTo === 'parts')>
+                                            <span class="form-check-label">Parts only</span>
+                                        </label>
+                                        <label class="form-check">
+                                            <input type="radio" class="form-check-input" name="shop_fee_applies_to" value="both" @checked($shopFeeAppliesTo === 'both')>
+                                            <span class="form-check-label">Labor and parts</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-hint mb-0">Package lines count with labor. Sublet and fee lines stay outside the shop fee. Applies to every fee type above.</div>
+                                    @error('shop_fee_applies_to')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                 </fieldset>
                                 <div class="row g-3">
                                     <div class="col-12 col-md-4" x-show="shopFeeMode === 'percent'" @if ($shopFeeMode !== 'percent') x-cloak @endif>

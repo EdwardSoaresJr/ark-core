@@ -51,6 +51,7 @@ use InvalidArgumentException;
     'tax_document_presentation',
     'shop_fee_enabled',
     'shop_fee_mode',
+    'shop_fee_applies_to',
     'shop_fee_rate',
     'shop_fee_flat_cents',
     'shop_fee_cap_cents',
@@ -599,6 +600,7 @@ TEXT;
             'tax_document_presentation' => 'combined',
             'shop_fee_enabled' => false,
             'shop_fee_mode' => 'percent',
+            'shop_fee_applies_to' => 'both',
             'shop_fee_rate' => 0,
             'shop_fee_flat_cents' => null,
             'shop_fee_cap_cents' => null,
@@ -1167,6 +1169,17 @@ TEXT;
         $mode = (string) ($this->shop_fee_mode ?? 'percent');
 
         return in_array($mode, ['percent', 'flat', 'per_concern'], true) ? $mode : 'percent';
+    }
+
+    /**
+     * Which line categories feed the shop fee: labor | parts | both.
+     * Default both preserves the historical Labor+Part+Package eligible set.
+     */
+    public function shopFeeAppliesTo(): string
+    {
+        $appliesTo = (string) ($this->shop_fee_applies_to ?? 'both');
+
+        return in_array($appliesTo, ['labor', 'parts', 'both'], true) ? $appliesTo : 'both';
     }
 
     public function defaultDepositEnabled(): bool
