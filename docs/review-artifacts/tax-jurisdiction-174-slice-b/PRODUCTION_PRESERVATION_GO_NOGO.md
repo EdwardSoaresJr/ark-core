@@ -16,7 +16,7 @@
 
 | Gate | Result |
 |---|---|
-| Branch tip under review | d77c6632838b938bdc9968944a7916cb9554351e |
+| Branch tip under review | `1c909b82ea5e08f17f00fd788ed8ff98126a5d58` (blocker close `d77c663`) |
 | Mergeable vs main `018ef6a` | MERGEABLE / CLEAN at last check |
 | Focused Tests / lint / security / communications-boundary | PASS on prior tip; re-run after this commit |
 | Regression pest on PR | Often SKIPPED by workflow policy — local financial subset **98 passed** (`TaxJurisdictionSliceB`, Slice A tax, Shop Fees, PricingEngineSafety, AuthorizationIntegrity, ApprovedWorkChangesAfterAuthorization) |
