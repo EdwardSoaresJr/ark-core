@@ -155,7 +155,10 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         ->not->toContain("redirect: 'manual',")
         ->toContain('sticky-lg-top')
         ->toContain('ops-financial-master-detail')
+        ->toContain('ops-financial-master-detail__nav-item')
         ->toContain('data-tax-profile-nav')
+        ->toContain('data-tax-add-profile')
+        ->toContain('data-tax-add-component')
         ->toContain('tax_document_presentation')
         ->toContain('fd.append(`parts_matrices[${matrixIndex}][rows][${rowIndex}][markup_percentage]`')
         ->toContain('localStorage.setItem(storageKey, key)');

@@ -28,6 +28,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -342,7 +343,189 @@ class ShopFinancialSettingsController
 
         // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
         // Presentation preference is shop-wide for new documents; issued/archived docs stay frozen.
-        return $this->redirectWithStatus('Tax settings saved.');
+        return $this->redirectToTaxSettings('Tax settings saved.');
+    }
+
+    public function storeTaxProfile(Request $request): RedirectResponse
+    {
+        $selectedKey = null;
+
+        DB::transaction(function () use (&$selectedKey): void {
+            ShopSettings::forgetCurrent();
+            $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
+            ShopSettings::bindCurrent($settings);
+
+            $this->stampLivingRepairOrdersWithCurrentTaxProfile($settings);
+
+            $profiles = ShopTaxCatalog::profilesFromShopSettings($settings);
+            if (count($profiles) >= ShopTaxCatalog::MAX_PROFILES) {
+                throw ValidationException::withMessages([
+                    'tax_profiles' => 'Keep tax profiles to '.ShopTaxCatalog::MAX_PROFILES.' or fewer.',
+                ]);
+            }
+
+            $selectedKey = 'profile-'.Str::lower(Str::random(8));
+            $profiles[] = [
+                'key' => $selectedKey,
+                'name' => 'New tax profile',
+                'is_default' => false,
+                'is_active' => true,
+                'state' => null,
+                'cities' => [],
+                'zip_codes' => [],
+                'service_area_description' => null,
+                'reporting_code' => null,
+                'taxable_labor' => false,
+                'taxable_parts' => true,
+                'taxable_shop_fees' => false,
+                'components' => [[
+                    'id' => (string) Str::uuid(),
+                    'name' => 'Sales tax',
+                    'rate' => '0.000',
+                    'jurisdiction_type' => 'other',
+                    'reporting_code' => null,
+                    'sort_order' => 1,
+                    'is_active' => true,
+                ]],
+            ];
+
+            $profiles = ShopTaxCatalog::normalizeProfiles($profiles);
+            $legacy = ShopTaxCatalog::projectLegacyColumns($profiles);
+
+            $settings->update([
+                'tax_profiles' => $profiles,
+                'tax_label' => $legacy['tax_label'],
+                'default_tax_rate' => $legacy['default_tax_rate'],
+                'taxable_labor' => $legacy['taxable_labor'],
+                'taxable_parts' => $legacy['taxable_parts'],
+                'taxable_shop_fees' => $legacy['taxable_shop_fees'],
+            ]);
+            ShopSettings::forgetCurrent();
+        });
+
+        return $this->redirectToTaxSettings('Tax profile added.', $selectedKey);
+    }
+
+    public function storeTaxComponent(Request $request, string $profileKey): RedirectResponse
+    {
+        DB::transaction(function () use ($profileKey): void {
+            ShopSettings::forgetCurrent();
+            $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
+            ShopSettings::bindCurrent($settings);
+
+            $this->stampLivingRepairOrdersWithCurrentTaxProfile($settings);
+
+            $profiles = ShopTaxCatalog::profilesFromShopSettings($settings);
+            $index = collect($profiles)->search(
+                fn (array $profile): bool => $profile['key'] === $profileKey,
+            );
+
+            if ($index === false) {
+                throw ValidationException::withMessages([
+                    'tax_profiles' => 'That tax profile was not found.',
+                ]);
+            }
+
+            $components = $profiles[$index]['components'] ?? [];
+            if (count($components) >= ShopTaxCatalog::MAX_COMPONENTS_PER_PROFILE) {
+                throw ValidationException::withMessages([
+                    'tax_profiles' => 'Keep tax components to '.ShopTaxCatalog::MAX_COMPONENTS_PER_PROFILE.' or fewer per profile.',
+                ]);
+            }
+
+            $components[] = [
+                'id' => (string) Str::uuid(),
+                'name' => 'New component',
+                'rate' => '0.000',
+                'jurisdiction_type' => 'other',
+                'reporting_code' => null,
+                'sort_order' => count($components) + 1,
+                'is_active' => true,
+            ];
+            $profiles[$index]['components'] = $components;
+            $profiles[$index]['is_active'] = true;
+
+            $profiles = ShopTaxCatalog::normalizeProfiles($profiles);
+            $legacy = ShopTaxCatalog::projectLegacyColumns($profiles);
+
+            $settings->update([
+                'tax_profiles' => $profiles,
+                'tax_label' => $legacy['tax_label'],
+                'default_tax_rate' => $legacy['default_tax_rate'],
+                'taxable_labor' => $legacy['taxable_labor'],
+                'taxable_parts' => $legacy['taxable_parts'],
+                'taxable_shop_fees' => $legacy['taxable_shop_fees'],
+            ]);
+            ShopSettings::forgetCurrent();
+        });
+
+        return $this->redirectToTaxSettings('Tax component added.', $profileKey);
+    }
+
+    public function updateTaxProfileActive(Request $request, string $profileKey): RedirectResponse
+    {
+        $data = $request->validate([
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        DB::transaction(function () use ($profileKey, $data): void {
+            ShopSettings::forgetCurrent();
+            $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
+            ShopSettings::bindCurrent($settings);
+
+            $this->stampLivingRepairOrdersWithCurrentTaxProfile($settings);
+
+            $profiles = ShopTaxCatalog::profilesFromShopSettings($settings);
+            $index = collect($profiles)->search(
+                fn (array $profile): bool => $profile['key'] === $profileKey,
+            );
+
+            if ($index === false) {
+                throw ValidationException::withMessages([
+                    'tax_profiles' => 'That tax profile was not found.',
+                ]);
+            }
+
+            if ($profiles[$index]['is_default'] && ! (bool) $data['is_active']) {
+                throw ValidationException::withMessages([
+                    'tax_profiles' => 'The default tax profile must stay active. Choose another default first.',
+                ]);
+            }
+
+            $profiles[$index]['is_active'] = (bool) $data['is_active'];
+            $profiles = ShopTaxCatalog::normalizeProfiles($profiles);
+            $legacy = ShopTaxCatalog::projectLegacyColumns($profiles);
+
+            $settings->update([
+                'tax_profiles' => $profiles,
+                'tax_label' => $legacy['tax_label'],
+                'default_tax_rate' => $legacy['default_tax_rate'],
+                'taxable_labor' => $legacy['taxable_labor'],
+                'taxable_parts' => $legacy['taxable_parts'],
+                'taxable_shop_fees' => $legacy['taxable_shop_fees'],
+            ]);
+            ShopSettings::forgetCurrent();
+        });
+
+        $status = (bool) $data['is_active'] ? 'Tax profile reactivated.' : 'Tax profile deactivated.';
+
+        return $this->redirectToTaxSettings($status, $profileKey);
+    }
+
+    private function redirectToTaxSettings(string $status, ?string $selectedProfileKey = null): RedirectResponse
+    {
+        $query = [
+            'section' => 'financial',
+            'financial-tab' => 'tax',
+        ];
+
+        if (filled($selectedProfileKey)) {
+            $query['tax_profile'] = $selectedProfileKey;
+        }
+
+        return redirect()
+            ->route('operations.settings.shop.edit', $query)
+            ->with('status', $status);
     }
 
     public function updateFees(Request $request): RedirectResponse

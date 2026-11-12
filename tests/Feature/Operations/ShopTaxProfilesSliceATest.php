@@ -165,3 +165,98 @@ test('inactive components remain stored and do not affect the combined rate', fu
     expect(ShopTaxCatalog::combinedRate($normalized[0]))->toBe('2.900')
         ->and($normalized[0]['components'])->toHaveCount(2);
 });
+
+test('add tax profile and add tax component persist stable ids and reload in the editor', function () {
+    ShopSettings::current()->update([
+        'tax_enabled' => true,
+        'tax_label' => 'Sales Tax',
+        'default_tax_rate' => '8.250',
+        'taxable_parts' => true,
+        'tax_profiles' => null,
+    ]);
+
+    $this->post(route('operations.settings.shop.tax.profiles.store'))
+        ->assertRedirect()
+        ->assertSessionHas('status', 'Tax profile added.');
+
+    $settings = ShopSettings::current()->fresh();
+    $profiles = $settings->taxProfiles();
+    expect($profiles)->toHaveCount(2);
+
+    $added = collect($profiles)->firstWhere('is_default', false);
+    expect($added)->not->toBeNull()
+        ->and($added['name'])->toBe('New tax profile')
+        ->and($added['components'])->toHaveCount(1)
+        ->and($added['components'][0]['id'])->not->toBe('');
+
+    $componentIdBefore = $added['components'][0]['id'];
+
+    $this->post(route('operations.settings.shop.tax.components.store', $added['key']))
+        ->assertRedirect()
+        ->assertSessionHas('status', 'Tax component added.');
+
+    $added = collect(ShopSettings::current()->fresh()->taxProfiles())->firstWhere('key', $added['key']);
+    expect($added['components'])->toHaveCount(2)
+        ->and($added['components'][0]['id'])->toBe($componentIdBefore)
+        ->and($added['components'][1]['id'])->not->toBe($componentIdBefore)
+        ->and($added['components'][1]['name'])->toBe('New component');
+
+    $html = $this->get(route('operations.settings.shop.edit', [
+        'section' => 'financial',
+        'financial-tab' => 'tax',
+        'tax_profile' => $added['key'],
+    ]))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('data-tax-profile-tab="'.$added['key'].'"')
+        ->toContain('data-tax-add-profile')
+        ->toContain('data-tax-add-component-button')
+        ->toContain($added['components'][1]['id']);
+});
+
+test('deactivate and reactivate a non-default tax profile keeps its component ids', function () {
+    $this->post(route('operations.settings.shop.tax.profiles.store'))->assertRedirect();
+    $added = collect(ShopSettings::current()->fresh()->taxProfiles())->firstWhere('is_default', false);
+    $componentId = $added['components'][0]['id'];
+
+    $this->patch(route('operations.settings.shop.tax.profiles.active', $added['key']), [
+        'is_active' => '0',
+    ])->assertRedirect()->assertSessionHas('status', 'Tax profile deactivated.');
+
+    $deactivated = collect(ShopSettings::current()->fresh()->taxProfiles())->firstWhere('key', $added['key']);
+    expect($deactivated['is_active'])->toBeFalse()
+        ->and($deactivated['components'][0]['id'])->toBe($componentId);
+
+    $this->patch(route('operations.settings.shop.tax.profiles.active', $added['key']), [
+        'is_active' => '1',
+    ])->assertRedirect()->assertSessionHas('status', 'Tax profile reactivated.');
+
+    $reactivated = collect(ShopSettings::current()->fresh()->taxProfiles())->firstWhere('key', $added['key']);
+    expect($reactivated['is_active'])->toBeTrue()
+        ->and($reactivated['components'][0]['id'])->toBe($componentId);
+});
+
+test('validation rejects an invalid component rate on save', function () {
+    $this->patch(route('operations.settings.shop.tax.update'), [
+        'tax_enabled' => '1',
+        'tax_document_presentation' => 'combined',
+        'tax_profiles' => [
+            [
+                'key' => 'shop-default',
+                'name' => 'Colorado Springs',
+                'is_default' => '1',
+                'is_active' => '1',
+                'taxable_parts' => '1',
+                'components' => [
+                    [
+                        'id' => 'comp-1',
+                        'name' => 'State',
+                        'rate' => 'not-a-rate',
+                        'jurisdiction_type' => 'state',
+                        'is_active' => '1',
+                    ],
+                ],
+            ],
+        ],
+    ])->assertSessionHasErrors();
+});

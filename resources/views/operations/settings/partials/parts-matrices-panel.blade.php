@@ -336,14 +336,14 @@
                     <template x-for="matrix in matrices" :key="matrix.key">
                         <button
                             type="button"
-                            class="list-group-item list-group-item-action"
+                            class="list-group-item list-group-item-action ops-financial-master-detail__nav-item"
                             :class="{ 'active': selectedKey === matrix.key }"
                             :aria-current="selectedKey === matrix.key ? 'page' : null"
                             :data-parts-matrix-tab="matrix.key"
                             @click="selectMatrix(matrix.key)"
                         >
-                            <span x-text="matrix.name"></span>
-                            <span class="badge bg-secondary-lt ms-1" x-show="matrix.key === defaultPartsMatrixKey" x-cloak>Default</span>
+                            <span class="ops-financial-master-detail__nav-label" x-text="matrix.name"></span>
+                            <span class="badge bg-secondary-lt" x-show="matrix.key === defaultPartsMatrixKey" x-cloak>Default</span>
                         </button>
                     </template>
                 </div>

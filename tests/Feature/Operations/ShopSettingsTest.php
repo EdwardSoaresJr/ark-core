@@ -82,15 +82,16 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Default Labor Rate')
         ->assertSee('Labor rate matrix')
         ->assertDontSee('name="standard_hourly_rate"', false)
-        ->assertSee('Sales tax rate')
-        ->assertSee('Tax display name')
+        ->assertSee('Sales tax profiles')
+        ->assertSee('Customer document presentation')
         ->assertSee('Tax labor')
         ->assertSee('Tax parts')
-        ->assertSee('Used when calculating taxable estimate/invoice totals.')
-        ->assertSee('Saved tax setup:')
+        ->assertSee('does not reprice existing open or closed ROs')
+        ->assertSee('Saved projection for new ROs:')
         ->assertDontSee('Effective posture')
         ->assertSee('shop fees not taxable')
         ->assertSee('Tax shop fees')
+        ->assertSee('+ Add tax profile')
         ->assertDontSee('Default tax rate')
         ->assertDontSee('Taxable labor')
         ->assertDontSee('Taxable parts')
@@ -524,19 +525,28 @@ test('tax and shop fee switches are checkboxes that post 0 when off and 1 when o
 
     $response = $this->get(route('operations.settings.shop.edit', ['section' => 'financial']))->assertOk();
 
-    foreach (['tax_enabled', 'taxable_labor', 'taxable_parts', 'taxable_shop_fees', 'shop_fee_enabled'] as $field) {
+    foreach (['tax_enabled', 'shop_fee_enabled'] as $field) {
         $response
             ->assertSee('<input type="hidden" name="'.$field.'" value="0">', false)
             ->assertSee('type="checkbox" name="'.$field.'" value="1"', false)
             ->assertDontSee('<select name="'.$field.'"', false);
     }
 
+    foreach (['taxable_labor', 'taxable_parts', 'taxable_shop_fees'] as $field) {
+        $response
+            ->assertSee('name="tax_profiles[0]['.$field.']"', false)
+            ->assertSee('type="checkbox" name="tax_profiles[0]['.$field.']" value="1"', false)
+            ->assertDontSee('<select name="tax_profiles[0]['.$field.']"', false);
+    }
+
     $response
         ->assertSee('Charge sales tax')
         ->assertSee('Charge a shop fee')
-        ->assertSee('x-data="{ taxEnabled: true }"', false)
+        ->assertSee('taxEnabled: true', false)
         ->assertSee('shopFeeEnabled: false', false)
-        ->assertSee('shopFeeMode:', false);
+        ->assertSee('shopFeeMode:', false)
+        ->assertSee('data-tax-add-profile', false)
+        ->assertSee('+ Add component');
 });
 
 test('saving tax with the switch on or off persists exactly the posted values', function (string $posted, bool $expected) {

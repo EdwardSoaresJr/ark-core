@@ -29,8 +29,15 @@
     } catch (\Illuminate\Validation\ValidationException) {
         $profiles = $settings->taxProfiles();
     }
-    $selectedKey = old('selected_tax_profile_key', collect($profiles)->firstWhere('is_default', true)['key'] ?? $profiles[0]['key']);
+    $requestedKey = request()->query('tax_profile');
+    $selectedKey = old(
+        'selected_tax_profile_key',
+        collect($profiles)->firstWhere('key', $requestedKey)['key']
+            ?? collect($profiles)->firstWhere('is_default', true)['key']
+            ?? $profiles[0]['key'],
+    );
     $defaultProfile = collect($profiles)->firstWhere('is_default', true) ?? $profiles[0];
+    $canAddProfile = count($profiles) < ShopTaxCatalog::MAX_PROFILES;
 @endphp
 
 <form
@@ -98,20 +105,31 @@
                         @foreach ($profiles as $profile)
                             <button
                                 type="button"
-                                class="list-group-item list-group-item-action"
+                                class="list-group-item list-group-item-action ops-financial-master-detail__nav-item"
                                 :class="{ 'active': selectedKey === @js($profile['key']) }"
                                 @click="selectedKey = @js($profile['key'])"
                                 data-tax-profile-tab="{{ $profile['key'] }}"
                             >
-                                {{ $profile['name'] }}
+                                <span class="ops-financial-master-detail__nav-label">{{ $profile['name'] }}</span>
                                 @if ($profile['is_default'])
-                                    <span class="badge bg-secondary-lt ms-1">Default</span>
+                                    <span class="badge bg-secondary-lt">Default</span>
                                 @endif
                                 @unless ($profile['is_active'])
-                                    <span class="badge bg-yellow-lt ms-1">Inactive</span>
+                                    <span class="badge bg-yellow-lt">Inactive</span>
                                 @endunless
                             </button>
                         @endforeach
+                    </div>
+                    <div class="card-footer py-2">
+                        <button
+                            type="submit"
+                            class="btn btn-sm w-100"
+                            form="tax-add-profile"
+                            @disabled(! $canAddProfile)
+                            data-tax-add-profile-button
+                        >
+                            + Add tax profile
+                        </button>
                     </div>
                 </nav>
                 <p class="small text-secondary mt-2 mb-0 d-lg-none">Select a profile above, then edit its components.</p>
@@ -204,6 +222,16 @@
                                             <div class="subheader mb-0">Tax components</div>
                                             <div class="small text-secondary">Combined rate: <strong>{{ ShopTaxCatalog::combinedRate($profile) }}%</strong></div>
                                         </div>
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm"
+                                            form="tax-add-component-{{ $profile['key'] }}"
+                                            @disabled(count($profile['components']) >= ShopTaxCatalog::MAX_COMPONENTS_PER_PROFILE)
+                                            data-tax-add-component-button
+                                            data-tax-profile-key="{{ $profile['key'] }}"
+                                        >
+                                            + Add component
+                                        </button>
                                     </div>
                                     <div class="table-responsive border rounded">
                                         <table class="table table-vcenter table-sm mb-0">
@@ -239,7 +267,7 @@
                                                         </td>
                                                         <td>
                                                             <input type="hidden" name="tax_profiles[{{ $profileIndex }}][components][{{ $componentIndex }}][is_active]" value="0">
-                                                            <input type="checkbox" class="form-check-input" name="tax_profiles[{{ $profileIndex }}][components][{{ $componentIndex }}][is_active]" value="1" @checked($component['is_active'])>
+                                                            <input type="checkbox" class="form-check-input" name="tax_profiles[{{ $profileIndex }}][components][{{ $componentIndex }}][is_active]" value="1" @checked($component['is_active']) title="Active components count toward the combined rate">
                                                         </td>
                                                     </tr>
                                                 @endforeach
@@ -247,10 +275,23 @@
                                         </table>
                                     </div>
                                     <p class="form-hint mb-0 mt-2">
-                                        Component IDs stay stable. Deactivate a component instead of removing it so historical references remain meaningful.
-                                        Add additional profiles/components by saving a copy in a follow-up edit — Slice A stores the catalog without silent deletes.
+                                        Component IDs stay stable. Uncheck Active to deactivate a component without deleting it so historical references remain meaningful.
                                     </p>
                                 </div>
+
+                                @unless ($profile['is_default'])
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm btn-ghost-secondary"
+                                            form="tax-profile-active-{{ $profile['key'] }}"
+                                            data-tax-profile-active-button
+                                            data-tax-profile-key="{{ $profile['key'] }}"
+                                        >
+                                            {{ $profile['is_active'] ? 'Deactivate profile' : 'Reactivate profile' }}
+                                        </button>
+                                    </div>
+                                @endunless
                             </div>
                         </div>
                     </div>
@@ -279,3 +320,40 @@
         <button type="submit" class="btn btn-primary">Save Tax Rules</button>
     </div>
 </form>
+
+{{-- Sibling forms (not nested): HTML forbids forms inside forms; buttons use the form= attribute. --}}
+<form
+    id="tax-add-profile"
+    method="POST"
+    action="{{ route('operations.settings.shop.tax.profiles.store') }}"
+    class="d-none"
+    data-tax-add-profile
+>
+    @csrf
+</form>
+@foreach ($profiles as $profile)
+    <form
+        id="tax-add-component-{{ $profile['key'] }}"
+        method="POST"
+        action="{{ route('operations.settings.shop.tax.components.store', $profile['key']) }}"
+        class="d-none"
+        data-tax-add-component
+        data-tax-profile-key="{{ $profile['key'] }}"
+    >
+        @csrf
+    </form>
+    @unless ($profile['is_default'])
+        <form
+            id="tax-profile-active-{{ $profile['key'] }}"
+            method="POST"
+            action="{{ route('operations.settings.shop.tax.profiles.active', $profile['key']) }}"
+            class="d-none"
+            data-tax-profile-active
+            data-tax-profile-key="{{ $profile['key'] }}"
+        >
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="is_active" value="{{ $profile['is_active'] ? '0' : '1' }}">
+        </form>
+    @endunless
+@endforeach

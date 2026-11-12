@@ -67,6 +67,14 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
 
     Route::patch('/app/settings/shop/tax', [ShopFinancialSettingsController::class, 'updateTax'])
         ->name('operations.settings.shop.tax.update');
+    Route::post('/app/settings/shop/tax/profiles', [ShopFinancialSettingsController::class, 'storeTaxProfile'])
+        ->name('operations.settings.shop.tax.profiles.store');
+    Route::post('/app/settings/shop/tax/profiles/{profileKey}/components', [ShopFinancialSettingsController::class, 'storeTaxComponent'])
+        ->where('profileKey', '[A-Za-z0-9][A-Za-z0-9_-]{0,63}')
+        ->name('operations.settings.shop.tax.components.store');
+    Route::patch('/app/settings/shop/tax/profiles/{profileKey}/active', [ShopFinancialSettingsController::class, 'updateTaxProfileActive'])
+        ->where('profileKey', '[A-Za-z0-9][A-Za-z0-9_-]{0,63}')
+        ->name('operations.settings.shop.tax.profiles.active');
 
     Route::patch('/app/settings/shop/fees', [ShopFinancialSettingsController::class, 'updateFees'])
         ->name('operations.settings.shop.fees.update');

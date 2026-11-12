@@ -29,6 +29,29 @@
         word-break: break-word;
     }
 
+    .ops-financial-master-detail__nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        text-align: left;
+    }
+
+    .ops-financial-master-detail__nav-label {
+        display: block;
+        width: 100%;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .ops-financial-master-detail__nav-item .badge {
+        align-self: flex-start;
+        white-space: normal;
+        max-width: 100%;
+        text-align: left;
+    }
+
     .ops-financial-master-detail__editor > :first-child {
         margin-top: 0;
     }
