@@ -9,11 +9,11 @@
 | Pin | SHA |
 |---|---|
 | Main (audit base) | `2b32d48b6bf2a01f867f1cd9e256b3392169db4f` |
-| PR / Slice A tip | _(after push)_ |
-| Alpha Core | _(after staging pin)_ |
+| PR / Slice A tip | `e57f7a7cb1b012708a5d56125de2c44acbf43193` |
+| Alpha Core | `e57f7a7cb1b012708a5d56125de2c44acbf43193` |
 | Alpha SaaS | `eb859c2159a1821d87e51721698d4608c3bb20c1` |
 
-Note: Alpha was previously on `#188` shop-fee tip; Slice A staging acceptance re-pins Core to this branch only (staging, not production).
+Note: Alpha was previously on `#188` shop-fee tip; Slice A staging acceptance re-pinned Core to this branch only (staging, not production). Temporary tax-on sample restored to tax disabled afterward.
 
 ## Audit findings (main)
 
@@ -65,8 +65,17 @@ ShopTaxProfilesSliceATest|PartsMatrixAndTaxForwardOnlyTest|ShopSettingsFinancial
 → pass
 ```
 
-## Screenshots
+## Screenshots (same Alpha Core `e57f7a7`)
 
-Captured on the same Alpha Core SHA after pin (Labor / Parts / Tax desktop + mobile 320/375/430).
+Desktop (same browser width):
+- `desktop-labor.png`
+- `desktop-parts.png`
+- `desktop-tax.png` (tax temporarily enabled with Colorado Springs 2.9+3.12 components for UI review, then restored off)
+
+Mobile:
+- `mobile-tax-320.png` / `mobile-tax-375.png` / `mobile-tax-430.png`
+- `mobile-labor-430.png` / `mobile-parts-430.png`
+
+Nav width: Labor/Parts/Tax use shared `ops-financial-master-detail` (~240px). Parts no longer uses `col-xxl-2`.
 
 **Do not merge without owner review. No production deployment.**
