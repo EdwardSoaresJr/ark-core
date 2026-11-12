@@ -235,13 +235,89 @@ class RepairOrderConcern extends Model
     public function defaultPartsMatrix(?ShopSettings $settings = null, ?Customer $customer = null): array
     {
         $settings ??= ShopSettings::current();
+        $repairOrder = $this->repairOrder;
+        $context = $repairOrder?->pricingContext($settings);
+        $commercial = $context?->commercialProfile();
+
+        $roHasCommercialStamp = is_array($repairOrder?->commercial_pricing_profile)
+            && $repairOrder->commercial_pricing_profile !== [];
+
+        $resolveKey = function (?string $className) use ($commercial, $context, $settings, $roHasCommercialStamp): array {
+            if ($roHasCommercialStamp) {
+                $matrixKey = $commercial?->defaultPartsMatrixKeyFor($className);
+                $matrix = filled($matrixKey)
+                    ? $context?->partsMatrixByKey($matrixKey)
+                    : null;
+                $matrix ??= $context?->partsMatrixByKey(null);
+                $matrix ??= $commercial?->partsMatrixByKey(null);
+
+                // Stamped RO: never invent from live shop matrices. Schema-1 without frozen
+                // tiers cannot reconstruct historical brackets — fail visibly.
+                abort_if(
+                    $matrix === null || ($matrix['rows'] ?? []) === [],
+                    422,
+                    'This repair order\'s frozen pricing does not include a usable parts matrix. Schema-1 stamps without tier definitions cannot reconstruct historical brackets.',
+                );
+
+                return $matrix;
+            }
+
+            $matrixKey = $commercial?->defaultPartsMatrixKeyFor($className);
+            if (filled($matrixKey)) {
+                return $context?->partsMatrixByKey($matrixKey)
+                    ?? $settings->partsMatrixByKey($matrixKey)
+                    ?? $settings->defaultPartsMatrix();
+            }
+
+            if ($commercial !== null && $commercial->partsMatrices !== []) {
+                return $commercial->partsMatrixByKey($matrixKey)
+                    ?? $settings->defaultPartsMatrix();
+            }
+
+            return $settings->partsMatrixForCustomerTypeProfile($className) ?? $settings->defaultPartsMatrix();
+        };
 
         if ($this->billing_posture === ConcernBillingPosture::Default) {
-            $customerType = ($customer ?? $this->repairOrder?->customer)?->customer_type;
+            $customerType = ($customer ?? $repairOrder?->customer)?->customer_type;
 
-            return $settings->partsMatrixForCustomerTypeProfile($customerType) ?? $settings->defaultPartsMatrix();
+            return $resolveKey($customerType);
+        }
+
+        $billingClass = $this->billing_posture->billingClassName();
+        if ($billingClass !== null) {
+            return $resolveKey($billingClass);
+        }
+
+        if ($roHasCommercialStamp) {
+            return $resolveKey(null);
+        }
+
+        if ($context !== null && ! $context->allowsLiveCommercialFallback && $commercial !== null) {
+            return $commercial->partsMatrixByKey(null) ?? $settings->defaultPartsMatrix();
         }
 
         return $this->billing_posture->defaultPartsMatrix($settings);
+    }
+
+    /**
+     * Raw billing class key (built-in posture value or shop-defined custom_* key).
+     */
+    public function billingClassKey(): string
+    {
+        $raw = $this->getAttributes()['billing_posture'] ?? null;
+
+        return is_string($raw) && $raw !== ''
+            ? $raw
+            : $this->billing_posture->value;
+    }
+
+    public function billingClassLabel(): string
+    {
+        $key = $this->billingClassKey();
+        $custom = ShopSettings::current()->customLaborBillingClass($key);
+
+        return is_array($custom)
+            ? (string) $custom['label']
+            : $this->billing_posture->label();
     }
 }

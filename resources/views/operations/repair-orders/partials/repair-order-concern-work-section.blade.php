@@ -13,6 +13,11 @@
     $concernDefaultPartSell = $concernDefaultPartPricingMode === 'manual' ? '0' : '';
 @endphp
 
+@include('operations.repair-orders.partials.repair-order-concern-billing-minimum', [
+    'repairOrder' => $repairOrder,
+    'concern' => $concern,
+])
+
 @include('operations.repair-orders.partials.repair-order-scope-repair-action-suggestions', [
     'repairOrder' => $repairOrder,
     'concern' => $concern,

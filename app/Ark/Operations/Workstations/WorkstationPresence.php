@@ -38,7 +38,11 @@ final class WorkstationPresence
         $request->session()->forget(self::SESSION_LOCKED);
 
         $workstation = self::resolveBoundWorkstation($request);
-        $needsBinding = $workstation === null && ! self::bindPromptDismissed($request);
+        // Do not interrupt first entry for basic shops. Binding remains available from
+        // Stations & Phones; existing bindings and dismiss cookies still apply.
+        $needsBinding = $workstation === null
+            && ! self::bindPromptDismissed($request)
+            && self::stationBindingPromptEnabled();
         $currentOperator = $workstation?->currentOperator;
 
         return new self(
@@ -50,6 +54,20 @@ final class WorkstationPresence
             needsPinSetup: false,
             canManagePresence: true,
         );
+    }
+
+    /**
+     * Whether unbound browsers should see the station bind prompt.
+     *
+     * Owner direction: stations should be explicitly enabled from Advanced Settings,
+     * not auto-prompted because multiple workstation rows or telephony exist.
+     * ShopSettings today only stores workstation_idle_lock_minutes (retired lock), not
+     * an explicit "stations enabled" flag. Until that approved setting exists, keep the
+     * safe default: never auto-prompt. Telephony-only single-station shops must not prompt.
+     */
+    public static function stationBindingPromptEnabled(): bool
+    {
+        return false;
     }
 
     public static function bindPromptDismissed(Request $request): bool

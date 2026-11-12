@@ -1513,6 +1513,14 @@ test('opening a repair order lands on the presentation workspace', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
 
+    // Forward-only shop-fee profile is stamped at create — enable fees before the RO exists.
+    ShopSettings::current()->update([
+        'tax_enabled' => false,
+        'shop_fee_enabled' => true,
+        'shop_fee_rate' => '6.667',
+        'shop_fee_cap_cents' => null,
+    ]);
+
     $repairOrder = repairOrderForEstimateWorkspace();
     $concern = RepairOrderConcern::query()->create([
         'repair_order_id' => $repairOrder->id,
@@ -1537,12 +1545,6 @@ test('opening a repair order lands on the presentation workspace', function () {
         'total_cents' => 18000,
     ]);
 
-    ShopSettings::current()->update([
-        'tax_enabled' => false,
-        'shop_fee_enabled' => true,
-        'shop_fee_rate' => '6.667',
-        'shop_fee_cap_cents' => null,
-    ]);
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder);
 
     $this->get(route('operations.repair-orders.show', $repairOrder))

@@ -3,10 +3,11 @@
 namespace App\Ark\Operations\EstimatePricing;
 
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
+use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
-final class UpsertLaborPolicyAction
+class UpsertLaborPolicyAction
 {
     public function execute(
         ConcernBillingPosture $billingPosture,
@@ -14,25 +15,28 @@ final class UpsertLaborPolicyAction
         float $hourlyRate,
         Carbon $effectiveFrom,
         ?string $changeReason = null,
+        ?LaborRateType $rateType = null,
     ): LaborPolicy {
         $rateCents = (int) round($hourlyRate * 100);
-        $rateType = $rateCents === 0 ? LaborRateType::Zero : LaborRateType::Hourly;
         $effectiveDate = $effectiveFrom->toDateString();
+        $resolvedType = $this->resolveRateType($billingPosture, $rateCents, $rateType);
+
+        if ($resolvedType === LaborRateType::Standard) {
+            $rateCents = ShopSettings::current()->defaultLaborRateCents();
+        }
+
+        if ($resolvedType === LaborRateType::Zero) {
+            $rateCents = 0;
+        }
 
         return DB::transaction(function () use (
             $billingPosture,
             $operationClass,
             $rateCents,
-            $rateType,
+            $resolvedType,
             $effectiveDate,
             $changeReason,
         ): LaborPolicy {
-            if (in_array($billingPosture, [ConcernBillingPosture::WarrantyOther, ConcernBillingPosture::RepairPal], true)
-                && $rateCents > 0
-            ) {
-                $rateType = LaborRateType::Contract;
-            }
-
             $current = LaborPolicy::query()
                 ->where('billing_posture', $billingPosture->value)
                 ->where('operation_class_id', $operationClass->id)
@@ -47,13 +51,16 @@ final class UpsertLaborPolicyAction
                 ->lockForUpdate()
                 ->first();
 
-            if ($current !== null
+            $sameRate = $current !== null
+                && $current->rate_type === $resolvedType
                 && (int) ($current->hourly_rate_cents ?? 0) === $rateCents
-                && $current->effective_from?->toDateString() === $effectiveDate
-            ) {
+                && $current->effective_from?->toDateString() === $effectiveDate;
+
+            if ($sameRate) {
                 $current->update([
                     'change_reason' => $changeReason,
-                    'rate_type' => $rateType,
+                    'rate_type' => $resolvedType,
+                    'hourly_rate_cents' => $rateCents,
                 ]);
 
                 return $current->fresh();
@@ -74,7 +81,7 @@ final class UpsertLaborPolicyAction
             return LaborPolicy::query()->create([
                 'billing_posture' => $billingPosture->value,
                 'operation_class_id' => $operationClass->id,
-                'rate_type' => $rateType,
+                'rate_type' => $resolvedType,
                 'hourly_rate_cents' => $rateCents,
                 'effective_from' => $effectiveDate,
                 'effective_until' => null,
@@ -83,5 +90,25 @@ final class UpsertLaborPolicyAction
                 'change_reason' => $changeReason,
             ]);
         });
+    }
+
+    private function resolveRateType(
+        ConcernBillingPosture $billingPosture,
+        int $rateCents,
+        ?LaborRateType $rateType,
+    ): LaborRateType {
+        if ($rateType instanceof LaborRateType) {
+            return $rateType;
+        }
+
+        if ($rateCents === 0) {
+            return LaborRateType::Zero;
+        }
+
+        if (in_array($billingPosture, [ConcernBillingPosture::WarrantyOther, ConcernBillingPosture::RepairPal], true)) {
+            return LaborRateType::Contract;
+        }
+
+        return LaborRateType::Hourly;
     }
 }

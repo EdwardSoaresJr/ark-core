@@ -35,7 +35,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
+#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'shop_fee_profile', 'commercial_pricing_profile', 'tax_profile', 'labor_pricing_profile', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
 class RepairOrder extends Model
 {
     protected static function booted(): void
@@ -58,6 +58,47 @@ class RepairOrder extends Model
         static::creating(function (RepairOrder $repairOrder): void {
             if (! array_key_exists('shop_fee_rules', $repairOrder->getAttributes())) {
                 $repairOrder->setAttribute('shop_fee_rules', self::SHOP_FEES_PER_LINE);
+            }
+
+            $settings = \App\Ark\Operations\Settings\ShopSettings::current();
+
+            // Forward-only labor pricing profile: null means legacy (no billing-class minimums).
+            // Existing ROs are never backfilled; only newly created ROs receive a stamp.
+            if (! array_key_exists('labor_pricing_profile', $repairOrder->getAttributes())
+                || $repairOrder->getAttribute('labor_pricing_profile') === null
+            ) {
+                $version = (int) ($settings->labor_pricing_profile_version ?? 0);
+
+                if ($version >= 1) {
+                    $repairOrder->setAttribute(
+                        'labor_pricing_profile',
+                        \App\Ark\Operations\EstimatePricing\LaborPricingProfile::fromShopSettings($settings)->toArray(),
+                    );
+                }
+            }
+
+            // Forward-only shop fee profile (percent or flat). Explicit null keeps legacy live-settings path.
+            if (! array_key_exists('shop_fee_profile', $repairOrder->getAttributes())) {
+                $repairOrder->setAttribute(
+                    'shop_fee_profile',
+                    \App\Ark\Operations\EstimatePricing\ShopFeeProfile::fromShopSettings($settings)->toArray(),
+                );
+            }
+
+            // Forward-only billing-class commercial rules (discounts, class fee overrides, parts defaults).
+            if (! array_key_exists('commercial_pricing_profile', $repairOrder->getAttributes())) {
+                $repairOrder->setAttribute(
+                    'commercial_pricing_profile',
+                    \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::fromShopSettings($settings)->toArray(),
+                );
+            }
+
+            // Forward-only tax rules. Explicit null keeps legacy live-settings path until stamped.
+            if (! array_key_exists('tax_profile', $repairOrder->getAttributes())) {
+                $repairOrder->setAttribute(
+                    'tax_profile',
+                    \App\Ark\Operations\EstimatePricing\TaxProfile::fromShopSettings($settings)->toArray(),
+                );
             }
         });
     }
@@ -99,6 +140,10 @@ class RepairOrder extends Model
             'opened_at' => 'datetime',
             'closed_at' => 'datetime',
             'posted_at' => 'datetime',
+            'labor_pricing_profile' => 'array',
+            'shop_fee_profile' => 'array',
+            'commercial_pricing_profile' => 'array',
+            'tax_profile' => 'array',
             'lost_reason_key' => RepairOrderLostReason::class,
             'lost_reason_recorded_at' => 'datetime',
             'review_request_sent' => 'boolean',
@@ -676,20 +721,65 @@ class RepairOrder extends Model
      */
     public function shopFeePolicyFor(ConcernBillingPosture $posture, ShopSettings $settings): array
     {
-        if (! $settings->shop_fee_enabled) {
+        $context = $this->pricingContext($settings);
+        $shopFee = $context->shopFeeProfile();
+
+        if (! $shopFee->enabled) {
+            return ['enabled' => false, 'rate' => null];
+        }
+
+        $commercial = $context->commercialProfile();
+        if ($commercial === null) {
+            // Terminal legacy without stamp: do not invent fee rules from live class tables.
             return ['enabled' => false, 'rate' => null];
         }
 
         if ($posture === ConcernBillingPosture::Default && $this->usesPerLineShopFees()) {
             $this->loadMissing('customer');
-            $policy = $settings->shopFeePolicyForCustomerType($this->customer?->customer_type);
+            $policy = $commercial->shopFeePolicyForCustomerType($this->customer?->customer_type);
 
             return $policy['enabled'] && $policy['rate'] === null
-                ? $settings->shopFeePolicyForBillingDefault()
+                ? [
+                    'enabled' => true,
+                    'rate' => filled($shopFee->rate) ? (string) $shopFee->rate : null,
+                ]
                 : $policy;
         }
 
-        return $posture->shopFeePolicy($settings);
+        $billingClass = $posture->billingClassName();
+
+        if ($billingClass !== null) {
+            return $commercial->shopFeePolicyForCustomerType($billingClass);
+        }
+
+        return [
+            'enabled' => true,
+            'rate' => filled($shopFee->rate) ? (string) $shopFee->rate : null,
+        ];
+    }
+
+    public function pricingContext(?ShopSettings $settings = null): \App\Ark\Operations\EstimatePricing\RepairOrderPricingContext
+    {
+        return \App\Ark\Operations\EstimatePricing\RepairOrderPricingContext::for($this, $settings);
+    }
+
+    /**
+     * Prefer stamped commercial rules. Terminal ROs never invent rules from live settings.
+     * Living ROs without a stamp still fall back to live settings until the next activation stamps them.
+     */
+    public function resolvedCommercialPricingProfile(ShopSettings $settings): ?\App\Ark\Operations\EstimatePricing\CommercialPricingProfile
+    {
+        return $this->pricingContext($settings)->commercialProfile();
+    }
+
+    /**
+     * Advisor explicitly changed the customer's billing class: adopt current shop commercial rules.
+     */
+    public function restampCommercialPricingProfile(ShopSettings $settings): void
+    {
+        $this->forceFill([
+            'commercial_pricing_profile' => \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::fromShopSettings($settings)->toArray(),
+        ])->saveQuietly();
     }
 
     public function ensureOpenForEditing(): void

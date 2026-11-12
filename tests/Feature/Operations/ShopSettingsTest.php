@@ -33,7 +33,13 @@ function laborSettingsPayload(array $overrides = []): array
         ])
         ->all();
 
+    $defaultKey = $overrides['default_labor_category_key'] ?? ShopSettings::DEFAULT_LABOR_CATEGORY_KEY;
+    $defaultCategory = collect($categories)->firstWhere('key', $defaultKey) ?? $categories[0] ?? null;
+    $standardHourlyRate = $overrides['standard_hourly_rate']
+        ?? ($defaultCategory['rate'] ?? number_format($settings->default_labor_rate_cents / 100, 2, '.', ''));
+
     return array_merge([
+        'standard_hourly_rate' => $standardHourlyRate,
         'default_labor_category_key' => ShopSettings::DEFAULT_LABOR_CATEGORY_KEY,
         'labor_categories' => $categories,
     ], $overrides);
@@ -50,7 +56,10 @@ test('admin can view operational shop settings defaults', function () {
         ->assertDontSee('Operational Domains')
         ->assertDontSee('Current outcomes')
         ->assertDontSee('Financial rules, estimate defaults, and document language')
-        ->assertSeeInOrder(['Your shop', 'Shop Identity', 'Appointments &amp; Setup', 'Money', 'Financial Rules', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Documents &amp; workflow', 'Documents / Disclaimers', 'Workflow Defaults', 'Label Printing', 'Connected services', 'Square Payments', 'Parts catalogs', 'Communications', 'Stations &amp; Phones'], false)
+        ->assertSeeInOrder(['Basic', 'Shop Identity', 'Appointments &amp; Setup', 'Financial Rules', 'Documents / Disclaimers', 'Optional', 'Online Requests', 'Square Payments', 'Parts catalogs', 'Advanced', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Workflow Defaults', 'Label Printing'], false)
+        ->assertSee('fw-semibold', false)
+        ->assertSee('Communications')
+        ->assertSee('Stations & Phones')
         ->assertSee("@click=\"setActive('operations')\"", false)
         ->assertSee('<div class="subheader">Appointments &amp; Setup</div>', false)
         ->assertSee('Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.')
@@ -70,7 +79,9 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Worksheet notes')
         ->assertSee('Estimate logo')
         ->assertDontSee('name="default_labor_rate"', false)
-        ->assertSee('is the shop default labor rate', false)
+        ->assertSee('Default Labor Rate')
+        ->assertSee('Labor rate matrix')
+        ->assertDontSee('name="standard_hourly_rate"', false)
         ->assertSee('Sales tax rate')
         ->assertSee('Tax display name')
         ->assertSee('Tax labor')
@@ -87,7 +98,7 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('AFT Parts')
         ->assertSee('OEM Parts')
         ->assertSee('Warranty (No Markup)')
-        ->assertSee('Billing Classes')
+        ->assertSee('Manage Billing Classes')
         ->assertSee('Warranty')
         ->assertSee('Military')
         ->assertSee('Markup is the editable pricing policy')
@@ -106,11 +117,10 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Remove')
         ->assertSee('Fleet shop fees')
         ->assertSee('Warranty parts matrix')
-        ->assertSee('Standard billing class')
         ->assertSee('Pill color')
-        ->assertSee('name="customer_types[0][pill_color]"', false)
-        ->assertSee('name="customer_types[0][shop_fees_enabled]"', false)
-        ->assertSee('name="customer_types[2][shop_fees_enabled]"', false)
+        ->assertSee('data-billing-classes-shared', false)
+        ->assertDontSee('id="financial-tab-billing-classes"', false)
+        ->assertDontSee('id="financial-tab-labor-policies"', false)
         ->assertDontSee('Default estimate state')
         ->assertDontSee('name="parts_matrices[1][rows][0][margin_percentage]"', false)
         ->assertSee(ShopSettings::DEFAULT_ESTIMATE_DISCLAIMER)
@@ -160,9 +170,9 @@ test('settings pages use plain labels instead of posture, authority, truth, surf
     $response
         ->assertSee('Default visit type')
         ->assertSee('Billing at Check In')
-        ->assertSee('Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet.')
-        ->assertSee('Columns are billing types.')
-        ->assertSee('Rate preview')
+        ->assertSee('Labor rate matrix')
+        ->assertSee('Select a work type, edit hourly rates inline, and open Rules for billing-policy minimums.')
+        ->assertSee('Manage Billing Classes')
         ->assertSee('Time zone sources')
         ->assertSee('Where card payments are offered')
         ->assertSee('Save card payment options')
@@ -170,7 +180,7 @@ test('settings pages use plain labels instead of posture, authority, truth, surf
         ->assertSee('Creates customer and vehicle records only. Repair history is not imported.')
         ->assertSee('Technicians record findings on each checklist item.')
         ->assertSee('name="default_visit_mode"', false)
-        ->assertSee('name="lp_posture"', false)
+        ->assertDontSee('name="lp_posture"', false)
         ->assertSee(route('operations.settings.shop.payments.update'), false);
 });
 
@@ -178,7 +188,7 @@ test('every financial rules tab opens from the financial-tab link that save redi
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor-policies']))
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']))
         ->assertOk()
         ->getContent();
 
@@ -188,7 +198,8 @@ test('every financial rules tab opens from the financial-tab link that save redi
     $honoredTabs = collect(explode(',', $honored[1]))->map(fn (string $tab): string => trim($tab, " '"))->all();
     $renderedTabs = collect($tabs[1])->unique()->reject(fn (string $tab): bool => in_array($tab, ['billing-classes', 'customer-types', 'customer-tags'], true))->values()->all();
 
-    expect($renderedTabs)->toContain('labor-policies', 'deposits');
+    expect($renderedTabs)->toContain('labor', 'deposits')
+        ->and($renderedTabs)->not->toContain('labor-policies');
 
     foreach ($renderedTabs as $tab) {
         expect($honoredTabs)->toContain($tab);
@@ -286,6 +297,7 @@ test('admin can persist authoritative operational defaults', function () {
     ])->assertRedirect(route('operations.settings.shop.edit'));
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
+        'standard_hourly_rate' => '175.50',
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -409,13 +421,13 @@ test('shop settings rejects more than one default parts matrix', function () {
     ])->assertSessionHasErrors('parts_matrices');
 });
 
-test('saving tax settings recalculates living repair order line tax without taxing shop fees', function () {
+test('saving tax settings does not recalculate living repair order line tax', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     ShopSettings::current()->update([
         'tax_enabled' => true,
-        'default_tax_rate' => '10.000',
+        'default_tax_rate' => '11.000',
         'taxable_labor' => false,
         'taxable_parts' => true,
         'taxable_shop_fees' => false,
@@ -425,6 +437,8 @@ test('saving tax settings recalculates living repair order line tax without taxi
     ]);
 
     $repairOrder = repairOrderForFinancialAuthority();
+    expect($repairOrder->tax_profile['rate'])->toBe('11.000');
+
     $concern = concernForFinancialAuthority($repairOrder);
 
     $part = RepairOrderLine::query()->create([
@@ -451,9 +465,12 @@ test('saving tax settings recalculates living repair order line tax without taxi
 
     $part->refresh();
 
+    // Forward-only: living line amounts stay put; RO keeps the pre-change tax stamp.
     expect($part->shop_fee_cents)->toBe(1000)
-        ->and($part->tax_cents)->toBe(1000)
-        ->and($part->total_cents)->toBe(12000);
+        ->and($part->tax_cents)->toBe(1100)
+        ->and($part->total_cents)->toBe(12100)
+        ->and($repairOrder->fresh()->tax_profile['rate'])->toBe('11.000')
+        ->and((string) ShopSettings::current()->default_tax_rate)->toBe('10.000');
 });
 
 test('saving tax settings does not rewrite unrelated settings', function () {
@@ -518,7 +535,8 @@ test('tax and shop fee switches are checkboxes that post 0 when off and 1 when o
         ->assertSee('Charge sales tax')
         ->assertSee('Charge a shop fee')
         ->assertSee('x-data="{ taxEnabled: true }"', false)
-        ->assertSee('x-data="{ shopFeeEnabled: false }"', false);
+        ->assertSee('shopFeeEnabled: false', false)
+        ->assertSee('shopFeeMode:', false);
 });
 
 test('saving tax with the switch on or off persists exactly the posted values', function (string $posted, bool $expected) {
@@ -711,44 +729,22 @@ test('deposit diagnostic categories fall back to the default list only when none
     expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['programming', 'diagnostic']);
 });
 
-test('billing class fee rate override enables and disables as soon as shop fees is changed', function () {
+test('billing class fee rate override disables when shop fees are off in the shared Labor editor', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    ShopSettings::current()->update([
-        'customer_types' => [
-            ['name' => 'Retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => '4.500', 'discount_type' => 'none'],
-            ['name' => 'Internal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'discount_type' => 'none'],
-            ['name' => 'Fleet', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'discount_type' => 'none'],
-        ],
-    ]);
-
-    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'billing-classes']))
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']))
         ->assertOk()
+        ->assertSee('data-billing-classes-shared', false)
+        ->assertSee('data-billing-class-settings-modal', false)
         ->getContent();
 
-    $rowFor = function (int $index) use ($html): string {
-        $start = strpos($html, 'name="customer_types['.$index.'][shop_fees_enabled]"');
-        expect($start)->not->toBeFalse();
-        $scopeStart = strrpos(substr($html, 0, $start), 'x-data="{ shopFeesOn:');
-        $end = strpos($html, 'name="customer_types['.$index.'][default_parts_matrix_key]"', $start);
-
-        return substr($html, $scopeStart, $end - $scopeStart);
-    };
-
-    foreach ([0 => true, 1 => false, 2 => false] as $index => $on) {
-        $row = $rowFor($index);
-
-        expect($row)
-            ->toStartWith('x-data="{ shopFeesOn: '.($on ? 'true' : 'false').' }"')
-            ->toContain('@change="shopFeesOn = $event.target.value === \'1\'"')
-            ->toContain(':disabled="! shopFeesOn"');
-
-        $override = substr($row, strpos($row, 'name="customer_types['.$index.'][shop_fee_rate_override]"'));
-        $override = substr($override, 0, strpos($override, '>'));
-
-        expect(preg_match('/\sdisabled\s/', $override) === 1)->toBe(! $on);
-    }
+    expect($html)
+        ->toContain("draft.shop_fees_enabled = \$event.target.value === '1'")
+        ->toContain(':disabled="! draft.shop_fees_enabled"')
+        ->toContain('Fee rate override')
+        ->not->toContain('name="customer_types[0][shop_fees_enabled]"')
+        ->not->toContain('id="financial-tab-billing-classes"');
 });
 
 test('saving billing classes after switching shop fees stores the override only when fees are on', function () {
@@ -887,6 +883,194 @@ test('admin can save a single parts matrix without touching other shop settings'
         ->and($settings->defaultPartsMatrix()['key'])->toBe('oem-parts');
 });
 
+test('parts matrix autosave accepts json so validation failures are 422 not a successful html redirect', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $before = ShopSettings::current()->parts_matrices;
+
+    $this->withHeaders([
+        'X-Requested-With' => 'XMLHttpRequest',
+        'Accept' => 'application/json',
+    ])->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
+        'parts_matrices' => [
+            [
+                'key' => 'aft-parts',
+                'name' => 'AFT Parts',
+                'rows' => [
+                    ['min_cost' => '', 'max_cost' => '5', 'markup_percentage' => '180', 'sort_order' => '1'],
+                ],
+            ],
+        ],
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertStatus(422)
+        ->assertJsonMissing(['committed' => true]);
+
+    expect(ShopSettings::current()->fresh()->parts_matrices)->toBe($before);
+});
+
+test('parts matrix json autosave returns an explicit committed payload and persists a fresh server read', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $baseline = ShopSettings::DEFAULT_PARTS_MATRICES;
+    ShopSettings::current()->update(['parts_matrices' => $baseline]);
+
+    $payload = collect($baseline)->map(function (array $matrix): array {
+        $rows = collect($matrix['rows'])->map(fn (array $row, int $index): array => [
+            'min_cost' => $row['min_cost'],
+            'max_cost' => $row['max_cost'] ?? '',
+            'markup_percentage' => $matrix['key'] === 'fluids' ? '151' : $row['markup_percentage'],
+            'sort_order' => (string) ($index + 1),
+        ])->all();
+
+        return [
+            'key' => $matrix['key'],
+            'name' => $matrix['name'],
+            'rows' => $rows,
+        ];
+    })->values()->all();
+
+    $response = $this->withHeaders([
+        'X-Requested-With' => 'XMLHttpRequest',
+        'Accept' => 'application/json',
+    ])->patch(route('operations.settings.shop.parts-matrices.update', 'fluids'), [
+        'parts_matrices' => $payload,
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('committed', true)
+        ->assertJsonPath('matrix_key', 'fluids');
+
+    $persisted = ShopSettings::current()->fresh();
+
+    expect($persisted->partsMatrixByKey('fluids')['rows'][0]['markup_percentage'])->toBe('151.00')
+        ->and($persisted->partsMatrixByKey('aft-parts')['rows'][0]['markup_percentage'])->toBe('180.00')
+        ->and($response->json('parts_matrices'))->toBe($persisted->partsMatrices());
+});
+
+test('parts matrix json autosave rejects guests and advisors without committing', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    ShopSettings::current()->update(['parts_matrices' => ShopSettings::DEFAULT_PARTS_MATRICES]);
+    $before = ShopSettings::current()->fresh()->parts_matrices;
+
+    $this->withHeaders([
+        'Accept' => 'application/json',
+    ])->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
+        'parts_matrices' => ShopSettings::DEFAULT_PARTS_MATRICES,
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertUnauthorized();
+
+    expect(ShopSettings::current()->fresh()->parts_matrices)->toBe($before);
+
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    $advisorResponse = $this->withHeaders([
+        'Accept' => 'application/json',
+    ])->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
+        'parts_matrices' => ShopSettings::DEFAULT_PARTS_MATRICES,
+        'default_parts_matrix_key' => 'aft-parts',
+    ]);
+
+    expect(in_array($advisorResponse->status(), [401, 403, 302], true))->toBeTrue()
+        ->and($advisorResponse->json('committed') ?? null)->toBeNull()
+        ->and(ShopSettings::current()->fresh()->parts_matrices)->toBe($before);
+});
+
+test('later parts matrix json save wins when two commits are applied in order', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $baseline = ShopSettings::DEFAULT_PARTS_MATRICES;
+    ShopSettings::current()->update(['parts_matrices' => $baseline]);
+
+    $makePayload = function (string $filtersMarkup) use ($baseline): array {
+        return collect($baseline)->map(function (array $matrix) use ($filtersMarkup): array {
+            $rows = collect($matrix['rows'])->map(fn (array $row, int $index): array => [
+                'min_cost' => $row['min_cost'],
+                'max_cost' => $row['max_cost'] ?? '',
+                'markup_percentage' => $matrix['key'] === 'filters' ? $filtersMarkup : $row['markup_percentage'],
+                'sort_order' => (string) ($index + 1),
+            ])->all();
+
+            return [
+                'key' => $matrix['key'],
+                'name' => $matrix['name'],
+                'rows' => $rows,
+            ];
+        })->values()->all();
+    };
+
+    $headers = [
+        'X-Requested-With' => 'XMLHttpRequest',
+        'Accept' => 'application/json',
+    ];
+
+    $this->withHeaders($headers)->patch(route('operations.settings.shop.parts-matrices.update', 'filters'), [
+        'parts_matrices' => $makePayload('171'),
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertOk()->assertJsonPath('committed', true);
+
+    $this->withHeaders($headers)->patch(route('operations.settings.shop.parts-matrices.update', 'filters'), [
+        'parts_matrices' => $makePayload('174'),
+        'default_parts_matrix_key' => 'aft-parts',
+    ])->assertOk()->assertJsonPath('committed', true);
+
+    $fresh = ShopSettings::current()->fresh();
+
+    expect($fresh->partsMatrixByKey('filters')['rows'][0]['markup_percentage'])->toBe('174.00')
+        ->and($fresh->partsMatrixByKey('oem-parts')['rows'][0]['markup_percentage'])->toBe('90.00')
+        ->and($fresh->partsMatrixByKey('aft-parts')['rows'][0]['markup_percentage'])->toBe('180.00');
+});
+
+test('parts matrix save keyed to one matrix persists every submitted sibling unchanged except the edited tier', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $baseline = ShopSettings::DEFAULT_PARTS_MATRICES;
+    ShopSettings::current()->update(['parts_matrices' => $baseline]);
+
+    $payload = collect($baseline)->map(function (array $matrix): array {
+        $rows = collect($matrix['rows'])->map(fn (array $row, int $index): array => [
+            'min_cost' => $row['min_cost'],
+            'max_cost' => $row['max_cost'] ?? '',
+            'markup_percentage' => $row['markup_percentage'],
+            'sort_order' => (string) ($index + 1),
+        ])->all();
+
+        if ($matrix['key'] === 'filters') {
+            $rows[0]['markup_percentage'] = '177';
+        }
+
+        return [
+            'key' => $matrix['key'],
+            'name' => $matrix['name'],
+            'rows' => $rows,
+        ];
+    })->values()->all();
+
+    $this->patch(route('operations.settings.shop.parts-matrices.update', 'filters'), [
+        'parts_matrices' => $payload,
+        'default_parts_matrix_key' => collect($baseline)->firstWhere('is_default', true)['key'] ?? $baseline[0]['key'],
+    ])->assertRedirect(route('operations.settings.shop.edit'));
+
+    $settings = ShopSettings::current()->fresh();
+    $expectedKeys = collect($baseline)->pluck('key')->sort()->values()->all();
+    $actualKeys = collect($settings->parts_matrices)->pluck('key')->sort()->values()->all();
+
+    expect($actualKeys)->toBe($expectedKeys)
+        ->and($settings->partsMatrixByKey('filters')['rows'][0]['markup_percentage'])->toBe('177.00');
+
+    foreach ($baseline as $matrix) {
+        if ($matrix['key'] === 'filters') {
+            continue;
+        }
+
+        expect($settings->partsMatrixByKey($matrix['key'])['rows'][0]['markup_percentage'])
+            ->toBe($matrix['rows'][0]['markup_percentage']);
+    }
+});
+
 test('advisor cannot access or edit shop settings', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
@@ -979,11 +1163,15 @@ test('shop settings seeder provides current business defaults without wiping ope
         ->and($settings->fresh()->shop_fee_cap_cents)->toBe(4200);
 });
 
-test('admin can update labor categories from shop settings', function () {
+test('labor settings save applies the standard hourly rate and ignores obsolete category form fields', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
+    $beforeDiagnostic = collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'diagnostic');
+
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
+        'standard_hourly_rate' => '180.00',
+        // Obsolete Labor-categories table fields must not drive persistence after the Work Types matrix redesign.
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -1006,16 +1194,19 @@ test('admin can update labor categories from shop settings', function () {
     expect($settings->default_labor_rate_cents)->toBe(18000)
         ->and($mechanical['rate_cents'])->toBe(18000)
         ->and($mechanical['is_default'])->toBeTrue()
-        ->and($diagnostic['rate_cents'])->toBe(19500)
-        ->and($diagnostic['minimum_hours'])->toBe('1.25')
-        ->and(collect($settings->laborCategories())->firstWhere('key', 'courtesy')['rounding_rule'])->toBe('tenth');
+        ->and($diagnostic['rate_cents'])->toBe($beforeDiagnostic['rate_cents'])
+        ->and($diagnostic['minimum_hours'])->toBe($beforeDiagnostic['minimum_hours'])
+        ->and(collect($settings->laborCategories())->firstWhere('key', 'courtesy')['rounding_rule'])
+        ->toBe(collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->firstWhere('key', 'courtesy')['rounding_rule']);
 });
 
 test('the default category rate row is the shop default labor rate', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    $payload = laborSettingsPayload();
+    $payload = laborSettingsPayload([
+        'standard_hourly_rate' => '172.25',
+    ]);
     $payload['labor_categories'] = collect($payload['labor_categories'])
         ->map(function (array $category): array {
             if ($category['key'] === ShopSettings::DEFAULT_LABOR_CATEGORY_KEY) {
@@ -1037,20 +1228,19 @@ test('the default category rate row is the shop default labor rate', function ()
         ->and(collect($settings->laborCategories())->firstWhere('key', ShopSettings::DEFAULT_LABOR_CATEGORY_KEY)['rate_cents'])->toBe(17225);
 });
 
-test('changing the default labor category keeps every category rate', function () {
+test('labor settings save does not change the default category from obsolete form fields', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     $before = collect(ShopSettings::current()->laborCategories())->mapWithKeys(
         fn (array $category): array => [$category['key'] => $category['rate_cents']],
     );
-    $newDefault = $before->keys()->first(fn (string $key): bool => $key !== ShopSettings::DEFAULT_LABOR_CATEGORY_KEY
-        && $before[$key] !== $before[ShopSettings::DEFAULT_LABOR_CATEGORY_KEY]);
-
-    expect($newDefault)->not->toBeNull();
+    $mechanicalRate = number_format($before[ShopSettings::DEFAULT_LABOR_CATEGORY_KEY] / 100, 2, '.', '');
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
-        'default_labor_category_key' => $newDefault,
+        'standard_hourly_rate' => $mechanicalRate,
+        // Retired table field — must not reassign which category is default.
+        'default_labor_category_key' => 'diagnostic',
     ]))->assertRedirect(route('operations.settings.shop.edit'))
         ->assertSessionHasNoErrors();
 
@@ -1059,9 +1249,11 @@ test('changing the default labor category keeps every category rate', function (
         fn (array $category): array => [$category['key'] => $category['rate_cents']],
     );
 
+    // Default category ownership stays on the Labor Matrix / category authority, not the retired table form.
     expect($after->all())->toEqual($before->all())
-        ->and(collect($settings->laborCategories())->firstWhere('is_default', true)['key'])->toBe($newDefault)
-        ->and($settings->default_labor_rate_cents)->toBe($before[$newDefault]);
+        ->and(collect($settings->laborCategories())->firstWhere('is_default', true)['key'])
+        ->toBe(ShopSettings::DEFAULT_LABOR_CATEGORY_KEY)
+        ->and($settings->default_labor_rate_cents)->toBe($before[ShopSettings::DEFAULT_LABOR_CATEGORY_KEY]);
 });
 
 test('labor categories default repairpal and warranty with adjust labor off', function () {
@@ -1074,7 +1266,7 @@ test('labor categories default repairpal and warranty with adjust labor off', fu
         ->and(collect($settings->laborCategories())->firstWhere('key', 'mechanical')['allows_modifiers'])->toBeTrue();
 });
 
-test('admin can enable adjust labor on a program category', function () {
+test('labor settings save ignores obsolete adjust-labor category form fields', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
@@ -1092,7 +1284,7 @@ test('admin can enable adjust labor on a program category', function () {
     $this->patch(route('operations.settings.shop.labor.update'), $payload)
         ->assertRedirect(route('operations.settings.shop.edit'));
 
-    expect(collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'repairpal')['allows_modifiers'])->toBeTrue();
+    expect(collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'repairpal')['allows_modifiers'])->toBeFalse();
 });
 
 test('admin can delete a non-default parts matrix', function () {
@@ -1116,6 +1308,7 @@ test('admin can delete a non-default parts matrix', function () {
 
     expect(collect($settings->partsMatrices())->pluck('key')->all())
         ->not->toContain('filters')
+        ->and(collect($settings->parts_matrices)->firstWhere('key', 'filters')['is_active'] ?? true)->toBeFalse()
         ->and(collect($settings->customer_types)->firstWhere('name', 'Fleet')['default_parts_matrix_key'])->toBeNull()
         ->and($settings->defaultPartsMatrix()['key'])->toBe('aft-parts');
 });

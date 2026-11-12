@@ -53,12 +53,19 @@ final class ChangeConcernBillingPostureAction
      *     skipped: list<array{line: RepairOrderLine, reason: string}>
      * }
      */
-    public function plan(RepairOrderConcern $concern, ConcernBillingPosture $next): array
+    public function plan(RepairOrderConcern $concern, ConcernBillingPosture|string $next): array
     {
         $settings = ShopSettings::current();
         $prior = $concern->billing_posture;
+        $priorKey = $concern->billingClassKey();
+        $nextEnum = $next instanceof ConcernBillingPosture
+            ? $next
+            : (ConcernBillingPosture::tryFrom((string) $next)
+                ?? ConcernBillingPosture::fromStored(
+                    $settings->customLaborBillingClass((string) $next)['base_posture'] ?? ConcernBillingPosture::CustomerPay->value,
+                ));
         $priorCategory = $settings->laborDefaultsForBillingPosture($prior)['category_key'];
-        $nextCategory = $settings->laborDefaultsForBillingPosture($next)['category_key'];
+        $nextCategory = $settings->laborDefaultsForBillingPosture($nextEnum)['category_key'];
         $repriced = [];
         $skipped = [];
 
@@ -102,7 +109,7 @@ final class ChangeConcernBillingPostureAction
             ];
         }
 
-        return ['prior' => $prior, 'next' => $next, 'repriced' => $repriced, 'skipped' => $skipped];
+        return ['prior' => $prior, 'prior_key' => $priorKey, 'next' => $next, 'next_enum' => $nextEnum, 'repriced' => $repriced, 'skipped' => $skipped];
     }
 
     /**
@@ -111,18 +118,20 @@ final class ChangeConcernBillingPostureAction
     public function execute(
         RepairOrder $repairOrder,
         RepairOrderConcern $concern,
-        ConcernBillingPosture $next,
+        ConcernBillingPosture|string $next,
         ?User $actor = null,
         string $source = 'concern',
     ): array {
-        if ($concern->billing_posture === $next) {
+        $nextKey = $next instanceof ConcernBillingPosture ? $next->value : (string) $next;
+
+        if ($concern->billingClassKey() === $nextKey) {
             return ['changed' => false, 'repriced' => 0, 'kept' => 0];
         }
 
-        $plan = DB::transaction(function () use ($repairOrder, $concern, $next, $actor, $source): array {
+        $plan = DB::transaction(function () use ($repairOrder, $concern, $next, $nextKey, $actor, $source): array {
             $plan = $this->plan($concern, $next);
 
-            $concern->update(['billing_posture' => $next]);
+            $concern->update(['billing_posture' => $nextKey]);
 
             foreach ($plan['repriced'] as $entry) {
                 $attributes = $entry['attributes'];
@@ -148,8 +157,8 @@ final class ChangeConcernBillingPostureAction
                 payload: [
                     'concern_id' => $concern->id,
                     'source' => $source,
-                    'prior_billing_posture' => $plan['prior']->value,
-                    'new_billing_posture' => $next->value,
+                    'prior_billing_posture' => $plan['prior_key'],
+                    'new_billing_posture' => $nextKey,
                     'repriced' => array_map(fn (array $entry): array => [
                         'line_id' => $entry['line']->id,
                         'prior_rate_cents' => $entry['prior_rate_cents'],

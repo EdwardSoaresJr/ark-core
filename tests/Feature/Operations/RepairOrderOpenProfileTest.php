@@ -25,5 +25,6 @@ test('opening a repair order reuses settlement catalog and messaging reads', fun
     });
 
     // Includes one read each of labor_policies, operation_classes and operations for the labor rates the editors show.
-    expect($measured['count'])->toBeLessThanOrEqual(63);
+    // Pricing-context reads (labor/commercial/tax profiles) add a couple queries on this pin.
+    expect($measured['count'])->toBeLessThanOrEqual(65);
 });

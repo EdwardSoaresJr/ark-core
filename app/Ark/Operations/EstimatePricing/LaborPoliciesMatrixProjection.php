@@ -30,12 +30,15 @@ final class LaborPoliciesMatrixProjection
     /**
      * @return array{
      *     operation_classes: list<array{id: int, key: string, name: string, is_shop_default: bool}>,
-     *     postures: list<array{value: string, label: string}>,
+     *     postures: list<array{value: string, label: string, description: string}>,
      *     cells: array<string, array<string, array{
      *         hourly_rate_cents: int|null,
+     *         effective_rate_cents: int|null,
      *         rate_display: string,
      *         labor_policy_id: int|null,
      *         rate_type: string|null,
+     *         settings_mode: string|null,
+     *         follows_shop_standard: bool,
      *         effective_from: string|null,
      *         version: int|null,
      *     }>>,
@@ -45,12 +48,15 @@ final class LaborPoliciesMatrixProjection
      *         operation_class_key: string|null,
      *         operation_class_name: string|null,
      *     },
+     *     standard_rate_cents: int,
      * }
      */
     public function build(?Carbon $asOf = null): array
     {
         $asOf ??= Carbon::now();
         $asOfDate = $asOf->toDateString();
+        $settings = ShopSettings::current();
+        $standardCents = $settings->defaultLaborRateCents();
 
         $classes = OperationClass::query()
             ->orderBy('sort_order')
@@ -81,27 +87,10 @@ final class LaborPoliciesMatrixProjection
                         && $row->billing_posture === $posture->value,
                 );
 
-                $cells[$class->key][$posture->value] = $policy === null
-                    ? [
-                        'hourly_rate_cents' => null,
-                        'rate_display' => '-',
-                        'labor_policy_id' => null,
-                        'rate_type' => null,
-                        'effective_from' => null,
-                        'version' => null,
-                    ]
-                    : [
-                        'hourly_rate_cents' => (int) ($policy->hourly_rate_cents ?? 0),
-                        'rate_display' => '$'.number_format(((int) ($policy->hourly_rate_cents ?? 0)) / 100, 2),
-                        'labor_policy_id' => $policy->id,
-                        'rate_type' => $policy->rate_type->value,
-                        'effective_from' => $policy->effective_from?->toDateString(),
-                        'version' => $policy->version,
-                    ];
+                $cells[$class->key][$posture->value] = $this->presentCell($policy, $standardCents);
             }
         }
 
-        $settings = ShopSettings::current();
         $defaultCategory = $settings->defaultLaborCategory();
         $defaultOperation = Operation::query()
             ->with('operationClass')
@@ -120,6 +109,7 @@ final class LaborPoliciesMatrixProjection
             'postures' => collect($postures)->map(fn (ConcernBillingPosture $posture): array => [
                 'value' => $posture->value,
                 'label' => $posture->label(),
+                'description' => $this->postureDescription($posture),
             ])->all(),
             'cells' => $cells,
             'shop_default' => [
@@ -128,6 +118,69 @@ final class LaborPoliciesMatrixProjection
                 'operation_class_key' => $defaultOperation?->operationClass?->key,
                 'operation_class_name' => $defaultOperation?->operationClass?->name,
             ],
+            'standard_rate_cents' => $standardCents,
         ];
+    }
+
+    /**
+     * @return array{
+     *     hourly_rate_cents: int|null,
+     *     effective_rate_cents: int|null,
+     *     rate_display: string,
+     *     labor_policy_id: int|null,
+     *     rate_type: string|null,
+     *     settings_mode: string|null,
+     *     follows_shop_standard: bool,
+     *     effective_from: string|null,
+     *     version: int|null,
+     * }
+     */
+    private function presentCell(?LaborPolicy $policy, int $standardCents): array
+    {
+        if ($policy === null) {
+            return [
+                'hourly_rate_cents' => null,
+                'effective_rate_cents' => null,
+                'rate_display' => '—',
+                'labor_policy_id' => null,
+                'rate_type' => null,
+                'settings_mode' => null,
+                'follows_shop_standard' => false,
+                'effective_from' => null,
+                'version' => null,
+            ];
+        }
+
+        $rateType = $policy->rate_type;
+        $storedCents = (int) ($policy->hourly_rate_cents ?? 0);
+        $effectiveCents = $rateType === LaborRateType::Standard
+            ? $standardCents
+            : ($rateType === LaborRateType::Zero ? 0 : $storedCents);
+
+        return [
+            'hourly_rate_cents' => $storedCents,
+            'effective_rate_cents' => $effectiveCents,
+            'rate_display' => '$'.number_format($effectiveCents / 100, 2),
+            'labor_policy_id' => $policy->id,
+            'rate_type' => $rateType->value,
+            'settings_mode' => $rateType->settingsMode(),
+            'follows_shop_standard' => $rateType->followsShopStandard(),
+            'effective_from' => $policy->effective_from?->toDateString(),
+            'version' => $policy->version,
+        ];
+    }
+
+    private function postureDescription(ConcernBillingPosture $posture): string
+    {
+        return match ($posture) {
+            ConcernBillingPosture::CustomerPay => 'Retail customer work billed at your shop rates.',
+            ConcernBillingPosture::Fleet => 'Account / fleet work with negotiated rates.',
+            ConcernBillingPosture::Wholesale => 'Dealer or wholesale partner rates.',
+            ConcernBillingPosture::Internal => 'Shop-owned / internal work (often $0).',
+            ConcernBillingPosture::Comeback => 'Comeback / no-charge rework (often $0).',
+            ConcernBillingPosture::WarrantyOther => 'OEM / third-party warranty contract rates.',
+            ConcernBillingPosture::RepairPal => 'RepairPal network contract rates.',
+            default => 'Billing rate for this concern type.',
+        };
     }
 }

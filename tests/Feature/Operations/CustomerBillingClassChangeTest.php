@@ -102,14 +102,30 @@ test('a billing class change records its effect on each open repair order and up
 
     classChangeTo($customer, 'Military', $open);
 
-    expect(classChangeEvents($open))->toBe([[
-        'customer_id' => $customer->id,
-        'prior_billing_class' => 'Retail',
-        'new_billing_class' => 'Military',
-        'prior_total_cents' => 33000,
-        'new_total_cents' => 29700,
-    ]])
+    expect(classChangeEvents($open))->toHaveCount(1)
+        ->and(classChangeEvents($open)[0])->toMatchArray([
+            'customer_id' => $customer->id,
+            'prior_billing_class' => 'Retail',
+            'new_billing_class' => 'Military',
+            'prior_total_cents' => 33000,
+            'new_total_cents' => 29700,
+            'had_approved_work' => false,
+            'requires_additional_authorization' => false,
+            'approved_line_count' => 0,
+            'source' => 'explicit_customer_billing_class_change',
+        ])
         ->and(classChangeEvents($invoiced))->toHaveCount(1)
+        ->and(classChangeEvents($invoiced)[0])->toMatchArray([
+            'customer_id' => $customer->id,
+            'prior_billing_class' => 'Retail',
+            'new_billing_class' => 'Military',
+            'prior_total_cents' => 33000,
+            'new_total_cents' => 29700,
+            'had_approved_work' => true,
+            'requires_additional_authorization' => false,
+            'approved_line_count' => 1,
+            'source' => 'explicit_customer_billing_class_change',
+        ])
         ->and(classChangeEvents($closed))->toBe([])
         ->and((int) $open->fresh()->estimate_version)->toBeGreaterThan($versions[$open->id])
         ->and((int) $invoiced->fresh()->estimate_version)->toBeGreaterThan($versions[$invoiced->id])

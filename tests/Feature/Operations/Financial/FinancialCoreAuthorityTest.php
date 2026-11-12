@@ -142,6 +142,11 @@ test('issued invoice snapshot stays frozen when estimate changes after partial p
         'shop_fee_rate' => '10.000',
         'shop_fee_cap_cents' => null,
     ]);
+    // financialCloseoutRepairOrder() disables fees before create; restamp so this RO
+    // uses the fee policy under test without implying live settings rewrite all open ROs.
+    $repairOrder->forceFill([
+        'shop_fee_profile' => \App\Ark\Operations\EstimatePricing\ShopFeeProfile::fromShopSettings(ShopSettings::current())->toArray(),
+    ])->save();
 
     $calculator->recalculateRepairOrder($repairOrder->fresh(['customer', 'concerns', 'lines.concern']));
 

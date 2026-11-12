@@ -91,3 +91,6 @@ arksmsv2
 id_rsa
 id_ed25519
 *.keystore
+
+# Local Settings UX review captures (not for main lineage)
+.review-capture/
