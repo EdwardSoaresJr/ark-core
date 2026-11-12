@@ -5,8 +5,8 @@ export const EDITOR_PRESENTATION_ID = 'worksheet-line-editor';
 // A scope names which inputs changed. Several scopes may name the same region.
 // That region is still one element and is applied once.
 const SCOPE_REGIONS = {
-    lines: ['line', 'worksheet-count', 'totals', 'concern-money', 'authorized-money', 'financial-position', 'invoice-posture', 'authorization-rail'],
-    authorization: ['concern-authorization', 'authorized-money', 'financial-position', 'invoice-posture', 'line', 'authorization-rail'],
+    lines: ['line', 'worksheet-count', 'totals', 'concern-money', 'authorized-money', 'financial-position', 'invoice-posture', 'authorization-rail', 'authorization-record'],
+    authorization: ['concern-authorization', 'authorized-money', 'financial-position', 'invoice-posture', 'line', 'authorization-rail', 'authorization-record'],
     settlement: ['settlement', 'financial-position'],
     identity: [],
     workflow: ['workflow'],
