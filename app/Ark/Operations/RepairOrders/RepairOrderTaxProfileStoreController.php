@@ -14,8 +14,12 @@ final class RepairOrderTaxProfileStoreController
         Request $request,
         RepairOrder $repairOrder,
         SelectTaxProfileOnRepairOrderAction $action,
+        RepairOrderConcurrency $concurrency,
     ): RedirectResponse {
         abort_unless($request->user()?->can(ArkCapability::RepairOrdersManage->value), 403);
+
+        $repairOrder->ensureOpenForEditing();
+        $concurrency->guard($request, $repairOrder);
 
         $data = $request->validate([
             'tax_profile_key' => ['required', 'string', 'max:64'],
@@ -26,11 +30,8 @@ final class RepairOrderTaxProfileStoreController
             'service_address_state' => ['nullable', 'string', 'max:32'],
             'service_address_postal_code' => ['nullable', 'string', 'max:32'],
             'service_address_county' => ['nullable', 'string', 'max:255'],
-            'confirm_jurisdiction' => ['nullable', 'boolean'],
-            RepairOrderConcurrency::FIELD => ['required', 'integer'],
+            'confirm_jurisdiction' => ['accepted'],
         ]);
-
-        RepairOrderConcurrency::assertMatches($repairOrder, (int) $data[RepairOrderConcurrency::FIELD]);
 
         $kind = TaxSourcingLocationKind::from($data['tax_sourcing_location_kind']);
         $serviceAddress = [
@@ -42,13 +43,14 @@ final class RepairOrderTaxProfileStoreController
             'county' => $data['service_address_county'] ?? null,
         ];
 
+        // `accepted` already rejected a missing/false confirmation — never default true.
         $action->execute(
             $repairOrder,
             (string) $data['tax_profile_key'],
             $kind,
             $request->user(),
             $serviceAddress,
-            confirmed: (bool) ($data['confirm_jurisdiction'] ?? true),
+            confirmed: true,
         );
 
         return redirect()

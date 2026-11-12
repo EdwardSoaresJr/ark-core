@@ -38,7 +38,6 @@
                 >
                     @csrf
                     <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                    <input type="hidden" name="confirm_jurisdiction" value="1">
                     <label class="form-label" for="ro-tax-profile-{{ $repairOrder->id }}">Tax profile</label>
                     <select id="ro-tax-profile-{{ $repairOrder->id }}" name="tax_profile_key" class="form-select" required>
                         @foreach ($taxProfiles as $profile)
@@ -71,6 +70,17 @@
                             <input name="service_address_county" class="form-control" value="{{ old('service_address_county', $sourcing['address']['county'] ?? '') }}" placeholder="County">
                         </div>
                     </div>
+                    <label class="form-check">
+                        <input
+                            type="checkbox"
+                            name="confirm_jurisdiction"
+                            value="1"
+                            class="form-check-input"
+                            required
+                            @checked(old('confirm_jurisdiction'))
+                        >
+                        <span class="form-check-label">I confirm this tax jurisdiction for this repair order</span>
+                    </label>
                     <button type="submit" class="btn btn-outline-primary btn-sm align-self-start">Confirm tax jurisdiction</button>
                 </form>
             @else

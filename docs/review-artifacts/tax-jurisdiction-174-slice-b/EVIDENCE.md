@@ -17,7 +17,8 @@ Integrated surfaces retained on main: Labor matrix, Parts matrix nav, Shop Fees 
 |---|---|
 | Branch | `feat/tax-jurisdiction-slice-b` |
 | Base | `origin/main` @ `018ef6a` |
-| Docs | `ARCHITECTURE.md`, `SURFACE_MATRIX.md`, `PENNY_RECONCILIATION.md` |
+| Docs | `ARCHITECTURE.md`, `SURFACE_MATRIX.md`, `PENNY_RECONCILIATION.md`, `PRODUCTION_PRESERVATION_GO_NOGO.md` |
+| Migrations | **None** in #190 |
 
 ### Delivered
 
@@ -26,32 +27,35 @@ Integrated surfaces retained on main: Labor matrix, Parts matrix nav, Shop Fees 
 - `TaxJurisdictionMatcher` (suggestive only; never auto-assign)
 - County associations on catalog + settings UI
 - RO tax jurisdiction confirmation card + `SelectTaxProfileOnRepairOrderAction`
-- Post-auth tax increase held under approved-dollar ceiling
-- Penny reconciliation regression (stored cents = snapshot display)
-- Follow-up: estimate/invoice snapshots freeze tax labels/rates from RO stamp; invoice embeds `tax_profile`; Money-aligned formatCents
+- **Affirmative** `confirm_jurisdiction` (`accepted` + checkbox; missing field rejected)
+- Post-auth tax increase held under approved-dollar ceiling; supplemental auth raises ceiling; invoice cannot collect unapproved
+- Estimate/invoice snapshots freeze tax labels from RO stamp; invoice embeds `tax_profile`
+- Estimate email body prefers document snapshot total cents
+- Penny + pricing-release E2E cent reconciliation regressions
 
 ### Explicitly deferred
 
-- Component-level independent taxable bases / itemized document lines (Slice C)
-- Full builder→email→portal→invoice automated cent matrix
+- Component-level independent taxable bases / itemized document lines (Slice C) — safe unused
+- Portal invoice-pay cent depth; full async mail isolation suite
 - Customer tax exemption independent of Billing Class
 - SaaS automated lookup (never Core)
 
 ## Tests (local)
 
-`TaxJurisdictionSliceBTest` + Slice A tax + ShopFeeAppliesTo + PricingEngineSafety: **43 passed**
+Focused financial subset: **98 passed**  
+(`TaxJurisdictionSliceB` + Slice A tax + ShopFeeAppliesTo + ShopFeePerConcernAuthorization + PricingEngineSafety + AuthorizationIntegrity + ApprovedWorkChangesAfterAuthorization)
 
 ## Alpha / screenshots (staging only)
 
 | Pin | SHA |
 |---|---|
-| Alpha Core | `4d5903b7e0dbf9787262b0186eead443d53d0e04` (+ follow-up tip after evidence) |
+| Alpha Core (earlier Slice B UI) | `4d5903b7…` — re-pin to tip after this release-blocker commit if owner wants refreshed evidence |
 | Alpha SaaS | `eb859c2159a1821d87e51721698d4608c3bb20c1` |
 
-- Tax settings counties field: `slice-b-tax-settings-desktop.png`
-- RO tax jurisdiction card: `slice-b-ro-tax-jurisdiction-desktop.png`
-- Mobile 375: `slice-b-ro-tax-jurisdiction-mobile-375.png`
+Prior screenshots remain valid for card/settings chrome. No tenant migration required (JSON stamp only). No production changes.
 
-Tax temporarily enabled for UI, then restored off. No tenant migration required (JSON stamp only). No production changes.
+## Production
+
+See `PRODUCTION_PRESERVATION_GO_NOGO.md` — **NO-GO** for production until #190 merge + fresh prod pin audit + clone rehearsal + explicit owner deploy authorization.
 
 **PR:** https://github.com/EdwardSoaresJr/ark-core/pull/190 — **HOLD MERGE**

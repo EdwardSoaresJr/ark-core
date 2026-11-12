@@ -19,6 +19,7 @@ use App\Ark\Mail\EmailIntent;
 use App\Ark\Platform\Mail\ArkMailClient;
 use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Models\User;
+use Brick\Money\Money;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Throwable;
@@ -58,7 +59,13 @@ class EstimateDocumentEmailDelivery
 
         $settings = ShopSettings::current();
         $shopName = $settings->shop_name ?: config('app.name', 'ARK-SMS');
-        $totals = $this->calculator->totalsFor($repairOrder);
+        // Prefer the attachable document snapshot so email body cents match the PDF.
+        $snapshotTotalCents = $document !== null
+            ? (int) data_get($document->snapshot_json, 'totals.total_cents')
+            : 0;
+        $estimateTotalCents = $snapshotTotalCents > 0
+            ? $snapshotTotalCents
+            : $this->calculator->totalsFor($repairOrder)->totalCents();
         $pdfFilename = sprintf('estimate-ro-%d.pdf', $repairOrder->repair_order_id);
         $accessToken = $this->estimateTokens->execute($repairOrder, $actor);
         $portalUrl = route('portal.estimates.show', ['token' => $accessToken->plainToken]);
@@ -71,7 +78,10 @@ class EstimateDocumentEmailDelivery
             'shop_name' => $shopName,
             'vehicle' => (string) ($repairOrder->vehicle?->display_name ?? 'vehicle'),
             'repair_order_number' => (string) $repairOrder->repair_order_id,
-            'estimate_total' => $totals->format($totals->totalCents()),
+            'estimate_total' => '$'.Money::ofMinor($estimateTotalCents, 'USD')
+                ->getAmount()
+                ->toScale(2)
+                ->__toString(),
             'portal_url' => $portalUrl,
             'staff_note' => filled($staffNote) ? trim($staffNote) : '',
         ]);
