@@ -64,8 +64,8 @@
         </div>
     </div>
 
-    <div class="row g-3">
-        <div class="col-12 col-lg-3">
+    <div class="ops-financial-master-detail">
+        <div class="ops-financial-master-detail__nav">
             <div class="list-group list-group-flush border rounded" data-labor-work-type-nav>
                 <template x-for="workType in matrix.work_types" :key="workType.key">
                     <button
@@ -85,7 +85,7 @@
             </button>
         </div>
 
-        <div class="col-12 col-lg-9">
+        <div class="ops-financial-master-detail__editor">
             <div class="mb-2">
                 <h4 class="mb-0" data-labor-selected-heading>
                     Rates for <span x-text="selectedWorkTypeLabel()"></span>

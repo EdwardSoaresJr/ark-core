@@ -325,9 +325,9 @@
         <div class="alert alert-danger" role="alert">{{ $message }}</div>
     @enderror
 
-    {{-- Match Shop Settings left-tab nav (same pattern Labor content sits beside): card + list-group-flush + active item. --}}
-    <div class="row g-3">
-        <div class="col-12 col-lg-3 col-xxl-2">
+    {{-- Shared Financial Rules master-detail (~240px nav) with Labor and Tax. --}}
+    <div class="ops-financial-master-detail">
+        <div class="ops-financial-master-detail__nav">
             <nav class="card sticky-lg-top" style="top: 1rem" aria-label="Parts matrices" data-parts-matrix-nav>
                 <div class="card-header py-2">
                     <div class="subheader">Parts matrices</div>
@@ -351,7 +351,7 @@
             <p class="small text-secondary mt-2 mb-0 d-lg-none">Select a matrix above, then edit its pricing tiers.</p>
         </div>
 
-        <div class="col-12 col-lg-9 col-xxl-10">
+        <div class="ops-financial-master-detail__editor">
             <form
                 id="parts-matrix-form"
                 method="POST"

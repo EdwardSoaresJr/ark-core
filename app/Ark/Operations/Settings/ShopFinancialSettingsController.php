@@ -10,6 +10,7 @@ use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix;
 use App\Ark\Operations\EstimatePricing\OperationClass;
 use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
+use App\Ark\Operations\EstimatePricing\ShopTaxCatalog;
 use App\Ark\Operations\EstimatePricing\TaxProfile;
 use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
@@ -274,14 +275,34 @@ class ShopFinancialSettingsController
     {
         $data = $request->validate([
             'tax_enabled' => ['nullable', 'boolean'],
-            'tax_label' => ['required', 'string', 'max:64'],
-            'default_tax_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+            'tax_document_presentation' => ['nullable', 'string', Rule::in([
+                ShopTaxCatalog::PRESENTATION_COMBINED,
+                ShopTaxCatalog::PRESENTATION_ITEMIZED,
+            ])],
+            'tax_profiles' => ['nullable', 'array'],
+            // Legacy single-rate payload (kept so existing tests / integrations keep working).
+            'tax_label' => ['nullable', 'string', 'max:64'],
+            'default_tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'taxable_labor' => ['nullable', 'boolean'],
             'taxable_parts' => ['nullable', 'boolean'],
             'taxable_shop_fees' => ['nullable', 'boolean'],
         ]);
 
-        DB::transaction(function () use ($data): void {
+        $usingProfilesPayload = isset($data['tax_profiles']) && is_array($data['tax_profiles']) && $data['tax_profiles'] !== [];
+
+        if (! $usingProfilesPayload && ! filled($data['tax_label'] ?? null)) {
+            throw ValidationException::withMessages([
+                'tax_label' => 'Enter a tax display name.',
+            ]);
+        }
+
+        if (! $usingProfilesPayload && ! array_key_exists('default_tax_rate', $data)) {
+            throw ValidationException::withMessages([
+                'default_tax_rate' => 'Enter a sales tax rate.',
+            ]);
+        }
+
+        DB::transaction(function () use ($data, $usingProfilesPayload): void {
             ShopSettings::forgetCurrent();
             $settings = ShopSettings::query()->lockForUpdate()->first() ?? ShopSettings::current();
             ShopSettings::bindCurrent($settings);
@@ -290,18 +311,37 @@ class ShopFinancialSettingsController
             // before this save can change rates / taxable bases.
             $this->stampLivingRepairOrdersWithCurrentTaxProfile($settings);
 
+            $profiles = $usingProfilesPayload
+                ? ShopTaxCatalog::normalizeProfiles($data['tax_profiles'])
+                : ShopTaxCatalog::profilesFromLegacyRequest($data, $settings);
+
+            $legacy = ShopTaxCatalog::projectLegacyColumns($profiles);
+            $presentation = (string) ($data['tax_document_presentation']
+                ?? $settings->tax_document_presentation
+                ?? ShopTaxCatalog::PRESENTATION_COMBINED);
+
+            if (! in_array($presentation, [
+                ShopTaxCatalog::PRESENTATION_COMBINED,
+                ShopTaxCatalog::PRESENTATION_ITEMIZED,
+            ], true)) {
+                $presentation = ShopTaxCatalog::PRESENTATION_COMBINED;
+            }
+
             $settings->update([
                 'tax_enabled' => (bool) ($data['tax_enabled'] ?? false),
-                'tax_label' => trim($data['tax_label']) ?: 'Tax',
-                'default_tax_rate' => $data['default_tax_rate'],
-                'taxable_labor' => (bool) ($data['taxable_labor'] ?? false),
-                'taxable_parts' => (bool) ($data['taxable_parts'] ?? false),
-                'taxable_shop_fees' => (bool) ($data['taxable_shop_fees'] ?? false),
+                'tax_profiles' => $profiles,
+                'tax_document_presentation' => $presentation,
+                'tax_label' => $legacy['tax_label'],
+                'default_tax_rate' => $legacy['default_tax_rate'],
+                'taxable_labor' => $legacy['taxable_labor'],
+                'taxable_parts' => $legacy['taxable_parts'],
+                'taxable_shop_fees' => $legacy['taxable_shop_fees'],
             ]);
             ShopSettings::forgetCurrent();
         });
 
         // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
+        // Presentation preference is shop-wide for new documents; issued/archived docs stay frozen.
         return $this->redirectWithStatus('Tax settings saved.');
     }
 
