@@ -576,6 +576,7 @@ test('saving shop fees with the switch on or off persists exactly the posted val
 
     $this->patch(route('operations.settings.shop.fees.update'), [
         'shop_fee_enabled' => $posted,
+        'shop_fee_mode' => 'percent',
         'shop_fee_rate' => '6.000',
         'shop_fee_cap' => '45.00',
     ])->assertRedirect(route('operations.settings.shop.edit'))
@@ -584,6 +585,7 @@ test('saving shop fees with the switch on or off persists exactly the posted val
     $settings = ShopSettings::current()->fresh();
 
     expect($settings->shop_fee_enabled)->toBe($expected)
+        ->and($settings->shop_fee_mode)->toBe('percent')
         ->and((string) $settings->shop_fee_rate)->toBe('6.000')
         ->and($settings->shop_fee_cap_cents)->toBe(4500);
 })->with([

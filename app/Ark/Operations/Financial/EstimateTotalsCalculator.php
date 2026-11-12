@@ -721,10 +721,21 @@ class EstimateTotalsCalculator
 
         $feeSettings = $this->settingsWithShopFeeProfile($settings, $shopFeeProfile);
         $concernsById = $repairOrder->concerns->keyBy('id');
+        $hasApprovedWork = $lines->contains(
+            fn (RepairOrderLine $line): bool => $concernsById->get($line->repair_order_concern_id)?->disposition
+                === RepairOrderConcernDisposition::Approved,
+        );
 
         $eligibleLines = $lines
             ->filter(fn (RepairOrderLine $line): bool => $line->type->isShopFeeEligible())
             ->filter(fn (RepairOrderLine $line): bool => ($subtotals[$line->id] ?? 0) > 0)
+            ->filter(function (RepairOrderLine $line) use ($concernsById, $hasApprovedWork): bool {
+                $disposition = $concernsById->get($line->repair_order_concern_id)?->disposition;
+
+                // Declined / deferred / draft never generate shop fees. When approved work
+                // exists, pending recommended scopes also stay out of the fee base.
+                return $disposition === null || $disposition->countsTowardEstimateTotal($hasApprovedWork);
+            })
             ->filter(fn (RepairOrderLine $line): bool => $this->shopFeesApplyToLine(
                 $repairOrder,
                 $line,
@@ -738,7 +749,16 @@ class EstimateTotalsCalculator
         }
 
         if ($shopFeeProfile->isFlat()) {
+            // Flat per RO is itself the maximum; caps do not apply to this method.
             return $this->allocateFlatShopFee(
+                $eligibleLines,
+                $subtotals,
+                $shopFeeProfile->flatCents ?? 0,
+            );
+        }
+
+        if ($shopFeeProfile->isPerConcern()) {
+            return $this->allocatePerConcernShopFee(
                 $eligibleLines,
                 $subtotals,
                 $shopFeeProfile->flatCents ?? 0,
@@ -789,9 +809,49 @@ class EstimateTotalsCalculator
         Collection $eligibleLines,
         Collection $subtotals,
         int $flatCents,
-        ?int $capCents,
     ): array {
         $totalFeeCents = max(0, $flatCents);
+
+        if ($totalFeeCents === 0) {
+            return [];
+        }
+
+        return $this->allocatePooledShopFee($eligibleLines, $subtotals, $totalFeeCents);
+    }
+
+    /**
+     * Fixed dollars once per eligible concern on the RO (not per line), then optional RO cap.
+     * Cap applies to the aggregate concern fees, never separately per concern or line.
+     *
+     * @param  Collection<int, RepairOrderLine>  $eligibleLines
+     * @param  Collection<int, int>  $subtotals
+     * @return array<int, int>
+     */
+    private function allocatePerConcernShopFee(
+        Collection $eligibleLines,
+        Collection $subtotals,
+        int $flatCentsPerConcern,
+        ?int $capCents,
+    ): array {
+        $perConcernCents = max(0, $flatCentsPerConcern);
+
+        if ($perConcernCents === 0) {
+            return [];
+        }
+
+        $eligibleConcernCount = $eligibleLines
+            ->map(fn (RepairOrderLine $line): ?int => $line->repair_order_concern_id !== null
+                ? (int) $line->repair_order_concern_id
+                : null)
+            ->filter(fn (?int $concernId): bool => $concernId !== null)
+            ->unique()
+            ->count();
+
+        if ($eligibleConcernCount === 0) {
+            return [];
+        }
+
+        $totalFeeCents = $perConcernCents * $eligibleConcernCount;
 
         if ($capCents !== null && $totalFeeCents > $capCents) {
             $totalFeeCents = $capCents;
