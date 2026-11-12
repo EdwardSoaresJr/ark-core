@@ -26,23 +26,21 @@ Both branches diverge from `main` @ `2b32d48`. Neither should be force-merged ov
 
 Non-overlapping (safe either order): fee calculator/auth/tests (#188); `ShopTaxCatalog`, tax migration, tax panel partial, tax tests (#189).
 
-## Safe sequence (recommended)
+## Safe sequence (current)
 
-1. **Land #188 first** (owner-approved fee work) onto `main`.
-2. **Rebase #189 onto updated `main`** (or merge `main` into #189).
-3. Resolve controller/settings/shop.blade conflicts by **keeping both** fee and tax changes.
-4. Re-run:
-   - Shop fee suites (`ShopFee*`)
-   - Tax Slice A suites (`ShopTaxProfilesSliceATest`, Tabler, ShopSettings tax assertions)
-   - Focused CI on the rebased #189 tip
-5. Then owner-merge #189.
+1. **#188 landed** on `main` @ `17cd340` (merge commit).
+2. **#189 rebased** onto that main (fee + tax coexist).
+3. **Shop Fees eligibility** added on the same #189 tip (schema-3 `applies_to`) — keep on #189 so the feature is not lost in a second divergent PR.
+4. Owner reviews eligibility + Tax Slice A on **one** Alpha Core pin.
+5. Only then owner-merge #189. **Do not start Tax Slice B** before that acceptance.
 
-Alternative (if #189 is accepted first): reverse the order — land #189, rebase #188, keep both fee+tax edits, re-run fee + tax suites.
+Alternative if owner wants a focused fees PR: after accepting tax-only #189, cherry-pick eligibility commits onto a new branch from `main`. Prefer keeping them on #189 to avoid re-splitting overlapping `ShopSettings` / `shop.blade.php` / fee controller surfaces.
 
 ## Do not
 
-- Merge either PR as part of Slice A polish.
-- Squash one branch in a way that drops the other’s controller/settings hunks.
+- Merge #189 or any new PR without owner authorization.
+- Squash in a way that drops fee eligibility, per-concern fees, or tax catalog hunks.
+- Start Tax Slice B or automated jurisdiction lookup while this gate is open.
 - Assume staging tip equality: Alpha may pin one feature branch at a time for UI acceptance.
 
 ## Staging note

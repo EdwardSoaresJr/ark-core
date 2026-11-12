@@ -1,84 +1,91 @@
-# Integration gate — PR #188 into main + rebased PR #189
+# Integration gate — PR #188/#189 + Shop Fees eligibility (HOLD MERGE)
 
 **Do not merge #189 until owner accepts this candidate.**  
 No production deploy / production migrations / tenant cutover.  
-Do not start Tax Slice B until this candidate is accepted.
+**Do not start Tax Slice B** until Shop Fees eligibility and Tax Slice A coexist correctly on the same Core pin.
 
-## Main after #188
+## What changed on this tip (two distinct scopes)
+
+| Scope | What it is | What it is not |
+|---|---|---|
+| **Tax Slice A** (prior #189 work) | Named tax profiles catalog, Tax UI, shared 240px Financial Rules nav | Automated jurisdiction lookup; RO jurisdiction selection (Slice B) |
+| **Shop Fees eligibility** (this pass) | `applies_to` labor \| parts \| both across percent / flat / per_concern; schema-3 stamp | A second fee engine; Tax Slice B |
+
+## Merge strategy (so eligibility is not lost)
+
+1. **Keep eligibility on PR #189** (`feat/tax-profiles-slice-a`), which already sits on `main` after #188 (`17cd340`).
+2. **Do not** open a separate eligibility PR unless owner prefers a split after review — a second PR would rebase away from the integrated fee+tax tip and recreate the #188/#189 conflict surface.
+3. Land as one merge commit to `main` only after owner acceptance of **both** scopes on the same SHA.
+4. If owner wants history split later: cherry-pick the eligibility commit(s) (`624ce35`…) onto a new branch from `main` **after** #189 tax-only lands — not before.
+
+## Pins
 
 | Item | Value |
 |---|---|
-| Merge strategy | Merge commit (`gh pr merge 188 --merge`) — same pattern as #187 |
-| Main SHA | `17cd34046a669e3f082d04fd5ee9e58566f40d47` |
-| Merged PR | https://github.com/EdwardSoaresJr/ark-core/pull/188 |
-| Merged at | 2026-11-12T18:09:04Z |
-| Pre-merge checks | Tests focused/targeted/lint/security/comms-boundary **SUCCESS**; Regression pest **SKIPPED** (not counted as pass) |
+| Main after #188 | `17cd34046a669e3f082d04fd5ee9e58566f40d47` |
+| Eligibility feature SHA | `624ce3529c75137ed362a1b784bc0cd8fa8585e8` |
+| Branch / PR | `feat/tax-profiles-slice-a` · https://github.com/EdwardSoaresJr/ark-core/pull/189 |
+| Alpha Core pin | `624ce3529c75137ed362a1b784bc0cd8fa8585e8` |
+| Alpha SaaS | `eb859c2159a1821d87e51721698d4608c3bb20c1` (unchanged) |
 
-## Integrated candidate (#189 rebased onto main)
+Staging only. Alpha ran additive `shop_fee_applies_to` migration. Temporary fee/tax UI toggles restored off after screenshots.
 
-| Item | Value |
+## Eligibility audit (legacy line kinds)
+
+| Line type | Historical fee-eligible? | Schema 3 behavior |
+|---|---|---|
+| Labor | Yes | Counts for `labor` and `both` |
+| Part | Yes | Counts for `parts` and `both` |
+| Package | Yes (with labor) | Counts for `labor` and `both` only |
+| Sublet | **Never** | Still excluded |
+| Fee | **Never** | Still excluded |
+| Note | No | Still excluded |
+| Diagnostics | Labor line + category | Same as Labor (not a separate type) |
+
+Schema 1/2 profiles **without** `applies_to` keep Labor+Part+Package. Existing Alpha ROs 39–43 remain schema 1/2 with no `applies_to` key.
+
+## Compatibility risks
+
+- New ROs stamp schema 3 with `applies_to`; open/closed stamped ROs do not reprice when shop settings change.
+- Flat-per-RO still ignores/hides the cap (verified on Alpha UI).
+- Changing to labor-only / parts-only affects **new** ROs only.
+- Additive migration default `both`.
+
+## Focused tests (local @ `624ce35`)
+
+| Suite | Result |
 |---|---|
-| Branch | `feat/tax-profiles-slice-a` |
-| Tip | `f31d62a7844e3fb47290ce7763f21ff4dacc811d` |
-| Base | `origin/main` @ `17cd340` |
-| PR | https://github.com/EdwardSoaresJr/ark-core/pull/189 |
-| Rebase | Clean (no conflict hunks). Verified both fee + tax surfaces remain. |
+| `ShopFeeAppliesToTest` | **23 passed** |
+| Broader `ShopFee*` + commercial | **71 passed** |
+| Tax Slice A + parts/tax forward-only | **15 passed** |
 
-## Overlap inventory (both kept)
+GitHub Focused Tests / Regression: see tip SHA after evidence push; prior tip Regression success recorded in [REGRESSION.md](./REGRESSION.md).
 
-- `ShopFinancialSettingsController` — `updateFees` (`percent`/`flat`/`per_concern`) **and** tax profile store/component/active
-- `ShopSettings` — fee mode helpers **and** `taxProfiles()` / presentation
-- `shop.blade.php` — Shop Fees three-method UI + conditional cap **and** Tax panel + shared 240px master-detail styles
-
-## Focused tests
-
-Local (tip `f31d62a`): **84 passed** / 834 assertions  
-(`ShopFee*` + tax Slice A + Labor/Parts/Tabler + forward-only + ShopSettings tax cases)
-
-GitHub Focused Tests: **success** — https://github.com/EdwardSoaresJr/ark-core/actions/runs/43276891172
-
-## Full Regression
-
-See [REGRESSION.md](./REGRESSION.md).
-
-- GitHub: https://github.com/EdwardSoaresJr/ark-core/actions/runs/43277230314 — **success**
-- 4553 tests, **0 new regressions** vs known-failure baseline (205 known still failing)
-
-## Staging pins (Alpha)
-
-| Pin | SHA |
-|---|---|
-| Alpha Core | `f31d62a7844e3fb47290ce7763f21ff4dacc811d` |
-| Alpha SaaS | `eb859c2159a1821d87e51721698d4608c3bb20c1` |
-
-Staging only. `tenants:migrate --tenants=alpha` → nothing to migrate (fee + tax columns already present).
-
-## Staging verification (Alpha @ `f31d62a`)
+## Alpha staging verification (same Core pin `624ce35`)
 
 | Check | Result |
 |---|---|
-| Shop Fees percent + cap | Pass — `fees-percent-desktop.png` (8% / $45 cap) |
-| Shop Fees flat-per-RO | Pass — `fees-flat-desktop.png`; **cap hidden** (`display: none`) |
-| Shop Fees per-concern + cap | Pass — `fees-per-concern-desktop.png` ($15 / concern, $60 cap) |
-| Tax Profiles add | Pass — added `New tax profile` (`profile-tkfbxqxr`); toast “Tax profile added.” |
-| Tax Profiles deactivate | Pass — badge **Inactive** after deactivate |
-| Labor / Parts / Tax nav width | Pass — each measured **240px** |
-| Existing RO line totals | Pass — before/after snapshot identical for ROs 39–43 (tax/fee/total cents unchanged) |
+| Shop Fees percent + **Apply shop fees to** | Pass — `fees-applies-to-percent-desktop.png` |
+| Shop Fees flat-per-RO + applies_to; **cap hidden** | Pass — `fees-applies-to-flat-desktop.png` |
+| Shop Fees per-concern + applies_to + cap field | Pass — `fees-applies-to-per-concern-desktop.png` |
+| Mobile 375 Shop Fees applies_to | Pass — `fees-applies-to-mobile-375.png` |
+| Labor | Pass — `labor-same-pin-desktop.png`; nav **240px** |
+| Parts Matrix | Pass — `parts-same-pin-desktop.png`; nav **240px** |
+| Tax Profiles | Pass — `tax-profiles-same-pin-desktop.png`; nav **240px** |
+| Existing RO fee stamps (39–43) | Pass — schema 1/2, no `applies_to` key (historical) |
 
-Fee + tax **toggles restored off** after UI checks. Inactive “New tax profile” left in catalog as proof of add/deactivate.
+Fee + tax toggles restored off after UI checks.
 
-## Screenshots
+## Screenshots (this eligibility pass)
 
-- `fees-percent-desktop.png`
-- `fees-flat-desktop.png`
-- `fees-per-concern-desktop.png`
-- `tax-profiles-desktop.png`
-- `labor-nav-240-desktop.png`
-- `parts-nav-240-desktop.png`
+- `fees-applies-to-percent-desktop.png`
+- `fees-applies-to-flat-desktop.png`
+- `fees-applies-to-per-concern-desktop.png`
+- `fees-applies-to-mobile-375.png`
+- `labor-same-pin-desktop.png`
+- `parts-same-pin-desktop.png`
+- `tax-profiles-same-pin-desktop.png`
 
-## Follow-ups (tracked, not implemented)
+## Follow-ups
 
-See [FOLLOWUPS.md](./FOLLOWUPS.md):
-
-1. Configurable Shop Fees eligibility (labor / parts / both)
-2. Tax Slice B — RO jurisdiction + service address (after this candidate is accepted)
+See [FOLLOWUPS.md](./FOLLOWUPS.md). Eligibility implemented; Tax Slice B still blocked pending owner acceptance. Core vs SaaS automated tax lookup boundary recorded on #174 and in tax Slice A evidence.

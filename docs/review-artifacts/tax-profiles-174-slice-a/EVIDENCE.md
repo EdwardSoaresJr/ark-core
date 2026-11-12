@@ -52,11 +52,26 @@ Measured at 1440×900 desktop:
 
 Mobile: nav stacks above editor; usable at 320 / 375 / 430.
 
+## Core vs SaaS tax-jurisdiction boundary (owner clarification on #174)
+
+**Automated tax-jurisdiction lookup belongs exclusively in ARK SaaS, NOT ARK Core.**
+
+| Owner | Responsibility |
+|---|---|
+| **Core** | Named tax profiles/components; manual city/ZIP associations; RO jurisdiction selection; frozen tax rules, calculations, exemptions, authorization, invoices, documents; provider-neutral, validated, auditable application of externally supplied jurisdiction data |
+| **SaaS** | Colorado SUTS/GIS and other provider integrations; credentials; API requests; address verification; rate freshness; caching; usage metering; automatic jurisdiction suggestions / optional profile updates; SaaS billing/entitlement for automated lookups |
+
+Preserve this boundary in Slice B/C plans. **Do not** put provider-specific code, API credentials, external lookup dependencies, or SaaS metering in Core. Core must remain usable offline/self-hosted with manually configured tax profiles. **Do not implement automated lookup yet.**
+
 ## Explicitly deferred (owner architectural decisions — do not implement in Slice A)
 
-- **Slice B:** TaxProfile schema 2 immutable selected-profile/component snapshot; service-location + manual profile selection; pre-auth selection change with audited recalc; post-approval tax **increase** → supplemental auth before extra cents collectible; decreases without extra auth; preserve historical approvals/snapshots/invoices/terminal records; **no separate tax engine**. ZIP may suggest a profile; selection confirms against **service location** (fleet: RO service location, not HQ).
+- **Slice B:** TaxProfile schema 2 immutable selected-profile/component snapshot; service-location + manual profile selection; pre-auth selection change with audited recalc; post-approval tax **increase** → supplemental auth before extra cents collectible; decreases without extra auth; preserve historical approvals/snapshots/invoices/terminal records; **no separate tax engine**. ZIP may suggest a profile; selection confirms against **service location** (fleet: RO service location, not HQ). Automated lookup suggestions remain SaaS-owned.
 - **Slice C:** component-level calc; combined/itemized document rendering; customer tax exemption + evidence independent of Billing Class; jurisdiction exemptions; cent-level reconcile across invoices/approvals/PDFs/portal/reporting.
-- Colorado SUTS / paid providers: not in Slice A.
+- Colorado SUTS / paid providers: SaaS only — not in Core Slice A/B/C implementation.
+
+## Concurrent Shop Fees eligibility (on same #189 tip — not Tax Slice A)
+
+Shop Fees **Apply shop fees to** (labor / parts / both) landed on this integrated branch before Slice B. See [integrate-188-189/EVIDENCE.md](../integrate-188-189/EVIDENCE.md). Distinguish fee eligibility commits from Tax Slice A when reviewing.
 
 ## Compatibility
 
