@@ -8,8 +8,8 @@
 
 | Pin | SHA |
 |---|---|
-| PR head / Core tip | _(filled after push)_ |
-| Alpha Core (`vendor/ark/core`) | _(filled after staging pin)_ |
+| PR head / Core tip | `3e7cd6f3df87481b79f4fe7f0d697b55576577ff` |
+| Alpha Core (`vendor/ark/core`) | `3e7cd6f3df87481b79f4fe7f0d697b55576577ff` |
 | Alpha SaaS (`/var/www/ark-stancl`) | `eb859c2159a1821d87e51721698d4608c3bb20c1` |
 
 ## Policy / schema
