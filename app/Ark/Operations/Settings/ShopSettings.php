@@ -1031,14 +1031,23 @@ TEXT;
             ? rtrim(rtrim(number_format((float) $shopFee['rate'], 3, '.', ''), '0'), '.')
             : null;
 
+        $feeMode = $this->shopFeeMode();
+        $flatFee = filled($this->shop_fee_flat_cents)
+            ? number_format(((int) $this->shop_fee_flat_cents) / 100, 2, '.', '')
+            : null;
+
         $shopFeeSummary = match (true) {
             ! $shopFee['enabled'] => 'No shop fees',
+            $feeMode === 'flat' && $flatFee !== null => '$'.$flatFee.' shop fee per RO',
+            $feeMode === 'per_concern' && $flatFee !== null => '$'.$flatFee.' shop fee per concern',
             $feeRate !== null => $feeRate.'% shop fee',
             default => 'Shop fees apply',
         };
 
         $shopFeeInline = match (true) {
             ! $shopFee['enabled'] => 'No fees',
+            $feeMode === 'flat' && $flatFee !== null => '$'.$flatFee.' fee/RO',
+            $feeMode === 'per_concern' && $flatFee !== null => '$'.$flatFee.' fee/concern',
             $feeRate !== null => $feeRate.'% fees',
             default => 'Fees apply',
         };
@@ -1137,7 +1146,7 @@ TEXT;
     {
         $mode = (string) ($this->shop_fee_mode ?? 'percent');
 
-        return in_array($mode, ['percent', 'flat'], true) ? $mode : 'percent';
+        return in_array($mode, ['percent', 'flat', 'per_concern'], true) ? $mode : 'percent';
     }
 
     public function defaultDepositEnabled(): bool

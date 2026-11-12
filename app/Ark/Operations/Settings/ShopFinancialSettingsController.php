@@ -309,7 +309,7 @@ class ShopFinancialSettingsController
     {
         $data = $request->validate([
             'shop_fee_enabled' => ['nullable', 'boolean'],
-            'shop_fee_mode' => ['nullable', 'string', Rule::in(['percent', 'flat'])],
+            'shop_fee_mode' => ['nullable', 'string', Rule::in(['percent', 'flat', 'per_concern'])],
             'shop_fee_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'shop_fee_flat' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'shop_fee_cap' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
@@ -317,13 +317,15 @@ class ShopFinancialSettingsController
 
         $enabled = (bool) ($data['shop_fee_enabled'] ?? false);
         $mode = (string) ($data['shop_fee_mode'] ?? ShopSettings::current()->shopFeeMode());
-        if (! in_array($mode, ['percent', 'flat'], true)) {
+        if (! in_array($mode, ['percent', 'flat', 'per_concern'], true)) {
             $mode = 'percent';
         }
 
-        if ($enabled && $mode === 'flat' && ! filled($data['shop_fee_flat'] ?? null)) {
+        if ($enabled && in_array($mode, ['flat', 'per_concern'], true) && ! filled($data['shop_fee_flat'] ?? null)) {
             throw ValidationException::withMessages([
-                'shop_fee_flat' => 'Enter a fixed dollar fee when using a flat shop fee.',
+                'shop_fee_flat' => $mode === 'per_concern'
+                    ? 'Enter a flat fee per concern when using that fee type.'
+                    : 'Enter a fixed dollar fee when using a flat shop fee.',
             ]);
         }
 
@@ -338,20 +340,33 @@ class ShopFinancialSettingsController
         // Stamp living ROs that still use live settings so this save cannot reprice them.
         $this->stampLivingRepairOrdersWithCurrentShopFeeProfile($settings);
 
+        // Preserve inactive method values so switching fee types does not wipe them.
+        $rate = $mode === 'percent'
+            ? ($data['shop_fee_rate'] ?? 0)
+            : $settings->shop_fee_rate;
+
+        $flatCents = in_array($mode, ['flat', 'per_concern'], true)
+            ? (filled($data['shop_fee_flat'] ?? null)
+                ? (int) round(((float) $data['shop_fee_flat']) * 100)
+                : null)
+            : $settings->shop_fee_flat_cents;
+
+        $capCents = in_array($mode, ['percent', 'per_concern'], true)
+            ? (filled($data['shop_fee_cap'] ?? null)
+                ? (int) round(((float) $data['shop_fee_cap']) * 100)
+                : null)
+            : $settings->shop_fee_cap_cents;
+
         $settings->update([
             'shop_fee_enabled' => $enabled,
             'shop_fee_mode' => $mode,
-            'shop_fee_rate' => $data['shop_fee_rate'] ?? 0,
-            'shop_fee_flat_cents' => filled($data['shop_fee_flat'] ?? null)
-                ? (int) round(((float) $data['shop_fee_flat']) * 100)
-                : null,
-            'shop_fee_cap_cents' => filled($data['shop_fee_cap'] ?? null)
-                ? (int) round(((float) $data['shop_fee_cap']) * 100)
-                : null,
+            'shop_fee_rate' => $rate,
+            'shop_fee_flat_cents' => $flatCents,
+            'shop_fee_cap_cents' => $capCents,
         ]);
 
-        // Forward-only: do not recalculate living ROs when fee settings change.
-        $this->syncOpenEstimateDocuments();
+        // Forward-only: do not recalculate living ROs or rewrite open estimate snapshots.
+        // New ROs pick up the updated fee profile through the established stamp-on-create path.
 
         return $this->redirectWithStatus('Shop fee settings saved.');
     }

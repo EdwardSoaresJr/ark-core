@@ -5,6 +5,7 @@ namespace App\Ark\Operations\Financial;
 use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\EstimatePricing\ShopFeeProfile;
 use App\Ark\Operations\EstimatePricing\TaxProfile;
+use App\Ark\Operations\RepairOrders\ApprovedWorkScope;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\EstimateTotals;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -738,8 +739,19 @@ class EstimateTotalsCalculator
         }
 
         if ($shopFeeProfile->isFlat()) {
+            // Flat per RO is itself the maximum; caps do not apply to this method.
+            // Eligibility stays the historical percent/flat line set (no disposition filter).
             return $this->allocateFlatShopFee(
                 $eligibleLines,
+                $subtotals,
+                $shopFeeProfile->flatCents ?? 0,
+            );
+        }
+
+        if ($shopFeeProfile->isPerConcern()) {
+            // Per-concern only. Percentage and flat-per-RO keep the historical line set.
+            return $this->allocatePerConcernShopFee(
+                $this->perConcernFeeEligibleLines($repairOrder, $eligibleLines, $concernsById),
                 $subtotals,
                 $shopFeeProfile->flatCents ?? 0,
                 $shopFeeProfile->capCents,
@@ -779,6 +791,48 @@ class EstimateTotalsCalculator
     }
 
     /**
+     * Per-concern fee base (percentage/flat keep the historical unfiltered line set):
+     * - declined / deferred / draft never count
+     * - before any ApprovedWorkScope exists: recommended (or null) and Approved count
+     *   so the pre-authorization estimate and first-authorization stamp see the same base
+     * - after at least one scope exists: only Approved concerns count
+     *   (recommended/unauthorized additions cannot raise the fee; a concern flipped to
+     *   Approved during supplemental authorization counts before its scope row is written)
+     *
+     * @param  Collection<int, RepairOrderLine>  $eligibleLines
+     * @param  Collection<int, RepairOrderConcern>  $concernsById
+     * @return Collection<int, RepairOrderLine>
+     */
+    private function perConcernFeeEligibleLines(
+        RepairOrder $repairOrder,
+        Collection $eligibleLines,
+        Collection $concernsById,
+    ): Collection {
+        $hasRecordedScopes = ApprovedWorkScope::query()
+            ->where('repair_order_id', $repairOrder->id)
+            ->exists();
+
+        if ($hasRecordedScopes) {
+            return $eligibleLines
+                ->filter(function (RepairOrderLine $line) use ($concernsById): bool {
+                    return $concernsById->get($line->repair_order_concern_id)?->disposition
+                        === RepairOrderConcernDisposition::Approved;
+                })
+                ->values();
+        }
+
+        return $eligibleLines
+            ->filter(function (RepairOrderLine $line) use ($concernsById): bool {
+                $disposition = $concernsById->get($line->repair_order_concern_id)?->disposition;
+
+                return $disposition === null
+                    || $disposition === RepairOrderConcernDisposition::Recommended
+                    || $disposition === RepairOrderConcernDisposition::Approved;
+            })
+            ->values();
+    }
+
+    /**
      * Flat dollar fee once per RO, spread across eligible lines by subtotal share.
      *
      * @param  Collection<int, RepairOrderLine>  $eligibleLines
@@ -789,19 +843,66 @@ class EstimateTotalsCalculator
         Collection $eligibleLines,
         Collection $subtotals,
         int $flatCents,
-        ?int $capCents,
     ): array {
         $totalFeeCents = max(0, $flatCents);
-
-        if ($capCents !== null && $totalFeeCents > $capCents) {
-            $totalFeeCents = $capCents;
-        }
 
         if ($totalFeeCents === 0) {
             return [];
         }
 
         return $this->allocatePooledShopFee($eligibleLines, $subtotals, $totalFeeCents);
+    }
+
+    /**
+     * Fixed dollars once per eligible concern on that concern's lines (not pooled across the RO).
+     * Cap applies to the aggregate of those concern fees. Concerns are charged in ascending id
+     * order so earlier authorized concerns keep their full per-concern amount and a later
+     * concern under a binding cap receives only the remaining room (supplemental auth).
+     *
+     * @param  Collection<int, RepairOrderLine>  $eligibleLines
+     * @param  Collection<int, int>  $subtotals
+     * @return array<int, int>
+     */
+    private function allocatePerConcernShopFee(
+        Collection $eligibleLines,
+        Collection $subtotals,
+        int $flatCentsPerConcern,
+        ?int $capCents,
+    ): array {
+        $perConcernCents = max(0, $flatCentsPerConcern);
+
+        if ($perConcernCents === 0) {
+            return [];
+        }
+
+        $linesByConcernId = $eligibleLines
+            ->filter(fn (RepairOrderLine $line): bool => $line->repair_order_concern_id !== null)
+            ->groupBy(fn (RepairOrderLine $line): int => (int) $line->repair_order_concern_id)
+            ->sortKeys();
+
+        if ($linesByConcernId->isEmpty()) {
+            return [];
+        }
+
+        $allocated = [];
+        $remainingCapCents = $capCents;
+
+        foreach ($linesByConcernId as $concernLines) {
+            $feeForConcern = $perConcernCents;
+
+            if ($remainingCapCents !== null) {
+                $feeForConcern = min($feeForConcern, max(0, $remainingCapCents));
+                $remainingCapCents -= $feeForConcern;
+            }
+
+            if ($feeForConcern === 0) {
+                continue;
+            }
+
+            $allocated += $this->allocatePooledShopFee($concernLines->values(), $subtotals, $feeForConcern);
+        }
+
+        return $allocated;
     }
 
     /**

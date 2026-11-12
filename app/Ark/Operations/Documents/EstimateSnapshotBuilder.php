@@ -199,7 +199,12 @@ class EstimateSnapshotBuilder
             'taxable_parts' => $settings->taxable_parts,
             'taxable_shop_fees' => $settings->taxable_shop_fees,
             'shop_fee_enabled' => $settings->shop_fee_enabled,
+            'shop_fee_mode' => $settings->shopFeeMode(),
             'shop_fee_rate' => (string) $settings->shop_fee_rate,
+            'shop_fee_flat_cents' => $settings->shop_fee_flat_cents,
+            'shop_fee_flat' => $settings->shop_fee_flat_cents === null
+                ? null
+                : $this->formatCents($settings->shop_fee_flat_cents),
             'shop_fee_cap_cents' => $settings->shop_fee_cap_cents,
             'shop_fee_cap' => $settings->shop_fee_cap_cents === null
                 ? null

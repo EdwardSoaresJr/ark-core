@@ -12,14 +12,18 @@ final class RecordApprovedWorkScopeAction
         private readonly EstimateTotalsCalculator $totalsCalculator,
     ) {}
 
-    public function execute(RepairOrderConcern $concern, ?User $actor = null): ?ApprovedWorkScope
+    public function execute(RepairOrderConcern $concern, ?User $actor = null, bool $recalculate = true): ?ApprovedWorkScope
     {
         if ($concern->disposition !== RepairOrderConcernDisposition::Approved) {
             return null;
         }
 
-        // The recorded amounts must match what the customer was shown, so price the lines first.
-        $this->totalsCalculator->recalculateRepairOrder($concern->repairOrder()->firstOrFail());
+        // The recorded amounts must match what the customer was shown, so price the lines first
+        // unless the caller already recalculated once for a multi-concern approval batch.
+        if ($recalculate) {
+            $this->totalsCalculator->recalculateRepairOrder($concern->repairOrder()->firstOrFail());
+        }
+
         $concern->load('lines');
 
         $lines = $concern->lines

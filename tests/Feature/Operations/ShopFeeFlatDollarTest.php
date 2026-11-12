@@ -164,11 +164,12 @@ test('saving fee settings stamps legacy living repair orders before the change',
     expect((int) $legacy->lines()->sum('shop_fee_cents'))->toBe(825);
 });
 
-test('shop fee settings page exposes percent and flat choices', function () {
+test('shop fee settings page exposes percent flat and per-concern choices', function () {
     $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'tab' => 'shop-fees']))
         ->assertOk()
         ->assertSee('Percentage of eligible charges')
         ->assertSee('Fixed dollar fee per RO')
+        ->assertSee('Fixed dollar fee per concern')
         ->assertSee('Flat fee per RO ($)')
         ->assertSee('Applies to new repair orders only');
 });
@@ -178,5 +179,21 @@ test('shop fee profile serializes from shop settings', function () {
 
     expect($profile->isFlat())->toBeTrue()
         ->and($profile->flatCents)->toBe(2500)
-        ->and($profile->toArray()['schema'])->toBe(1);
+        ->and($profile->toArray()['schema'])->toBe(2);
+});
+
+test('legacy schema-1 flat profiles are never reinterpreted as per concern', function () {
+    $profile = ShopFeeProfile::tryFromStored([
+        'enabled' => true,
+        'mode' => 'per_concern',
+        'rate' => '0',
+        'flat_cents' => 1500,
+        'cap_cents' => 4000,
+        'taxable' => false,
+        'schema' => 1,
+    ]);
+
+    expect($profile)->not->toBeNull()
+        ->and($profile->mode)->toBe('percent')
+        ->and($profile->isPerConcern())->toBeFalse();
 });
