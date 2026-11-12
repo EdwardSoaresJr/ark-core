@@ -40,6 +40,17 @@ Integrated surfaces retained on main: Labor matrix, Parts matrix nav, Shop Fees 
 
 `TaxJurisdictionSliceBTest` + Slice A tax + ShopFeeAppliesTo + PricingEngineSafety: **43 passed**
 
-## Alpha / screenshots
+## Alpha / screenshots (staging only)
 
-Filled after push + staging pin (staging only; no production).
+| Pin | SHA |
+|---|---|
+| Alpha Core | `4d5903b7e0dbf9787262b0186eead443d53d0e04` (+ follow-up tip after evidence) |
+| Alpha SaaS | `eb859c2159a1821d87e51721698d4608c3bb20c1` |
+
+- Tax settings counties field: `slice-b-tax-settings-desktop.png`
+- RO tax jurisdiction card: `slice-b-ro-tax-jurisdiction-desktop.png`
+- Mobile 375: `slice-b-ro-tax-jurisdiction-mobile-375.png`
+
+Tax temporarily enabled for UI, then restored off. No tenant migration required (JSON stamp only). No production changes.
+
+**PR:** https://github.com/EdwardSoaresJr/ark-core/pull/190 — **HOLD MERGE**

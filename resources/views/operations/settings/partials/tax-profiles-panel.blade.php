@@ -61,7 +61,7 @@
             <h3 class="mb-1">Sales tax profiles</h3>
             <p class="text-secondary small mb-0">
                 Configure named jurisdictions with individual tax components. New repair orders stamp the
-                <strong>default</strong> profile’s combined rate (TaxProfile schema 1). Changing these settings
+                <strong>default</strong> profile as TaxProfile schema 2 (components frozen on the RO). Changing these settings
                 does not reprice existing open or closed ROs.
             </p>
         </div>
