@@ -8,9 +8,12 @@
 
 | Pin | SHA |
 |---|---|
-| PR head / Core tip | `0b8ec996ca5b9a8f0b00113c662101baf6ecc8af` |
-| Alpha Core (`vendor/ark/core`) | `0b8ec996ca5b9a8f0b00113c662101baf6ecc8af` |
+| Code tip (auth/calc fixes) | `3e7cd6f3df87481b79f4fe7f0d697b55576577ff` |
+| Alpha Core (`vendor/ark/core`) | `ed4d7b80164587b168afeb0d7579ffd496b02180` (includes code tip `3e7cd6f`) |
 | Alpha SaaS (`/var/www/ark-stancl`) | `eb859c2159a1821d87e51721698d4608c3bb20c1` |
+| GitHub Tests on `ed4d7b8` | **success** — https://github.com/EdwardSoaresJr/ark-core/actions/runs/43157415114 |
+
+Synthetic staging ROs kept (`#43` fee-auth path). Temporary `$15`/`$40` settings restored to `enabled=false`, `mode=percent`, `rate=0`, `flat=null`, `cap=null`.
 
 ## Policy / schema
 
@@ -42,14 +45,16 @@ Locked by `ShopFeePerConcernTest::switching fee methods preserves inactive store
 | Deferred / draft | fees still stored | n/a (same eligibility) |
 | Mixed approved + recommended | fees stored on both; estimate omits recommended once approved exists | same pattern |
 
-**Intentional differences already on this branch (not silent):**
+**Intentional differences (not silent):**
 
 1. Flat-per-RO **ignores** `shop_fee_cap_cents` (caps are percent/per-concern only).
 2. Per-concern disposition filtering is **new** and must not apply to percent/flat (regression suite proves it does not).
 
-Suite: `ShopFeeDispositionRegressionTest` — pass.
+Suite: `ShopFeeDispositionRegressionTest` — **pass**.
 
 ## Check 2 — supplemental authorization ($15 / concern, cap $40)
+
+### Local Pest
 
 | Step | Approved shop fee | Notes |
 |---|---:|---|
@@ -63,14 +68,27 @@ Suite: `ShopFeeDispositionRegressionTest` — pass.
 
 Product path for supplemental: `UpdateConcernDispositionAction` (Authorization Store does not auto-approve new recommended after an approved scope exists).
 
-Supporting fixes for authorization integrity:
+### Alpha staging (tenant `alpha`, synthetic RO `#43`)
+
+| Metric | Result |
+|---|---:|
+| fee after 2 (live) | 3000 |
+| approved after 2 | 3000 |
+| approved with recommended 3rd | 3000 |
+| live with recommended 3rd | 3000 |
+| 3rd fee while recommended | 0 |
+| approved after authorizing 3rd | 4000 |
+| fees after 3rd | one=1500, two=1500, three=1000 |
+| settings restored | enabled=false, percent, rate=0, flat/cap null |
+
+Supporting fixes:
 
 - `RepairOrderReadCache` flushes on `RepairOrderConcern` writes.
-- First-authorization batch: one recalculate, then `RecordApprovedWorkScopeAction(..., recalculate: false)`.
-- After any scope exists, only **Approved** concerns are fee-eligible (recommended additions cannot raise the fee; flipping to Approved during supplemental counts before the new scope row is written).
-- Per-concern allocation is **per concern’s lines** in ascending concern id order, with cap remainder on later concerns (not a single RO-wide pool that dilutes earlier authorized concerns).
+- First-authorization batch: one recalculate, then scopes with `recalculate: false`.
+- After any scope exists, only **Approved** concerns are fee-eligible.
+- Per-concern allocation is **per concern’s lines** in ascending concern id order, with cap remainder on later concerns.
 
-Suite: `ShopFeePerConcernAuthorizationTest` — pass.
+Suite: `ShopFeePerConcernAuthorizationTest` — **pass**.
 
 ## Check 3 — CI + broader financial regressions
 
@@ -86,8 +104,8 @@ filter='ShopFee|PricingEngineSafety|EstimateTotals|Authorization|ApprovedWork|In
 
 ### GitHub
 
-Prior tip `161f2fc` Tests workflow **success** (focused/targeted/lint/security/communications-boundary). Cancelled run on `4533010` is not counted as a pass.  
-Fresh Tests workflow on the owner-review tip must complete successfully after push (recorded below).
+- Prior tip `161f2fc` Tests workflow **success** (cancelled `4533010` run not counted).
+- Owner-review tip Tests workflow: must complete **success** on the PR head after this package (URL in PR comment). `pest` under Regression may remain skipped by workflow rules; the **Tests** workflow is the required gate.
 
 ## Calculation (final)
 
@@ -103,23 +121,17 @@ Fresh Tests workflow on the owner-review tip must complete successfully after pu
 
 ## Changed files (owner-review gate)
 
-- `app/Ark/Operations/Financial/EstimateTotalsCalculator.php` — per-concern eligibility + per-concern allocation
-- `app/Ark/Operations/Approvals/RecordCustomerAuthorizationAction.php` — batch scope pricing
-- `app/Ark/Operations/RepairOrders/RecordApprovedWorkScopeAction.php` — `recalculate` flag
-- `app/Ark/Operations/RepairOrders/RepairOrderReadCache.php` — flush on Concern
+- `app/Ark/Operations/Financial/EstimateTotalsCalculator.php`
+- `app/Ark/Operations/Approvals/RecordCustomerAuthorizationAction.php`
+- `app/Ark/Operations/RepairOrders/RecordApprovedWorkScopeAction.php`
+- `app/Ark/Operations/RepairOrders/RepairOrderReadCache.php`
 - `tests/Feature/Operations/ShopFeeDispositionRegressionTest.php` _(new)_
 - `tests/Feature/Operations/ShopFeePerConcernAuthorizationTest.php` _(new)_
 - `docs/review-artifacts/shop-fee-per-concern/EVIDENCE.md`
 
 (Earlier PR commits also include profile/UI/settings/tests/screenshots.)
 
-## Alpha staging
-
-Synthetic fee-auth records kept. Temporary `$15` / `$40` settings restored afterward to:
-
-`enabled=false`, `mode=percent`, `rate=0`, `flat=null`, `cap=null`.
-
-### UI screenshots (unchanged)
+## UI screenshots
 
 - `shop-fees-percent-desktop.png`
 - `shop-fees-flat-ro-desktop.png` (cap hidden)
