@@ -24,8 +24,9 @@ No production deploy / production migrations / tenant cutover.
 |---|---|
 | Main after #188 | `17cd34046a669e3f082d04fd5ee9e58566f40d47` |
 | Eligibility feature SHA | `624ce3529c75137ed362a1b784bc0cd8fa8585e8` |
+| Owner-review tip | `a008275f77ce35f50bbc55631df663a126d04917` (includes evidence + provenance fix) |
 | Branch / PR | `feat/tax-profiles-slice-a` · https://github.com/EdwardSoaresJr/ark-core/pull/189 |
-| Alpha Core pin | `624ce3529c75137ed362a1b784bc0cd8fa8585e8` |
+| Alpha Core pin | `a008275f77ce35f50bbc55631df663a126d04917` |
 | Alpha SaaS | `eb859c2159a1821d87e51721698d4608c3bb20c1` (unchanged) |
 
 Staging only. Alpha ran additive `shop_fee_applies_to` migration. Temporary fee/tax UI toggles restored off after screenshots.
@@ -51,17 +52,21 @@ Schema 1/2 profiles **without** `applies_to` keep Labor+Part+Package. Existing A
 - Changing to labor-only / parts-only affects **new** ROs only.
 - Additive migration default `both`.
 
-## Focused tests (local @ `624ce35`)
+## Focused tests
+
+Local @ `624ce35` / `a008275`:
 
 | Suite | Result |
 |---|---|
 | `ShopFeeAppliesToTest` | **23 passed** |
 | Broader `ShopFee*` + commercial | **71 passed** |
 | Tax Slice A + parts/tax forward-only | **15 passed** |
+| Pricing provenance schema 3 | **passed** |
 
-GitHub Focused Tests / Regression: see tip SHA after evidence push; prior tip Regression success recorded in [REGRESSION.md](./REGRESSION.md).
+GitHub Focused Tests @ `a008275`: **success** — https://github.com/EdwardSoaresJr/ark-core/actions/runs/43288811401  
+Full Regression @ `a008275`: **success** — see [REGRESSION.md](./REGRESSION.md) (`43288790782`)
 
-## Alpha staging verification (same Core pin `624ce35`)
+## Alpha staging verification (same Core pin; UI verified on `624ce35`, tip re-pinned to `a008275`)
 
 | Check | Result |
 |---|---|
