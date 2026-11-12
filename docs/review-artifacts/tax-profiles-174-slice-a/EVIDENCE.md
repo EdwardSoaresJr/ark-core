@@ -12,8 +12,8 @@
 |---|---|
 | Main (audit base) | `2b32d48b6bf2a01f867f1cd9e256b3392169db4f` |
 | Failed CI tip (owner review) | `0fbcf8bca32a956a5e4a3e5a5283cfcbfb38f88e` |
-| PR / Slice A tip (this polish) | `e3f87b8a5beb1c1202e0a7bf6b0fd2ccd1be046a` |
-| Alpha Core (screenshot pin) | `e3f87b8a5beb1c1202e0a7bf6b0fd2ccd1be046a` |
+| PR / Slice A tip (this polish) | `9f4ac42d11149ad346a90d4ad47249b9a43f0e94` |
+| Alpha Core (screenshot pin) | `e3f87b8a5beb1c1202e0a7bf6b0fd2ccd1be046a` (UI polish; tip `9f4ac42` is test/assertion only) |
 | Alpha SaaS | `eb859c2159a1821d87e51721698d4608c3bb20c1` |
 
 Staging only. No production pin, merge, or tenant migration in this polish (Alpha already had the Slice A additive migration). Temporary tax-on sample restored to tax disabled after screenshots.
@@ -28,7 +28,8 @@ Workflow: https://github.com/EdwardSoaresJr/ark-core/actions/runs/43264768298
   - `ShopSettingsTest::tax and shop fee switches are checkboxes…` — still asserted top-level `taxable_*` checkboxes and `x-data="{ taxEnabled: true }"`.
 - Slice A moved taxable flags under `tax_profiles[0][…]` and renamed the tax heading to **Sales tax profiles**.
 - Fix: update those assertions; cover `+ Add tax profile` / add-component affordances.
-- Local re-run (passed): `ShopTaxProfilesSliceATest`, Tabler financial scrapers, ShopSettings tax/view cases, Parts/Labor forward-only filters (37 tests).
+- Local re-run (passed): `ShopTaxProfilesSliceATest`, Tabler financial scrapers, ShopSettings tax/view cases, Parts/Labor forward-only filters.
+- Follow-up on tip `9f4ac42`: tax saves redirect to `section=financial&financial-tab=tax`; ShopSettings assertions updated. Focused Tests **passed** on https://github.com/EdwardSoaresJr/ark-core/actions/runs/43271103477 (Regression still skipped — not counted as passed).
 
 ## Slice A delivered (including HOLD MERGE polish)
 
