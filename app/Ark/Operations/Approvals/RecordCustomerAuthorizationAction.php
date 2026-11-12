@@ -134,6 +134,13 @@ final class RecordCustomerAuthorizationAction
         $repairOrder->unsetRelation('concerns');
         $repairOrder->load('concerns.lines');
 
+        // Price once for the whole approval batch so shared shop-fee pools (percent/flat/
+        // per-concern) are stamped identically onto every scope. Repricing inside each
+        // scope write can see a partially written ApprovedWorkScope set and freeze wrong fees.
+        $this->totalsCalculator->recalculateRepairOrder($repairOrder->fresh(['lines', 'concerns', 'customer']));
+        $repairOrder->unsetRelation('concerns');
+        $repairOrder->load('concerns.lines');
+
         foreach ($concernDispositions as $concernId => $disposition) {
             if ((string) $disposition !== RepairOrderConcernDisposition::Approved->value) {
                 continue;
@@ -142,7 +149,7 @@ final class RecordCustomerAuthorizationAction
             $concern = $repairOrder->concerns->firstWhere('id', (int) $concernId);
 
             if ($concern instanceof RepairOrderConcern && $concern->disposition === RepairOrderConcernDisposition::Approved) {
-                $this->approvedWorkScope->execute($concern, $actor);
+                $this->approvedWorkScope->execute($concern, $actor, recalculate: false);
             }
         }
     }

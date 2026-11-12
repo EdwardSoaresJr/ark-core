@@ -76,6 +76,7 @@ final class RepairOrderReadCache
             InspectionItemPhoto::class,
             InspectionItemMeasurement::class,
             RepairOrderLine::class,
+            RepairOrderConcern::class,
             PhoneSmsCapability::class,
             LaborPolicy::class,
             OperationClass::class,
