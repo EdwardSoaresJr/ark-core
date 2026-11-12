@@ -296,6 +296,45 @@ test('settings catalog persists counties associations', function () {
     expect($profile['counties'])->toBe(['El Paso', 'Teller']);
 });
 
+test('estimate and invoice snapshots freeze tax labels from the RO stamp not live settings', function () {
+    $ro = taxSliceBRo();
+    taxSliceBPart($ro, 10000);
+
+    ShopSettings::current()->update([
+        'tax_label' => 'Live Catalog Label',
+        'default_tax_rate' => '9.999',
+        'taxable_parts' => false,
+        'taxable_labor' => true,
+    ]);
+
+    $estimate = app(\App\Ark\Operations\Documents\EstimateSnapshotBuilder::class)->build($ro->fresh(['lines', 'concerns', 'customer', 'vehicle']), $this->admin);
+    expect(data_get($estimate, 'settings.tax_label'))->toBe('Colorado Springs')
+        ->and((string) data_get($estimate, 'settings.default_tax_rate'))->toStartWith('6.020')
+        ->and(data_get($estimate, 'settings.taxable_parts'))->toBeTrue()
+        ->and(data_get($estimate, 'totals.tax_label'))->toBe('Colorado Springs')
+        ->and(data_get($estimate, 'tax_profile.profile_key'))->toBe('springs');
+
+    $ro->update(['status' => RepairOrderStatus::WaitingApproval]);
+    $payload = [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Synthetic TaxB',
+        RepairOrderConcurrency::FIELD => (int) $ro->fresh()->estimate_version,
+        RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD => app(WorkCompletionAuthorization::class)
+            ->pendingChangesFingerprint($ro->fresh(['lines.concern', 'concerns'])),
+    ];
+    $this->post(route('operations.repair-orders.authorization.store', $ro), $payload)->assertRedirect();
+    $ro->fresh()->update(['status' => RepairOrderStatus::ReadyPickup]);
+
+    $invoice = app(\App\Ark\Operations\Financial\InvoiceSnapshotBuilder::class)->build(
+        $ro->fresh(['lines.concern', 'concerns', 'customer', 'vehicle']),
+        $this->admin,
+    );
+    expect(data_get($invoice, 'settings.tax_label'))->toBe('Colorado Springs')
+        ->and((string) data_get($invoice, 'settings.default_tax_rate'))->toStartWith('6.020')
+        ->and(data_get($invoice, 'tax_profile.profile_key'))->toBe('springs')
+        ->and(data_get($invoice, 'totals.customer_tax_label'))->toContain('parts');
+});
+
 test('sales tax penny reconciliation keeps stored cents equal to displayed snapshot cents', function () {
     $ro = taxSliceBRo();
     // Three lines that can produce fractional-cent half-up boundaries.

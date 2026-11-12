@@ -28,6 +28,7 @@ Integrated surfaces retained on main: Labor matrix, Parts matrix nav, Shop Fees 
 - RO tax jurisdiction confirmation card + `SelectTaxProfileOnRepairOrderAction`
 - Post-auth tax increase held under approved-dollar ceiling
 - Penny reconciliation regression (stored cents = snapshot display)
+- Follow-up: estimate/invoice snapshots freeze tax labels/rates from RO stamp; invoice embeds `tax_profile`; Money-aligned formatCents
 
 ### Explicitly deferred
 

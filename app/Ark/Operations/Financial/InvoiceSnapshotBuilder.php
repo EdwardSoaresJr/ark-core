@@ -34,6 +34,8 @@ final class InvoiceSnapshotBuilder
         }
 
         $settings = ShopSettings::current();
+        $pricingContext = $repairOrder->pricingContext($settings);
+        $taxSettings = $this->calculator->settingsWithTaxOverlay($repairOrder, $settings, $pricingContext->taxProfile());
         $totals = $this->calculator->totalsForApprovedWork($repairOrder);
         $generatedAt = now();
 
@@ -77,15 +79,24 @@ final class InvoiceSnapshotBuilder
                 ->all(),
             'totals' => $this->totalsSnapshot(
                 $totals,
-                $settings,
+                $taxSettings,
                 StandingDiscountPresentation::label(
                     $repairOrder->customer?->customer_type,
                     $totals->standingDiscountCents(),
                 ),
             ),
+            'tax_profile' => $pricingContext->taxProfile()?->toArray(),
+            'pricing' => [
+                'provenance' => $pricingContext->provenance(),
+                'tax_profile' => $pricingContext->taxProfile()?->toArray(),
+            ],
             'settings' => [
-                'tax_label' => $settings->taxLabel(),
-                'default_tax_rate' => (string) $settings->default_tax_rate,
+                'tax_enabled' => $taxSettings->tax_enabled,
+                'tax_label' => $taxSettings->taxLabel(),
+                'default_tax_rate' => (string) $taxSettings->default_tax_rate,
+                'taxable_labor' => $taxSettings->taxable_labor,
+                'taxable_parts' => $taxSettings->taxable_parts,
+                'taxable_shop_fees' => $taxSettings->taxable_shop_fees,
                 'estimate_disclaimer' => $settings->globalDocumentDisclaimerFor(FinancialDocumentType::Estimate),
                 'invoice_disclaimer' => $settings->globalDocumentDisclaimerFor(FinancialDocumentType::Invoice),
                 'recommendation_disclaimer' => $settings->recommendation_disclaimer,

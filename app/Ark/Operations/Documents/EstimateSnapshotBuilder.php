@@ -25,6 +25,7 @@ use App\Ark\Operations\Settings\ShopCustomerHoursPresentation;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Timeline\OperationalTimeline;
 use App\Models\User;
+use Brick\Money\Money;
 use Illuminate\Support\Facades\Storage;
 
 class EstimateSnapshotBuilder
@@ -61,6 +62,7 @@ class EstimateSnapshotBuilder
 
         $settings = ShopSettings::current();
         $pricingContext = $repairOrder->pricingContext($settings);
+        $taxSettings = $this->calculator->settingsWithTaxOverlay($repairOrder, $settings, $pricingContext->taxProfile());
         $totals = $this->calculator->totalsFor($repairOrder);
         $generatedAt = now();
         $presentation = $pricingContext->documentPresentationProfileFor($repairOrder->customer?->customer_type);
@@ -72,7 +74,7 @@ class EstimateSnapshotBuilder
             'generated_at_display' => $generatedAt->timezone(config('app.display_timezone'))->format('M j, Y g:i A'),
             'generated_by' => $this->generatedBy($user),
             'shop' => $this->shopSnapshot($settings),
-            'settings' => $this->settingsSnapshot($settings),
+            'settings' => $this->settingsSnapshot($settings, $taxSettings),
             'commercial_pricing_profile' => $pricingContext->commercialProfile()?->toArray(),
             'tax_profile' => $pricingContext->taxProfile()?->toArray(),
             'pricing' => [
@@ -97,7 +99,7 @@ class EstimateSnapshotBuilder
             'staff' => $this->staffSnapshot($repairOrder),
             'totals' => $this->totalsSnapshot(
                 $totals,
-                $settings,
+                $taxSettings,
                 StandingDiscountPresentation::label(
                     $repairOrder->customer?->customer_type,
                     $totals->standingDiscountCents(),
@@ -181,8 +183,10 @@ class EstimateSnapshotBuilder
     /**
      * @return array<string, mixed>
      */
-    private function settingsSnapshot(ShopSettings $settings): array
+    private function settingsSnapshot(ShopSettings $settings, ?ShopSettings $taxSettings = null): array
     {
+        $taxSettings ??= $settings;
+
         return [
             'estimate_disclaimer' => $settings->globalDocumentDisclaimerFor(FinancialDocumentType::Estimate),
             'invoice_disclaimer' => $settings->globalDocumentDisclaimerFor(FinancialDocumentType::Invoice),
@@ -192,12 +196,12 @@ class EstimateSnapshotBuilder
             'default_labor_rate_cents' => $settings->defaultLaborRateCents(),
             'default_labor_rate' => $this->formatCents($settings->defaultLaborRateCents()),
             'labor_categories' => $settings->laborCategories(),
-            'tax_enabled' => $settings->tax_enabled,
-            'tax_label' => $settings->taxLabel(),
-            'default_tax_rate' => (string) $settings->default_tax_rate,
-            'taxable_labor' => $settings->taxable_labor,
-            'taxable_parts' => $settings->taxable_parts,
-            'taxable_shop_fees' => $settings->taxable_shop_fees,
+            'tax_enabled' => $taxSettings->tax_enabled,
+            'tax_label' => $taxSettings->taxLabel(),
+            'default_tax_rate' => (string) $taxSettings->default_tax_rate,
+            'taxable_labor' => $taxSettings->taxable_labor,
+            'taxable_parts' => $taxSettings->taxable_parts,
+            'taxable_shop_fees' => $taxSettings->taxable_shop_fees,
             'shop_fee_enabled' => $settings->shop_fee_enabled,
             'shop_fee_mode' => $settings->shopFeeMode(),
             'shop_fee_rate' => (string) $settings->shop_fee_rate,
@@ -564,6 +568,9 @@ class EstimateSnapshotBuilder
 
     private function formatCents(?int $cents): string
     {
-        return '$'.number_format(($cents ?? 0) / 100, 2);
+        return '$'.Money::ofMinor($cents ?? 0, 'USD')
+            ->getAmount()
+            ->toScale(2)
+            ->__toString();
     }
 }
