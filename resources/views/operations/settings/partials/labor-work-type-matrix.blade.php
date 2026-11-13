@@ -25,8 +25,8 @@
         <div>
             <h3 class="mb-1">Labor rate matrix</h3>
             <p class="text-secondary small mb-0">
-                Select a work type, then edit rate mode, hourly rate, billing minimums, and work-type rounding inline.
-                Mechanical is the Default Work Type. Changes apply to new repair orders only.
+                Select a work type, then set hourly rates, billing minimums, and rounding for each billing class.
+                Mechanical is the Default Work Type. Changes apply to new repair orders only. Use $0.00 for no charge.
             </p>
         </div>
         <div class="small" aria-live="polite">
@@ -36,31 +36,6 @@
                 Could not save —
                 <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="retryLast()">Retry</button>
             </span>
-        </div>
-    </div>
-
-    <div class="border rounded px-3 py-2 mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2" data-labor-default-rate>
-        <div>
-            <div class="fw-semibold">Default Labor Rate</div>
-            <div class="form-hint mb-0">
-                Shop-wide inheritance source.
-                <span x-text="inheritCount()"></span> matrix entries use this rate.
-                Updating it changes new repair orders only.
-            </div>
-        </div>
-        <div class="input-group input-group-sm" style="max-width: 10rem">
-            <span class="input-group-text">$</span>
-            <input
-                type="text"
-                class="form-control font-monospace text-end"
-                :value="defaultRateInput()"
-                @change="saveDefaultLaborRate($event.target.value)"
-                @keydown.enter.prevent="saveDefaultLaborRate($event.target.value)"
-                inputmode="decimal"
-                aria-label="Default Labor Rate"
-                data-labor-default-rate-input
-            >
-            <span class="input-group-text">/hr</span>
         </div>
     </div>
 
@@ -91,7 +66,7 @@
                     Rates for <span x-text="selectedWorkTypeLabel()"></span>
                 </h4>
                 <p class="form-hint mb-0">
-                    Edit ordinary pricing inline. Min Hrs is the billing-policy minimum (all work types).
+                    Hourly Rate is this work type × billing class. Min Hrs is the billing-policy minimum (all work types).
                     Round To is this work type’s labor-category rounding. Class Settings opens commercial configuration.
                 </p>
             </div>
@@ -100,8 +75,7 @@
                     <thead>
                         <tr>
                             <th class="bg-light">Billing Class</th>
-                            <th class="bg-light" style="min-width: 8.5rem">Rate Type</th>
-                            <th class="bg-light" style="min-width: 7rem">Hourly Rate</th>
+                            <th class="bg-light" style="min-width: 7.5rem">Hourly Rate</th>
                             <th class="bg-light" style="min-width: 11rem">
                                 Min Hrs
                                 <div class="form-hint mb-0 fw-normal">Billing policy · all work types</div>
@@ -118,29 +92,9 @@
                             <tr :data-billing-class="column.value">
                                 <td class="py-1">
                                     <div class="fw-medium" x-text="column.label"></div>
-                                    <div class="form-hint mb-0" x-show="cell(selectedWorkType, column.value).is_default_cell">
-                                        Inherits Default Labor Rate
-                                    </div>
-                                    <div
-                                        class="form-hint mb-0 text-azure"
-                                        x-show="cell(selectedWorkType, column.value).settings_mode === 'standard' && !cell(selectedWorkType, column.value).is_default_cell"
-                                    >Inherited</div>
                                 </td>
                                 <td class="py-1">
-                                    <select
-                                        class="form-select form-select-sm"
-                                        x-model="cell(selectedWorkType, column.value).settings_mode"
-                                        @change="saveRate(selectedWorkType, column.value)"
-                                        :aria-label="`${selectedWorkTypeLabel()} ${column.label} rate type`"
-                                        data-labor-rate-mode
-                                    >
-                                        <option value="standard">Default</option>
-                                        <option value="custom">Custom</option>
-                                        <option value="zero">No Charge</option>
-                                    </select>
-                                </td>
-                                <td class="py-1">
-                                    <div class="input-group input-group-sm" style="max-width: 7.5rem" x-show="cell(selectedWorkType, column.value).settings_mode === 'custom'">
+                                    <div class="input-group input-group-sm" style="max-width: 7.5rem">
                                         <span class="input-group-text">$</span>
                                         <input
                                             type="text"
@@ -153,15 +107,6 @@
                                             data-labor-hourly-rate
                                         >
                                     </div>
-                                    <span
-                                        class="font-monospace small text-secondary"
-                                        x-show="cell(selectedWorkType, column.value).settings_mode === 'standard'"
-                                        x-text="cell(selectedWorkType, column.value).rate_display"
-                                    ></span>
-                                    <span
-                                        class="small text-secondary"
-                                        x-show="cell(selectedWorkType, column.value).settings_mode === 'zero'"
-                                    >—</span>
                                 </td>
                                 <td class="py-1">
                                     <div class="d-flex flex-wrap align-items-center gap-1">
@@ -324,32 +269,6 @@ document.addEventListener('alpine:init', () => {
         selectedWorkTypeLabel() {
             return this.matrix.work_types.find((row) => row.key === this.selectedWorkType)?.label || 'Work type';
         },
-        defaultRateInput() {
-            const cents = this.matrix.standard_rate_cents;
-            return cents == null ? '' : (cents / 100).toFixed(2);
-        },
-        inheritCount() {
-            let count = 0;
-            Object.values(this.matrix.cells || {}).forEach((row) => {
-                Object.values(row || {}).forEach((cell) => {
-                    if (cell?.settings_mode === 'standard' || cell?.follows_shop_standard) {
-                        count += 1;
-                    }
-                });
-            });
-            return count === 1 ? '1' : String(count);
-        },
-        async saveDefaultLaborRate(value) {
-            const cents = Math.round(parseFloat(value || '0') * 100);
-            const rate = Number.isFinite(cents) ? (cents / 100).toFixed(2) : '0.00';
-            this.matrix.standard_rate_cents = Math.round(parseFloat(rate) * 100);
-            await this.request(this.matrix.routes.rate, 'PATCH', {
-                work_type: 'mechanical',
-                billing_class: 'customer_pay',
-                mode: 'custom',
-                rate,
-            });
-        },
         cell(workType, billingClass) {
             this.matrix.cells[workType] ||= {};
             this.matrix.cells[workType][billingClass] ||= {
@@ -468,11 +387,14 @@ document.addEventListener('alpine:init', () => {
         },
         async saveRate(workType, billingClass) {
             const cell = this.cell(workType, billingClass);
+            const cents = Number(cell.effective_rate_cents || 0);
+            const mode = cents <= 0 ? 'zero' : 'custom';
+            cell.settings_mode = mode;
             await this.request(this.matrix.routes.rate, 'PATCH', {
                 work_type: workType,
                 billing_class: billingClass,
-                mode: cell.settings_mode || 'custom',
-                rate: ((cell.effective_rate_cents || 0) / 100).toFixed(2),
+                mode,
+                rate: (Math.max(0, cents) / 100).toFixed(2),
             });
         },
         promptAddWorkType() {

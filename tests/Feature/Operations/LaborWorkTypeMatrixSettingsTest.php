@@ -34,28 +34,29 @@ test('labor settings show hybrid inline work-type matrix without a save button',
         ->assertSee('+ Add Work Type')
         ->assertSee('+ Add Labor Column')
         ->assertSee('Manage Billing Classes')
-        ->assertSee('Default Labor Rate')
         ->assertSee('Default Work Type')
         ->assertSee('Rates for')
         ->assertSee('Billing Class')
-        ->assertSee('Rate Type')
         ->assertSee('Hourly Rate')
         ->assertSee('Min Hrs')
         ->assertSee('Round To')
         ->assertSee('>Per concern</option>', false)
-        ->assertSee('data-labor-rate-mode', false)
+        ->assertSee('data-labor-hourly-rate', false)
         ->assertSee('data-labor-min-hours', false)
         ->assertSee('data-labor-rounding', false)
-        ->assertSee('>Default</option>', false)
-        ->assertSee('>Custom</option>', false)
-        ->assertSee('>No Charge</option>', false)
+        ->assertDontSee('Default Labor Rate')
+        ->assertDontSee('Rate Type')
+        ->assertDontSee('data-labor-rate-mode', false)
+        ->assertDontSee('data-labor-default-rate', false)
         ->assertDontSee('Allow Modifiers')
         ->assertDontSee('Adjust Labor')
         ->assertDontSee('Save Labor Settings')
         ->assertDontSee('Standard hourly rate');
 });
 
-test('autosave rate endpoint updates Mechanical Retail default and profile version', function () {
+test('autosave rate endpoint updates Mechanical Retail cell and profile version', function () {
+    $beforeDefault = (int) ShopSettings::current()->default_labor_rate_cents;
+
     $this->actingAs($this->admin)
         ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
             'work_type' => 'mechanical',
@@ -68,7 +69,7 @@ test('autosave rate endpoint updates Mechanical Retail default and profile versi
         ->assertJsonPath('status', 'saved')
         ->assertJsonPath('applies_to', 'new_repair_orders_only');
 
-    expect((int) ShopSettings::current()->default_labor_rate_cents)->toBe(17500)
+    expect((int) ShopSettings::current()->default_labor_rate_cents)->toBe($beforeDefault)
         ->and((int) ShopSettings::current()->labor_pricing_profile_version)->toBeGreaterThanOrEqual(1);
 
     $resolved = app(LaborPolicyResolver::class)->resolve(

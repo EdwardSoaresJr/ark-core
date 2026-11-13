@@ -23,9 +23,10 @@ test('admin can view labor policies matrix on shop settings', function () {
         ]))
         ->assertOk()
         ->assertSee('Labor rate matrix')
-        ->assertSee('Default Labor Rate')
+        ->assertSee('Hourly Rate')
         ->assertSee('Manage Billing Classes')
         ->assertSee('Class Settings')
+        ->assertDontSee('Default Labor Rate')
         ->assertDontSee('data-labor-rules', false)
         ->assertDontSee('data-labor-rules-modal', false)
         ->assertDontSee('Resolver Preview')
@@ -127,12 +128,13 @@ test('labor policies shows default labor category as read-only from labor catego
             'financial-tab' => 'labor',
         ]))
         ->assertOk()
-        ->assertSee('Default Labor Rate')
+        ->assertSee('Hourly Rate')
         ->assertSee('Mechanical')
-        ->assertSee('Inherits Default Labor Rate')
-        ->assertSee('>Default</option>', false)
+        ->assertSee('data-labor-hourly-rate', false)
+        ->assertDontSee('Default Labor Rate')
         ->assertDontSee('Save default')
-        ->assertDontSee('Use Default Labor Rate');
+        ->assertDontSee('Use Default Labor Rate')
+        ->assertDontSee('Inherits Default Labor Rate');
 
     expect(\Illuminate\Support\Facades\Route::has('operations.settings.shop.labor-policies.default'))->toBeFalse();
 
