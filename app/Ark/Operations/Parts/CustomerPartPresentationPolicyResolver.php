@@ -16,29 +16,51 @@ final class CustomerPartPresentationPolicyResolver
      */
     public function forConcern(array $snapshot, array $concern): CustomerPartPresentationPolicy
     {
-        $profile = $this->profileResolver->forConcern($snapshot, $concern);
+        $presentation = $this->profileResolver->forConcern($snapshot, $concern);
         $settings = $this->settingsFromSnapshot($snapshot);
         $locked = (bool) ($snapshot['customer_part_labels_locked'] ?? false);
 
-        return $this->fromSettingsAndProfile($settings, $profile)->withLabelsLocked($locked);
+        return $this->fromSettingsAndPresentation($settings, $presentation)->withLabelsLocked($locked);
     }
 
-    public function forShop(?ShopSettings $settings = null, ?CustomerPartPresentationProfile $profile = null): CustomerPartPresentationPolicy
-    {
+    public function forShop(
+        ?ShopSettings $settings = null,
+        ?CustomerDocumentPresentation $presentation = null,
+    ): CustomerPartPresentationPolicy {
         $settings ??= ShopSettings::current();
-        $profile ??= CustomerPartPresentationProfile::Retail;
+        $presentation ??= new CustomerDocumentPresentation;
 
-        return $this->fromSettingsAndProfile($settings, $profile);
+        return $this->fromSettingsAndPresentation($settings, $presentation);
     }
 
-    public function fromSettingsAndProfile(ShopSettings $settings, CustomerPartPresentationProfile $profile): CustomerPartPresentationPolicy
-    {
+    public function fromSettingsAndPresentation(
+        ShopSettings $settings,
+        CustomerDocumentPresentation $presentation,
+    ): CustomerPartPresentationPolicy {
         return new CustomerPartPresentationPolicy(
             descriptionMode: $settings->customerPartDescriptionMode(),
-            showManufacturerNumber: $settings->customerPartShowManufacturerNumber() || $profile->showsPartNumber(),
-            showSupplier: $settings->customerPartShowSupplier() || $profile->showsVendor(),
+            // Billing-class checkboxes are authoritative. Shop-wide toggles remain
+            // an optional floor so existing global enables are not silently removed.
+            showManufacturerNumber: $presentation->showPartNumber
+                || $settings->customerPartShowManufacturerNumber(),
+            showBrand: $presentation->showPartBrand,
+            showSupplier: $presentation->showVendor
+                || $settings->customerPartShowSupplier(),
             showSupplierSku: $settings->customerPartShowSupplierSku(),
             allowDescriptionOverride: $settings->customerPartAllowDescriptionOverride(),
+        );
+    }
+
+    /**
+     * @deprecated Use {@see fromSettingsAndPresentation()}.
+     */
+    public function fromSettingsAndProfile(
+        ShopSettings $settings,
+        CustomerPartPresentationProfile $profile,
+    ): CustomerPartPresentationPolicy {
+        return $this->fromSettingsAndPresentation(
+            $settings,
+            CustomerDocumentPresentation::fromLegacyProfile($profile),
         );
     }
 

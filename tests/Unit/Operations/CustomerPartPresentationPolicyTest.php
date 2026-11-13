@@ -11,6 +11,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 function partPresentationPolicy(
     CustomerPartDescriptionMode $mode = CustomerPartDescriptionMode::Cleaned,
     bool $showManufacturerNumber = false,
+    bool $showBrand = false,
     bool $showSupplier = false,
     bool $showSupplierSku = false,
     bool $labelsLocked = false,
@@ -18,6 +19,7 @@ function partPresentationPolicy(
     return new CustomerPartPresentationPolicy(
         descriptionMode: $mode,
         showManufacturerNumber: $showManufacturerNumber,
+        showBrand: $showBrand,
         showSupplier: $showSupplier,
         showSupplierSku: $showSupplierSku,
         allowDescriptionOverride: true,
@@ -124,9 +126,24 @@ test('locked historical labels prefer stored wording without re-normalizing', fu
     expect($presented['customer_part_description'])->toBe('Champion Spark Plug Copper Plus');
 });
 
-test('retail profile composition still unlocks warranty part number via policy flags', function () {
-    $profile = CustomerPartPresentationProfile::Warranty;
+test('legacy warranty profile migrates to part number and vendor checkboxes', function () {
+    $presentation = \App\Ark\Operations\Parts\CustomerDocumentPresentation::fromLegacyProfile(
+        CustomerPartPresentationProfile::Warranty,
+    );
 
-    expect($profile->showsPartNumber())->toBeTrue()
-        ->and($profile->showsVendor())->toBeTrue();
+    expect($presentation->showPartNumber)->toBeTrue()
+        ->and($presentation->showVendor)->toBeTrue()
+        ->and($presentation->showPartBrand)->toBeFalse();
+});
+
+test('show brand checkbox exposes inferred manufacturer brand', function () {
+    $presented = presentPartLine([
+        'description' => 'Gates 43527 Water Pump',
+        'part_number' => '43527',
+        'vendor_name' => 'WorldPac',
+    ], partPresentationPolicy(showBrand: true));
+
+    expect($presented['customer_part_brand'])->toBe('Gates')
+        ->and($presented)->not->toHaveKey('customer_part_number')
+        ->and($presented)->not->toHaveKey('customer_part_vendor');
 });

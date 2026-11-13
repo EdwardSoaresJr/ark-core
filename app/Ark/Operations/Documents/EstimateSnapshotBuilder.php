@@ -65,7 +65,7 @@ class EstimateSnapshotBuilder
         $taxSettings = $this->calculator->settingsWithTaxOverlay($repairOrder, $settings, $pricingContext->taxProfile());
         $totals = $this->calculator->totalsFor($repairOrder);
         $generatedAt = now();
-        $presentation = $pricingContext->documentPresentationProfileFor($repairOrder->customer?->customer_type);
+        $presentation = $pricingContext->documentPresentationFor($repairOrder->customer?->customer_type);
 
         return RepairOrderFreeText::normalizeSnapshot([
             'schema_version' => 2,
@@ -85,7 +85,12 @@ class EstimateSnapshotBuilder
             'repair_order' => $this->documentRepairOrderSnapshot($repairOrder, $totals),
             'customer' => [
                 ...$this->customerSnapshot($repairOrder),
-                'document_presentation_profile' => $presentation->value,
+                'document_presentation' => $presentation->toFrozen(),
+                'document_presentation_profile' => match (true) {
+                    $presentation->showPartNumber && $presentation->showVendor => 'warranty',
+                    $presentation->showPartNumber && ! $presentation->showVendor => 'repairpal',
+                    default => 'retail',
+                },
             ],
             'vehicle' => $this->vehicleSnapshot($repairOrder),
             'intake' => [

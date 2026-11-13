@@ -13,6 +13,7 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Labor\LaborAuthority;
 use App\Ark\Operations\Parts\CustomerPartDescriptionMode;
+use App\Ark\Operations\Parts\CustomerDocumentPresentation;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -360,15 +361,15 @@ class ShopSettings extends Model
     ];
 
     public const DEFAULT_CUSTOMER_TYPES = [
-        ['key' => 'retail', 'labor_column_key' => 'customer_pay', 'name' => 'Retail', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['key' => 'fleet', 'labor_column_key' => 'fleet', 'name' => 'Fleet', 'document_presentation_profile' => 'fleet', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['key' => 'warranty', 'labor_column_key' => 'warranty_other', 'name' => 'Warranty', 'document_presentation_profile' => 'warranty', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['key' => 'repairpal', 'labor_column_key' => 'repairpal', 'name' => 'RepairPal', 'document_presentation_profile' => 'repairpal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['key' => 'internal', 'labor_column_key' => 'internal', 'name' => 'Internal', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['key' => 'wholesale', 'labor_column_key' => 'wholesale', 'name' => 'Wholesale', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['key' => 'comeback', 'labor_column_key' => 'comeback', 'name' => 'Comeback', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['key' => 'business', 'name' => 'Business', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['key' => 'military', 'name' => 'Military', 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'labor', 'discount_amount' => '10.00', 'default_parts_matrix_key' => null],
+        ['key' => 'retail', 'labor_column_key' => 'customer_pay', 'name' => 'Retail', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
+        ['key' => 'fleet', 'labor_column_key' => 'fleet', 'name' => 'Fleet', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'fleet', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
+        ['key' => 'warranty', 'labor_column_key' => 'warranty_other', 'name' => 'Warranty', 'document_show_part_number' => true, 'document_show_part_brand' => false, 'document_show_vendor' => true, 'document_presentation_profile' => 'warranty', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
+        ['key' => 'repairpal', 'labor_column_key' => 'repairpal', 'name' => 'RepairPal', 'document_show_part_number' => true, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'repairpal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
+        ['key' => 'internal', 'labor_column_key' => 'internal', 'name' => 'Internal', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
+        ['key' => 'wholesale', 'labor_column_key' => 'wholesale', 'name' => 'Wholesale', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
+        ['key' => 'comeback', 'labor_column_key' => 'comeback', 'name' => 'Comeback', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
+        ['key' => 'business', 'name' => 'Business', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
+        ['key' => 'military', 'name' => 'Military', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'labor', 'discount_amount' => '10.00', 'default_parts_matrix_key' => null],
     ];
 
     public const DEFAULT_ESTIMATE_DISCLAIMER = <<<'TEXT'
@@ -883,6 +884,17 @@ TEXT;
      */
     public function customLaborBillingClasses(): array
     {
+        return collect($this->allCustomLaborBillingClasses())
+            ->filter(fn (array $row): bool => $row['is_active'])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{key: string, label: string, base_posture: string, is_active: bool}>
+     */
+    public function allCustomLaborBillingClasses(): array
+    {
         return collect(is_array($this->custom_labor_billing_classes) ? $this->custom_labor_billing_classes : [])
             ->filter(fn ($row): bool => is_array($row) && filled($row['key'] ?? null) && filled($row['label'] ?? null))
             ->map(fn (array $row): array => [
@@ -891,14 +903,26 @@ TEXT;
                 'base_posture' => (string) ($row['base_posture'] ?? ConcernBillingPosture::CustomerPay->value),
                 'is_active' => (bool) ($row['is_active'] ?? true),
             ])
-            ->filter(fn (array $row): bool => $row['is_active'])
             ->values()
             ->all();
     }
 
     public function customLaborBillingClass(string $key): ?array
     {
-        return collect($this->customLaborBillingClasses())->firstWhere('key', $key);
+        return collect($this->allCustomLaborBillingClasses())->firstWhere('key', $key);
+    }
+
+    /**
+     * Customer Billing Classes available for new customer selection.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function activeCustomerTypeRows(): array
+    {
+        return collect($this->customerTypeRows())
+            ->filter(fn (array $row): bool => (bool) ($row['is_active'] ?? true))
+            ->values()
+            ->all();
     }
 
     /**
@@ -1524,14 +1548,20 @@ TEXT;
             ?? $this->customerTypeRows()[0];
     }
 
+    public function documentPresentationFor(?string $customerType): CustomerDocumentPresentation
+    {
+        return CustomerDocumentPresentation::fromStoredRow($this->customerTypeFor($customerType));
+    }
+
     public function documentPresentationProfileFor(?string $customerType): CustomerPartPresentationProfile
     {
-        $row = $this->customerTypeFor($customerType);
+        $presentation = $this->documentPresentationFor($customerType);
 
-        return CustomerPartPresentationProfile::fromStored(
-            $row['document_presentation_profile']
-                ?? CustomerPartPresentationProfile::defaultForBillingClassName($row['name'] ?? null)->value,
-        );
+        return match (true) {
+            $presentation->showPartNumber && $presentation->showVendor => CustomerPartPresentationProfile::Warranty,
+            $presentation->showPartNumber && ! $presentation->showVendor => CustomerPartPresentationProfile::RepairPal,
+            default => CustomerPartPresentationProfile::Retail,
+        };
     }
 
     /**
@@ -1657,9 +1687,21 @@ TEXT;
                 $payload = [
                     'key' => $stableKey,
                     'name' => $name,
+                    'document_show_part_number' => array_key_exists('document_show_part_number', $row)
+                        ? $row['document_show_part_number']
+                        : ($existing['document_show_part_number'] ?? null),
+                    'document_show_part_brand' => array_key_exists('document_show_part_brand', $row)
+                        ? $row['document_show_part_brand']
+                        : ($existing['document_show_part_brand'] ?? null),
+                    'document_show_vendor' => array_key_exists('document_show_vendor', $row)
+                        ? $row['document_show_vendor']
+                        : ($existing['document_show_vendor'] ?? null),
                     'document_presentation_profile' => filled($row['document_presentation_profile'] ?? null)
                         ? $row['document_presentation_profile']
                         : ($existing['document_presentation_profile'] ?? null),
+                    'is_active' => array_key_exists('is_active', $row)
+                        ? $row['is_active']
+                        : ($existing['is_active'] ?? true),
                     'shop_fees_enabled' => (bool) ($row['shop_fees_enabled'] ?? $existing['shop_fees_enabled'] ?? true),
                     'shop_fee_rate_override' => array_key_exists('shop_fee_rate_override', $row)
                         ? $row['shop_fee_rate_override']
@@ -1674,6 +1716,13 @@ TEXT;
                         ? $row['concern_billing_posture']
                         : ($existing['concern_billing_posture'] ?? null),
                 ];
+
+                // Drop null flag placeholders so legacy profile migration can still run.
+                foreach (['document_show_part_number', 'document_show_part_brand', 'document_show_vendor'] as $flag) {
+                    if ($payload[$flag] === null) {
+                        unset($payload[$flag]);
+                    }
+                }
 
                 if (filled($row['labor_column_key'] ?? null)) {
                     $payload['labor_column_key'] = (string) $row['labor_column_key'];
@@ -1876,13 +1925,17 @@ TEXT;
         $resolvedName = $name !== '' ? $name : 'Retail';
         $concernBillingPosture = self::selectableConcernBillingPosture($row['concern_billing_posture'] ?? null);
 
+        $presentation = $this->documentPresentationFromCustomerTypeInput($row, $defaults, $resolvedName);
+
         $normalized = [
             'name' => $resolvedName,
-            'document_presentation_profile' => CustomerPartPresentationProfile::fromStored(
-                $row['document_presentation_profile']
-                    ?? $defaults['document_presentation_profile']
-                    ?? null,
-            )->value,
+            ...$presentation->toRow(),
+            // Legacy label kept for older readers; checkbox flags are authoritative.
+            'document_presentation_profile' => match (true) {
+                $presentation->showPartNumber && $presentation->showVendor => CustomerPartPresentationProfile::Warranty->value,
+                $presentation->showPartNumber && ! $presentation->showVendor => CustomerPartPresentationProfile::RepairPal->value,
+                default => CustomerPartPresentationProfile::Retail->value,
+            },
             'shop_fees_enabled' => $shopFeesEnabled,
             'shop_fee_rate_override' => $rateOverride,
             'fee_override' => $shopFeesEnabled ? $rateOverride : 'none',
@@ -1894,6 +1947,9 @@ TEXT;
                     : null),
             'default_parts_matrix_key' => $row['default_parts_matrix_key'] ?? $defaults['default_parts_matrix_key'] ?? null,
             'pill_color' => BillingClassPillColor::resolve($row['pill_color'] ?? null, $resolvedName),
+            'is_active' => array_key_exists('is_active', $row)
+                ? (bool) $row['is_active']
+                : (array_key_exists('is_active', $defaults) ? (bool) $defaults['is_active'] : true),
             ...($concernBillingPosture !== null ? ['concern_billing_posture' => $concernBillingPosture->value] : []),
         ];
 
@@ -1932,6 +1988,36 @@ TEXT;
         return $posture !== null && in_array($posture, ConcernBillingPosture::advisorSelectableCases(), true)
             ? $posture
             : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @param  array<string, mixed>  $defaults
+     */
+    private function documentPresentationFromCustomerTypeInput(
+        array $row,
+        array $defaults,
+        string $resolvedName,
+    ): CustomerDocumentPresentation {
+        if (array_key_exists('document_show_part_number', $row)
+            || array_key_exists('document_show_part_brand', $row)
+            || array_key_exists('document_show_vendor', $row)) {
+            return CustomerDocumentPresentation::fromStoredRow([
+                ...$row,
+                'name' => $resolvedName,
+            ]);
+        }
+
+        if (filled($row['document_presentation_profile'] ?? null)) {
+            return CustomerDocumentPresentation::fromLegacyProfile(
+                CustomerPartPresentationProfile::fromStored((string) $row['document_presentation_profile']),
+            );
+        }
+
+        return CustomerDocumentPresentation::fromStoredRow([
+            ...$defaults,
+            'name' => $resolvedName,
+        ]);
     }
 
     /**

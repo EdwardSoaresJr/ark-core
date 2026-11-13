@@ -46,10 +46,11 @@
         @else
             <p class="font-medium text-slate-800">{{ $description }}</p>
         @endif
-        @if ($lineType === 'part' && (filled($line['customer_part_number'] ?? null) || filled($line['customer_part_vendor'] ?? null) || filled($line['customer_part_supplier_sku'] ?? null)))
+        @if ($lineType === 'part' && (filled($line['customer_part_brand'] ?? null) || filled($line['customer_part_number'] ?? null) || filled($line['customer_part_vendor'] ?? null) || filled($line['customer_part_supplier_sku'] ?? null)))
             <p class="mt-0.5 text-xs text-slate-500">
                 @php
                     $procurementBits = array_values(array_filter([
+                        filled($line['customer_part_brand'] ?? null) ? (string) $line['customer_part_brand'] : null,
                         filled($line['customer_part_number'] ?? null) ? (string) $line['customer_part_number'] : null,
                         filled($line['customer_part_vendor'] ?? null) ? (string) $line['customer_part_vendor'] : null,
                         filled($line['customer_part_supplier_sku'] ?? null) && ($line['customer_part_supplier_sku'] ?? null) !== ($line['customer_part_number'] ?? null)
@@ -76,10 +77,11 @@
     @else
         <span class="line-desc-primary">{{ $description }}</span>
     @endif
-    @if ($lineType === 'part' && (filled($line['customer_part_number'] ?? null) || filled($line['customer_part_vendor'] ?? null) || filled($line['customer_part_supplier_sku'] ?? null)))
+    @if ($lineType === 'part' && (filled($line['customer_part_brand'] ?? null) || filled($line['customer_part_number'] ?? null) || filled($line['customer_part_vendor'] ?? null) || filled($line['customer_part_supplier_sku'] ?? null)))
         <span class="line-desc-procurement">
             @php
                 $procurementBits = array_values(array_filter([
+                    filled($line['customer_part_brand'] ?? null) ? (string) $line['customer_part_brand'] : null,
                     filled($line['customer_part_number'] ?? null) ? (string) $line['customer_part_number'] : null,
                     filled($line['customer_part_vendor'] ?? null) ? (string) $line['customer_part_vendor'] : null,
                     filled($line['customer_part_supplier_sku'] ?? null) && ($line['customer_part_supplier_sku'] ?? null) !== ($line['customer_part_number'] ?? null)

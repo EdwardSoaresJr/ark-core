@@ -68,6 +68,18 @@ final class LaborWorkTypeMatrix
             ShopSettings::WARRANTY_OTHER_LABOR_CATEGORY_KEY,
         ];
 
+        $categoriesByKey = collect($settings->laborCategories())->keyBy('key');
+        $isActive = function (string $key) use ($categoriesByKey): bool {
+            $category = $categoriesByKey->get($key);
+
+            return $category === null || (bool) ($category['is_active'] ?? true);
+        };
+
+        $builtIn = array_values(array_filter(
+            $builtIn,
+            fn (array $row): bool => $isActive($row['key']),
+        ));
+
         $custom = collect($settings->laborCategories())
             ->reject(fn (array $category): bool => in_array($category['key'], $reservedCategoryKeys, true))
             ->filter(fn (array $category): bool => (bool) ($category['is_active'] ?? true))
@@ -88,7 +100,7 @@ final class LaborWorkTypeMatrix
             ->all();
 
         // Keep fabrication as a matrix work type when active.
-        $fabrication = collect($settings->laborCategories())->firstWhere('key', 'fabrication');
+        $fabrication = $categoriesByKey->get('fabrication');
         if (is_array($fabrication) && ($fabrication['is_active'] ?? true)) {
             $builtIn[] = [
                 'key' => 'fabrication',
