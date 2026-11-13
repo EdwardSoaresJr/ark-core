@@ -4,7 +4,7 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\EstimatePricing\RepairOrderPricingContext;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
-use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
+use App\Ark\Operations\Parts\CustomerDocumentPresentation;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfileResolver;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -181,13 +181,20 @@ test('document presentation resolves from frozen commercial profile in snapshots
         ['billing_posture' => ConcernBillingPosture::CustomerPay->value],
     );
 
-    expect($resolved)->toBe(CustomerPartPresentationProfile::Retail);
+    expect($resolved->toRow())->toMatchArray((new CustomerDocumentPresentation)->toRow());
 
-    // Live settings change presentation for Military → fleet should not affect frozen snapshot path.
+    // Live settings change presentation for Military → warranty flags should not affect frozen snapshot path.
     ShopSettings::current()->update([
         'customer_types' => collect([
-            ['name' => 'Military', 'discount_type' => 'labor', 'discount_amount' => '10.00', 'document_presentation_profile' => 'fleet'],
-            ['name' => 'Retail', 'discount_type' => 'none', 'document_presentation_profile' => 'retail'],
+            [
+                'name' => 'Military',
+                'discount_type' => 'labor',
+                'discount_amount' => '10.00',
+                'document_show_part_number' => true,
+                'document_show_part_brand' => true,
+                'document_show_vendor' => true,
+            ],
+            ['name' => 'Retail', 'discount_type' => 'none'],
         ])->map(fn (array $row): array => ShopSettings::current()->normalizeStoredCustomerTypeRow($row))->all(),
     ]);
 
@@ -195,7 +202,8 @@ test('document presentation resolves from frozen commercial profile in snapshots
         $snapshot,
         ['billing_posture' => ConcernBillingPosture::CustomerPay->value],
     );
-    expect($again)->toBe(CustomerPartPresentationProfile::Retail);
+    expect($again->toRow())->toMatchArray((new CustomerDocumentPresentation)->toRow())
+        ->and(ShopSettings::current()->documentPresentationFor('Military')->showPartNumber)->toBeTrue();
 });
 
 test('billing classes settings activation is transactional and stamps matrices', function () {
