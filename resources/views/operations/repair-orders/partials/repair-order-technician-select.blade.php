@@ -61,6 +61,12 @@
                             role="listbox"
                             aria-label="Technician"
                         >
+                            @if ($needsTechnician)
+                                <li>
+                                    <span class="dropdown-item-text small text-warning">Needed before In Progress</span>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                            @endif
                             @if ($allowsTechnicianClear)
                                 <li>
                                     <button
@@ -106,9 +112,6 @@
                         @endforeach
                     </select>
                 </form>
-                @if ($needsTechnician)
-                    <div class="small text-warning mt-1">Needed before In Progress</div>
-                @endif
             </div>
         </div>
     @endif
