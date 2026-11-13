@@ -87,6 +87,7 @@
                                     data-lifecycle-option
                                     data-status-value="{{ $option['value'] }}"
                                     @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
+                                    @if (! empty($option['needsTechnician'])) data-needs-technician="1" @endif
                                 >
                                     {{ $option['label'] }}@if (filled($option['blockedReason'])) - {{ $option['blockedReason'] }}@endif
                                 </button>
@@ -139,6 +140,7 @@
                         <option
                             value="{{ $option['value'] }}"
                             @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
+                            @if (! empty($option['needsTechnician'])) data-needs-technician="1" @endif
                         >
                             {{ $option['label'] }}@if (filled($option['blockedReason'])) - {{ $option['blockedReason'] }}@endif
                         </option>

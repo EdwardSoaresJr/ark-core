@@ -45,7 +45,7 @@ test('non-canonical status transitions are deactivated so menus stay operational
     RepairOrderStatusCatalogDefaults::deactivateNonCanonicalTransitions($catalog);
 
     expect($catalog->allowedTargetSlugs(RepairOrderStatus::WaitingApproval->value))
-        ->toBe(['estimate', 'approved'])
+        ->toBe(['estimate', 'approved', 'in_progress'])
         ->and(
             RepairOrderStatusTransition::query()
                 ->where('from_status_slug', RepairOrderStatus::WaitingApproval->value)

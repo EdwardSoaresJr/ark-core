@@ -79,7 +79,7 @@ class RepairOrderLifecycleTransition
             && $repairOrder->assigned_technician_id === null
             && ! $repairOrder->hasRepairActionOwner()
         ) {
-            return 'Assign a technician before moving to '.$this->statusCatalog->labelForSlug($toStatusSlug).'.';
+            return 'Assign a technician first.';
         }
 
         $hasUnresolvedApprovedParts = $selectCache !== null

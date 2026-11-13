@@ -1378,6 +1378,24 @@ function resetLifecycleSelect(form) {
     }
 }
 
+function openTechnicianPicker() {
+    const techTrigger = document.querySelector('[data-technician-trigger]');
+
+    if (! techTrigger) {
+        window.alert('Assign a technician first.');
+
+        return;
+    }
+
+    const Dropdown = window.bootstrap?.Dropdown;
+
+    if (Dropdown) {
+        Dropdown.getOrCreateInstance(techTrigger).show();
+    }
+
+    techTrigger.focus({ preventScroll: true });
+}
+
 export function initRepairOrderLifecycleSelect() {
     document.addEventListener('change', (event) => {
         const select = event.target.closest('[data-lifecycle-select]');
@@ -1417,11 +1435,23 @@ export function initRepairOrderLifecycleSelect() {
         const blockedReason = selectedOption?.dataset?.blockedReason ?? '';
 
         if (blockedReason !== '') {
+            const needsTechnician = selectedOption?.dataset?.needsTechnician === '1';
+
             select.value = currentStatus;
+
+            if (needsTechnician) {
+                form.dataset.pendingStatus = 'in_progress';
+                openTechnicianPicker();
+
+                return;
+            }
+
             window.alert(blockedReason);
 
             return;
         }
+
+        delete form.dataset.pendingStatus;
 
         if (select.value !== currentStatus) {
             arkWorksheetFormSubmit(form);
@@ -1456,16 +1486,37 @@ export function initRepairOrderLifecycleSelect() {
             const form = technicianOption.closest('form');
             const select = form?.querySelector('[data-technician-select]');
             const nextValue = technicianOption.dataset.technicianValue ?? '';
+            const lifecycleForm = document.querySelector('[data-lifecycle-form]');
+            const pendingStatus = lifecycleForm?.dataset.pendingStatus ?? '';
 
             if (! select) {
                 return;
             }
 
-            if (String(select.value || '') === String(nextValue)) {
+            if (String(select.value || '') === String(nextValue) && pendingStatus === '') {
                 return;
             }
 
             select.value = nextValue;
+
+            if (pendingStatus === 'in_progress' && String(nextValue) !== '') {
+                delete lifecycleForm.dataset.pendingStatus;
+
+                Promise.resolve(arkWorksheetFormSubmit(form)).then(() => {
+                    const freshLifecycle = document.querySelector('[data-lifecycle-form]');
+                    const freshSelect = freshLifecycle?.querySelector('[data-lifecycle-select]');
+
+                    if (! freshSelect) {
+                        return;
+                    }
+
+                    freshSelect.value = 'in_progress';
+                    freshSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+
+                return;
+            }
+
             select.dispatchEvent(new Event('change', { bubbles: true }));
 
             return;

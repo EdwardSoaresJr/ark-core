@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 final readonly class RepairOrderLifecycleSelectProjection
 {
     /**
-     * @param  list<array{value: string, label: string, blockedReason: ?string, disabled: bool}>  $statusOptions
+     * @param  list<array{value: string, label: string, blockedReason: ?string, needsTechnician?: bool, disabled: bool}>  $statusOptions
      * @param  list<array{value: string, label: string, blockedReason: ?string}>  $closeOptions
      */
     public function __construct(
@@ -54,10 +54,14 @@ final readonly class RepairOrderLifecycleSelectProjection
                 $label = '← '.$label;
             }
 
+            $needsTechnician = $nextStatusSlug === RepairOrderStatus::InProgress->value
+                && $blockedReason === 'Assign a technician first.';
+
             $statusOptions[] = [
                 'value' => $nextStatusSlug,
                 'label' => $label,
                 'blockedReason' => $blockedReason,
+                'needsTechnician' => $needsTechnician,
                 'disabled' => $blockedReason !== null
                     || ($selectCache->lacksEstimateLines()
                         && ! in_array($nextStatusSlug, [RepairOrderStatus::Draft->value, RepairOrderStatus::Estimate->value], true)),

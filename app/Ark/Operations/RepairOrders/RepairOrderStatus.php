@@ -164,8 +164,8 @@ enum RepairOrderStatus: string
     {
         return match ($this) {
             self::Draft => [self::Estimate],
-            self::Estimate => [self::WaitingApproval, self::Draft],
-            self::WaitingApproval => [self::Approved, self::Estimate, self::Closed],
+            self::Estimate => [self::WaitingApproval, self::InProgress, self::Draft],
+            self::WaitingApproval => [self::Approved, self::InProgress, self::Estimate, self::Closed],
             self::Approved => [self::WaitingParts, self::ReadyForWork, self::InProgress],
             self::WaitingParts => [self::ReadyForWork, self::InProgress, self::Approved],
             self::ReadyForWork => [self::InProgress, self::WaitingParts],
