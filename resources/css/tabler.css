@@ -1042,9 +1042,106 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
 .ops-concern-header-accent {
     background: color-mix(in srgb, var(--tblr-primary) 12%, var(--tblr-bg-surface, #fff));
     border-bottom-color: color-mix(in srgb, var(--tblr-primary) 22%, var(--tblr-border-color));
+    padding-block: 0.4rem 0.45rem;
+}
+
+.ops-concern-header-accent .card-title,
+.ops-concern-header-accent .h3 {
+    line-height: 1.25;
+}
+
+.ops-concern-header-accent .subheader {
+    margin-bottom: 0.125rem;
 }
 
 [data-bs-theme='dark'] .ops-concern-header-accent {
     background: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface, #1e1e1e));
     border-bottom-color: color-mix(in srgb, var(--tblr-primary) 28%, var(--tblr-border-color));
+}
+
+/* Sales Tax row: same geometry as Labor/Parts/Fees; only the jurisdiction name looks interactive. */
+.ops-tax-jurisdiction-trigger {
+    cursor: pointer;
+    line-height: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    vertical-align: baseline;
+    box-shadow: none !important;
+}
+
+.ops-tax-jurisdiction-trigger:hover,
+.ops-tax-jurisdiction-trigger:focus-visible {
+    color: inherit;
+}
+
+.ops-tax-jurisdiction-label {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.18em;
+}
+
+/* Sticky footer Print: Bootstrap static dropup opens upward above the dock without Alpine click.outside races. */
+[data-ro-footer-print] {
+    position: relative;
+}
+
+[data-ro-footer-print-menu] {
+    bottom: 100%;
+    top: auto;
+    margin-bottom: 0.25rem;
+    z-index: 1080;
+}
+
+/* Tax jurisdiction modal: body-teleported layer with backdrop behind dialog (Bootstrap defaults). */
+[data-tax-jurisdiction-layer] {
+    position: relative;
+    z-index: 1055;
+}
+
+[data-tax-jurisdiction-backdrop] {
+    z-index: 1050;
+}
+
+[data-tax-jurisdiction-dialog] {
+    z-index: 1055;
+}
+
+/* Compact Estimate workspace: less empty space above concerns. */
+.ops-estimate-main > .mb-3 {
+    margin-bottom: 0.75rem !important;
+}
+
+#visit-reason.card-sm .card-body {
+    padding: 0.5rem 0.75rem;
+}
+
+#visit-reason .subheader {
+    margin-bottom: 0.15rem;
+}
+
+[data-estimate-instruments] .card-body {
+    padding: 0.5rem 0.65rem;
+}
+
+[data-estimate-instruments] .subheader {
+    margin-bottom: 0.15rem;
+    font-size: 0.7rem;
+}
+
+[data-estimate-instruments] .h3 {
+    font-size: 1.05rem;
+    line-height: 1.2;
+}
+
+[data-estimate-instruments] .progress {
+    margin-top: 0.35rem !important;
+}
+
+#estimate-context-rail {
+    margin-bottom: 0.75rem !important;
+}
+
+#worksheet-concerns {
+    gap: 0.75rem !important;
 }

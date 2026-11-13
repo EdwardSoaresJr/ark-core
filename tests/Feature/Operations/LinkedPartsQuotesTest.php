@@ -65,7 +65,8 @@ test('the repair order can show a provider neutral linked quote without importin
     $app = file_get_contents(base_path('resources/js/app.js'));
 
     expect($html)->toContain('data-linked-parts-quote')
-        ->and($html)->toContain('>Manage</button>')
+        ->and($html)->toContain('data-linked-parts-quote-host')
+        ->and($html)->toContain('ark:linked-parts-quote-open')
         ->and($html)->toContain('data-linked-parts-quote-dialog')
         ->and($html)->toContain('modal-dialog')
         ->and($html)->toContain('Refresh quote')
@@ -78,6 +79,7 @@ test('the repair order can show a provider neutral linked quote without importin
         ->and($html)->not->toContain('window.arkLinkedPartsQuote')
         ->and($html)->not->toContain('opens the linked quote')
         ->and($html)->not->toContain('>Open PartsTech<')
+        ->and($html)->not->toContain('card card-sm mb-3')
         ->and($script)->toContain('applyPanel(payload)')
         ->and($script)->not->toContain('this.panel = payload')
         ->and($script)->toContain('No quote linked')
@@ -95,7 +97,7 @@ test('the repair order can show a provider neutral linked quote without importin
         ->and(RepairOrderLine::query()->count())->toBe(0);
 });
 
-test('the repair order page includes the compact linked quote row', function () {
+test('the repair order page hosts linked quote without the workspace card', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $repairOrder = linkedQuoteRepairOrder();
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
@@ -145,10 +147,14 @@ test('the repair order page includes the compact linked quote row', function () 
         ->getContent();
 
     expect($html)->toContain('data-linked-parts-quote')
-        ->and($html)->toContain('>Manage</button>')
+        ->and($html)->toContain('data-linked-parts-quote-host')
+        ->and($html)->toContain('data-linked-parts-quote-open')
+        ->and($html)->toContain('data-linked-parts-quote-actions')
+        ->and($html)->toContain('Linked quote')
         ->and($html)->toContain('x-data="arkLinkedPartsQuote(')
         ->and($html)->toContain('Example Catalog')
-        ->and($html)->not->toContain('window.arkLinkedPartsQuote');
+        ->and($html)->not->toContain('window.arkLinkedPartsQuote')
+        ->and($html)->not->toContain('card card-sm mb-3"\n    x-data="arkLinkedPartsQuote');
 });
 
 test('stock core leaves the linked quote row off the repair order', function () {

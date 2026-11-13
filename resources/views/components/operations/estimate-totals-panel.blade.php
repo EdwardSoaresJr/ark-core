@@ -164,22 +164,25 @@
                     @if ($taxRowInteractive)
                         <button
                             type="button"
-                            class="btn btn-link p-0 align-baseline text-secondary text-decoration-none"
+                            class="btn btn-link p-0 align-baseline text-secondary text-decoration-none ops-tax-jurisdiction-trigger"
                             data-tax-jurisdiction-trigger
                             aria-haspopup="dialog"
                             aria-controls="ro-tax-jurisdiction-modal"
-                            title="Edit tax jurisdiction"
+                            title="Click to view or change tax jurisdiction."
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="left"
+                            data-bs-title="Click to view or change tax jurisdiction."
                             @click="window.dispatchEvent(new CustomEvent('ark-open-tax-jurisdiction'))"
                         >
-                            {{ $taxLabel ?? 'Tax' }}
+                            <span>{{ $taxLabel ?? 'Sales Tax' }}</span>
                             @if ($taxSummaryBits !== [])
-                                <span class="d-block small fw-normal text-secondary">{{ implode(' · ', $taxSummaryBits) }}</span>
+                                <span class="ops-tax-jurisdiction-label"> · {{ implode(' · ', $taxSummaryBits) }}</span>
                             @endif
                         </button>
                     @else
-                        {{ $taxLabel ?? 'Tax' }}
+                        {{ $taxLabel ?? 'Sales Tax' }}
                         @if ($taxSummaryBits !== [])
-                            <span class="d-block small fw-normal text-secondary">{{ implode(' · ', $taxSummaryBits) }}</span>
+                            <span class="text-secondary"> · {{ implode(' · ', $taxSummaryBits) }}</span>
                         @endif
                     @endif
                 </dt>

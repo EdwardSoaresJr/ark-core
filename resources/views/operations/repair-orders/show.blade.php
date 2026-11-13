@@ -1664,7 +1664,7 @@
             'visitCommands' => $visitCommands,
         ])
 
-        <div class="ops-estimate-layout gap-3 mt-3">
+        <div class="ops-estimate-layout gap-2 mt-2">
             <div class="ops-estimate-main min-w-0">
                 <x-operations.repair-order-workspace-tabs
                     workspaceMode="review"
@@ -1680,11 +1680,7 @@
                     :recommendationOpenCount="$recommendationAwareness['open_count'] ?? 0"
                     :recommendationSafetyCount="$recommendationAwareness['safety_count'] ?? 0"
                 >
-                @include('operations.repair-orders.partials.repair-order-estimate-toolbar-actions', [
-                    'repairOrder' => $repairOrder,
-                    'mode' => 'edit',
-                    'isTerminal' => $isTerminal,
-                ])
+                {{-- Import / Preview / Customer View relocated: Tools, portal panel, context strip. --}}
 
                 @include('operations.repair-orders.partials.repair-order-visit-reason', [
                     'repairOrder' => $repairOrder,
@@ -1771,6 +1767,16 @@
                             @include('operations.repair-orders.partials.repair-order-linked-quote', [
                                 'repairOrder' => $repairOrder,
                             ])
+                            <div class="d-flex flex-wrap gap-2 mb-2" data-linked-parts-quote-actions>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-ghost-secondary"
+                                    data-linked-parts-quote-open
+                                    @click="window.dispatchEvent(new CustomEvent('ark:linked-parts-quote-open', { detail: { invokeEl: $event.currentTarget } }))"
+                                >
+                                    Linked quote
+                                </button>
+                            </div>
                         @endif
                         @unless ($canImportPartstechQuote || $isTerminal)
                             @if ($partsTechLauncher->usesPlatform())

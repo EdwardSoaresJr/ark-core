@@ -11,30 +11,14 @@
     ];
 @endphp
 
+{{-- No large workspace card. Entry points: PartsTech Cart header + Parts context. --}}
 <div
     data-linked-parts-quote
-    class="card card-sm mb-3"
+    data-linked-parts-quote-host
+    class="d-none"
     x-data="arkLinkedPartsQuote(@js($linkedQuoteConfig))"
+    @ark:linked-parts-quote-open.window="openManage($event)"
 >
-    <div class="card-body d-flex align-items-center gap-3 py-2">
-        <svg class="icon text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.2 11h11.3l2-7H7"></path>
-            <circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none"></circle>
-            <circle cx="18" cy="20" r="1.4" fill="currentColor" stroke="none"></circle>
-        </svg>
-        <div class="flex-fill" style="min-width: 0">
-            <div class="fw-medium text-truncate" x-text="summaryTitle()"></div>
-            <div class="small text-secondary text-truncate" x-text="summaryDetail()"></div>
-        </div>
-        <button
-            type="button"
-            class="btn btn-sm flex-shrink-0"
-            @click="openManage($event)"
-            :aria-expanded="open ? 'true' : 'false'"
-            aria-haspopup="dialog"
-        >Manage</button>
-    </div>
-
     <template x-teleport="body">
         <div
             x-show="open"

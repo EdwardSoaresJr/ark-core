@@ -131,9 +131,26 @@ test('header and footer print menus expose identical authoritative items', funct
 
     expect(substr_count($html, 'data-ro-print-menu'))->toBeGreaterThanOrEqual(2)
         ->and($html)->toContain('data-ro-footer-print')
-        ->and($html)->toContain('dropup-menu')
+        ->and($html)->toContain('data-bs-toggle="dropdown"')
+        ->and($html)->toContain('data-ro-footer-print-menu')
+        ->and($html)->toContain('class="dropup ms-auto"')
         ->and(substr_count($html, 'data-ro-print-item="estimate_pdf"'))->toBe(2)
         ->and(substr_count($html, 'data-ro-print-item="check_in_sheet"'))->toBe(2);
+});
+
+test('tax jurisdiction modal teleports above its backdrop and tax row keeps financial-row geometry', function () {
+    $ro = workspaceUiRo();
+
+    $html = $this->get(route('operations.repair-orders.show', $ro))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('x-teleport="body"')
+        ->and($html)->toContain('data-tax-jurisdiction-backdrop')
+        ->and($html)->toContain('data-tax-jurisdiction-dialog')
+        ->and($html)->toContain('ops-tax-jurisdiction-label')
+        ->and($html)->toContain('ops-tax-jurisdiction-trigger')
+        ->and($html)->toContain('Click to view or change tax jurisdiction.');
 });
 
 test('concern headers share accent wash and ordinal, not priority stripes', function () {

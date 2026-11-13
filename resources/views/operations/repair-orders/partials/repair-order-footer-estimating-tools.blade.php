@@ -17,6 +17,15 @@
 @endphp
 
 <div class="d-none d-md-flex align-items-center gap-1" role="group" aria-label="Estimating tools" data-ro-footer-tools>
+    <button
+        type="button"
+        class="btn btn-sm btn-ghost-secondary"
+        data-ro-footer-dealer-quote
+        title="Import a dealer quote PDF or pasted text onto this estimate"
+        @click="window.dispatchEvent(new CustomEvent('ark:dealer-quote-capture-open'))"
+    >
+        Import
+    </button>
     @if ($partsCatalogs !== [])
         <div class="position-relative" data-toolbar-group="parts-catalog" @click.outside="partsCatalogMenu = false">
             <div class="btn-group" role="group" aria-label="Parts catalog">
@@ -145,6 +154,12 @@
                 <button type="button" class="btn-close" aria-label="Close" @click="toolsOpen = false"></button>
             </div>
             <div class="list-group list-group-flush border-top">
+                <button
+                    type="button"
+                    class="list-group-item list-group-item-action"
+                    data-ro-footer-dealer-quote
+                    @click="toolsOpen = false; window.dispatchEvent(new CustomEvent('ark:dealer-quote-capture-open'))"
+                >Import Dealer Quote</button>
                 <template x-for="item in partsCatalogItems" :key="'sheet-catalog-' + item.key">
                     <button
                         type="button"

@@ -14,7 +14,7 @@
         : null;
 @endphp
 
-<div class="mb-3" id="estimate-context-rail" data-estimate-context>
+<div class="mb-2" id="estimate-context-rail" data-estimate-context>
     <div class="nav nav-pills gap-1" role="toolbar" aria-label="Estimate context">
         <button
             type="button"

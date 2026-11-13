@@ -12,7 +12,7 @@
     );
 @endphp
 
-{{-- Own x-data so @click and the PRINT menu bind wherever the dock renders. --}}
+{{-- Own x-data so @click binds wherever the dock renders. Print uses Bootstrap dropup (not Alpine open) so the toggle cannot be cancelled by click.outside. --}}
 <footer
     @class([
         'border-top mt-1 pt-1 mt-md-2 pt-md-2' => $docked,
@@ -98,17 +98,16 @@
         </div>
 
         <div
-            class="position-relative ms-auto"
-            x-data="{ open: false }"
-            @keydown.escape.window="open = false"
+            class="dropup ms-auto"
             data-ro-footer-print
             data-ro-print-menu
         >
             <button
                 type="button"
-                class="btn btn-ghost-secondary btn-sm"
-                @click="open = ! open"
-                :aria-expanded="open.toString()"
+                class="btn btn-ghost-secondary btn-sm dropdown-toggle"
+                data-bs-toggle="dropdown"
+                data-bs-display="static"
+                aria-expanded="false"
                 aria-haspopup="menu"
                 aria-label="Print"
                 title="Print"
@@ -117,15 +116,14 @@
                 <span @class(['d-none d-sm-inline' => $estimatingTools !== null])>PRINT</span>
             </button>
             <div
-                class="dropdown-menu dropdown-menu-end dropup-menu bottom-100 end-0 mb-1"
-                :class="{ show: open }"
+                class="dropdown-menu dropdown-menu-end"
                 role="menu"
+                data-ro-footer-print-menu
                 style="max-height: min(70vh, 24rem); overflow-y: auto;"
-                @click.outside="open = false"
             >
                 @include('operations.repair-orders.partials.repair-order-print-menu-items', [
                     'printItems' => $printItems,
-                    'closeExpr' => 'open = false',
+                    'closeExpr' => '',
                 ])
             </div>
         </div>
