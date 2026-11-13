@@ -23,6 +23,7 @@ final class CommunicationsInboxPresentation
 {
     public function __construct(
         private readonly ConversationWork $work,
+        private readonly CommunicationsVisitCheckInAction $checkInAction,
     ) {}
 
     /**
@@ -192,6 +193,8 @@ final class CommunicationsInboxPresentation
             'status' => $primary['status'] ?? data_get($context, 'current_visit.lifecycle_label'),
             'url' => $primary['url'] ?? null,
         ];
+        $context['open_repair_orders'] = $this->openRepairOrderSummaries($customer, $context);
+        $context['check_in'] = $this->checkInAction->forContext($context, auth()->user());
 
         if ($conversation instanceof Conversation) {
             $context['work'] = array_merge([
@@ -413,6 +416,63 @@ final class CommunicationsInboxPresentation
                 'status' => $repairOrder->statusDisplayLabel(),
                 'url' => route('operations.repair-orders.show', $repairOrder),
             ])
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     * @return list<array{number: string, vehicle: ?string, status: string, url: string}>
+     */
+    private function openRepairOrderSummaries(?Customer $customer, array $context): array
+    {
+        if (is_array($context['open_repair_orders'] ?? null) && $context['open_repair_orders'] !== []) {
+            return array_values(array_filter(array_map(function (mixed $row): ?array {
+                if (! is_array($row)) {
+                    return null;
+                }
+
+                return [
+                    'number' => (string) ($row['number'] ?? $row['ro_number'] ?? ''),
+                    'vehicle' => filled($row['vehicle'] ?? null) ? (string) $row['vehicle'] : null,
+                    'status' => (string) ($row['status'] ?? ''),
+                    'url' => (string) ($row['url'] ?? ''),
+                ];
+            }, $context['open_repair_orders'])));
+        }
+
+        if (! $customer instanceof Customer) {
+            $primary = is_array($context['primary_ro'] ?? null) ? $context['primary_ro'] : [];
+            if ($primary === [] || ! filled($primary['url'] ?? null)) {
+                return [];
+            }
+
+            return [[
+                'number' => (string) ($primary['number'] ?? ''),
+                'vehicle' => filled($primary['vehicle'] ?? null) ? (string) $primary['vehicle'] : null,
+                'status' => (string) ($primary['status'] ?? ''),
+                'url' => (string) $primary['url'],
+            ]];
+        }
+
+        return RepairOrder::query()
+            ->with('vehicle')
+            ->where('customer_id', $customer->id)
+            ->whereIn('status', RepairOrderStatus::operationalQueueValues())
+            ->latest('id')
+            ->limit(5)
+            ->get()
+            ->map(function (RepairOrder $repairOrder): array {
+                $vehicle = $repairOrder->vehicle;
+
+                return [
+                    'number' => 'RO '.$repairOrder->repair_order_id,
+                    'vehicle' => $vehicle !== null
+                        ? trim(implode(' ', array_filter([(string) $vehicle->year, (string) $vehicle->make, (string) $vehicle->model])))
+                        : null,
+                    'status' => $repairOrder->statusDisplayLabel(),
+                    'url' => route('operations.repair-orders.show', $repairOrder),
+                ];
+            })
             ->all();
     }
 
