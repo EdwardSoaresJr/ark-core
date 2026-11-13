@@ -104,7 +104,12 @@
                 </dl>
             </section>
 
-            @if (is_array($work) && filled($work['url'] ?? null))
+            @php
+                $checkIn = is_array($context['check_in'] ?? null) ? $context['check_in'] : null;
+                $checkInAvailable = $checkIn !== null && filled($checkIn['url'] ?? null);
+                $hasWork = is_array($work) && filled($work['url'] ?? null);
+            @endphp
+            @if ($hasWork)
                 <section class="p-3 border-bottom" aria-labelledby="comms-context-work" data-comms-work-summary>
                     <div class="subheader mb-1" id="comms-context-work">Conversation</div>
                     <dl class="row g-0 small mb-2">
@@ -113,7 +118,29 @@
                         <dt class="col-4 text-secondary fw-normal">Follow-up</dt>
                         <dd class="col-8 mb-1">{{ $work['follow_up_due_label'] ?? 'None' }}</dd>
                     </dl>
-                    @include('operations.communications.workspace.partials.work-actions', ['work' => $work, 'variant' => 'rail'])
+                    @include('operations.communications.workspace.partials.work-actions', [
+                        'work' => $work,
+                        'variant' => 'rail',
+                        'checkIn' => $checkIn,
+                    ])
+                </section>
+            @elseif ($checkInAvailable)
+                {{-- Check In must not depend on work-lane / assignment controls. --}}
+                <section class="p-3 border-bottom" aria-labelledby="comms-context-work" data-comms-check-in-fallback>
+                    <div class="subheader mb-1" id="comms-context-work">Conversation</div>
+                    <div class="ark-comms-work-grid" role="group" aria-label="Conversation work">
+                        <div data-comms-context-check-in="{{ $checkIn['key'] ?? 'check_in' }}">
+                            <a
+                                href="{{ $checkIn['url'] }}"
+                                class="btn btn-sm w-100 {{ ($checkIn['style'] ?? 'primary') === 'primary' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                data-comms-check-in
+                                @if (filled($checkIn['hint'] ?? null)) title="{{ $checkIn['hint'] }}" @endif
+                            >
+                                <x-tabler.icon name="car" />
+                                {{ $checkIn['label'] ?? 'Check In' }}
+                            </a>
+                        </div>
+                    </div>
                 </section>
             @endif
 
@@ -121,7 +148,6 @@
                 <div class="subheader mb-1" id="comms-context-vehicle">Vehicle &amp; visit</div>
                 @php
                     $openOrders = is_array($context['open_repair_orders'] ?? null) ? $context['open_repair_orders'] : [];
-                    $checkIn = is_array($context['check_in'] ?? null) ? $context['check_in'] : null;
                     $shop = is_array($context['shop'] ?? null) ? $context['shop'] : [];
                 @endphp
                 @if ($openOrders !== [])
@@ -158,21 +184,6 @@
                     </div>
                 @else
                     <div class="text-secondary small">No current visit</div>
-                @endif
-                @if ($checkIn !== null && filled($checkIn['url'] ?? null))
-                    <div class="mt-2" data-comms-context-check-in="{{ $checkIn['key'] ?? 'check_in' }}">
-                        <a
-                            href="{{ $checkIn['url'] }}"
-                            class="btn btn-sm {{ ($checkIn['style'] ?? 'primary') === 'primary' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            data-comms-check-in
-                        >
-                            <x-tabler.icon name="car" />
-                            {{ $checkIn['label'] ?? 'Check In' }}
-                        </a>
-                        @if (filled($checkIn['hint'] ?? null))
-                            <div class="small text-secondary mt-1">{{ $checkIn['hint'] }}</div>
-                        @endif
-                    </div>
                 @endif
                 @if (filled($shop['approval'] ?? null) || filled($shop['balance'] ?? null) || filled($shop['appointment'] ?? null))
                     <dl class="row g-0 small mt-2 mb-0" data-comms-context-visit>
