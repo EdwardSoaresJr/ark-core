@@ -5,9 +5,9 @@
 
 | Layer | SHA |
 | --- | --- |
-| Core (functional / Alpha pin) | `c66c8ee9a547927d3645742247180488b8136703` |
-| SaaS (Alpha pin) | `2674b980410593994c61fde9aef36ca9d1d157fb` |
-| Core PR tip (docs only) | `6cb1d6d5fa1d56948e1b64e29a71047e0f029f39` |
+| Core (functional / Alpha pin) | `48a2e00f90be0717c3c877e9d11133a3dc9f5dd9` |
+| SaaS (Alpha pin) | `036e23690985dfb9174c62032580bda8fb10b2c4` |
+| Core PR tip | `48a2e00f90be0717c3c877e9d11133a3dc9f5dd9` |
 | Demo | https://alpha.staging.arksms.com/app/repair-orders/40 |
 | Core PR | https://github.com/EdwardSoaresJr/ark-core/pull/193 |
 | SaaS PR | https://github.com/EdwardSoaresJr/ark-stancl/pull/223 |
