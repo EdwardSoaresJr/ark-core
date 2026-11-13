@@ -36,3 +36,22 @@ Baseline includes accepted Labor Matrix R1+D2 (`b29bf318` ancestor).
 - [ ] **ACCEPT Alpha** — authorize merge + combined production prep with Labor Matrix
 - [ ] **CHANGES REQUIRED** — list UI/behavior notes
 - [ ] **HOLD** — leave Alpha pin; do not promote
+
+---
+
+## Addendum — lifecycle (Archive / Restore / Delete)
+
+| Layer | SHA |
+| --- | --- |
+| Core | `fc9b9974db8b96581d7b060f715227626b3f3b91` |
+| SaaS | `552adc046489ecae378cf17a95dc9bcee843e37a` |
+
+Identity rules: see `LIFECYCLE_IDENTITY.md`. Customer Billing Classes ≠ labor columns.
+
+### Accept
+1. Class Settings gear remains primary editor for labor-linked classes; footer Archive/Restore/Delete.
+2. “Customer-only & archived” replaces broad Manage list redundancy; Add Billing Class preserved.
+3. Work type heading actions menu: Archive/Delete (default protected).
+4. Delete refuses with references; Archive preserves historical pricing.
+
+Production remains on hold.
