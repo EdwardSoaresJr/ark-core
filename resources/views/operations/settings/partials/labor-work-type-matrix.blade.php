@@ -189,13 +189,6 @@
                                             :aria-label="`${column.label} minimum hours`"
                                             data-labor-min-hours
                                         >
-                                        <button
-                                            type="button"
-                                            class="btn btn-ghost-secondary btn-sm px-1"
-                                            @click="openRules(column)"
-                                            data-labor-rules
-                                            title="Shortfall rate and advanced minimum rules"
-                                        >Rules</button>
                                     </div>
                                 </td>
                                 <td class="py-1">
@@ -247,56 +240,6 @@
     <div
         class="modal modal-blur"
         tabindex="-1"
-        x-ref="rulesModal"
-        data-labor-rules-modal
-        x-cloak
-        :class="{ show: !!rulesColumn }"
-        :style="rulesColumn
-            ? 'display: block !important; background: rgba(22, 28, 45, 0.35);'
-            : 'display: none !important'"
-    >
-        <div class="modal-dialog modal-dialog-centered modal-sm" role="document" style="max-width: 22rem">
-            <div class="modal-content">
-                <div class="modal-header py-2">
-                    <h5 class="modal-title">
-                        <span x-text="rulesColumn?.label"></span> rules
-                    </h5>
-                    <button type="button" class="btn-close" @click="closeRules()"></button>
-                </div>
-                <div class="modal-body py-3">
-                    <p class="form-hint mb-3">
-                        Advanced shortfall pricing for this billing policy. Ordinary Min Hrs edits save inline on the matrix.
-                    </p>
-                    <label class="form-label mb-1">Minimum labor</label>
-                    <select class="form-select form-select-sm" x-model="rulesDraft.mode">
-                        <option value="none">No minimum</option>
-                        <option value="per_line">Minimum per labor line</option>
-                        <option value="per_ro">Minimum per repair order</option>
-                    </select>
-                    <div class="mt-3" x-show="rulesDraft.mode !== 'none'">
-                        <label class="form-label mb-1">Minimum hours</label>
-                        <input type="text" class="form-control form-control-sm font-monospace mb-2" x-model="rulesDraft.hours" inputmode="decimal">
-                        <label class="form-label mb-1">Shortfall rate</label>
-                        <select class="form-select form-select-sm mb-2" x-model="rulesDraft.shortfall_rate_source">
-                            <option value="standard_mechanical">Default Labor Rate (Mechanical × Retail)</option>
-                            <option value="custom">Custom Rate</option>
-                        </select>
-                        <div class="input-group input-group-sm" x-show="rulesDraft.shortfall_rate_source === 'custom'">
-                            <span class="input-group-text">$</span>
-                            <input type="text" class="form-control font-monospace" x-model="rulesDraft.shortfall_rate" inputmode="decimal">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-sm" @click="closeRules()">Cancel</button>
-                    <button type="button" class="btn btn-primary btn-sm" @click="saveRules()">Save rules</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div
-        class="modal modal-blur"
-        tabindex="-1"
         data-labor-add-dialog
         x-cloak
         :class="{ show: !!addDialog }"
@@ -331,8 +274,6 @@ document.addEventListener('alpine:init', () => {
         selectedWorkType: initialWorkType || initial.work_types?.[0]?.key || 'mechanical',
         status: 'idle',
         lastRequest: null,
-        rulesColumn: null,
-        rulesDraft: { mode: 'none', hours: '0.00', shortfall_rate_source: 'standard_mechanical', shortfall_rate: '' },
         addDialog: null,
         addDialogName: '',
         init() {
@@ -533,30 +474,7 @@ document.addEventListener('alpine:init', () => {
                 rate: ((cell.effective_rate_cents || 0) / 100).toFixed(2),
             });
         },
-        openRules(column) {
-            this.addDialog = null;
-            this.rulesColumn = column;
-            const row = this.matrix.billing_minimums[column.value] || {};
-            this.rulesDraft = {
-                mode: row.mode || 'none',
-                hours: row.hours || '0.00',
-                shortfall_rate_source: row.shortfall_rate_source || 'standard_mechanical',
-                shortfall_rate: row.shortfall_rate_cents != null ? (row.shortfall_rate_cents / 100).toFixed(2) : '',
-            };
-        },
-        closeRules() {
-            this.rulesColumn = null;
-        },
-        async saveRules() {
-            if (!this.rulesColumn) return;
-            await this.request(this.matrix.routes.minimum, 'PATCH', {
-                billing_class: this.rulesColumn.value,
-                ...this.rulesDraft,
-            });
-            this.closeRules();
-        },
         promptAddWorkType() {
-            this.rulesColumn = null;
             this.addDialogName = '';
             this.addDialog = {
                 kind: 'work_type',
@@ -566,13 +484,12 @@ document.addEventListener('alpine:init', () => {
             };
         },
         promptAddLaborColumn() {
-            this.rulesColumn = null;
             this.addDialogName = '';
             this.addDialog = {
                 kind: 'billing_class',
                 title: 'Add labor column',
                 label: 'Labor column name',
-                hint: 'Creates a labor-pricing column with its own rates and Rules. Does not create a customer Billing Class — use Manage Billing Classes for that.',
+                hint: 'Creates a labor-pricing column with its own rates. Does not create a customer Billing Class — use Manage Billing Classes for that.',
             };
         },
         promptAddBillingClass() {

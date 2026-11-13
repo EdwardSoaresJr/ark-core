@@ -249,7 +249,7 @@ test('existing open RO keeps stamped rates for new labor after settings change',
     expect($newPriced['labor_rate_cents'])->toBe(21000);
 });
 
-test('inline billing minimum autosave persists without opening Rules', function () {
+test('inline billing minimum autosave persists without a Rules popup', function () {
     $this->actingAs($this->admin)
         ->patchJson(route('operations.settings.shop.labor-matrix.minimum'), [
             'billing_class' => ConcernBillingPosture::Fleet->value,
