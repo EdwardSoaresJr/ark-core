@@ -74,7 +74,8 @@
 .ark-ro-visit-commands__status .col-8,
 .ark-ro-visit-commands__tech .col-8,
 .ark-ro-visit-commands__review .col-8 {
-    margin-bottom: 0.25rem;
+    /* Match Visit facts leading; beat Bootstrap .mb-* / reboot dd margins. */
+    margin-bottom: 0.15rem !important;
     font-weight: var(--tblr-font-weight-medium, 500);
 }
 
@@ -654,6 +655,29 @@ html:has([data-ark-topbar]) {
 
 .ark-ro-visit__facts {
     margin-top: 0;
+    --tblr-gutter-y: 0;
+}
+
+.ark-ro-visit__facts > dt,
+.ark-ro-visit__facts > dd {
+    /* Same leading as Status/Technician; beat Bootstrap reboot dd margin. */
+    margin-bottom: 0.15rem !important;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1.35;
+}
+
+.ark-ro-visit__facts > dt:last-of-type,
+.ark-ro-visit__facts > dd:last-child {
+    margin-bottom: 0 !important;
+}
+
+.ark-ro-visit__details .ops-visit-inline-trigger {
+    line-height: inherit;
+}
+
+.ark-ro-visit-commands__workflow .row:last-child .col-8 {
+    margin-bottom: 0.15rem !important;
 }
 
 /* Money columns align by digit. Tabler has no tabular-figures utility. */

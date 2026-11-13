@@ -49,7 +49,7 @@
 {{-- Worksheet continuity replaces this card by its id. --}}
 <div class="card mb-3" id="ro-identity-band" data-identity-band>
     <div class="row g-0 ark-identity-panel">
-        <section class="col-md-4 col-xxl-3 p-2 p-md-3 min-w-0" data-identity-present="customer" aria-labelledby="ro-identity-customer-heading">
+        <section class="col-md-4 p-2 p-md-3 min-w-0" data-identity-present="customer" aria-labelledby="ro-identity-customer-heading">
             <h3 class="subheader mb-1" id="ro-identity-customer-heading">Customer</h3>
             <div class="d-flex flex-wrap align-items-center gap-2">
                 @if ($canEditCustomer)
@@ -116,7 +116,7 @@
             </dl>
         </section>
 
-        <section class="col-md-4 col-xxl-3 p-2 p-md-3 min-w-0" data-identity-present="vehicle" aria-labelledby="ro-identity-vehicle-heading">
+        <section class="col-md-4 p-2 p-md-3 min-w-0" data-identity-present="vehicle" aria-labelledby="ro-identity-vehicle-heading">
             <h3 class="subheader mb-1" id="ro-identity-vehicle-heading">Vehicle</h3>
             @if ($canEditVehicle)
                 <button
@@ -166,7 +166,7 @@
             </dl>
         </section>
 
-        <section class="col-md-4 col-xxl-6 p-2 p-md-3 min-w-0 ark-identity-panel__visit" data-identity-present="visit" aria-labelledby="ro-identity-visit-heading">
+        <section class="col-md-4 p-2 p-md-3 min-w-0 ark-identity-panel__visit" data-identity-present="visit" aria-labelledby="ro-identity-visit-heading">
             <h3 class="subheader mb-1" id="ro-identity-visit-heading">Visit</h3>
             <div class="ark-ro-visit">
                 {{-- On the RO editor (with visit commands) the top bar carries the RO number and Visit actions. --}}
@@ -185,27 +185,27 @@
 
                     <dl class="row g-0 small mb-0 ark-ro-visit__facts">
                         <dt class="col-4 text-secondary fw-normal">Visit type</dt>
-                        <dd class="col-8 mb-1 fw-medium" data-identity-present="visit-posture">
+                        <dd class="col-8 fw-medium" data-identity-present="visit-posture">
                             @if ($canEditVisitPosture)
                                 <button
                                     type="button"
-                                    class="btn btn-link btn-sm p-0 fw-medium text-reset"
+                                    class="ops-visit-inline-trigger fw-medium"
                                     title="Open to edit visit type"
                                     @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'visit-posture', invokeEl: $event.currentTarget } }))"
-                                >{{ $visitMode?->label() ?? 'Not set' }}</button>
+                                ><span class="ops-visit-inline-value">{{ $visitMode?->label() ?? 'Not set' }}</span></button>
                             @else
                                 {{ $visitMode?->label() ?? 'Not set' }}
                             @endif
                         </dd>
                         <dt class="col-4 text-secondary fw-normal">Billing</dt>
-                        <dd class="col-8 mb-1 fw-medium" data-visit-billing="{{ $repairOrder->defaultBillingPosture()->value }}">
+                        <dd class="col-8 fw-medium" data-visit-billing="{{ $repairOrder->defaultBillingPosture()->value }}">
                             @if ($canEditVisitPosture)
                                 <button
                                     type="button"
-                                    class="btn btn-link btn-sm p-0 fw-medium text-reset"
+                                    class="ops-visit-inline-trigger fw-medium"
                                     title="Open to change billing for this visit"
                                     @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'visit-billing', invokeEl: $event.currentTarget } }))"
-                                >{{ $repairOrder->defaultBillingPosture()->label() }}</button>
+                                ><span class="ops-visit-inline-value">{{ $repairOrder->defaultBillingPosture()->label() }}</span></button>
                             @else
                                 {{ $repairOrder->defaultBillingPosture()->label() }}
                             @endif
@@ -214,17 +214,18 @@
                             @include('operations.repair-orders.partials.repair-order-mileage-inline', [
                                 'repairOrder' => $repairOrder,
                                 'estimateVersion' => $estimateVersion,
+                                'mileageInlineAsFacts' => true,
                             ])
                         @endif
                         @foreach ($visitLines as $line)
                             {{-- The presenter's "Advisor" is who last prepared the estimate (RepairOrder::serviceAdvisorName); documents keep their own label. --}}
                             <dt class="col-4 text-secondary fw-normal">{{ $line['label'] === 'Advisor' ? 'Estimate by' : $line['label'] }}</dt>
-                            <dd class="col-8 mb-1 fw-medium text-break">{{ $line['value'] }}</dd>
+                            <dd class="col-8 fw-medium text-break">{{ $line['value'] }}</dd>
                         @endforeach
                         @if ($arrivalPosture?->present)
                             <dt class="col-4 text-secondary fw-normal">Appointment</dt>
                             <dd
-                                class="col-8 mb-1 fw-medium"
+                                class="col-8 fw-medium"
                                 data-arrival-posture="{{ $arrivalPosture->posture }}"
                                 @if (filled($arrivalPosture->subtitle)) title="{{ $arrivalPosture->subtitle }}" @endif
                             >
