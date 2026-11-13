@@ -26,9 +26,12 @@ class CustomerUpdateController
         EstimateDocumentService $documents,
         ApplyCustomerBillingClassChangeAction $applyBillingClassChange,
     ): RedirectResponse|JsonResponse {
-        $customerTypes = collect(ShopSettings::current()->customerTypeRows())
+        $customerTypes = collect(ShopSettings::current()->activeCustomerTypeRows())
             ->pluck('name')
             ->all();
+        if (filled($customer->customer_type) && ! in_array($customer->customer_type, $customerTypes, true)) {
+            $customerTypes[] = (string) $customer->customer_type;
+        }
 
         if ($request->input('contact_preference') === '') {
             $request->merge(['contact_preference' => null]);

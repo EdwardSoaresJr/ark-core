@@ -28,8 +28,10 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <div>
-                        <h5 class="modal-title mb-0">Manage Billing Classes</h5>
-                        <div class="text-secondary small">Customer commercial classifications — including classes without a Labor column (Military, Business).</div>
+                        <h5 class="modal-title mb-0">Customer-only &amp; archived classes</h5>
+                        <div class="text-secondary small">
+                            Labor-linked classes edit from the Class Settings gear on the Labor matrix. This list covers customer-only classes, archived customer classes, and labor-only columns.
+                        </div>
                     </div>
                     <button type="button" class="btn-close" @click="closeManage()"></button>
                 </div>
@@ -41,19 +43,40 @@
                         </div>
                         <button type="button" class="btn btn-primary btn-sm" @click="openCreate()">+ Add Billing Class</button>
                     </div>
-                    <div class="list-group list-group-flush">
-                        <template x-for="row in catalog.classes" :key="'manage-'+row.key">
+                    <div class="subheader mb-2">Customer Billing Classes</div>
+                    <div class="list-group list-group-flush mb-3">
+                        <template x-for="row in (catalog.manage_classes || [])" :key="'manage-'+row.key">
                             <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" @click="openClassSettings(row.key)">
                                 <span>
                                     <span class="fw-medium" x-text="row.name"></span>
+                                    <span class="badge bg-secondary-lt ms-1" x-show="!row.is_active">Archived</span>
                                     <span
                                         class="form-hint d-block mb-0"
-                                        :title="row.labor_column_key ? ('Key: ' + row.labor_column_key) : null"
-                                        x-text="row.labor_column_key ? ('Linked labor pricing · ' + row.name) : 'Customer only — no labor column'"
+                                        x-text="row.is_customer_only ? 'Customer only — no labor column' : ('Linked labor pricing · ' + row.name)"
                                     ></span>
                                 </span>
                                 <span class="btn btn-outline-primary btn-sm">Class Settings</span>
                             </button>
+                        </template>
+                        <div class="list-group-item text-secondary small" x-show="!(catalog.manage_classes || []).length">
+                            No customer-only or archived classes. Labor-linked classes use the Class Settings gear on each Labor matrix row.
+                        </div>
+                    </div>
+                    <div class="subheader mb-2" x-show="(catalog.labor_only_columns || []).length">Labor-only columns</div>
+                    <div class="list-group list-group-flush" x-show="(catalog.labor_only_columns || []).length">
+                        <template x-for="column in (catalog.labor_only_columns || [])" :key="'labor-only-'+column.key">
+                            <div class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                                <span>
+                                    <span class="fw-medium" x-text="column.label"></span>
+                                    <span class="badge bg-secondary-lt ms-1" x-show="!column.is_active">Archived</span>
+                                    <span class="form-hint d-block mb-0">Labor rates only — no customer Billing Class</span>
+                                </span>
+                                <div class="btn-list flex-nowrap">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" x-show="column.is_active" @click="archiveLaborColumn(column.key)">Archive</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" x-show="!column.is_active" @click="restoreLaborColumn(column.key)">Restore</button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" @click="deleteLaborColumn(column.key)">Delete</button>
+                                </div>
+                            </div>
                         </template>
                     </div>
                 </div>
@@ -205,11 +228,18 @@
                         Customer-only class — no Labor matrix column. Use Add Labor Column on Labor if you need rates for a separate posture.
                     </p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" @click="closeEditor()">Cancel</button>
-                    <button type="button" class="btn btn-primary" @click="saveDraft()" :disabled="status === 'saving'">
-                        <span x-text="status === 'saving' ? 'Saving…' : 'Save'"></span>
-                    </button>
+                <div class="modal-footer justify-content-between">
+                    <div class="btn-list" x-show="draft?.key && !creating">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" x-show="draft?.is_active !== false" @click="archiveDraft()">Archive</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" x-show="draft?.is_active === false" @click="restoreDraft()">Restore</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" @click="deleteDraft()">Delete</button>
+                    </div>
+                    <div class="btn-list ms-auto">
+                        <button type="button" class="btn" @click="closeEditor()">Cancel</button>
+                        <button type="button" class="btn btn-primary" @click="saveDraft()" :disabled="status === 'saving'">
+                            <span x-text="status === 'saving' ? 'Saving…' : 'Save'"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -335,7 +365,134 @@ document.addEventListener('alpine:init', () => {
                 discount_amount: row.discount_amount,
                 concern_billing_posture: row.concern_billing_posture || '',
                 labor_column_key: row.labor_column_key || null,
+                is_active: row.is_active !== false,
+                is_customer_only: !!row.is_customer_only,
             };
+        },
+        lifecycleUrl(template, key) {
+            return String(template || '').replace('__KEY__', encodeURIComponent(key));
+        },
+        async postLifecycle(url, successMessage) {
+            this.status = 'saving';
+            this.errors = {};
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrf(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    this.errors = payload.errors || { form: [payload.message || successMessage] };
+                    this.status = 'error';
+                    this.statusMessage = Array.isArray(this.errors.key) ? this.errors.key[0] : (payload.message || 'Request failed');
+                    if (Array.isArray(this.errors.references)) {
+                        this.statusMessage += ' — ' + this.errors.references.join('; ');
+                    }
+                    return false;
+                }
+                if (payload.catalog) this.catalog = payload.catalog;
+                this.status = 'saved';
+                this.statusMessage = payload.status || successMessage;
+                this.$dispatch('labor-matrix-refresh');
+                return true;
+            } catch (error) {
+                this.status = 'error';
+                this.statusMessage = error.message || 'Request failed';
+                return false;
+            }
+        },
+        async archiveDraft() {
+            if (!this.draft?.key) return;
+            if (!window.confirm('Archive “' + this.draft.name + '”? It will leave new customer selections but keep historical records.')) return;
+            if (await this.postLifecycle(this.lifecycleUrl(this.catalog.routes?.archive, this.draft.key), 'Archived')) {
+                this.closeEditor();
+            }
+        },
+        async restoreDraft() {
+            if (!this.draft?.key) return;
+            if (await this.postLifecycle(this.lifecycleUrl(this.catalog.routes?.restore, this.draft.key), 'Restored')) {
+                this.closeEditor();
+            }
+        },
+        async deleteDraft() {
+            if (!this.draft?.key) return;
+            if (!window.confirm('Delete “' + this.draft.name + '” only if it was never used? Referenced classes must be archived instead.')) return;
+            const url = this.lifecycleUrl(this.catalog.routes?.destroy, this.draft.key);
+            this.status = 'saving';
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrf(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    this.errors = payload.errors || { form: [payload.message || 'Delete refused'] };
+                    this.status = 'error';
+                    this.statusMessage = Array.isArray(this.errors.key) ? this.errors.key[0] : (payload.message || 'Delete refused');
+                    if (Array.isArray(this.errors.references)) {
+                        this.statusMessage += ' — ' + this.errors.references.join('; ');
+                    }
+                    return;
+                }
+                if (payload.catalog) this.catalog = payload.catalog;
+                this.status = 'saved';
+                this.statusMessage = payload.status || 'Deleted';
+                this.closeEditor();
+                this.$dispatch('labor-matrix-refresh');
+            } catch (error) {
+                this.status = 'error';
+                this.statusMessage = error.message || 'Delete failed';
+            }
+        },
+        async archiveLaborColumn(key) {
+            if (!window.confirm('Archive this labor-only column? Existing repair orders keep their rates.')) return;
+            await this.postLaborColumnLifecycle(this.catalog.routes?.labor_column_archive, key);
+        },
+        async restoreLaborColumn(key) {
+            await this.postLaborColumnLifecycle(this.catalog.routes?.labor_column_restore, key);
+        },
+        async deleteLaborColumn(key) {
+            if (!window.confirm('Delete this labor-only column only if it was never used on a repair order?')) return;
+            await this.postLaborColumnLifecycle(this.catalog.routes?.labor_column_destroy, key);
+        },
+        async postLaborColumnLifecycle(url, key) {
+            this.status = 'saving';
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrf(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ billing_class: key }),
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    this.status = 'error';
+                    this.statusMessage = payload.message || (payload.errors?.billing_class?.[0]) || 'Request failed';
+                    if (Array.isArray(payload.errors?.references)) {
+                        this.statusMessage += ' — ' + payload.errors.references.join('; ');
+                    }
+                    return;
+                }
+                await this.refreshCatalog();
+                this.status = 'saved';
+                this.statusMessage = payload.status || 'Updated';
+                this.$dispatch('labor-matrix-refresh');
+            } catch (error) {
+                this.status = 'error';
+                this.statusMessage = error.message || 'Request failed';
+            }
         },
         closeEditor() {
             this.draft = null;

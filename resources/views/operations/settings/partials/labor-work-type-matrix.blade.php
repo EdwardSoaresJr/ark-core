@@ -61,13 +61,35 @@
         </div>
 
         <div class="ops-financial-master-detail__editor">
-            <div class="mb-2">
-                <h4 class="mb-0" data-labor-selected-heading>
-                    Rates for <span x-text="selectedWorkTypeLabel()"></span>
-                </h4>
-                <p class="form-hint mb-0">
-                    Hourly Rate and Round To are this work type × billing class. Min Hrs is shared for the billing class across all work types. Class Settings opens commercial configuration.
-                </p>
+            <div class="mb-2 d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                    <h4 class="mb-0" data-labor-selected-heading>
+                        Rates for <span x-text="selectedWorkTypeLabel()"></span>
+                    </h4>
+                    <p class="form-hint mb-0">
+                        Hourly Rate and Round To are this work type × billing class. Min Hrs is shared for the billing class across all work types. Class Settings opens commercial configuration.
+                    </p>
+                </div>
+                <div class="dropdown" x-data="{ open: false }" @click.outside="open = false">
+                    <button
+                        type="button"
+                        class="btn btn-ghost-secondary btn-icon btn-sm"
+                        :aria-expanded="open"
+                        aria-haspopup="true"
+                        aria-label="Work type actions"
+                        title="Work type actions"
+                        @click="open = !open"
+                    >
+                        <x-tabler.icon name="dots" class="icon icon-sm" />
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end" :class="{ show: open }" x-show="open" x-cloak>
+                        <button type="button" class="dropdown-item" x-show="selectedWorkTypeMeta()?.can_archive" @click="open = false; archiveSelectedWorkType()">Archive work type</button>
+                        <button type="button" class="dropdown-item text-danger" x-show="selectedWorkTypeMeta()?.can_archive" @click="open = false; deleteSelectedWorkType()">Delete work type</button>
+                        <div class="dropdown-item-text text-secondary small" x-show="!selectedWorkTypeMeta()?.can_archive">
+                            Choose another default before archiving or deleting this work type.
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="table-responsive border rounded">
                 <table class="table table-vcenter table-sm mb-0 labor-matrix-table labor-matrix-table--hybrid" data-labor-rate-editor>
@@ -176,11 +198,11 @@
                     + Add Labor Column
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" @click="openManageBillingClasses()" data-labor-manage-billing-classes>
-                    Manage Billing Classes
+                    Customer-only &amp; archived
                 </button>
             </div>
             <p class="form-hint mb-0 mt-1">
-                Manual line overrides still follow each work type’s stored permission. Manage Billing Classes covers shared commercial settings.
+                Manual line overrides still follow each work type’s stored permission. Class Settings gear edits labor-linked customer classes. Customer-only &amp; archived opens discovery for classes without a labor column.
             </p>
         </div>
     </div>
@@ -240,6 +262,29 @@ document.addEventListener('alpine:init', () => {
                     this.selectedWorkType = fromUrl;
                 }
             });
+            this.$el.addEventListener('labor-matrix-refresh', () => this.refreshMatrix());
+        },
+        async refreshMatrix() {
+            if (!this.matrix.routes?.rate) return;
+            try {
+                const response = await fetch(this.matrix.routes.rate.replace(/\/rate$/, ''), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                // Prefer dedicated show route when present.
+            } catch (e) {}
+            try {
+                const showUrl = @js(route('operations.settings.shop.labor-matrix.show'));
+                const response = await fetch(showUrl, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                const payload = await response.json();
+                if (response.ok && payload.work_types) {
+                    this.matrix = payload;
+                    if (!this.matrix.work_types.some((row) => row.key === this.selectedWorkType)) {
+                        this.selectedWorkType = this.matrix.work_types[0]?.key || 'mechanical';
+                    }
+                }
+            } catch (e) {}
         },
         selectWorkType(key) {
             if (!this.matrix.work_types.some((row) => row.key === key)) {
@@ -270,6 +315,21 @@ document.addEventListener('alpine:init', () => {
         },
         selectedWorkTypeLabel() {
             return this.matrix.work_types.find((row) => row.key === this.selectedWorkType)?.label || 'Work type';
+        },
+        selectedWorkTypeMeta() {
+            return this.matrix.work_types.find((row) => row.key === this.selectedWorkType) || null;
+        },
+        async archiveSelectedWorkType() {
+            const meta = this.selectedWorkTypeMeta();
+            if (!meta?.can_archive) return;
+            if (!window.confirm('Archive “' + meta.label + '”? It leaves new selections but keeps historical labor lines.')) return;
+            await this.request(this.matrix.routes.work_type_archive, 'POST', { work_type: meta.key });
+        },
+        async deleteSelectedWorkType() {
+            const meta = this.selectedWorkTypeMeta();
+            if (!meta?.can_archive) return;
+            if (!window.confirm('Delete “' + meta.label + '” only if it was never used on a repair order or template?')) return;
+            await this.request(this.matrix.routes.work_type_destroy, 'POST', { work_type: meta.key });
         },
         cell(workType, billingClass) {
             this.matrix.cells[workType] ||= {};

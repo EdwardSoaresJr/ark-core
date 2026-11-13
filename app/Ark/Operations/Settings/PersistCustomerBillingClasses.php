@@ -118,9 +118,11 @@ final class PersistCustomerBillingClasses
                 'document_show_part_brand' => false,
                 'document_show_vendor' => false,
                 'pill_color' => 'slate',
+                'is_active' => true,
             ], $attributes, [
                 'key' => $key,
                 'name' => $name,
+                'is_active' => true,
             ]);
             unset($rows[array_key_last($rows)]['labor_column_key']);
 
@@ -148,8 +150,34 @@ final class PersistCustomerBillingClasses
     {
         $settings = ShopSettings::current();
 
+        $classes = collect($settings->storedCustomerTypeRows())
+            ->map(function (array $row): array {
+                $row['is_active'] = (bool) ($row['is_active'] ?? true);
+                $row['is_labor_linked'] = CustomerBillingClassLifecycle::isLaborLinked($row);
+                $row['is_customer_only'] = ! $row['is_labor_linked'];
+
+                return $row;
+            })
+            ->values()
+            ->all();
+
+        $laborOnlyColumns = collect($settings->allCustomLaborBillingClasses())
+            ->filter(function (array $column) use ($classes): bool {
+                return ! collect($classes)->contains(
+                    fn (array $row): bool => ($row['labor_column_key'] ?? null) === $column['key'],
+                );
+            })
+            ->values()
+            ->all();
+
         return [
-            'classes' => $settings->storedCustomerTypeRows(),
+            'classes' => $classes,
+            // Manage modal: customer-only + archived customer classes (labor-linked actives edit via Class Settings gear).
+            'manage_classes' => collect($classes)
+                ->filter(fn (array $row): bool => $row['is_customer_only'] || ! $row['is_active'])
+                ->values()
+                ->all(),
+            'labor_only_columns' => $laborOnlyColumns,
             'parts_matrices' => collect($settings->partsMatrices())
                 ->map(fn (array $matrix): array => [
                     'key' => $matrix['key'],
@@ -166,6 +194,14 @@ final class PersistCustomerBillingClasses
                 ->values()
                 ->all(),
             'commercial_pricing_profile_version' => (int) ($settings->commercial_pricing_profile_version ?? 1),
+            'routes' => [
+                'archive' => route('operations.settings.shop.customer-types.item.archive', ['classKey' => '__KEY__']),
+                'restore' => route('operations.settings.shop.customer-types.item.restore', ['classKey' => '__KEY__']),
+                'destroy' => route('operations.settings.shop.customer-types.item.destroy', ['classKey' => '__KEY__']),
+                'labor_column_archive' => route('operations.settings.shop.labor-matrix.billing-classes.archive'),
+                'labor_column_restore' => route('operations.settings.shop.labor-matrix.billing-classes.restore'),
+                'labor_column_destroy' => route('operations.settings.shop.labor-matrix.billing-classes.destroy'),
+            ],
         ];
     }
 

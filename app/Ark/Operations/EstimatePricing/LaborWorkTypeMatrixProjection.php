@@ -33,9 +33,14 @@ final class LaborWorkTypeMatrixProjection
         $workTypeSettings = [];
 
         foreach (LaborWorkTypeMatrix::workTypes($settings) as $workType) {
-            $workTypes[] = $workType;
-            $cells[$workType['key']] = [];
             $category = $categoriesByKey->get($workType['labor_category_key']) ?? null;
+            $workTypes[] = [
+                ...$workType,
+                'is_default' => (bool) ($category['is_default'] ?? $workType['is_default'] ?? false),
+                'is_active' => (bool) ($category['is_active'] ?? true),
+                'can_archive' => ! (bool) ($category['is_default'] ?? $workType['is_default'] ?? false),
+            ];
+            $cells[$workType['key']] = [];
             $fallbackRounding = LaborRoundingRule::tryFrom((string) ($category['rounding_rule'] ?? ''))
                 ?? LaborRoundingRule::Quarter;
             $workTypeSettings[$workType['key']] = [
@@ -104,6 +109,7 @@ final class LaborWorkTypeMatrixProjection
                 'name' => $row['name'],
                 'labor_column_key' => $row['labor_column_key'] ?? null,
                 'customer_only' => CustomerBillingClassIdentity::isCustomerOnlyClassKey($row['key'] ?? null),
+                'is_active' => (bool) ($row['is_active'] ?? true),
             ])
             ->values()
             ->all();
@@ -130,7 +136,13 @@ final class LaborWorkTypeMatrixProjection
                 'rounding' => route('operations.settings.shop.labor-matrix.rounding'),
                 'work_type_rounding' => route('operations.settings.shop.labor-matrix.work-type-rounding'),
                 'work_type' => route('operations.settings.shop.labor-matrix.work-types.store'),
+                'work_type_archive' => route('operations.settings.shop.labor-matrix.work-types.archive'),
+                'work_type_restore' => route('operations.settings.shop.labor-matrix.work-types.restore'),
+                'work_type_destroy' => route('operations.settings.shop.labor-matrix.work-types.destroy'),
                 'billing_class' => route('operations.settings.shop.labor-matrix.billing-classes.store'),
+                'billing_class_archive' => route('operations.settings.shop.labor-matrix.billing-classes.archive'),
+                'billing_class_restore' => route('operations.settings.shop.labor-matrix.billing-classes.restore'),
+                'billing_class_destroy' => route('operations.settings.shop.labor-matrix.billing-classes.destroy'),
                 'customer_types_show' => route('operations.settings.shop.customer-types.show'),
                 'customer_type_update' => route('operations.settings.shop.customer-types.item.update', ['classKey' => '__KEY__']),
                 'customer_types_store' => route('operations.settings.shop.customer-types.store'),

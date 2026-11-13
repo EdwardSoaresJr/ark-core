@@ -678,6 +678,45 @@ class ShopFinancialSettingsController
         ], 201);
     }
 
+    public function archiveCustomerTypeItem(
+        string $classKey,
+        CustomerBillingClassLifecycle $lifecycle,
+    ): \Illuminate\Http\JsonResponse {
+        $saved = $lifecycle->archive(ShopSettings::current(), $classKey);
+
+        return response()->json([
+            'class' => $saved,
+            'catalog' => $this->persistCustomerBillingClasses->catalog(ShopSettings::current()),
+            'status' => 'Billing class archived.',
+        ]);
+    }
+
+    public function restoreCustomerTypeItem(
+        string $classKey,
+        CustomerBillingClassLifecycle $lifecycle,
+    ): \Illuminate\Http\JsonResponse {
+        $saved = $lifecycle->restore(ShopSettings::current(), $classKey);
+
+        return response()->json([
+            'class' => $saved,
+            'catalog' => $this->persistCustomerBillingClasses->catalog(ShopSettings::current()),
+            'status' => 'Billing class restored.',
+        ]);
+    }
+
+    public function destroyCustomerTypeItem(
+        string $classKey,
+        CustomerBillingClassLifecycle $lifecycle,
+    ): \Illuminate\Http\JsonResponse {
+        $result = $lifecycle->delete(ShopSettings::current(), $classKey);
+
+        return response()->json([
+            ...$result,
+            'catalog' => $this->persistCustomerBillingClasses->catalog(ShopSettings::current()),
+            'status' => 'Billing class deleted.',
+        ]);
+    }
+
     /**
      * @return array<string, array<int, mixed>>
      */
@@ -723,6 +762,7 @@ class ShopFinancialSettingsController
             'document_show_part_brand' => ['nullable', 'boolean'],
             'document_show_vendor' => ['nullable', 'boolean'],
             'document_presentation_profile' => ['nullable', Rule::enum(CustomerPartPresentationProfile::class)],
+            'is_active' => ['nullable', 'boolean'],
             'pill_color' => ['nullable', 'string', Rule::in(\App\Ark\Operations\Settings\BillingClassPillColor::keys())],
             'concern_billing_posture' => ['nullable', 'string', Rule::in(array_map(
                 fn (ConcernBillingPosture $posture): string => $posture->value,

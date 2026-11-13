@@ -15,7 +15,7 @@ class CustomerStoreController
 {
     public function __invoke(Request $request): RedirectResponse
     {
-        $customerTypes = collect(ShopSettings::current()->customerTypeRows())
+        $customerTypes = collect(ShopSettings::current()->activeCustomerTypeRows())
             ->pluck('name')
             ->all();
 

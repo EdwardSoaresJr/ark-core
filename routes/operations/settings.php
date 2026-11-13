@@ -63,8 +63,20 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
         ->name('operations.settings.shop.labor-matrix.rounding');
     Route::post('/app/settings/shop/labor-matrix/work-types', [LaborMatrixSettingsController::class, 'storeWorkType'])
         ->name('operations.settings.shop.labor-matrix.work-types.store');
+    Route::post('/app/settings/shop/labor-matrix/work-types/archive', [LaborMatrixSettingsController::class, 'archiveWorkType'])
+        ->name('operations.settings.shop.labor-matrix.work-types.archive');
+    Route::post('/app/settings/shop/labor-matrix/work-types/restore', [LaborMatrixSettingsController::class, 'restoreWorkType'])
+        ->name('operations.settings.shop.labor-matrix.work-types.restore');
+    Route::post('/app/settings/shop/labor-matrix/work-types/destroy', [LaborMatrixSettingsController::class, 'destroyWorkType'])
+        ->name('operations.settings.shop.labor-matrix.work-types.destroy');
     Route::post('/app/settings/shop/labor-matrix/billing-classes', [LaborMatrixSettingsController::class, 'storeBillingClass'])
         ->name('operations.settings.shop.labor-matrix.billing-classes.store');
+    Route::post('/app/settings/shop/labor-matrix/billing-classes/archive', [LaborMatrixSettingsController::class, 'archiveBillingClass'])
+        ->name('operations.settings.shop.labor-matrix.billing-classes.archive');
+    Route::post('/app/settings/shop/labor-matrix/billing-classes/restore', [LaborMatrixSettingsController::class, 'restoreBillingClass'])
+        ->name('operations.settings.shop.labor-matrix.billing-classes.restore');
+    Route::post('/app/settings/shop/labor-matrix/billing-classes/destroy', [LaborMatrixSettingsController::class, 'destroyBillingClass'])
+        ->name('operations.settings.shop.labor-matrix.billing-classes.destroy');
 
     Route::patch('/app/settings/shop/labor-policies', [LaborPolicySettingsController::class, 'update'])
         ->name('operations.settings.shop.labor-policies.update');
@@ -95,6 +107,15 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/customer-types/{classKey}', [ShopFinancialSettingsController::class, 'updateCustomerTypeItem'])
         ->where('classKey', '[A-Za-z][A-Za-z0-9_]{0,47}')
         ->name('operations.settings.shop.customer-types.item.update');
+    Route::post('/app/settings/shop/customer-types/{classKey}/archive', [ShopFinancialSettingsController::class, 'archiveCustomerTypeItem'])
+        ->where('classKey', '[A-Za-z][A-Za-z0-9_]{0,47}')
+        ->name('operations.settings.shop.customer-types.item.archive');
+    Route::post('/app/settings/shop/customer-types/{classKey}/restore', [ShopFinancialSettingsController::class, 'restoreCustomerTypeItem'])
+        ->where('classKey', '[A-Za-z][A-Za-z0-9_]{0,47}')
+        ->name('operations.settings.shop.customer-types.item.restore');
+    Route::delete('/app/settings/shop/customer-types/{classKey}', [ShopFinancialSettingsController::class, 'destroyCustomerTypeItem'])
+        ->where('classKey', '[A-Za-z][A-Za-z0-9_]{0,47}')
+        ->name('operations.settings.shop.customer-types.item.destroy');
 
     Route::patch('/app/settings/shop/estimates', [ShopOperationsSettingsController::class, 'updateEstimates'])
         ->name('operations.settings.shop.estimates.update');

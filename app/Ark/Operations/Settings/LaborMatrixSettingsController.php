@@ -30,6 +30,8 @@ class LaborMatrixSettingsController
         private readonly CreateLaborBillingClassAction $createLaborBillingClass,
         private readonly LaborWorkTypeMatrixProjection $projection,
         private readonly LaborPolicyResolver $laborPolicyResolver,
+        private readonly LaborWorkTypeLifecycle $workTypeLifecycle,
+        private readonly CustomLaborBillingClassLifecycle $laborBillingClassLifecycle,
     ) {}
 
     public function show(): JsonResponse
@@ -260,6 +262,92 @@ class LaborMatrixSettingsController
             'status' => 'saved',
             'applies_to' => 'new_repair_orders_only',
             'billing_class' => $created,
+            'matrix' => $this->projection->build(),
+        ]);
+    }
+
+    public function archiveWorkType(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'work_type' => ['required', 'string', 'max:48'],
+        ]);
+
+        $this->workTypeLifecycle->archive(ShopSettings::current(), $data['work_type']);
+
+        return response()->json([
+            'status' => 'archived',
+            'matrix' => $this->projection->build(),
+        ]);
+    }
+
+    public function restoreWorkType(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'work_type' => ['required', 'string', 'max:48'],
+        ]);
+
+        $this->workTypeLifecycle->restore(ShopSettings::current(), $data['work_type']);
+
+        return response()->json([
+            'status' => 'restored',
+            'matrix' => $this->projection->build(),
+        ]);
+    }
+
+    public function destroyWorkType(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'work_type' => ['required', 'string', 'max:48'],
+        ]);
+
+        $result = $this->workTypeLifecycle->delete(ShopSettings::current(), $data['work_type']);
+
+        return response()->json([
+            'status' => 'deleted',
+            ...$result,
+            'matrix' => $this->projection->build(),
+        ]);
+    }
+
+    public function archiveBillingClass(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'billing_class' => ['required', 'string', 'max:48'],
+        ]);
+
+        $this->laborBillingClassLifecycle->archive(ShopSettings::current(), $data['billing_class']);
+
+        return response()->json([
+            'status' => 'archived',
+            'matrix' => $this->projection->build(),
+        ]);
+    }
+
+    public function restoreBillingClass(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'billing_class' => ['required', 'string', 'max:48'],
+        ]);
+
+        $this->laborBillingClassLifecycle->restore(ShopSettings::current(), $data['billing_class']);
+
+        return response()->json([
+            'status' => 'restored',
+            'matrix' => $this->projection->build(),
+        ]);
+    }
+
+    public function destroyBillingClass(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'billing_class' => ['required', 'string', 'max:48'],
+        ]);
+
+        $result = $this->laborBillingClassLifecycle->delete(ShopSettings::current(), $data['billing_class']);
+
+        return response()->json([
+            'status' => 'deleted',
+            ...$result,
             'matrix' => $this->projection->build(),
         ]);
     }

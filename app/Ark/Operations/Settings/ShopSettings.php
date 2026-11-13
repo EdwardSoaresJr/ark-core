@@ -884,6 +884,17 @@ TEXT;
      */
     public function customLaborBillingClasses(): array
     {
+        return collect($this->allCustomLaborBillingClasses())
+            ->filter(fn (array $row): bool => $row['is_active'])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{key: string, label: string, base_posture: string, is_active: bool}>
+     */
+    public function allCustomLaborBillingClasses(): array
+    {
         return collect(is_array($this->custom_labor_billing_classes) ? $this->custom_labor_billing_classes : [])
             ->filter(fn ($row): bool => is_array($row) && filled($row['key'] ?? null) && filled($row['label'] ?? null))
             ->map(fn (array $row): array => [
@@ -892,14 +903,26 @@ TEXT;
                 'base_posture' => (string) ($row['base_posture'] ?? ConcernBillingPosture::CustomerPay->value),
                 'is_active' => (bool) ($row['is_active'] ?? true),
             ])
-            ->filter(fn (array $row): bool => $row['is_active'])
             ->values()
             ->all();
     }
 
     public function customLaborBillingClass(string $key): ?array
     {
-        return collect($this->customLaborBillingClasses())->firstWhere('key', $key);
+        return collect($this->allCustomLaborBillingClasses())->firstWhere('key', $key);
+    }
+
+    /**
+     * Customer Billing Classes available for new customer selection.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function activeCustomerTypeRows(): array
+    {
+        return collect($this->customerTypeRows())
+            ->filter(fn (array $row): bool => (bool) ($row['is_active'] ?? true))
+            ->values()
+            ->all();
     }
 
     /**
@@ -1676,6 +1699,9 @@ TEXT;
                     'document_presentation_profile' => filled($row['document_presentation_profile'] ?? null)
                         ? $row['document_presentation_profile']
                         : ($existing['document_presentation_profile'] ?? null),
+                    'is_active' => array_key_exists('is_active', $row)
+                        ? $row['is_active']
+                        : ($existing['is_active'] ?? true),
                     'shop_fees_enabled' => (bool) ($row['shop_fees_enabled'] ?? $existing['shop_fees_enabled'] ?? true),
                     'shop_fee_rate_override' => array_key_exists('shop_fee_rate_override', $row)
                         ? $row['shop_fee_rate_override']
@@ -1921,6 +1947,9 @@ TEXT;
                     : null),
             'default_parts_matrix_key' => $row['default_parts_matrix_key'] ?? $defaults['default_parts_matrix_key'] ?? null,
             'pill_color' => BillingClassPillColor::resolve($row['pill_color'] ?? null, $resolvedName),
+            'is_active' => array_key_exists('is_active', $row)
+                ? (bool) $row['is_active']
+                : (array_key_exists('is_active', $defaults) ? (bool) $defaults['is_active'] : true),
             ...($concernBillingPosture !== null ? ['concern_billing_posture' => $concernBillingPosture->value] : []),
         ];
 
