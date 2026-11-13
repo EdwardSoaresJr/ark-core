@@ -7,7 +7,7 @@
 @endphp
 
 @if ($parts)
-    {{-- VIN click copies; abc icon opens character readback (desktop popover / mobile sheet). --}}
+    {{-- VIN click copies; abc icon opens readback (desktop hover + click popover / mobile sheet). --}}
     <span
         {{ $attributes->class(['d-inline-flex align-items-center gap-1']) }}
         x-data="arkVinDisplay(@js($parts['vin']))"
@@ -31,6 +31,10 @@
             x-ref="readback"
             class="btn btn-sm btn-ghost-secondary btn-icon p-0 ops-vin-readback-btn"
             @click.stop="toggleReadback()"
+            @mouseenter="onReadbackHoverEnter()"
+            @mouseleave="onReadbackHoverLeave()"
+            @focus="onReadbackHoverEnter()"
+            @blur="onReadbackHoverLeave()"
             :aria-expanded="readbackOpen ? 'true' : 'false'"
             aria-controls="{{ $readbackPanelId }}"
             aria-haspopup="dialog"
@@ -63,6 +67,8 @@
                     aria-label="VIN readback"
                     tabindex="-1"
                     data-vin-phonetic-readback
+                    @mouseenter="onReadbackHoverEnter()"
+                    @mouseleave="onReadbackHoverLeave()"
                     @keydown.escape.stop="closeReadback()"
                 >
                     <div class="d-flex align-items-start justify-content-between gap-2 mb-2">

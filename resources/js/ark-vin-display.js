@@ -43,11 +43,13 @@ export const arkVinDisplay = (vin) => ({
     vin: String(vin || '').toUpperCase().trim(),
     copied: false,
     readbackOpen: false,
+    readbackPinned: false,
     sheetMode: false,
     tooltipStyle: '',
     scrollHandler: null,
     outsideHandler: null,
     escapeHandler: null,
+    hoverCloseTimer: null,
 
     init() {
         this.sheetMode = window.matchMedia('(max-width: 767.98px)').matches;
@@ -62,8 +64,46 @@ export const arkVinDisplay = (vin) => ({
     },
 
     destroy() {
+        this.clearHoverClose();
         this.closeReadback();
         this._mq?.removeEventListener?.('change', this._mqListener);
+    },
+
+    isDesktopReadback() {
+        return ! window.matchMedia('(max-width: 767.98px)').matches;
+    },
+
+    clearHoverClose() {
+        if (this.hoverCloseTimer) {
+            clearTimeout(this.hoverCloseTimer);
+            this.hoverCloseTimer = null;
+        }
+    },
+
+    onReadbackHoverEnter() {
+        if (! this.isDesktopReadback()) {
+            return;
+        }
+
+        this.clearHoverClose();
+        if (! this.readbackOpen) {
+            this.openReadback({ pinned: false });
+        }
+    },
+
+    onReadbackHoverLeave() {
+        if (! this.isDesktopReadback() || this.readbackPinned) {
+            return;
+        }
+
+        this.clearHoverClose();
+        // Gap between trigger and body-teleported panel — close only after leave settles.
+        this.hoverCloseTimer = setTimeout(() => {
+            this.hoverCloseTimer = null;
+            if (! this.readbackPinned) {
+                this.closeReadback();
+            }
+        }, 120);
     },
 
     get suffixLength() {
@@ -104,28 +144,35 @@ export const arkVinDisplay = (vin) => ({
         return this.phoneticCells.filter((_, index) => index >= 9);
     },
 
-    openReadback() {
+    openReadback({ pinned = true } = {}) {
+        this.clearHoverClose();
         this.sheetMode = window.matchMedia('(max-width: 767.98px)').matches;
         this.readbackOpen = true;
+        this.readbackPinned = pinned;
         this.$nextTick(() => {
             this.positionReadback();
-            this.$refs.panel?.focus?.({ preventScroll: true });
+            if (pinned) {
+                this.$refs.panel?.focus?.({ preventScroll: true });
+            }
         });
         this.attachDismiss();
         this.attachScroll();
     },
 
     toggleReadback() {
-        if (this.readbackOpen) {
+        if (this.readbackOpen && this.readbackPinned) {
             this.closeReadback();
             return;
         }
 
-        this.openReadback();
+        // Click pins the card open even if hover already revealed it.
+        this.openReadback({ pinned: true });
     },
 
     closeReadback() {
+        this.clearHoverClose();
         this.readbackOpen = false;
+        this.readbackPinned = false;
         this.detachDismiss();
         this.detachScroll();
     },

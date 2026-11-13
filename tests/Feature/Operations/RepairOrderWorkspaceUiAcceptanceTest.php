@@ -189,6 +189,7 @@ test('estimate context opens from KPI cards and VIN readback teleports above wor
         ->and($html)->toContain('title="VIN readback"')
         ->and($html)->toContain('aria-label="VIN readback"')
         ->and($html)->toContain('toggleReadback()')
+        ->and($html)->toContain('onReadbackHoverEnter()')
         ->and($html)->not->toContain('ops-vin-copy-btn')
         ->and($html)->not->toContain('title="Copy VIN"')
         ->and($html)->not->toContain('title="Phone readback"')

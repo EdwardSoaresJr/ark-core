@@ -30,6 +30,10 @@
             x-ref="readback"
             class="ops-vin-readback-btn"
             @click.stop="toggleReadback()"
+            @mouseenter="onReadbackHoverEnter()"
+            @mouseleave="onReadbackHoverLeave()"
+            @focus="onReadbackHoverEnter()"
+            @blur="onReadbackHoverLeave()"
             :aria-expanded="readbackOpen ? 'true' : 'false'"
             aria-controls="{{ $readbackPanelId }}"
             aria-haspopup="dialog"
@@ -62,6 +66,8 @@
                     aria-label="VIN readback"
                     tabindex="-1"
                     data-vin-phonetic-readback
+                    @mouseenter="onReadbackHoverEnter()"
+                    @mouseleave="onReadbackHoverLeave()"
                     @keydown.escape.stop="closeReadback()"
                 >
                     <div class="ops-vin-phonetic-head d-flex align-items-start justify-content-between gap-2">
