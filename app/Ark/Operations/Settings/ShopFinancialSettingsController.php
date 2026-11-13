@@ -693,6 +693,9 @@ class ShopFinancialSettingsController
             'customer_types.*.shop_fee_rate_override' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'customer_types.*.discount_type' => ['nullable', 'string', Rule::in(['none', 'labor', 'parts', 'both'])],
             'customer_types.*.discount_amount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'customer_types.*.document_show_part_number' => ['nullable', 'boolean'],
+            'customer_types.*.document_show_part_brand' => ['nullable', 'boolean'],
+            'customer_types.*.document_show_vendor' => ['nullable', 'boolean'],
             'customer_types.*.document_presentation_profile' => ['nullable', Rule::enum(CustomerPartPresentationProfile::class)],
             'customer_types.*.pill_color' => ['nullable', 'string', Rule::in(\App\Ark\Operations\Settings\BillingClassPillColor::keys())],
             'customer_types.*.concern_billing_posture' => ['nullable', 'string', Rule::in(array_map(
@@ -716,6 +719,9 @@ class ShopFinancialSettingsController
             'shop_fee_rate_override' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'discount_type' => ['nullable', 'string', Rule::in(['none', 'labor', 'parts', 'both'])],
             'discount_amount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'document_show_part_number' => ['nullable', 'boolean'],
+            'document_show_part_brand' => ['nullable', 'boolean'],
+            'document_show_vendor' => ['nullable', 'boolean'],
             'document_presentation_profile' => ['nullable', Rule::enum(CustomerPartPresentationProfile::class)],
             'pill_color' => ['nullable', 'string', Rule::in(\App\Ark\Operations\Settings\BillingClassPillColor::keys())],
             'concern_billing_posture' => ['nullable', 'string', Rule::in(array_map(

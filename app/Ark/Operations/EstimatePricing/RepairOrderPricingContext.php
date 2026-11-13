@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\EstimatePricing;
 
+use App\Ark\Operations\Parts\CustomerDocumentPresentation;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -119,17 +120,28 @@ final class RepairOrderPricingContext
         return $this->commercial->shopFeePolicyForCustomerType($customerType);
     }
 
-    public function documentPresentationProfileFor(?string $customerType): CustomerPartPresentationProfile
+    public function documentPresentationFor(?string $customerType): CustomerDocumentPresentation
     {
         if ($this->commercial !== null) {
-            return $this->commercial->documentPresentationProfileFor($customerType);
+            return $this->commercial->documentPresentationFor($customerType);
         }
 
         if (! $this->allowsLiveCommercialFallback) {
-            return CustomerPartPresentationProfile::Retail;
+            return new CustomerDocumentPresentation;
         }
 
-        return $this->shopSettings->documentPresentationProfileFor($customerType);
+        return $this->shopSettings->documentPresentationFor($customerType);
+    }
+
+    public function documentPresentationProfileFor(?string $customerType): CustomerPartPresentationProfile
+    {
+        $presentation = $this->documentPresentationFor($customerType);
+
+        return match (true) {
+            $presentation->showPartNumber && $presentation->showVendor => CustomerPartPresentationProfile::Warranty,
+            $presentation->showPartNumber && ! $presentation->showVendor => CustomerPartPresentationProfile::RepairPal,
+            default => CustomerPartPresentationProfile::Retail,
+        };
     }
 
     /**

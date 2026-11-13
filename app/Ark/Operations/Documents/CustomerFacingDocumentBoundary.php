@@ -133,10 +133,11 @@ final class CustomerFacingDocumentBoundary
 
             unset($concern['notes']);
 
+            $presentation = $this->partPresentationProfileResolver->forConcern($snapshot, $concern);
             $policy = $this->partPresentationPolicyResolver->forConcern($snapshot, $concern);
+            $concern['customer_part_presentation'] = $presentation->toFrozen();
             $concern['customer_part_presentation_profile'] = $this->partPresentationProfileResolver
-                ->forConcern($snapshot, $concern)
-                ->value;
+                ->legacyProfileLabel($presentation);
             $concern['customer_part_description_mode'] = $policy->descriptionMode->value;
 
             $lines = $concern['lines'] ?? null;

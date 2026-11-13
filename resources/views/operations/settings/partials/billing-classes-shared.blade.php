@@ -183,12 +183,19 @@
 
                     <div class="mb-2">
                         <div class="subheader mb-2">Customer Documents</div>
-                        <label class="form-label mb-1">Customer document presentation</label>
-                        <select class="form-select form-select-sm" x-model="draft.document_presentation_profile">
-                            <template x-for="profile in catalog.presentation_profiles" :key="profile.value">
-                                <option :value="profile.value" x-text="profile.label + ' - ' + profile.help"></option>
-                            </template>
-                        </select>
+                        <p class="form-hint mb-2">Part description is always shown on customer estimates and invoices. Choose optional identifiers for this billing class only.</p>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="checkbox" id="billing-doc-part-number" x-model="draft.document_show_part_number">
+                            <label class="form-check-label" for="billing-doc-part-number">Show part number</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="checkbox" id="billing-doc-part-brand" x-model="draft.document_show_part_brand">
+                            <label class="form-check-label" for="billing-doc-part-brand">Show part brand</label>
+                        </div>
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="billing-doc-vendor" x-model="draft.document_show_vendor">
+                            <label class="form-check-label" for="billing-doc-vendor">Show vendor/supplier</label>
+                        </div>
                     </div>
 
                     <p class="form-hint mb-0 mt-3" x-show="draft.labor_column_key" :title="'Key: ' + draft.labor_column_key">
@@ -275,7 +282,9 @@ document.addEventListener('alpine:init', () => {
                 key: null,
                 name: '',
                 pill_color: 'slate',
-                document_presentation_profile: 'retail',
+                document_show_part_number: false,
+                document_show_part_brand: false,
+                document_show_vendor: false,
                 shop_fees_enabled: true,
                 shop_fee_rate_override: null,
                 default_parts_matrix_key: '',
@@ -316,7 +325,9 @@ document.addEventListener('alpine:init', () => {
                 key: row.key,
                 name: row.name,
                 pill_color: row.pill_color || 'slate',
-                document_presentation_profile: row.document_presentation_profile || 'retail',
+                document_show_part_number: !!row.document_show_part_number,
+                document_show_part_brand: !!row.document_show_part_brand,
+                document_show_vendor: !!row.document_show_vendor,
                 shop_fees_enabled: !!row.shop_fees_enabled,
                 shop_fee_rate_override: row.shop_fee_rate_override,
                 default_parts_matrix_key: row.default_parts_matrix_key || '',
@@ -353,7 +364,9 @@ document.addEventListener('alpine:init', () => {
                 key: draft.key || undefined,
                 name: draft.name,
                 pill_color: draft.pill_color,
-                document_presentation_profile: draft.document_presentation_profile,
+                document_show_part_number: !!draft.document_show_part_number,
+                document_show_part_brand: !!draft.document_show_part_brand,
+                document_show_vendor: !!draft.document_show_vendor,
                 shop_fees_enabled: warranty ? false : !!draft.shop_fees_enabled,
                 shop_fee_rate_override: warranty || !draft.shop_fees_enabled ? null : (draft.shop_fee_rate_override || null),
                 default_parts_matrix_key: draft.default_parts_matrix_key || null,

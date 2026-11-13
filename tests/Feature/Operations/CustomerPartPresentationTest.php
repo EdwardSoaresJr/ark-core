@@ -14,6 +14,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderWorkGroup;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Parts\CustomerDocumentPresentation;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfileResolver;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -22,14 +23,16 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\ShopSettingsSeeder;
 
-test('shop settings can remap billing class customer document presentation profile', function () {
+test('shop settings can remap billing class customer document presentation checkboxes', function () {
     $this->seed([ArkAuthorizationSeeder::class, ShopSettingsSeeder::class]);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     $rows = collect(ShopSettings::current()->customerTypeRows())
         ->map(fn (array $row): array => [
             'name' => $row['name'],
-            'document_presentation_profile' => $row['name'] === 'Fleet' ? 'warranty' : ($row['document_presentation_profile'] ?? 'retail'),
+            'document_show_part_number' => $row['name'] === 'Fleet',
+            'document_show_part_brand' => false,
+            'document_show_vendor' => $row['name'] === 'Fleet',
             'shop_fees_enabled' => $row['shop_fees_enabled'] ? '1' : '0',
             'shop_fee_rate_override' => $row['shop_fee_rate_override'],
             'discount_type' => $row['discount_type'],
@@ -42,39 +45,75 @@ test('shop settings can remap billing class customer document presentation profi
         'customer_types' => $rows,
     ])->assertRedirect(route('operations.settings.shop.edit'));
 
-    expect(ShopSettings::current()->documentPresentationProfileFor('Fleet'))
+    $fleet = ShopSettings::current()->documentPresentationFor('Fleet');
+
+    expect($fleet->showPartNumber)->toBeTrue()
+        ->and($fleet->showVendor)->toBeTrue()
+        ->and(ShopSettings::current()->documentPresentationProfileFor('Fleet'))
         ->toBe(CustomerPartPresentationProfile::Warranty);
 });
 
-test('billing class defaults map to customer part presentation profiles', function () {
+test('billing class defaults migrate legacy profiles into checkbox combinations', function () {
     $this->seed(ShopSettingsSeeder::class);
 
-    expect(ShopSettings::current()->documentPresentationProfileFor('Retail'))
-        ->toBe(CustomerPartPresentationProfile::Retail)
-        ->and(ShopSettings::current()->documentPresentationProfileFor('Warranty'))
-        ->toBe(CustomerPartPresentationProfile::Warranty)
-        ->and(ShopSettings::current()->documentPresentationProfileFor('RepairPal'))
-        ->toBe(CustomerPartPresentationProfile::RepairPal)
-        ->and(ShopSettings::current()->documentPresentationProfileFor('Fleet'))
-        ->toBe(CustomerPartPresentationProfile::Fleet)
-        ->and(ShopSettings::current()->documentPresentationProfileFor('Internal'))
-        ->toBe(CustomerPartPresentationProfile::Retail);
+    expect(ShopSettings::current()->documentPresentationFor('Retail')->toRow())
+        ->toMatchArray(['document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false])
+        ->and(ShopSettings::current()->documentPresentationFor('Warranty')->toRow())
+        ->toMatchArray(['document_show_part_number' => true, 'document_show_part_brand' => false, 'document_show_vendor' => true])
+        ->and(ShopSettings::current()->documentPresentationFor('RepairPal')->toRow())
+        ->toMatchArray(['document_show_part_number' => true, 'document_show_part_brand' => false, 'document_show_vendor' => false])
+        ->and(ShopSettings::current()->documentPresentationFor('Fleet')->toRow())
+        ->toMatchArray(['document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false])
+        ->and(ShopSettings::current()->documentPresentationFor('Internal')->toRow())
+        ->toMatchArray(['document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false]);
 });
 
-test('concern billing posture overrides customer billing class presentation profile', function () {
-    $resolver = new CustomerPartPresentationProfileResolver;
+test('concern billing posture uses matching billing class checkboxes not hard-coded profiles', function () {
+    $this->seed(ShopSettingsSeeder::class);
 
+    $settings = ShopSettings::current();
+    $settings->update([
+        'customer_types' => collect($settings->customerTypeRows())
+            ->map(function (array $row): array {
+                if ($row['name'] === 'Warranty') {
+                    return [
+                        ...$row,
+                        'document_show_part_number' => true,
+                        'document_show_part_brand' => true,
+                        'document_show_vendor' => false,
+                    ];
+                }
+
+                return $row;
+            })
+            ->all(),
+    ]);
+    ShopSettings::forgetCurrent();
+
+    $resolver = new CustomerPartPresentationProfileResolver;
     $snapshot = [
         'customer' => ['customer_type' => 'Retail'],
         'concerns' => [],
     ];
 
-    expect($resolver->forConcern($snapshot, ['billing_posture' => 'warranty_other']))
-        ->toBe(CustomerPartPresentationProfile::Warranty)
-        ->and($resolver->forConcern($snapshot, ['billing_posture' => 'repairpal']))
-        ->toBe(CustomerPartPresentationProfile::RepairPal)
-        ->and($resolver->forConcern($snapshot, ['billing_posture' => 'default']))
-        ->toBe(CustomerPartPresentationProfile::Retail);
+    expect($resolver->forConcern($snapshot, ['billing_posture' => 'warranty_other'])->toRow())
+        ->toMatchArray([
+            'document_show_part_number' => true,
+            'document_show_part_brand' => true,
+            'document_show_vendor' => false,
+        ])
+        ->and($resolver->forConcern($snapshot, ['billing_posture' => 'repairpal'])->toRow())
+        ->toMatchArray([
+            'document_show_part_number' => true,
+            'document_show_part_brand' => false,
+            'document_show_vendor' => false,
+        ])
+        ->and($resolver->forConcern($snapshot, ['billing_posture' => 'default'])->toRow())
+        ->toMatchArray([
+            'document_show_part_number' => false,
+            'document_show_part_brand' => false,
+            'document_show_vendor' => false,
+        ]);
 });
 
 test('customer facing boundary derives customer part descriptions and strips inventory metadata', function () {
@@ -325,7 +364,12 @@ test('warranty presentation profile shows audit part number and vendor without m
 
     $line = $presented['concerns'][0]['lines'][0];
 
-    expect($presented['concerns'][0]['customer_part_presentation_profile'])->toBe('warranty')
+    expect($presented['concerns'][0]['customer_part_presentation'])->toMatchArray([
+        'show_part_number' => true,
+        'show_part_brand' => false,
+        'show_vendor' => true,
+    ])
+        ->and($presented['concerns'][0]['customer_part_presentation_profile'])->toBe('warranty')
         ->and($line['description'])->toBe('Gates 43527 Water Pump')
         ->and($line['customer_part_description'])->toBe('Water Pump')
         ->and($line['customer_part_number'])->toBe('Gates 43527')
@@ -367,13 +411,39 @@ test('repairpal presentation profile shows part number but not vendor', function
 
     $line = $presented['concerns'][0]['lines'][0];
 
-    expect($presented['concerns'][0]['customer_part_presentation_profile'])->toBe('repairpal')
+    expect($presented['concerns'][0]['customer_part_presentation'])->toMatchArray([
+        'show_part_number' => true,
+        'show_part_brand' => false,
+        'show_vendor' => false,
+    ])
+        ->and($presented['concerns'][0]['customer_part_presentation_profile'])->toBe('repairpal')
         ->and($line['customer_part_description'])->toBe('Water Pump')
         ->and($line['customer_part_number'])->toBe('Gates 43527')
         ->not->toHaveKey('customer_part_vendor');
 });
 
-test('concern billing posture can override retail customer to warranty presentation', function () {
+test('concern billing posture follows warranty class checkboxes not hard-coded warranty profile', function () {
+    $this->seed(ShopSettingsSeeder::class);
+
+    $settings = ShopSettings::current();
+    $settings->update([
+        'customer_types' => collect($settings->customerTypeRows())
+            ->map(function (array $row): array {
+                if ($row['name'] === 'Warranty') {
+                    return [
+                        ...$row,
+                        'document_show_part_number' => true,
+                        'document_show_part_brand' => false,
+                        'document_show_vendor' => false,
+                    ];
+                }
+
+                return $row;
+            })
+            ->all(),
+    ]);
+    ShopSettings::forgetCurrent();
+
     [$repairOrder, $concern] = repairOrderForCustomerPartPresentation(customerType: 'Retail');
     $concern->update(['billing_posture' => ConcernBillingPosture::WarrantyOther]);
 
@@ -396,8 +466,72 @@ test('concern billing posture can override retail customer to warranty presentat
         app(EstimateSnapshotBuilder::class)->build($repairOrder->fresh(['customer', 'vehicle', 'concerns.lines'])),
     );
 
-    expect($presented['concerns'][0]['customer_part_presentation_profile'])->toBe('warranty')
-        ->and($presented['concerns'][0]['lines'][0]['customer_part_vendor'])->toBe('WorldPac');
+    expect($presented['concerns'][0]['customer_part_presentation'])->toMatchArray([
+        'show_part_number' => true,
+        'show_part_brand' => false,
+        'show_vendor' => false,
+    ])
+        ->and($presented['concerns'][0]['lines'][0]['customer_part_number'])->toBe('Gates 43527')
+        ->and($presented['concerns'][0]['lines'][0])->not->toHaveKey('customer_part_vendor');
+});
+
+test('custom billing class checkboxes independently control brand and vendor on customer documents', function () {
+    $this->seed([ArkAuthorizationSeeder::class, ShopSettingsSeeder::class]);
+
+    $settings = ShopSettings::current();
+    $settings->update([
+        'customer_types' => [
+            ...$settings->customerTypeRows(),
+            [
+                'key' => 'custom-audit',
+                'name' => 'Custom Audit',
+                'document_show_part_number' => true,
+                'document_show_part_brand' => true,
+                'document_show_vendor' => true,
+                'shop_fees_enabled' => true,
+                'discount_type' => 'none',
+            ],
+        ],
+    ]);
+    ShopSettings::forgetCurrent();
+
+    [$repairOrder, $concern] = repairOrderForCustomerPartPresentation(customerType: 'Custom Audit');
+
+    RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Part,
+        'description' => 'Gates 43527 Water Pump',
+        'vendor_name' => 'WorldPac',
+        'part_number' => '43527',
+        'quantity' => '1.00',
+        'unit_price_cents' => 18900,
+        'subtotal_cents' => 18900,
+        'total_cents' => 18900,
+    ]);
+
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
+
+    $presented = app(DocumentPdfPresenter::class)->prepareForCustomer(
+        app(EstimateSnapshotBuilder::class)->build($repairOrder->fresh(['customer', 'vehicle', 'concerns.lines'])),
+    );
+
+    $line = $presented['concerns'][0]['lines'][0];
+
+    expect($line['customer_part_brand'])->toBe('Gates')
+        ->and($line['customer_part_number'])->toBe('Gates 43527')
+        ->and($line['customer_part_vendor'])->toBe('WorldPac');
+});
+
+test('legacy profile-only rows migrate into equivalent checkbox combinations', function () {
+    expect(CustomerDocumentPresentation::fromStoredRow([
+        'name' => 'Fleet',
+        'document_presentation_profile' => 'warranty',
+    ])->toRow())->toMatchArray([
+        'document_show_part_number' => true,
+        'document_show_part_brand' => false,
+        'document_show_vendor' => true,
+    ]);
 });
 
 test('staff estimate document view keeps internal inventory descriptions', function () {

@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\EstimatePricing;
 
+use App\Ark\Operations\Parts\CustomerDocumentPresentation;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\Settings\ShopSettings;
 
@@ -138,14 +139,20 @@ final class CommercialPricingProfile
         ];
     }
 
+    public function documentPresentationFor(?string $customerType): CustomerDocumentPresentation
+    {
+        return CustomerDocumentPresentation::fromStoredRow($this->customerTypeFor($customerType));
+    }
+
     public function documentPresentationProfileFor(?string $customerType): CustomerPartPresentationProfile
     {
-        $row = $this->customerTypeFor($customerType);
+        $presentation = $this->documentPresentationFor($customerType);
 
-        return CustomerPartPresentationProfile::fromStored(
-            $row['document_presentation_profile']
-                ?? CustomerPartPresentationProfile::defaultForBillingClassName($row['name'] ?? null)->value,
-        );
+        return match (true) {
+            $presentation->showPartNumber && $presentation->showVendor => CustomerPartPresentationProfile::Warranty,
+            $presentation->showPartNumber && ! $presentation->showVendor => CustomerPartPresentationProfile::RepairPal,
+            default => CustomerPartPresentationProfile::Retail,
+        };
     }
 
     public function defaultPartsMatrixKeyFor(?string $customerType): ?string
@@ -245,6 +252,11 @@ final class CommercialPricingProfile
             $discountType = 'none';
         }
 
+        $presentation = CustomerDocumentPresentation::fromStoredRow([
+            ...$row,
+            'name' => $name,
+        ]);
+
         return [
             'name' => $name,
             'shop_fees_enabled' => $shopFeesEnabled,
@@ -259,9 +271,13 @@ final class CommercialPricingProfile
             'default_parts_matrix_key' => filled($row['default_parts_matrix_key'] ?? null)
                 ? (string) $row['default_parts_matrix_key']
                 : null,
-            'document_presentation_profile' => CustomerPartPresentationProfile::fromStored(
-                $row['document_presentation_profile'] ?? null,
-            )->value,
+            ...$presentation->toRow(),
+            // Legacy label kept for older stamps/readers; flags are authoritative.
+            'document_presentation_profile' => match (true) {
+                $presentation->showPartNumber && $presentation->showVendor => CustomerPartPresentationProfile::Warranty->value,
+                $presentation->showPartNumber && ! $presentation->showVendor => CustomerPartPresentationProfile::RepairPal->value,
+                default => CustomerPartPresentationProfile::Retail->value,
+            },
             'concern_billing_posture' => filled($row['concern_billing_posture'] ?? null)
                 ? (string) $row['concern_billing_posture']
                 : null,
@@ -320,6 +336,7 @@ final class CommercialPricingProfile
                 'discount_type' => 'none',
                 'discount_amount' => null,
                 'default_parts_matrix_key' => null,
+                ...((new CustomerDocumentPresentation)->toRow()),
                 'document_presentation_profile' => CustomerPartPresentationProfile::Retail->value,
             ];
     }

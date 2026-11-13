@@ -32,6 +32,14 @@ final class CustomerPartPresentationPresenter
 
         $line['customer_part_description'] = $this->resolveDescription($policy, $line, $siblingPartDescriptions);
 
+        if ($policy->showBrand) {
+            $brand = $this->inferBrand(trim((string) ($line['description'] ?? '')));
+
+            if ($brand !== '') {
+                $line['customer_part_brand'] = $brand;
+            }
+        }
+
         if ($policy->showManufacturerNumber) {
             $partNumber = $this->presentationPartNumber($line);
 

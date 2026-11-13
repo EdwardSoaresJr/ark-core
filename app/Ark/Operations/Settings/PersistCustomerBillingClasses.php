@@ -114,7 +114,9 @@ final class PersistCustomerBillingClasses
                 'discount_type' => 'none',
                 'discount_amount' => null,
                 'default_parts_matrix_key' => null,
-                'document_presentation_profile' => 'retail',
+                'document_show_part_number' => false,
+                'document_show_part_brand' => false,
+                'document_show_vendor' => false,
                 'pill_color' => 'slate',
             ], $attributes, [
                 'key' => $key,
@@ -138,7 +140,6 @@ final class PersistCustomerBillingClasses
      * @return array{
      *     classes: list<array<string, mixed>>,
      *     parts_matrices: list<array{key: string, name: string}>,
-     *     presentation_profiles: list<array{value: string, label: string, help: string}>,
      *     pill_colors: list<array{key: string, label: string}>,
      *     postures: list<array{value: string, label: string}>
      * }
@@ -153,14 +154,6 @@ final class PersistCustomerBillingClasses
                 ->map(fn (array $matrix): array => [
                     'key' => $matrix['key'],
                     'name' => $matrix['name'],
-                ])
-                ->values()
-                ->all(),
-            'presentation_profiles' => collect(\App\Ark\Operations\Parts\CustomerPartPresentationProfile::cases())
-                ->map(fn ($profile): array => [
-                    'value' => $profile->value,
-                    'label' => $profile->label(),
-                    'help' => $profile->helpText(),
                 ])
                 ->values()
                 ->all(),
