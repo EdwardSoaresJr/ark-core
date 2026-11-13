@@ -122,6 +122,17 @@ final class LaborWorkTypeMatrix
             };
     }
 
+    public static function workTypeKeyForLaborCategory(string $categoryKey, ?ShopSettings $settings = null): string
+    {
+        foreach (self::workTypes($settings) as $workType) {
+            if ($workType['labor_category_key'] === $categoryKey || $workType['key'] === $categoryKey) {
+                return $workType['key'];
+            }
+        }
+
+        return $categoryKey;
+    }
+
     /**
      * Primary matrix columns for the selected work type editor.
      *

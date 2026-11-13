@@ -23,6 +23,9 @@ final class LaborWorkTypeMatrixProjection
         $minimums = LaborBillingMinimums::fromStored(
             is_array($settings->labor_billing_minimums) ? $settings->labor_billing_minimums : null,
         );
+        $rounding = LaborRoundingMatrix::fromStored(
+            is_array($settings->labor_rounding) ? $settings->labor_rounding : null,
+        )->ensureComplete($settings);
         $categoriesByKey = collect($settings->laborCategories())->keyBy('key');
 
         $workTypes = [];
@@ -33,25 +36,28 @@ final class LaborWorkTypeMatrixProjection
             $workTypes[] = $workType;
             $cells[$workType['key']] = [];
             $category = $categoriesByKey->get($workType['labor_category_key']) ?? null;
-            $rounding = LaborRoundingRule::tryFrom((string) ($category['rounding_rule'] ?? ''))
+            $fallbackRounding = LaborRoundingRule::tryFrom((string) ($category['rounding_rule'] ?? ''))
                 ?? LaborRoundingRule::Quarter;
             $workTypeSettings[$workType['key']] = [
                 'labor_category_key' => $workType['labor_category_key'],
-                // Line billed-hours floor + rounding live on the work type's labor category (not per billing class).
                 'line_minimum_hours' => (string) ($category['minimum_hours'] ?? '0.00'),
-                'rounding_rule' => $rounding->value,
-                // Enforcement stays in LaborAuthority; not shown as a matrix control (#194).
-                'allows_modifiers' => (bool) ($category['allows_modifiers'] ?? true),
+                'rounding_rule' => $fallbackRounding->value,
             ];
 
             foreach (LaborWorkTypeMatrix::matrixBillingColumns($settings) as $column) {
+                $cellRounding = $rounding->ruleFor($workType['key'], $column['value']) ?? $fallbackRounding;
+
                 try {
                     $resolved = $this->resolver->resolve($column['posture'], $workType['operation_class_key'], $asOf);
+                    $mode = $resolved->rateType->settingsMode() === 'standard'
+                        ? 'custom'
+                        : $resolved->rateType->settingsMode();
                     $cells[$workType['key']][$column['value']] = [
                         'rate_display' => '$'.number_format($resolved->hourlyRateCents / 100, 2),
                         'effective_rate_cents' => $resolved->hourlyRateCents,
-                        'settings_mode' => $resolved->rateType->settingsMode(),
-                        'follows_shop_standard' => $resolved->rateType->followsShopStandard(),
+                        'settings_mode' => $mode,
+                        'follows_shop_standard' => false,
+                        'rounding_rule' => $cellRounding->value,
                         'operation_class_key' => $workType['operation_class_key'],
                         'is_default_cell' => $workType['key'] === 'mechanical'
                             && $column['value'] === ConcernBillingPosture::CustomerPay->value,
@@ -62,6 +68,7 @@ final class LaborWorkTypeMatrixProjection
                         'effective_rate_cents' => null,
                         'settings_mode' => 'custom',
                         'follows_shop_standard' => false,
+                        'rounding_rule' => $cellRounding->value,
                         'operation_class_key' => $workType['operation_class_key'],
                         'is_default_cell' => false,
                     ];
@@ -120,6 +127,7 @@ final class LaborWorkTypeMatrixProjection
             'routes' => [
                 'rate' => route('operations.settings.shop.labor-matrix.rate'),
                 'minimum' => route('operations.settings.shop.labor-matrix.minimum'),
+                'rounding' => route('operations.settings.shop.labor-matrix.rounding'),
                 'work_type_rounding' => route('operations.settings.shop.labor-matrix.work-type-rounding'),
                 'work_type' => route('operations.settings.shop.labor-matrix.work-types.store'),
                 'billing_class' => route('operations.settings.shop.labor-matrix.billing-classes.store'),

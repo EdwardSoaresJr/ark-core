@@ -244,7 +244,7 @@ test('worksheet strips repairpal labor modifiers on store', function () {
         ->unit_price_cents->toBe(15000);
 });
 
-test('repairpal allows modifiers when enabled in shop settings', function () {
+test('repairpal stays commercially locked even when allows_modifiers setting is true', function () {
     ShopSettings::current()->update([
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)
             ->map(function (array $category): array {
@@ -267,9 +267,62 @@ test('repairpal allows modifiers when enabled in shop settings', function () {
     ], ShopSettings::current());
 
     expect($resolved)
-        ->labor_adjustment->toBe('difficult')
-        ->labor_billed_hours->toBe('2.50')
-        ->quantity->toBe('2.50');
+        ->labor_adjustment->toBe('normal')
+        ->labor_billed_hours->toBe('2.00')
+        ->quantity->toBe('2.00');
+});
+
+test('stamped profile schema 3 applies per billing-class rounding', function () {
+    $repairOrder = repairOrderForFinancialAuthority();
+    $profile = [
+        'schema' => 3,
+        'version' => 1,
+        'default_labor_rate_cents' => 16500,
+        'billing_minimums' => [],
+        'work_types' => [
+            'mechanical' => [
+                'key' => 'mechanical',
+                'label' => 'Mechanical',
+                'operation_class_key' => 'general_repair',
+                'labor_category_key' => 'mechanical',
+            ],
+        ],
+        'rates' => [
+            'mechanical' => [
+                'customer_pay' => [
+                    'mode' => 'custom',
+                    'rate_cents' => 16500,
+                    'operation_class_key' => 'general_repair',
+                    'rounding_rule' => 'quarter',
+                ],
+                'repairpal' => [
+                    'mode' => 'custom',
+                    'rate_cents' => 15000,
+                    'operation_class_key' => 'general_repair',
+                    'rounding_rule' => 'exact',
+                ],
+            ],
+        ],
+        'labor_categories' => [],
+    ];
+    $repairOrder->forceFill(['labor_pricing_profile' => $profile])->save();
+
+    $retail = app(LaborAuthority::class)->resolveForLine([
+        'labor_category_key' => 'mechanical',
+        'billing_posture' => 'customer_pay',
+        'labor_entered_hours' => '1.10',
+        'labor_adjustment' => LaborAdjustment::Normal->value,
+    ], ShopSettings::current(), null, $repairOrder->fresh());
+
+    $repairPal = app(LaborAuthority::class)->resolveForLine([
+        'labor_category_key' => 'mechanical',
+        'billing_posture' => 'repairpal',
+        'labor_entered_hours' => '1.10',
+        'labor_adjustment' => LaborAdjustment::Normal->value,
+    ], ShopSettings::current(), null, $repairOrder->fresh());
+
+    expect($retail['labor_billed_hours'])->toBe('1.25')
+        ->and($repairPal['labor_billed_hours'])->toBe('1.10');
 });
 
 test('exact rounding preserves book hours after minimum and adjustment', function () {

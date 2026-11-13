@@ -286,39 +286,38 @@ test('inline billing minimum accepts per-concern mode', function () {
         ->and(ShopSettings::current()->labor_billing_minimums['customer_pay']['hours'])->toBe('1.00');
 });
 
-test('work-type rounding autosave updates labor category without changing rates or modifiers', function () {
+test('cell rounding autosave is independent per billing class', function () {
     ShopSettings::current()->update([
-        'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)
-            ->map(function (array $category): array {
-                if ($category['key'] === 'mechanical') {
-                    $category['allows_modifiers'] = false;
-                    $category['rounding_rule'] = 'quarter';
-                }
-
-                return $category;
-            })
-            ->values()
-            ->all(),
+        'labor_rounding' => [
+            'mechanical' => [
+                'customer_pay' => 'quarter',
+                'repairpal' => 'quarter',
+            ],
+        ],
     ]);
 
-    $beforeRate = (int) ShopSettings::current()->default_labor_rate_cents;
+    $beforeRate = app(LaborPolicyResolver::class)->resolve(
+        ConcernBillingPosture::CustomerPay,
+        'general_repair',
+    )->hourlyRateCents;
 
     $this->actingAs($this->admin)
-        ->patchJson(route('operations.settings.shop.labor-matrix.work-type-rounding'), [
+        ->patchJson(route('operations.settings.shop.labor-matrix.rounding'), [
             'work_type' => 'mechanical',
-            'rounding_rule' => 'tenth',
+            'billing_class' => ConcernBillingPosture::RepairPal->value,
+            'rounding_rule' => 'exact',
             'expected_version' => (int) ShopSettings::current()->labor_pricing_profile_version,
         ])
         ->assertOk()
         ->assertJsonPath('status', 'saved')
-        ->assertJsonPath('scope', 'work_type_labor_category')
-        ->assertJsonPath('matrix.work_type_settings.mechanical.rounding_rule', 'tenth');
+        ->assertJsonPath('scope', 'work_type_billing_class')
+        ->assertJsonPath('matrix.cells.mechanical.repairpal.rounding_rule', 'exact')
+        ->assertJsonPath('matrix.cells.mechanical.customer_pay.rounding_rule', 'quarter');
 
-    $mechanical = collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'mechanical');
+    $stored = ShopSettings::current()->labor_rounding;
 
-    expect($mechanical['rounding_rule'])->toBe('tenth')
-        ->and($mechanical['allows_modifiers'])->toBeFalse()
-        ->and((int) ShopSettings::current()->default_labor_rate_cents)->toBe($beforeRate)
+    expect($stored['mechanical']['repairpal'])->toBe('exact')
+        ->and($stored['mechanical']['customer_pay'])->toBe('quarter')
         ->and(app(LaborPolicyResolver::class)->resolve(
             ConcernBillingPosture::CustomerPay,
             'general_repair',
@@ -329,7 +328,7 @@ test('matrix JSON projection exposes hybrid fields without adjust-labor controls
     $this->actingAs($this->admin)
         ->getJson(route('operations.settings.shop.labor-matrix.show'))
         ->assertOk()
-        ->assertJsonPath('work_type_settings.mechanical.rounding_rule', 'quarter')
+        ->assertJsonPath('cells.mechanical.customer_pay.rounding_rule', 'quarter')
         ->assertJsonStructure([
             'work_types',
             'columns',
@@ -337,6 +336,6 @@ test('matrix JSON projection exposes hybrid fields without adjust-labor controls
             'work_type_settings',
             'rounding_options',
             'billing_minimums',
-            'routes' => ['rate', 'minimum', 'work_type_rounding'],
+            'routes' => ['rate', 'minimum', 'rounding'],
         ]);
 });

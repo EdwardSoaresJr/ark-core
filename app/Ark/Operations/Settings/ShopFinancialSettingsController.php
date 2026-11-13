@@ -131,12 +131,18 @@ class ShopFinancialSettingsController
                 'labor_pricing_profile_version' => $profileVersion,
             ]);
 
-            $syncResult = $this->syncStandardCustomerPayLaborRates->execute(
-                $previousStandardCents,
-                $standardRateCents,
-                $effectiveFrom,
-                'Standard hourly rate',
-            );
+            // #194 D2: no Standard cascade. Legacy form still updates Mechanical × Retail explicitly.
+            $generalRepair = OperationClass::query()->where('key', 'general_repair')->first();
+            if ($generalRepair !== null) {
+                $this->upsertLaborPolicy->execute(
+                    ConcernBillingPosture::CustomerPay,
+                    $generalRepair,
+                    $standardRateCents / 100,
+                    $effectiveFrom,
+                    'Legacy labor form Mechanical × Retail',
+                    LaborRateType::Hourly,
+                );
+            }
 
             $this->applyWorkTypeMatrixRates(
                 $matrixInput,
@@ -151,25 +157,13 @@ class ShopFinancialSettingsController
                 'general_repair',
             );
 
-            if ($resolved->hourlyRateCents !== $standardRateCents
-                && $resolved->rateType !== LaborRateType::Standard
-                && ! in_array('general_repair', $syncResult['preserved_class_keys'], true)
-            ) {
-                throw ValidationException::withMessages([
-                    'standard_hourly_rate' => 'Retail Mechanical rate did not match the standard hourly rate.',
-                ]);
-            }
-
-            if ($resolved->rateType === LaborRateType::Standard
-                && $resolved->hourlyRateCents !== $standardRateCents
-            ) {
-                throw ValidationException::withMessages([
-                    'standard_hourly_rate' => 'Retail Mechanical rate did not match the standard hourly rate.',
-                ]);
-            }
-
             return [
-                'sync' => $syncResult,
+                'sync' => [
+                    'updated_class_keys' => [],
+                    'preserved_class_keys' => [],
+                    'previous_standard_cents' => $previousStandardCents,
+                    'next_standard_cents' => $standardRateCents,
+                ],
                 'resolved_cents' => $resolved->hourlyRateCents,
                 'profile_version' => $profileVersion,
             ];

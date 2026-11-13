@@ -5,6 +5,8 @@ namespace App\Ark\Operations\Labor;
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
 use App\Ark\Operations\EstimatePricing\LaborPricingProfile;
 use App\Ark\Operations\EstimatePricing\LaborRateOverrideReason;
+use App\Ark\Operations\EstimatePricing\LaborRoundingMatrix;
+use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\OperationAuthority\Operation;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
@@ -60,7 +62,13 @@ final class LaborAuthority
 
         abort_if($category === null, 422, 'Labor category is not available.');
 
-        $allowsModifiers = $settings->laborCategoryAllowsModifiers($category['key']);
+        // Per-category Adjust Labor settings toggle retired (#194). RepairPal / Warranty-Other
+        // stay commercially locked; other categories keep difficulty + override affordances.
+        // Rate overrides still require PricingAuthority when requested.
+        $allowsModifiers = ! in_array((string) $category['key'], [
+            ShopSettings::WARRANTY_REPAIRPAL_LABOR_CATEGORY_KEY,
+            ShopSettings::WARRANTY_OTHER_LABOR_CATEGORY_KEY,
+        ], true);
         $enteredHours = $this->hoursFromInput($data['labor_entered_hours'] ?? $data['quantity'] ?? '0');
 
         if ($allowsModifiers) {
@@ -78,8 +86,7 @@ final class LaborAuthority
         $minimumHours = (float) $category['minimum_hours'];
         $afterMinimum = max($adjustedHours, $minimumHours);
 
-        $roundingRule = LaborRoundingRule::tryFrom((string) ($category['rounding_rule']))
-            ?? LaborRoundingRule::Quarter;
+        $roundingRule = $this->resolveRoundingRule($data, $category, $settings, $repairOrder);
         $calculatedBilledHours = $roundingRule->roundHours($afterMinimum);
 
         $minimumApplied = $adjustedHours < $minimumHours && $minimumHours > 0;
@@ -424,6 +431,49 @@ final class LaborAuthority
             'rate_cents' => $resolved->hourlyRateCents,
             'snapshot' => $resolved->toLineSnapshot(),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $category
+     */
+    private function resolveRoundingRule(
+        array $data,
+        array $category,
+        ShopSettings $settings,
+        ?RepairOrder $repairOrder,
+    ): LaborRoundingRule {
+        $posture = $this->resolveBillingPosture($data, (string) $category['key']);
+        $workTypeKey = LaborWorkTypeMatrix::workTypeKeyForLaborCategory((string) $category['key'], $settings);
+
+        if ($repairOrder !== null) {
+            $profile = LaborPricingProfile::tryFromStored(
+                is_array($repairOrder->labor_pricing_profile) ? $repairOrder->labor_pricing_profile : null,
+            );
+
+            if ($profile?->hasFrozenRounding()) {
+                $frozen = $profile->roundingRuleFor($workTypeKey, $posture)
+                    ?? $profile->roundingRuleForOperationClass(
+                        LaborWorkTypeMatrix::operationClassKeyForCategory((string) $category['key'], $settings),
+                        $posture,
+                    );
+
+                if ($frozen instanceof LaborRoundingRule) {
+                    return $frozen;
+                }
+            }
+        }
+
+        $matrix = LaborRoundingMatrix::fromStored(
+            is_array($settings->labor_rounding) ? $settings->labor_rounding : null,
+        );
+        $fromMatrix = $matrix->ruleFor($workTypeKey, $posture);
+        if ($fromMatrix instanceof LaborRoundingRule) {
+            return $fromMatrix;
+        }
+
+        return LaborRoundingRule::tryFrom((string) ($category['rounding_rule'] ?? ''))
+            ?? LaborRoundingRule::Quarter;
     }
 
     /**

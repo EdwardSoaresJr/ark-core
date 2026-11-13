@@ -63,9 +63,21 @@
         vertical-align: middle;
     }
 
+    .labor-matrix-table--hybrid .labor-matrix-th {
+        background: var(--tblr-bg-surface-secondary, var(--tblr-bg-surface, #f1f5f9));
+        color: var(--tblr-body-color, inherit);
+        border-bottom-color: var(--tblr-border-color, rgba(98, 105, 118, 0.16));
+        font-weight: 600;
+    }
+
     .labor-matrix-table--hybrid .form-hint {
         font-size: 0.7rem;
         line-height: 1.2;
+        color: var(--tblr-secondary, #667382);
+    }
+
+    .labor-matrix-table--hybrid tbody tr:hover > td {
+        background: color-mix(in srgb, var(--tblr-primary, #206bc4) 6%, transparent);
     }
 
     @media (max-width: 991.98px) {

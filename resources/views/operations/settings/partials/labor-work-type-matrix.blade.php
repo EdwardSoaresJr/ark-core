@@ -66,25 +66,24 @@
                     Rates for <span x-text="selectedWorkTypeLabel()"></span>
                 </h4>
                 <p class="form-hint mb-0">
-                    Hourly Rate is this work type × billing class. Min Hrs is the billing-policy minimum (all work types).
-                    Round To is this work type’s labor-category rounding. Class Settings opens commercial configuration.
+                    Hourly Rate and Round To are this work type × billing class. Min Hrs is shared for the billing class across all work types. Class Settings opens commercial configuration.
                 </p>
             </div>
             <div class="table-responsive border rounded">
                 <table class="table table-vcenter table-sm mb-0 labor-matrix-table labor-matrix-table--hybrid" data-labor-rate-editor>
                     <thead>
                         <tr>
-                            <th class="bg-light">Billing Class</th>
-                            <th class="bg-light" style="min-width: 7.5rem">Hourly Rate</th>
-                            <th class="bg-light" style="min-width: 11rem">
+                            <th class="labor-matrix-th">Billing Class</th>
+                            <th class="labor-matrix-th" style="min-width: 7.5rem">Hourly Rate</th>
+                            <th class="labor-matrix-th" style="min-width: 11rem">
                                 Min Hrs
-                                <div class="form-hint mb-0 fw-normal">Billing policy · all work types</div>
+                                <div class="form-hint mb-0 fw-normal">Shared · all work types</div>
                             </th>
-                            <th class="bg-light" style="min-width: 9.5rem">
+                            <th class="labor-matrix-th" style="min-width: 9.5rem">
                                 Round To
-                                <div class="form-hint mb-0 fw-normal">Work type</div>
+                                <div class="form-hint mb-0 fw-normal">This work type × class</div>
                             </th>
-                            <th class="bg-light text-end" style="width: 5.5rem">Class</th>
+                            <th class="labor-matrix-th text-end" style="width: 5.5rem">Class</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,9 +139,9 @@
                                 <td class="py-1">
                                     <select
                                         class="form-select form-select-sm"
-                                        :value="workTypeSetting().rounding_rule"
-                                        @change="saveWorkTypeRounding($event.target.value)"
-                                        :aria-label="`${selectedWorkTypeLabel()} rounding`"
+                                        :value="cell(selectedWorkType, column.value).rounding_rule || 'quarter'"
+                                        @change="saveCellRounding(column.value, $event.target.value)"
+                                        :aria-label="`${selectedWorkTypeLabel()} ${column.label} rounding`"
                                         data-labor-rounding
                                     >
                                         <template x-for="option in (matrix.rounding_options || [])" :key="option.value">
@@ -275,17 +274,9 @@ document.addEventListener('alpine:init', () => {
                 settings_mode: 'custom',
                 effective_rate_cents: null,
                 rate_display: '—',
+                rounding_rule: 'quarter',
             };
             return this.matrix.cells[workType][billingClass];
-        },
-        workTypeSetting() {
-            this.matrix.work_type_settings ||= {};
-            this.matrix.work_type_settings[this.selectedWorkType] ||= {
-                rounding_rule: 'quarter',
-                line_minimum_hours: '0.00',
-                allows_modifiers: true,
-            };
-            return this.matrix.work_type_settings[this.selectedWorkType];
         },
         minimumRow(billingClass) {
             this.matrix.billing_minimums ||= {};
@@ -337,10 +328,11 @@ document.addEventListener('alpine:init', () => {
                     : '',
             });
         },
-        async saveWorkTypeRounding(roundingRule) {
-            this.workTypeSetting().rounding_rule = roundingRule;
-            await this.request(this.matrix.routes.work_type_rounding, 'PATCH', {
+        async saveCellRounding(billingClass, roundingRule) {
+            this.cell(this.selectedWorkType, billingClass).rounding_rule = roundingRule;
+            await this.request(this.matrix.routes.rounding || this.matrix.routes.work_type_rounding, 'PATCH', {
                 work_type: this.selectedWorkType,
+                billing_class: billingClass,
                 rounding_rule: roundingRule,
             });
         },
