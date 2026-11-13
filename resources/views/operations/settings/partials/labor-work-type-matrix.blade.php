@@ -25,8 +25,8 @@
         <div>
             <h3 class="mb-1">Labor rate matrix</h3>
             <p class="text-secondary small mb-0">
-                Select a work type, edit hourly rates inline, and open Rules for billing-policy minimums.
-                Mechanical is the Default Work Type. Rate changes apply to new repair orders only.
+                Select a work type, then edit rate mode, hourly rate, billing minimums, and work-type rounding inline.
+                Mechanical is the Default Work Type. Changes apply to new repair orders only.
             </p>
         </div>
         <div class="small" aria-live="polite">
@@ -91,86 +91,139 @@
                     Rates for <span x-text="selectedWorkTypeLabel()"></span>
                 </h4>
                 <p class="form-hint mb-0">
-                    Hourly rates for this work type. Rules set minimums; Class Settings open commercial configuration.
+                    Edit ordinary pricing inline. Min Hrs is the billing-policy minimum (all work types).
+                    Round To is this work type’s labor-category rounding. Class Settings opens commercial configuration.
                 </p>
             </div>
             <div class="table-responsive border rounded">
-                <table class="table table-vcenter table-sm mb-0 labor-matrix-table" data-labor-rate-editor>
+                <table class="table table-vcenter table-sm mb-0 labor-matrix-table labor-matrix-table--hybrid" data-labor-rate-editor>
                     <thead>
                         <tr>
-                            <th class="bg-light">Billing Policy</th>
-                            <th class="bg-light" style="width: 16rem">Hourly Rate</th>
-                            <th class="bg-light text-end" style="width: 7.5rem">Actions</th>
+                            <th class="bg-light">Billing Class</th>
+                            <th class="bg-light" style="min-width: 8.5rem">Rate Type</th>
+                            <th class="bg-light" style="min-width: 7rem">Hourly Rate</th>
+                            <th class="bg-light" style="min-width: 11rem">
+                                Min Hrs
+                                <div class="form-hint mb-0 fw-normal">Billing policy · all work types</div>
+                            </th>
+                            <th class="bg-light" style="min-width: 9.5rem">
+                                Round To
+                                <div class="form-hint mb-0 fw-normal">Work type</div>
+                            </th>
+                            <th class="bg-light text-end" style="width: 5.5rem">Class</th>
                         </tr>
                     </thead>
                     <tbody>
                         <template x-for="column in matrix.columns" :key="column.value">
                             <tr :data-billing-class="column.value">
-                                <td class="py-2">
+                                <td class="py-1">
                                     <div class="fw-medium" x-text="column.label"></div>
                                     <div class="form-hint mb-0" x-show="cell(selectedWorkType, column.value).is_default_cell">
-                                        Default Work Type × Retail — inherits Default Labor Rate
+                                        Inherits Default Labor Rate
                                     </div>
+                                    <div
+                                        class="form-hint mb-0 text-azure"
+                                        x-show="cell(selectedWorkType, column.value).settings_mode === 'standard' && !cell(selectedWorkType, column.value).is_default_cell"
+                                    >Inherited</div>
                                 </td>
-                                <td class="py-2">
-                                    <div class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-start justify-content-end">
+                                <td class="py-1">
+                                    <select
+                                        class="form-select form-select-sm"
+                                        x-model="cell(selectedWorkType, column.value).settings_mode"
+                                        @change="saveRate(selectedWorkType, column.value)"
+                                        :aria-label="`${selectedWorkTypeLabel()} ${column.label} rate type`"
+                                        data-labor-rate-mode
+                                    >
+                                        <option value="standard">Default</option>
+                                        <option value="custom">Custom</option>
+                                        <option value="zero">No Charge</option>
+                                    </select>
+                                </td>
+                                <td class="py-1">
+                                    <div class="input-group input-group-sm" style="max-width: 7.5rem" x-show="cell(selectedWorkType, column.value).settings_mode === 'custom'">
+                                        <span class="input-group-text">$</span>
+                                        <input
+                                            type="text"
+                                            class="form-control font-monospace text-end"
+                                            :value="rateInput(selectedWorkType, column.value)"
+                                            @change="setRateInput(selectedWorkType, column.value, $event.target.value); saveRate(selectedWorkType, column.value)"
+                                            @keydown.enter.prevent="setRateInput(selectedWorkType, column.value, $event.target.value); saveRate(selectedWorkType, column.value)"
+                                            inputmode="decimal"
+                                            :aria-label="`${selectedWorkTypeLabel()} ${column.label} hourly rate`"
+                                            data-labor-hourly-rate
+                                        >
+                                    </div>
+                                    <span
+                                        class="font-monospace small text-secondary"
+                                        x-show="cell(selectedWorkType, column.value).settings_mode === 'standard'"
+                                        x-text="cell(selectedWorkType, column.value).rate_display"
+                                    ></span>
+                                    <span
+                                        class="small text-secondary"
+                                        x-show="cell(selectedWorkType, column.value).settings_mode === 'zero'"
+                                    >—</span>
+                                </td>
+                                <td class="py-1">
+                                    <div class="d-flex flex-wrap align-items-center gap-1">
                                         <select
                                             class="form-select form-select-sm"
-                                            style="max-width: 12.5rem"
-                                            x-model="cell(selectedWorkType, column.value).settings_mode"
-                                            @change="saveRate(selectedWorkType, column.value)"
-                                            :aria-label="`${selectedWorkTypeLabel()} ${column.label} rate mode`"
+                                            style="max-width: 6.75rem"
+                                            :value="minimumRow(column.value).mode"
+                                            @change="setMinimumMode(column.value, $event.target.value)"
+                                            :aria-label="`${column.label} minimum mode`"
+                                            data-labor-min-mode
                                         >
-                                            <option value="standard">Use Default Labor Rate</option>
-                                            <option value="custom">Custom Rate</option>
-                                            <option value="zero">No Charge</option>
+                                            <option value="none">None</option>
+                                            <option value="per_line">Per line</option>
+                                            <option value="per_ro">Per RO</option>
                                         </select>
-                                        <div class="input-group input-group-sm" style="max-width: 8.5rem" x-show="cell(selectedWorkType, column.value).settings_mode === 'custom'">
-                                            <span class="input-group-text">$</span>
-                                            <input
-                                                type="text"
-                                                class="form-control font-monospace text-end"
-                                                :value="rateInput(selectedWorkType, column.value)"
-                                                @change="setRateInput(selectedWorkType, column.value, $event.target.value); saveRate(selectedWorkType, column.value)"
-                                                @keydown.enter.prevent="setRateInput(selectedWorkType, column.value, $event.target.value); saveRate(selectedWorkType, column.value)"
-                                                inputmode="decimal"
-                                                :aria-label="`${selectedWorkTypeLabel()} ${column.label} hourly rate`"
-                                            >
-                                        </div>
-                                        <span
-                                            class="form-hint mb-0 font-monospace"
-                                            x-show="cell(selectedWorkType, column.value).settings_mode === 'standard'"
-                                            x-text="cell(selectedWorkType, column.value).rate_display + '/hr'"
-                                        ></span>
-                                        <span
-                                            class="form-hint mb-0"
-                                            x-show="cell(selectedWorkType, column.value).settings_mode === 'zero'"
-                                        >No Charge</span>
-                                    </div>
-                                </td>
-                                <td class="py-2 text-end text-nowrap">
-                                    <div class="btn-list justify-content-end flex-nowrap">
+                                        <input
+                                            type="text"
+                                            class="form-control form-control-sm font-monospace"
+                                            style="max-width: 4.25rem"
+                                            :value="minimumRow(column.value).hours"
+                                            :disabled="minimumRow(column.value).mode === 'none'"
+                                            @change="setMinimumHours(column.value, $event.target.value)"
+                                            @keydown.enter.prevent="setMinimumHours(column.value, $event.target.value)"
+                                            inputmode="decimal"
+                                            :aria-label="`${column.label} minimum hours`"
+                                            data-labor-min-hours
+                                        >
                                         <button
                                             type="button"
-                                            class="btn btn-ghost-secondary btn-sm"
+                                            class="btn btn-ghost-secondary btn-sm px-1"
                                             @click="openRules(column)"
                                             data-labor-rules
-                                        >
-                                            Rules
-                                        </button>
-                                        <template x-if="column.has_customer_class">
-                                            <button
-                                                type="button"
-                                                class="btn btn-ghost-secondary btn-icon btn-sm"
-                                                @click="openClassSettings(column)"
-                                                data-labor-class-settings
-                                                title="Class Settings"
-                                                aria-label="Class Settings"
-                                            >
-                                                <x-tabler.icon name="settings" class="icon icon-sm" />
-                                            </button>
-                                        </template>
+                                            title="Shortfall rate and advanced minimum rules"
+                                        >Rules</button>
                                     </div>
+                                </td>
+                                <td class="py-1">
+                                    <select
+                                        class="form-select form-select-sm"
+                                        :value="workTypeSetting().rounding_rule"
+                                        @change="saveWorkTypeRounding($event.target.value)"
+                                        :aria-label="`${selectedWorkTypeLabel()} rounding`"
+                                        data-labor-rounding
+                                    >
+                                        <template x-for="option in (matrix.rounding_options || [])" :key="option.value">
+                                            <option :value="option.value" x-text="option.label"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                                <td class="py-1 text-end">
+                                    <template x-if="column.has_customer_class">
+                                        <button
+                                            type="button"
+                                            class="btn btn-ghost-secondary btn-icon btn-sm"
+                                            @click="openClassSettings(column)"
+                                            data-labor-class-settings
+                                            title="Class Settings"
+                                            aria-label="Class Settings"
+                                        >
+                                            <x-tabler.icon name="settings" class="icon icon-sm" />
+                                        </button>
+                                    </template>
                                 </td>
                             </tr>
                         </template>
@@ -186,7 +239,7 @@
                 </button>
             </div>
             <p class="form-hint mb-0 mt-1">
-                Labor columns set rates and Rules for this work type. Manage Billing Classes covers shared commercial settings.
+                Manual line overrides still follow each work type’s stored permission. Manage Billing Classes covers shared commercial settings.
             </p>
         </div>
     </div>
@@ -212,7 +265,7 @@
                 </div>
                 <div class="modal-body py-3">
                     <p class="form-hint mb-3">
-                        Minimum applies to this billing policy across all work types, not only the selected work type.
+                        Advanced shortfall pricing for this billing policy. Ordinary Min Hrs edits save inline on the matrix.
                     </p>
                     <label class="form-label mb-1">Minimum labor</label>
                     <select class="form-select form-select-sm" x-model="rulesDraft.mode">
@@ -364,6 +417,25 @@ document.addEventListener('alpine:init', () => {
             };
             return this.matrix.cells[workType][billingClass];
         },
+        workTypeSetting() {
+            this.matrix.work_type_settings ||= {};
+            this.matrix.work_type_settings[this.selectedWorkType] ||= {
+                rounding_rule: 'quarter',
+                line_minimum_hours: '0.00',
+                allows_modifiers: true,
+            };
+            return this.matrix.work_type_settings[this.selectedWorkType];
+        },
+        minimumRow(billingClass) {
+            this.matrix.billing_minimums ||= {};
+            this.matrix.billing_minimums[billingClass] ||= {
+                mode: 'none',
+                hours: '0.00',
+                shortfall_rate_source: 'standard_mechanical',
+                shortfall_rate_cents: this.matrix.standard_rate_cents,
+            };
+            return this.matrix.billing_minimums[billingClass];
+        },
         rateInput(workType, billingClass) {
             const cents = this.cell(workType, billingClass).effective_rate_cents;
             return cents == null ? '' : (cents / 100).toFixed(2);
@@ -372,6 +444,44 @@ document.addEventListener('alpine:init', () => {
             const cents = Math.round(parseFloat(value || '0') * 100);
             this.cell(workType, billingClass).effective_rate_cents = Number.isFinite(cents) ? cents : 0;
             this.cell(workType, billingClass).rate_display = '$' + ((this.cell(workType, billingClass).effective_rate_cents || 0) / 100).toFixed(2);
+        },
+        async setMinimumMode(billingClass, mode) {
+            const row = this.minimumRow(billingClass);
+            row.mode = mode;
+            if (mode === 'none') {
+                row.hours = '0.00';
+            } else if (!parseFloat(row.hours || '0')) {
+                row.hours = '1.00';
+            }
+            await this.saveMinimum(billingClass);
+        },
+        async setMinimumHours(billingClass, hours) {
+            const row = this.minimumRow(billingClass);
+            const parsed = parseFloat(hours || '0');
+            row.hours = Number.isFinite(parsed) ? parsed.toFixed(2) : '0.00';
+            if (row.mode === 'none' && parsed > 0) {
+                row.mode = 'per_line';
+            }
+            await this.saveMinimum(billingClass);
+        },
+        async saveMinimum(billingClass) {
+            const row = this.minimumRow(billingClass);
+            await this.request(this.matrix.routes.minimum, 'PATCH', {
+                billing_class: billingClass,
+                mode: row.mode || 'none',
+                hours: row.hours || '0.00',
+                shortfall_rate_source: row.shortfall_rate_source || 'standard_mechanical',
+                shortfall_rate: row.shortfall_rate_cents != null
+                    ? (row.shortfall_rate_cents / 100).toFixed(2)
+                    : '',
+            });
+        },
+        async saveWorkTypeRounding(roundingRule) {
+            this.workTypeSetting().rounding_rule = roundingRule;
+            await this.request(this.matrix.routes.work_type_rounding, 'PATCH', {
+                work_type: this.selectedWorkType,
+                rounding_rule: roundingRule,
+            });
         },
         csrf() {
             return document.querySelector('meta[name="csrf-token"]')?.content || '';

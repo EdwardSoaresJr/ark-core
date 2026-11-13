@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\EstimatePricing;
 
+use App\Ark\Operations\Labor\LaborRoundingRule;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Carbon;
@@ -22,13 +23,26 @@ final class LaborWorkTypeMatrixProjection
         $minimums = LaborBillingMinimums::fromStored(
             is_array($settings->labor_billing_minimums) ? $settings->labor_billing_minimums : null,
         );
+        $categoriesByKey = collect($settings->laborCategories())->keyBy('key');
 
         $workTypes = [];
         $cells = [];
+        $workTypeSettings = [];
 
         foreach (LaborWorkTypeMatrix::workTypes($settings) as $workType) {
             $workTypes[] = $workType;
             $cells[$workType['key']] = [];
+            $category = $categoriesByKey->get($workType['labor_category_key']) ?? null;
+            $rounding = LaborRoundingRule::tryFrom((string) ($category['rounding_rule'] ?? ''))
+                ?? LaborRoundingRule::Quarter;
+            $workTypeSettings[$workType['key']] = [
+                'labor_category_key' => $workType['labor_category_key'],
+                // Line billed-hours floor + rounding live on the work type's labor category (not per billing class).
+                'line_minimum_hours' => (string) ($category['minimum_hours'] ?? '0.00'),
+                'rounding_rule' => $rounding->value,
+                // Enforcement stays in LaborAuthority; not shown as a matrix control (#194).
+                'allows_modifiers' => (bool) ($category['allows_modifiers'] ?? true),
+            ];
 
             foreach (LaborWorkTypeMatrix::matrixBillingColumns($settings) as $column) {
                 try {
@@ -91,6 +105,14 @@ final class LaborWorkTypeMatrixProjection
             'work_types' => $workTypes,
             'columns' => $columns,
             'cells' => $cells,
+            'work_type_settings' => $workTypeSettings,
+            'rounding_options' => collect(LaborRoundingRule::cases())
+                ->map(fn (LaborRoundingRule $rule): array => [
+                    'value' => $rule->value,
+                    'label' => $rule->label(),
+                ])
+                ->values()
+                ->all(),
             'standard_rate_cents' => $standardCents,
             'billing_minimums' => $minimumRows,
             'billing_classes' => $billingClasses,
@@ -98,6 +120,7 @@ final class LaborWorkTypeMatrixProjection
             'routes' => [
                 'rate' => route('operations.settings.shop.labor-matrix.rate'),
                 'minimum' => route('operations.settings.shop.labor-matrix.minimum'),
+                'work_type_rounding' => route('operations.settings.shop.labor-matrix.work-type-rounding'),
                 'work_type' => route('operations.settings.shop.labor-matrix.work-types.store'),
                 'billing_class' => route('operations.settings.shop.labor-matrix.billing-classes.store'),
                 'customer_types_show' => route('operations.settings.shop.customer-types.show'),

@@ -128,8 +128,10 @@ test('labor policies shows default labor category as read-only from labor catego
         ->assertOk()
         ->assertSee('Default Labor Rate')
         ->assertSee('Mechanical')
-        ->assertSee('Use Default Labor Rate')
-        ->assertDontSee('Save default');
+        ->assertSee('Inherits Default Labor Rate')
+        ->assertSee('>Default</option>', false)
+        ->assertDontSee('Save default')
+        ->assertDontSee('Use Default Labor Rate');
 
     expect(\Illuminate\Support\Facades\Route::has('operations.settings.shop.labor-policies.default'))->toBeFalse();
 

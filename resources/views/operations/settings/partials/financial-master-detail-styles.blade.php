@@ -55,4 +55,22 @@
     .ops-financial-master-detail__editor > :first-child {
         margin-top: 0;
     }
+
+    /* Labor Matrix hybrid: denser Billing Class rows (#194). */
+    .labor-matrix-table--hybrid > :is(thead, tbody) > tr > :is(th, td) {
+        padding-top: 0.4rem;
+        padding-bottom: 0.4rem;
+        vertical-align: middle;
+    }
+
+    .labor-matrix-table--hybrid .form-hint {
+        font-size: 0.7rem;
+        line-height: 1.2;
+    }
+
+    @media (max-width: 991.98px) {
+        .labor-matrix-table--hybrid {
+            min-width: 44rem;
+        }
+    }
 </style>

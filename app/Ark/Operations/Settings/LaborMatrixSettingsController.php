@@ -13,6 +13,7 @@ use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrixProjection;
 use App\Ark\Operations\EstimatePricing\OperationClass;
 use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
+use App\Ark\Operations\Labor\LaborRoundingRule;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -203,6 +204,60 @@ class LaborMatrixSettingsController
         return response()->json([
             'status' => 'saved',
             'applies_to' => 'new_repair_orders_only',
+            'matrix' => $this->projection->build(),
+        ]);
+    }
+
+    /**
+     * Round To on the matrix is work-type scoped (labor category rounding_rule).
+     * There is no per-billing-class rounding in the pricing engine (#194).
+     */
+    public function updateWorkTypeRounding(Request $request): JsonResponse
+    {
+        $workTypeKeys = collect(LaborWorkTypeMatrix::workTypes())->pluck('key')->all();
+        $roundingValues = array_column(LaborRoundingRule::cases(), 'value');
+
+        $data = $request->validate([
+            'work_type' => ['required', 'string', Rule::in($workTypeKeys)],
+            'rounding_rule' => ['required', 'string', Rule::in($roundingValues)],
+            'expected_version' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $settings = ShopSettings::current();
+        $this->assertVersion($settings, $data['expected_version'] ?? null);
+
+        $workType = collect(LaborWorkTypeMatrix::workTypes($settings))->firstWhere('key', $data['work_type']);
+        $categoryKey = (string) ($workType['labor_category_key'] ?? $data['work_type']);
+
+        $categories = collect($settings->laborCategories())
+            ->map(function (array $category) use ($categoryKey, $data): array {
+                return [
+                    'key' => $category['key'],
+                    'name' => $category['name'],
+                    'rate' => number_format($category['rate_cents'] / 100, 2, '.', ''),
+                    'minimum_hours' => $category['minimum_hours'],
+                    'rounding_rule' => $category['key'] === $categoryKey
+                        ? $data['rounding_rule']
+                        : $category['rounding_rule'],
+                    // Preserve existing Adjust Labor enforcement; matrix UI does not expose it.
+                    'allows_modifiers' => $category['allows_modifiers'] ? '1' : '0',
+                    'is_active' => ($category['is_active'] ?? true) ? '1' : '0',
+                ];
+            })
+            ->all();
+
+        $settings->update([
+            'labor_categories' => $settings->normalizeLaborCategories(
+                $categories,
+                $settings->defaultLaborCategory()['key'],
+            ),
+            'labor_pricing_profile_version' => max(1, (int) ($settings->labor_pricing_profile_version ?? 0) + 1),
+        ]);
+
+        return response()->json([
+            'status' => 'saved',
+            'applies_to' => 'new_repair_orders_only',
+            'scope' => 'work_type_labor_category',
             'matrix' => $this->projection->build(),
         ]);
     }
