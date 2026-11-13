@@ -422,7 +422,7 @@ final class CommunicationsInboxPresentation
 
     /**
      * @param  array<string, mixed>  $context
-     * @return list<array{number: string, vehicle: ?string, status: string, url: string}>
+     * @return list<array{repair_order_id: ?int, number: string, vehicle: ?string, status: string, url: string}>
      */
     private function openRepairOrderSummaries(?Customer $customer, array $context): array
     {
@@ -432,7 +432,10 @@ final class CommunicationsInboxPresentation
                     return null;
                 }
 
+                $id = (int) ($row['repair_order_id'] ?? $row['id'] ?? 0);
+
                 return [
+                    'repair_order_id' => $id > 0 ? $id : null,
                     'number' => (string) ($row['number'] ?? $row['ro_number'] ?? ''),
                     'vehicle' => filled($row['vehicle'] ?? null) ? (string) $row['vehicle'] : null,
                     'status' => (string) ($row['status'] ?? ''),
@@ -447,7 +450,10 @@ final class CommunicationsInboxPresentation
                 return [];
             }
 
+            $id = (int) ($primary['repair_order_id'] ?? 0);
+
             return [[
+                'repair_order_id' => $id > 0 ? $id : null,
                 'number' => (string) ($primary['number'] ?? ''),
                 'vehicle' => filled($primary['vehicle'] ?? null) ? (string) $primary['vehicle'] : null,
                 'status' => (string) ($primary['status'] ?? ''),
@@ -466,6 +472,7 @@ final class CommunicationsInboxPresentation
                 $vehicle = $repairOrder->vehicle;
 
                 return [
+                    'repair_order_id' => $repairOrder->id,
                     'number' => 'RO '.$repairOrder->repair_order_id,
                     'vehicle' => $vehicle !== null
                         ? trim(implode(' ', array_filter([(string) $vehicle->year, (string) $vehicle->make, (string) $vehicle->model])))

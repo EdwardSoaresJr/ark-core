@@ -8,6 +8,7 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -46,8 +47,8 @@ final class VisitCheckInAction
         $lead = $this->leadFromContext($context);
         $phone = $this->phoneFromContext($context);
         $vehicleId = $this->vehicleIdFromContext($context);
-        $openVisitRoId = $this->openVisitRepairOrderId($context);
-        $appointment = $this->checkInAppointment($customer, $openVisitRoId);
+        $openVisitRoId = $this->openVisitRepairOrderId($context, $customer, $vehicleId);
+        $appointment = $this->checkInAppointment($customer, $openVisitRoId, $context, $vehicleId);
 
         $params = $this->intakeParams($customer, $lead, $phone, $vehicleId, $appointment);
         if ($params === null && $customer === null && $lead === null && $phone === null) {
@@ -125,44 +126,194 @@ final class VisitCheckInAction
     {
         $vehicleId = (int) (data_get($context, 'current_visit.vehicle_id')
             ?: data_get($context, 'vehicle.id')
+            ?: data_get($context, 'vehicle_id')
             ?: 0);
 
-        return $vehicleId > 0 ? $vehicleId : null;
+        if ($vehicleId > 0) {
+            return $vehicleId;
+        }
+
+        $roId = (int) (data_get($context, 'primary_ro.repair_order_id')
+            ?: data_get($context, 'current_visit.repair_order_id')
+            ?: 0);
+        if ($roId <= 0) {
+            return null;
+        }
+
+        $repairOrder = $this->findRepairOrder($roId);
+
+        return $repairOrder?->vehicle_id !== null ? (int) $repairOrder->vehicle_id : null;
     }
 
     /**
      * Open RO for the selected visit — presence means check-in already created that visit's RO.
-     * Do not infer this from workflow status labels.
+     * Do not infer this from workflow status labels. When primary visit is incomplete but the
+     * rail still lists open repair orders (or open_visits), those orders must not be overlooked.
      *
      * @param  array<string, mixed>  $context
      */
-    private function openVisitRepairOrderId(array $context): ?int
+    private function openVisitRepairOrderId(array $context, ?Customer $customer, ?int $vehicleId): ?int
     {
-        $id = (int) (data_get($context, 'primary_ro.repair_order_id')
-            ?: data_get($context, 'current_visit.repair_order_id')
-            ?: 0);
+        $candidateIds = $this->openRepairOrderCandidateIds($context);
 
-        if ($id <= 0) {
+        if ($vehicleId !== null) {
+            foreach ($candidateIds as $id) {
+                $repairOrder = $this->findRepairOrder($id);
+                if ($repairOrder !== null && (int) $repairOrder->vehicle_id === $vehicleId) {
+                    return (int) $repairOrder->getKey();
+                }
+            }
+
+            if ($customer !== null) {
+                $forVehicle = RepairOrder::query()
+                    ->where('customer_id', $customer->id)
+                    ->where('vehicle_id', $vehicleId)
+                    ->whereIn('status', RepairOrderStatus::operationalQueueValues())
+                    ->latest('id')
+                    ->first();
+
+                if ($forVehicle !== null) {
+                    return (int) $forVehicle->getKey();
+                }
+            }
+
+            // A different vehicle's open RO must not block Check In for this vehicle.
             return null;
         }
 
-        return RepairOrder::query()->whereKey($id)->exists() ? $id : null;
+        foreach ($candidateIds as $id) {
+            $repairOrder = $this->findRepairOrder($id);
+            if ($repairOrder !== null) {
+                return (int) $repairOrder->getKey();
+            }
+        }
+
+        $primaryIncomplete = (int) (data_get($context, 'primary_ro.repair_order_id') ?: 0) <= 0
+            && (int) (data_get($context, 'current_visit.repair_order_id') ?: 0) <= 0;
+        $listedOpenOrders = is_array($context['open_repair_orders'] ?? null) ? $context['open_repair_orders'] : [];
+        $openVisits = is_array(data_get($context, 'current_visit.open_visits'))
+            ? data_get($context, 'current_visit.open_visits')
+            : [];
+
+        if ($primaryIncomplete && $customer !== null && ($listedOpenOrders !== [] || $openVisits !== [])) {
+            $open = RepairOrder::query()
+                ->where('customer_id', $customer->id)
+                ->whereIn('status', RepairOrderStatus::operationalQueueValues())
+                ->latest('id')
+                ->first();
+
+            if ($open !== null) {
+                return (int) $open->getKey();
+            }
+        }
+
+        return null;
     }
 
-    private function checkInAppointment(?Customer $customer, ?int $openVisitRoId): ?Appointment
+    /**
+     * @param  array<string, mixed>  $context
+     * @return list<int>
+     */
+    private function openRepairOrderCandidateIds(array $context): array
     {
+        $ids = [];
+
+        foreach ([
+            data_get($context, 'primary_ro.repair_order_id'),
+            data_get($context, 'current_visit.repair_order_id'),
+        ] as $raw) {
+            $id = (int) ($raw ?: 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        foreach ([
+            data_get($context, 'current_visit.open_visits', []),
+            $context['open_repair_orders'] ?? [],
+        ] as $rows) {
+            if (! is_array($rows)) {
+                continue;
+            }
+            foreach ($rows as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $id = (int) ($row['repair_order_id'] ?? $row['id'] ?? 0);
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    private function findRepairOrder(int $id): ?RepairOrder
+    {
+        return RepairOrder::query()->whereKey($id)->first()
+            ?? RepairOrder::query()->where('repair_order_id', $id)->first();
+    }
+
+    /**
+     * Prefill the appointment that belongs to this visit — never another vehicle's appointment.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function checkInAppointment(
+        ?Customer $customer,
+        ?int $openVisitRoId,
+        array $context,
+        ?int $vehicleId,
+    ): ?Appointment {
         if ($customer === null || $openVisitRoId !== null) {
             return null;
         }
 
-        return Appointment::query()
+        $statuses = [
+            AppointmentStatus::Scheduled->value,
+            AppointmentStatus::Confirmed->value,
+            AppointmentStatus::Arrived->value,
+        ];
+
+        $explicitId = (int) (data_get($context, 'appointment_id')
+            ?: data_get($context, 'appointment.id')
+            ?: data_get($context, 'current_visit.appointment_id')
+            ?: 0);
+
+        if ($explicitId > 0) {
+            $explicit = Appointment::query()
+                ->whereKey($explicitId)
+                ->where('customer_id', $customer->id)
+                ->whereNull('repair_order_id')
+                ->whereIn('status', $statuses)
+                ->first();
+
+            if ($explicit !== null
+                && ($vehicleId === null
+                    || $explicit->vehicle_id === null
+                    || (int) $explicit->vehicle_id === $vehicleId)) {
+                return $explicit;
+            }
+        }
+
+        $query = Appointment::query()
             ->where('customer_id', $customer->id)
             ->whereNull('repair_order_id')
-            ->whereIn('status', [
-                AppointmentStatus::Scheduled->value,
-                AppointmentStatus::Confirmed->value,
-                AppointmentStatus::Arrived->value,
-            ])
+            ->whereIn('status', $statuses);
+
+        if ($vehicleId !== null) {
+            $query->where(function ($builder) use ($vehicleId): void {
+                $builder->where('vehicle_id', $vehicleId)->orWhereNull('vehicle_id');
+            })->orderByRaw('CASE WHEN vehicle_id = ? THEN 0 ELSE 1 END', [$vehicleId]);
+        }
+
+        $leadId = (int) ($context['lead_id'] ?? 0);
+        if ($leadId > 0) {
+            $query->orderByRaw('CASE WHEN lead_id = ? THEN 0 ELSE 1 END', [$leadId]);
+        }
+
+        return $query
             ->orderByRaw('CASE status WHEN ? THEN 0 WHEN ? THEN 1 ELSE 2 END', [
                 AppointmentStatus::Arrived->value,
                 AppointmentStatus::Confirmed->value,

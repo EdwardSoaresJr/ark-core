@@ -164,3 +164,197 @@ test('lead concern and arrived appointment prefill Check In without treating RO 
         ->and($action['url'])->toContain('appointment_id='.$appointment->id)
         ->and($action['url'])->toContain('vehicle_id='.$vehicle->id);
 });
+
+test('open repair orders on the rail are not overlooked when primary visit context is incomplete', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $customer = Customer::query()->create([
+        'first_name' => 'Multi',
+        'last_name' => 'Open',
+        'phone' => '7195556106',
+    ]);
+    $vehicleA = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2017,
+        'make' => 'Honda',
+        'model' => 'Civic',
+    ]);
+    $vehicleB = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2019,
+        'make' => 'Toyota',
+        'model' => 'RAV4',
+    ]);
+    $roA = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicleA->id,
+        'status' => RepairOrderStatus::InProgress,
+        'concern_summary' => 'Noise',
+    ]);
+    $roB = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicleB->id,
+        'status' => RepairOrderStatus::WaitingApproval,
+        'concern_summary' => 'Brakes',
+    ]);
+
+    $action = app(VisitCheckInAction::class)->forContext([
+        'customer' => ['id' => $customer->id],
+        'customer_id' => $customer->id,
+        'primary_ro' => null,
+        'current_visit' => [
+            'repair_order_id' => null,
+            'open_visits' => [
+                ['repair_order_id' => $roA->id, 'ro_number' => $roA->repair_order_id],
+                ['repair_order_id' => $roB->id, 'ro_number' => $roB->repair_order_id],
+            ],
+        ],
+        'open_repair_orders' => [
+            ['repair_order_id' => $roA->id, 'number' => 'RO '.$roA->repair_order_id],
+            ['repair_order_id' => $roB->id, 'number' => 'RO '.$roB->repair_order_id],
+        ],
+    ], $advisor);
+
+    expect($action)->not->toBeNull()
+        ->and($action['key'])->toBe('new_visit')
+        ->and($action['label'])->toBe('New visit')
+        ->and($action['url'])->not->toContain('appointment_id=');
+});
+
+test('listed open repair orders without primary ids still force New visit', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $customer = Customer::query()->create([
+        'first_name' => 'Listed',
+        'last_name' => 'Only',
+        'phone' => '7195556107',
+    ]);
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2016,
+        'make' => 'Ford',
+        'model' => 'Escape',
+    ]);
+    RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'AC',
+    ]);
+
+    $action = app(VisitCheckInAction::class)->forContext([
+        'customer' => ['id' => $customer->id],
+        'customer_id' => $customer->id,
+        'primary_ro' => null,
+        'current_visit' => ['repair_order_id' => null, 'open_visits' => []],
+        'open_repair_orders' => [
+            ['number' => 'RO 99', 'status' => 'Estimate', 'url' => '/app/repair-orders/99'],
+        ],
+    ], $advisor);
+
+    expect($action)->not->toBeNull()
+        ->and($action['key'])->toBe('new_visit');
+});
+
+test('appointment prefill prefers the intended vehicle visit over another appointment', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $customer = Customer::query()->create([
+        'first_name' => 'Two',
+        'last_name' => 'Cars',
+        'phone' => '7195556108',
+    ]);
+    $vehicleA = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2015,
+        'make' => 'Chevy',
+        'model' => 'Malibu',
+    ]);
+    $vehicleB = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2021,
+        'make' => 'Subaru',
+        'model' => 'Outback',
+    ]);
+    $other = Appointment::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicleA->id,
+        'created_by_user_id' => $advisor->id,
+        'advisor_user_id' => $advisor->id,
+        'starts_at' => now()->subHour(),
+        'ends_at' => now()->addMinutes(30),
+        'concern' => 'Other car',
+        'status' => AppointmentStatus::Arrived,
+    ]);
+    $intended = Appointment::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicleB->id,
+        'created_by_user_id' => $advisor->id,
+        'advisor_user_id' => $advisor->id,
+        'starts_at' => now()->addHour(),
+        'ends_at' => now()->addHours(2),
+        'concern' => 'Intended visit',
+        'status' => AppointmentStatus::Confirmed,
+    ]);
+
+    $action = app(VisitCheckInAction::class)->forContext([
+        'customer' => ['id' => $customer->id],
+        'customer_id' => $customer->id,
+        'vehicle' => ['id' => $vehicleB->id],
+        'current_visit' => ['vehicle_id' => $vehicleB->id],
+    ], $advisor);
+
+    expect($action)->not->toBeNull()
+        ->and($action['key'])->toBe('check_in')
+        ->and($action['url'])->toContain('appointment_id='.$intended->id)
+        ->and($action['url'])->not->toContain('appointment_id='.$other->id)
+        ->and($action['url'])->toContain('vehicle_id='.$vehicleB->id);
+});
+
+test('explicit appointment_id wins when it matches the visit vehicle', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $customer = Customer::query()->create([
+        'first_name' => 'Explicit',
+        'last_name' => 'Appt',
+        'phone' => '7195556109',
+    ]);
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2018,
+        'make' => 'Nissan',
+        'model' => 'Altima',
+    ]);
+    $earlier = Appointment::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'created_by_user_id' => $advisor->id,
+        'advisor_user_id' => $advisor->id,
+        'starts_at' => now()->subMinutes(30),
+        'ends_at' => now()->addMinutes(30),
+        'concern' => 'Earlier',
+        'status' => AppointmentStatus::Arrived,
+    ]);
+    $chosen = Appointment::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'created_by_user_id' => $advisor->id,
+        'advisor_user_id' => $advisor->id,
+        'starts_at' => now()->addMinutes(90),
+        'ends_at' => now()->addHours(3),
+        'concern' => 'Chosen',
+        'status' => AppointmentStatus::Scheduled,
+    ]);
+
+    $action = app(VisitCheckInAction::class)->forContext([
+        'customer' => ['id' => $customer->id],
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'appointment_id' => $chosen->id,
+        'current_visit' => [
+            'vehicle_id' => $vehicle->id,
+            'appointment_id' => $chosen->id,
+        ],
+    ], $advisor);
+
+    expect($action)->not->toBeNull()
+        ->and($action['key'])->toBe('check_in')
+        ->and($action['url'])->toContain('appointment_id='.$chosen->id)
+        ->and($action['url'])->not->toContain('appointment_id='.$earlier->id);
+});
