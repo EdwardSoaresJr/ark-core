@@ -153,10 +153,25 @@
                 </div>
             @endif
             @php
+                use App\Ark\Operations\EstimatePricing\ShopTaxCatalog;
+                use App\Ark\Operations\Settings\ShopSettings;
+
                 $taxStamp = is_array($repairOrder?->tax_profile) ? $repairOrder->tax_profile : [];
-                $taxProfileLabel = (string) ($taxStamp['profile_name'] ?? $taxStamp['label'] ?? '');
-                $taxRateLabel = isset($taxStamp['rate']) ? rtrim(rtrim((string) $taxStamp['rate'], '0'), '.').'%' : '';
                 $taxRowLabel = 'Sales Tax';
+                $taxProfileLabel = trim((string) ($taxStamp['profile_name'] ?? ''));
+                $taxLineLabel = strtolower(trim((string) ($taxStamp['label'] ?? $taxLabel ?? 'tax')));
+                // Stamp "label" is the tax line name (often "Tax"), not the jurisdiction.
+                if ($taxProfileLabel === '' || in_array(strtolower($taxProfileLabel), ['tax', 'sales tax', $taxLineLabel], true)) {
+                    $taxProfileKey = trim((string) ($taxStamp['profile_key'] ?? ''));
+                    if ($taxProfileKey !== '') {
+                        $catalogName = collect(ShopTaxCatalog::profilesFromShopSettings(ShopSettings::current()))
+                            ->first(fn (array $profile): bool => (string) ($profile['key'] ?? '') === $taxProfileKey);
+                        $taxProfileLabel = trim((string) ($catalogName['name'] ?? ''));
+                    } else {
+                        $taxProfileLabel = '';
+                    }
+                }
+                $taxRateLabel = isset($taxStamp['rate']) ? rtrim(rtrim((string) $taxStamp['rate'], '0'), '.').'%' : '';
                 $taxRowInteractive = (bool) ($taxJurisdictionInteractive ?? false);
             @endphp
             <div class="d-flex justify-content-between align-items-baseline gap-3 py-1" data-tax-summary-row>
@@ -177,8 +192,6 @@
                             <span>{{ $taxRowLabel }}</span>
                             @if ($taxProfileLabel !== '')
                                 <span class="ops-tax-jurisdiction-label"> · {{ $taxProfileLabel }}</span>
-                            @elseif (($taxLabel ?? '') !== '' && ($taxLabel ?? '') !== $taxRowLabel)
-                                <span class="ops-tax-jurisdiction-label"> · {{ $taxLabel }}</span>
                             @endif
                             @if ($taxRateLabel !== '')
                                 <span> · {{ $taxRateLabel }}</span>
@@ -188,8 +201,6 @@
                         {{ $taxRowLabel }}
                         @if ($taxProfileLabel !== '')
                             <span class="text-secondary"> · {{ $taxProfileLabel }}</span>
-                        @elseif (($taxLabel ?? '') !== '' && ($taxLabel ?? '') !== $taxRowLabel)
-                            <span class="text-secondary"> · {{ $taxLabel }}</span>
                         @endif
                         @if ($taxRateLabel !== '')
                             <span class="text-secondary"> · {{ $taxRateLabel }}</span>
