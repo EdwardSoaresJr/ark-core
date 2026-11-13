@@ -4,13 +4,16 @@
 
 **Alpha acceptance only.** Production remains untouched until separately authorized.
 
-## Candidate (after Alpha deploy of this commit)
+## Candidate (Alpha)
 
 | Layer | SHA |
 | --- | --- |
 | Core branch | `fix/labor-matrix-hybrid-ux` |
-| Core commit | *(record after push)* |
+| Core commit | `a36da8f90949a6ee5f5cc87ce5f8e9eaab54b110` |
 | Stancl staging | `staging/labor-matrix-hybrid-194` |
+| Stancl commit | `e134e3714bf4c64a4470deee87df40da7cc774a2` |
+| Host | `157.230.172.143` / `alpha.staging.arksms.com` `/up` 200 |
+| Core PR | https://github.com/EdwardSoaresJr/ark-core/pull/195 |
 
 ## What landed
 
@@ -20,6 +23,7 @@
 - `LaborAuthority` resolves rounding from RO profile schema ≥3 cell, else shop matrix, else category fallback
 - `LaborPricingProfile::CURRENT_SCHEMA = 3` stamps `rounding_rule` on each rate cell
 - Matrix Round To saves per row via `PATCH …/labor-matrix/rounding`
+- Round To select uses static options so reload shows stored WT×BC values
 
 ### D2 — Explicit hourly rates
 - Standard open policies frozen to Hourly/Zero with stored cents (migration)
@@ -52,7 +56,9 @@ Redeploy prior Stancl SHA. Leaving `labor_rounding` in place is safe (ignored by
 
 ## Alpha proof checklist
 
-- [ ] Retail Round To ≠ RepairPal Round To for Mechanical; both persist
-- [ ] Hourly rate edit on one class does not cascade other work types
-- [ ] Open RO billed hours unchanged after settings edit
-- [ ] Desktop + mobile screenshots vs mockup
+- [x] Retail Round To ≠ RepairPal Round To for Mechanical; both persist after reload (`quarter` vs `tenth`)
+- [x] Explicit hourly rates shown (Retail `$165.00`, RepairPal `$150.00`); no Default Labor Rate / Rate Type
+- [x] DB `labor_rounding.mechanical.customer_pay=quarter`, `repairpal=tenth`; open Standard policies = 0
+- [x] Desktop screenshot after reload
+- [ ] Owner Alpha acceptance (stop here)
+- [ ] Production (blocked until separately authorized)

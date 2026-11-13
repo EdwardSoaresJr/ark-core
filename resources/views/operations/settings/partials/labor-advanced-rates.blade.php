@@ -14,7 +14,7 @@
 <div class="mb-3" data-settings-labor-advanced-rates>
     <p class="text-secondary small mb-3">
         These rates apply when a concern uses a billing type other than everyday Customer Pay —
-        or when Customer Pay should intentionally differ from the Standard rate above.
+        or when a billing class needs its own explicit hourly rate on the Labor matrix.
         Each row is for your shop’s default operation class
         (<strong>{{ $defaultClassName }}</strong>).
         Choose <strong>Use Standard</strong>, <strong>Custom Rate</strong>, or

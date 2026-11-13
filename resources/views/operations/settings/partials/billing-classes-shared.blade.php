@@ -79,7 +79,7 @@
                     <div>
                         <h5 class="modal-title mb-0" x-text="draft?.key ? ('Class Settings · ' + draft.name) : 'Add Billing Class'"></h5>
                         <div class="text-secondary small">
-                            Shared commercial settings for all work types. Labor rates and Rules stay on the Labor matrix row.
+                            Shared commercial settings for all work types. Hourly rates, Min Hrs, and Round To stay on the Labor matrix row.
                         </div>
                     </div>
                     <button type="button" class="btn-close" @click="closeEditor()"></button>

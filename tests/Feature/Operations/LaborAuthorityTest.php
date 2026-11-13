@@ -299,7 +299,7 @@ test('stamped profile schema 3 applies per billing-class rounding', function () 
                     'mode' => 'custom',
                     'rate_cents' => 15000,
                     'operation_class_key' => 'general_repair',
-                    'rounding_rule' => 'exact',
+                    'rounding_rule' => 'tenth',
                 ],
             ],
         ],
@@ -307,22 +307,110 @@ test('stamped profile schema 3 applies per billing-class rounding', function () 
     ];
     $repairOrder->forceFill(['labor_pricing_profile' => $profile])->save();
 
+    // Same source hours (not already on a tenth/quarter boundary).
+    $sourceHours = '1.01';
+
     $retail = app(LaborAuthority::class)->resolveForLine([
         'labor_category_key' => 'mechanical',
         'billing_posture' => 'customer_pay',
-        'labor_entered_hours' => '1.10',
+        'labor_entered_hours' => $sourceHours,
         'labor_adjustment' => LaborAdjustment::Normal->value,
     ], ShopSettings::current(), null, $repairOrder->fresh());
 
     $repairPal = app(LaborAuthority::class)->resolveForLine([
         'labor_category_key' => 'mechanical',
         'billing_posture' => 'repairpal',
-        'labor_entered_hours' => '1.10',
+        'labor_entered_hours' => $sourceHours,
         'labor_adjustment' => LaborAdjustment::Normal->value,
     ], ShopSettings::current(), null, $repairOrder->fresh());
 
+    expect($retail['labor_entered_hours'])->toBe('1.01')
+        ->and($retail['labor_billed_hours'])->toBe('1.25') // quarter up
+        ->and($retail['labor_rate_cents'])->toBe(16500)
+        ->and($retail['unit_price_cents'])->toBe(16500)
+        ->and((int) round((float) $retail['labor_billed_hours'] * $retail['labor_rate_cents']))->toBe(20625)
+        ->and($repairPal['labor_entered_hours'])->toBe('1.01')
+        ->and($repairPal['labor_billed_hours'])->toBe('1.10') // tenth up
+        ->and($repairPal['labor_rate_cents'])->toBe(15000)
+        ->and($repairPal['unit_price_cents'])->toBe(15000)
+        ->and((int) round((float) $repairPal['labor_billed_hours'] * $repairPal['labor_rate_cents']))->toBe(16500);
+});
+
+test('shop labor_rounding matrix applies independent Retail vs RepairPal rules for new work', function () {
+    ShopSettings::current()->update([
+        'labor_rounding' => [
+            'mechanical' => [
+                'customer_pay' => 'quarter',
+                'repairpal' => 'tenth',
+            ],
+        ],
+        'default_labor_rate_cents' => 16500,
+    ]);
+
+    $retail = app(LaborAuthority::class)->resolveForLine([
+        'labor_category_key' => 'mechanical',
+        'billing_posture' => 'customer_pay',
+        'labor_entered_hours' => '1.01',
+        'labor_adjustment' => LaborAdjustment::Normal->value,
+    ], ShopSettings::current());
+
+    $repairPal = app(LaborAuthority::class)->resolveForLine([
+        'labor_category_key' => 'mechanical',
+        'billing_posture' => 'repairpal',
+        'labor_entered_hours' => '1.01',
+        'labor_adjustment' => LaborAdjustment::Normal->value,
+    ], ShopSettings::current());
+
     expect($retail['labor_billed_hours'])->toBe('1.25')
         ->and($repairPal['labor_billed_hours'])->toBe('1.10');
+});
+
+test('stamped schema 3 rounding is unchanged when shop labor_rounding later diverges', function () {
+    $repairOrder = repairOrderForFinancialAuthority();
+    $profile = [
+        'schema' => 3,
+        'version' => 1,
+        'default_labor_rate_cents' => 16500,
+        'billing_minimums' => [],
+        'work_types' => [
+            'mechanical' => [
+                'key' => 'mechanical',
+                'label' => 'Mechanical',
+                'operation_class_key' => 'general_repair',
+                'labor_category_key' => 'mechanical',
+            ],
+        ],
+        'rates' => [
+            'mechanical' => [
+                'customer_pay' => [
+                    'mode' => 'custom',
+                    'rate_cents' => 16500,
+                    'operation_class_key' => 'general_repair',
+                    'rounding_rule' => 'quarter',
+                ],
+            ],
+        ],
+        'labor_categories' => [],
+    ];
+    $repairOrder->forceFill(['labor_pricing_profile' => $profile])->save();
+
+    ShopSettings::current()->update([
+        'labor_rounding' => [
+            'mechanical' => [
+                'customer_pay' => 'exact',
+            ],
+        ],
+    ]);
+
+    $resolved = app(LaborAuthority::class)->resolveForLine([
+        'labor_category_key' => 'mechanical',
+        'billing_posture' => 'customer_pay',
+        'labor_entered_hours' => '1.01',
+        'labor_adjustment' => LaborAdjustment::Normal->value,
+    ], ShopSettings::current(), null, $repairOrder->fresh());
+
+    expect($resolved['labor_billed_hours'])->toBe('1.25')
+        ->and($resolved['labor_rate_cents'])->toBe(16500);
 });
 
 test('exact rounding preserves book hours after minimum and adjustment', function () {
