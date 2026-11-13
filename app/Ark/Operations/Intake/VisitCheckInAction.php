@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Ark\Operations\Communications;
+namespace App\Ark\Operations\Intake;
 
 use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Appointments\AppointmentStatus;
 use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\Intake\IntakeEntryQuery;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -14,13 +13,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Check In for the Communications Vehicle & Visit rail.
+ * Check In / New visit for a selected customer visit context.
  *
  * Reuses {@see route('operations.intake.create')} / lead intake — never a separate intake path.
  * An open RO means that visit already has a repair order; that is not the same as RO workflow
  * status (approval, diagnosis, etc.). Arrival without an RO still needs Check In.
  */
-final class CommunicationsVisitCheckInAction
+final class VisitCheckInAction
 {
     /**
      * @param  array<string, mixed>  $context
@@ -147,9 +146,7 @@ final class CommunicationsVisitCheckInAction
             return null;
         }
 
-        $exists = RepairOrder::query()->whereKey($id)->exists();
-
-        return $exists ? $id : null;
+        return RepairOrder::query()->whereKey($id)->exists() ? $id : null;
     }
 
     private function checkInAppointment(?Customer $customer, ?int $openVisitRoId): ?Appointment
@@ -166,7 +163,7 @@ final class CommunicationsVisitCheckInAction
                 AppointmentStatus::Confirmed->value,
                 AppointmentStatus::Arrived->value,
             ])
-            ->orderByRaw("CASE status WHEN ? THEN 0 WHEN ? THEN 1 ELSE 2 END", [
+            ->orderByRaw('CASE status WHEN ? THEN 0 WHEN ? THEN 1 ELSE 2 END', [
                 AppointmentStatus::Arrived->value,
                 AppointmentStatus::Confirmed->value,
             ])

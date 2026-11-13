@@ -6,6 +6,7 @@ use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Intake\VisitCheckInAction;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -23,7 +24,7 @@ final class CommunicationsInboxPresentation
 {
     public function __construct(
         private readonly ConversationWork $work,
-        private readonly CommunicationsVisitCheckInAction $checkInAction,
+        private readonly VisitCheckInAction $checkInAction,
     ) {}
 
     /**
