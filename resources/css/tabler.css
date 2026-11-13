@@ -1059,8 +1059,9 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
     border-bottom-color: color-mix(in srgb, var(--tblr-primary) 28%, var(--tblr-border-color));
 }
 
-/* Sales Tax row: unstyled text button matching Labor/Parts/Fees dt geometry. */
-.ops-tax-jurisdiction-trigger {
+/* Inline click-to-edit text (Sales Tax, Visit Status/Technician): unstyled trigger + dotted value. */
+.ops-tax-jurisdiction-trigger,
+.ops-visit-inline-trigger {
     display: inline !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -1083,22 +1084,30 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
 }
 
 .ops-tax-jurisdiction-trigger:hover,
-.ops-tax-jurisdiction-trigger:focus-visible {
+.ops-tax-jurisdiction-trigger:focus-visible,
+.ops-visit-inline-trigger:hover,
+.ops-visit-inline-trigger:focus-visible {
     color: inherit;
     background: transparent;
     text-decoration: none;
 }
 
-.ops-tax-jurisdiction-trigger:focus-visible {
+.ops-tax-jurisdiction-trigger:focus-visible,
+.ops-visit-inline-trigger:focus-visible {
     outline: 2px solid var(--tblr-primary);
     outline-offset: 2px;
 }
 
-.ops-tax-jurisdiction-label {
+.ops-tax-jurisdiction-label,
+.ops-visit-inline-value {
     text-decoration-line: underline;
     text-decoration-style: dotted;
     text-decoration-thickness: from-font;
     text-underline-offset: 0.18em;
+}
+
+.ops-visit-inline-value.is-warning {
+    color: var(--tblr-warning);
 }
 
 /* VIN: copyable text + compact readback; teleported tooltip above sticky RO tabs. */

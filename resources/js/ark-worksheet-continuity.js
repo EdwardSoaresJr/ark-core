@@ -1429,6 +1429,48 @@ export function initRepairOrderLifecycleSelect() {
     });
 
     document.addEventListener('click', (event) => {
+        const lifecycleOption = event.target.closest('[data-lifecycle-option]');
+
+        if (lifecycleOption) {
+            const form = lifecycleOption.closest('[data-lifecycle-form]');
+            const select = form?.querySelector('[data-lifecycle-select]');
+            const nextValue = lifecycleOption.dataset.statusValue ?? '';
+
+            if (! select || nextValue === '') {
+                return;
+            }
+
+            if (select.value === nextValue && nextValue === (select.dataset.currentStatus ?? '')) {
+                return;
+            }
+
+            select.value = nextValue;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+
+            return;
+        }
+
+        const technicianOption = event.target.closest('[data-technician-option]');
+
+        if (technicianOption) {
+            const form = technicianOption.closest('form');
+            const select = form?.querySelector('[data-technician-select]');
+            const nextValue = technicianOption.dataset.technicianValue ?? '';
+
+            if (! select) {
+                return;
+            }
+
+            if (String(select.value || '') === String(nextValue)) {
+                return;
+            }
+
+            select.value = nextValue;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+
+            return;
+        }
+
         const cancel = event.target.closest('[data-lost-reason-cancel]');
 
         if (! cancel) {

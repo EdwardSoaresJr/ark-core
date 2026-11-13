@@ -20,11 +20,14 @@
         $balanceProjection,
     );
     $formId = 'repair-order-workflow';
+    $selectId = 'status-move-'.$repairOrder->repair_order_id;
+    $menuId = 'status-move-menu-'.$repairOrder->repair_order_id;
+    $currentLabel = $repairOrder->statusDisplayLabel();
 @endphp
 
 @if (! $repairOrder->isTerminal())
-    <div class="row g-0 align-items-center ark-ro-visit-commands__status">
-        <label for="status-move-{{ $repairOrder->repair_order_id }}" class="col-4 text-secondary">Status</label>
+    <div class="row g-0 align-items-baseline ark-ro-visit-commands__status">
+        <div class="col-4 text-secondary">Status</div>
         <div class="col-8">
             @if ($errors->has('lifecycle'))
                 <div class="small text-danger mb-1">{{ $errors->first('lifecycle') }}</div>
@@ -42,16 +45,96 @@
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+
+                <div class="dropdown">
+                    <button
+                        type="button"
+                        class="ops-visit-inline-trigger fw-medium"
+                        data-bs-toggle="dropdown"
+                        data-bs-display="static"
+                        aria-expanded="false"
+                        aria-haspopup="listbox"
+                        aria-controls="{{ $menuId }}"
+                        aria-label="Repair order status"
+                        title="Click to change status"
+                        data-lifecycle-trigger
+                    >
+                        <span class="ops-visit-inline-value">{{ $currentLabel }}</span>
+                    </button>
+                    <ul
+                        id="{{ $menuId }}"
+                        class="dropdown-menu"
+                        role="listbox"
+                        aria-label="Repair order status"
+                    >
+                        <li>
+                            <button
+                                type="button"
+                                class="dropdown-item active"
+                                role="option"
+                                aria-selected="true"
+                                data-lifecycle-option
+                                data-status-value="{{ $repairOrder->status->value }}"
+                            >{{ $currentLabel }}</button>
+                        </li>
+                        @foreach ($lifecycleSelect->statusOptions as $option)
+                            <li>
+                                <button
+                                    type="button"
+                                    class="dropdown-item"
+                                    role="option"
+                                    aria-selected="false"
+                                    data-lifecycle-option
+                                    data-status-value="{{ $option['value'] }}"
+                                    @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
+                                >
+                                    {{ $option['label'] }}@if (filled($option['blockedReason'])) - {{ $option['blockedReason'] }}@endif
+                                </button>
+                            </li>
+                        @endforeach
+                        @foreach ($lifecycleSelect->closeOptions as $option)
+                            <li>
+                                <button
+                                    type="button"
+                                    class="dropdown-item"
+                                    role="option"
+                                    aria-selected="false"
+                                    data-lifecycle-option
+                                    data-status-value="{{ $option['value'] }}"
+                                    @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
+                                >
+                                    {{ $option['label'] }}@if (filled($option['blockedReason'])) - {{ $option['blockedReason'] }}@endif
+                                </button>
+                            </li>
+                        @endforeach
+                        @if ($lifecycleSelect->showLostCloseOption)
+                            <li>
+                                <button
+                                    type="button"
+                                    class="dropdown-item"
+                                    role="option"
+                                    aria-selected="false"
+                                    data-lifecycle-option
+                                    data-status-value="closed:lost"
+                                >Closed - Lost</button>
+                            </li>
+                        @endif
+                    </ul>
+                </div>
+
+                {{-- Visually hidden: keeps deep-link + change handlers on the same select contract. --}}
+                <label class="visually-hidden" for="{{ $selectId }}">Repair order status</label>
                 <select
-                    id="status-move-{{ $repairOrder->repair_order_id }}"
+                    id="{{ $selectId }}"
                     name="status"
                     required
-                    class="form-select form-select-sm fw-bold"
-                    aria-label="Repair order status"
+                    class="visually-hidden"
+                    tabindex="-1"
+                    aria-hidden="true"
                     data-lifecycle-select
                     data-current-status="{{ $repairOrder->status->value }}"
                 >
-                    <option value="{{ $repairOrder->status->value }}" selected>{{ $repairOrder->statusDisplayLabel() }}</option>
+                    <option value="{{ $repairOrder->status->value }}" selected>{{ $currentLabel }}</option>
                     @foreach ($lifecycleSelect->statusOptions as $option)
                         <option
                             value="{{ $option['value'] }}"
