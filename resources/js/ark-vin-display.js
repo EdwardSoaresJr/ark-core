@@ -42,9 +42,29 @@ export const vinPhonetic = (char) => VIN_PHONETIC[String(char || '').toUpperCase
 export const arkVinDisplay = (vin) => ({
     vin: String(vin || '').toUpperCase().trim(),
     copied: false,
-    tooltipOpen: false,
+    readbackOpen: false,
+    sheetMode: false,
     tooltipStyle: '',
     scrollHandler: null,
+    outsideHandler: null,
+    escapeHandler: null,
+
+    init() {
+        this.sheetMode = window.matchMedia('(max-width: 767.98px)').matches;
+        this._mq = window.matchMedia('(max-width: 767.98px)');
+        this._mqListener = (event) => {
+            this.sheetMode = event.matches;
+            if (this.readbackOpen) {
+                this.$nextTick(() => this.positionReadback());
+            }
+        };
+        this._mq.addEventListener?.('change', this._mqListener);
+    },
+
+    destroy() {
+        this.closeReadback();
+        this._mq?.removeEventListener?.('change', this._mqListener);
+    },
 
     get suffixLength() {
         return Math.min(8, this.vin.length);
@@ -84,43 +104,49 @@ export const arkVinDisplay = (vin) => ({
         return this.phoneticCells.filter((_, index) => index >= 9);
     },
 
-    showTooltip() {
-        this.tooltipOpen = true;
-        this.$nextTick(() => this.positionTooltip());
+    openReadback() {
+        this.sheetMode = window.matchMedia('(max-width: 767.98px)').matches;
+        this.readbackOpen = true;
+        this.$nextTick(() => {
+            this.positionReadback();
+            this.$refs.panel?.focus?.({ preventScroll: true });
+        });
+        this.attachDismiss();
         this.attachScroll();
     },
 
-    toggleTooltip() {
-        if (this.tooltipOpen) {
-            this.hideTooltip();
+    toggleReadback() {
+        if (this.readbackOpen) {
+            this.closeReadback();
             return;
         }
 
-        this.showTooltip();
+        this.openReadback();
     },
 
-    hideTooltip(event) {
-        const related = event?.relatedTarget;
-        if (related && (this.$el.contains(related) || this.$refs.tooltip?.contains(related))) {
-            return;
-        }
-
-        this.tooltipOpen = false;
+    closeReadback() {
+        this.readbackOpen = false;
+        this.detachDismiss();
         this.detachScroll();
     },
 
-    positionTooltip() {
-        const trigger = this.$refs.trigger;
+    positionReadback() {
+        if (! this.readbackOpen || this.sheetMode) {
+            this.tooltipStyle = '';
+            return;
+        }
+
+        const trigger = this.$refs.readback || this.$refs.trigger;
 
         if (! trigger) {
             return;
         }
 
         const rect = trigger.getBoundingClientRect();
-        const offset = 7;
-        const tooltip = this.$refs.tooltip;
-        const height = tooltip?.offsetHeight ?? 280;
-        const width = tooltip?.offsetWidth ?? 320;
+        const offset = 8;
+        const panel = this.$refs.panel;
+        const height = panel?.offsetHeight ?? 280;
+        const width = panel?.offsetWidth ?? 320;
         let top = rect.bottom + offset;
         let left = rect.left;
 
@@ -132,7 +158,7 @@ export const arkVinDisplay = (vin) => ({
             left = Math.max(8, window.innerWidth - width - 8);
         }
 
-        // Keep above sticky RO tabs (1021) and orientation chrome (1022).
+        // Above sticky RO tabs (1021) and orientation chrome (1022).
         this.tooltipStyle = `top:${Math.round(top)}px;left:${Math.round(left)}px;z-index:1085;`;
     },
 
@@ -142,8 +168,8 @@ export const arkVinDisplay = (vin) => ({
         }
 
         this.scrollHandler = () => {
-            if (this.tooltipOpen) {
-                this.positionTooltip();
+            if (this.readbackOpen && ! this.sheetMode) {
+                this.positionReadback();
             }
         };
 
@@ -161,6 +187,47 @@ export const arkVinDisplay = (vin) => ({
         this.scrollHandler = null;
     },
 
+    attachDismiss() {
+        this.detachDismiss();
+
+        this.escapeHandler = (event) => {
+            if (event.key === 'Escape' && this.readbackOpen) {
+                event.stopPropagation();
+                this.closeReadback();
+                this.$refs.readback?.focus?.({ preventScroll: true });
+            }
+        };
+
+        this.outsideHandler = (event) => {
+            if (! this.readbackOpen) {
+                return;
+            }
+
+            const target = event.target;
+            if (this.$el.contains(target) || this.$refs.panel?.contains(target) || this.$refs.backdrop?.contains(target)) {
+                return;
+            }
+
+            this.closeReadback();
+        };
+
+        window.addEventListener('keydown', this.escapeHandler, true);
+        // Capture so RO tab clicks still dismiss after the panel teleports to body.
+        document.addEventListener('pointerdown', this.outsideHandler, true);
+    },
+
+    detachDismiss() {
+        if (this.escapeHandler) {
+            window.removeEventListener('keydown', this.escapeHandler, true);
+            this.escapeHandler = null;
+        }
+
+        if (this.outsideHandler) {
+            document.removeEventListener('pointerdown', this.outsideHandler, true);
+            this.outsideHandler = null;
+        }
+    },
+
     async copy() {
         if (! this.vin) {
             return;
@@ -173,7 +240,7 @@ export const arkVinDisplay = (vin) => ({
                 this.copied = false;
             }, 1500);
         } catch {
-            // Clipboard unavailable - hover still exposes the full VIN.
+            // Clipboard unavailable — VIN remains visible for manual copy.
         }
     },
 });

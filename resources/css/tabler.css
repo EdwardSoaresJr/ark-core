@@ -1122,8 +1122,22 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
     min-height: 1.25rem;
 }
 
-.ops-vin-tooltip-layer {
+.ops-vin-tooltip-layer,
+.ops-vin-readback-popover {
     z-index: 1085 !important;
+    pointer-events: auto;
+    width: max-content;
+    max-width: min(22rem, calc(100vw - 1rem));
+}
+
+.ops-vin-readback-backdrop {
+    z-index: 1084 !important;
+}
+
+.ops-vin-readback-sheet {
+    z-index: 1085 !important;
+    max-height: min(70dvh, 28rem);
+    overflow: auto;
     pointer-events: auto;
 }
 

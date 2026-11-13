@@ -183,9 +183,15 @@ test('estimate context opens from KPI cards and VIN readback teleports above wor
         ->and($html)->toContain('data-estimate-context-open="portal"')
         ->and($html)->toContain('data-estimate-context-open="parts"')
         ->and($html)->toContain('data-vin-readback-trigger')
-        ->and($html)->toContain('ops-vin-tooltip-layer')
+        ->and($html)->toContain('ops-vin-readback-popover')
         ->and($html)->toContain('Click to copy VIN')
+        ->and($html)->toContain('VIN copied')
+        ->and($html)->toContain('title="VIN readback"')
+        ->and($html)->toContain('aria-label="VIN readback"')
+        ->and($html)->toContain('toggleReadback()')
         ->and($html)->not->toContain('ops-vin-copy-btn')
+        ->and($html)->not->toContain('title="Copy VIN"')
+        ->and($html)->not->toContain('title="Phone readback"')
         ->and($html)->not->toContain('data-linked-parts-quote-actions')
         ->and($html)->not->toContain('id="authorization-rail"\n            data-continuity-region="authorization-rail"\n            class="nav-link"');
 });

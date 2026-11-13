@@ -1,5 +1,5 @@
 <span class="ops-vin-phonetic-head">
-    <span class="ops-vin-phonetic-label">Phone readback</span>
+    <span class="ops-vin-phonetic-label">VIN readback</span>
 </span>
 <span class="ops-vin-phonetic-rows">
     <span class="ops-vin-phonetic-section" x-show="phoneticWmiCells.length">

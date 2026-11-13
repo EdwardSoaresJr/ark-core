@@ -1,10 +1,13 @@
 @php
     $sections = $sections ?? [];
+    $heading = $heading ?? true;
 @endphp
 
-<span class="ops-vin-phonetic-head">
-    <span class="ops-vin-phonetic-label">Phone readback</span>
-</span>
+@if ($heading)
+    <span class="ops-vin-phonetic-head">
+        <span class="ops-vin-phonetic-label">VIN readback</span>
+    </span>
+@endif
 <span class="ops-vin-phonetic-rows">
     @foreach ($sections as $section)
         <span @class([

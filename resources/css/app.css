@@ -8742,9 +8742,40 @@
     }
 
     .ops-vin-readback-glyph {
-        font-size: 0.75rem;
+        font-size: 0.625rem;
         line-height: 1;
         font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: none;
+    }
+
+    .ops-vin-readback-close {
+        border: 0;
+        background: transparent;
+        padding: 0 0.25rem;
+        font-size: 1.125rem;
+        line-height: 1;
+        color: theme('colors.slate.500');
+        cursor: pointer;
+    }
+
+    .ops-vin-readback-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1084;
+        background: rgb(15 23 42 / 0.35);
+    }
+
+    .ops-vin-readback-sheet {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1085;
+        max-height: min(70dvh, 28rem);
+        overflow: auto;
+        border-radius: 0.75rem 0.75rem 0 0;
+        pointer-events: auto;
     }
 
     .ops-vin-copyable {
