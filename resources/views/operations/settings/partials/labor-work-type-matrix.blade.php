@@ -137,16 +137,19 @@
                                     </div>
                                 </td>
                                 <td class="py-1">
+                                    {{-- Static options: Alpine :value does not reliably sync when options are x-for-rendered. --}}
                                     <select
                                         class="form-select form-select-sm"
+                                        :key="`rounding-${selectedWorkType}-${column.value}`"
                                         :value="cell(selectedWorkType, column.value).rounding_rule || 'quarter'"
                                         @change="saveCellRounding(column.value, $event.target.value)"
                                         :aria-label="`${selectedWorkTypeLabel()} ${column.label} rounding`"
                                         data-labor-rounding
                                     >
-                                        <template x-for="option in (matrix.rounding_options || [])" :key="option.value">
-                                            <option :value="option.value" x-text="option.label"></option>
-                                        </template>
+                                        <option value="exact">No rounding</option>
+                                        <option value="tenth">Round up to 0.1 hr</option>
+                                        <option value="quarter">Round up to 0.25 hr</option>
+                                        <option value="half">Round up to 0.5 hr</option>
                                     </select>
                                 </td>
                                 <td class="py-1 text-end">
