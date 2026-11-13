@@ -44,7 +44,8 @@ test('Check In sits in the conversation work grid below Follow-up and Waiting', 
     $vehicleSection = substr($contextPanel, $vehicleStart);
     expect($vehicleSection)->not->toContain('data-comms-check-in')
         ->and($vehicleSection)->not->toContain('data-comms-context-check-in')
-        ->and($contextPanel)->toContain("'checkIn' => is_array(\$context['check_in']");
+        ->and($contextPanel)->toContain("'checkIn' => \$checkIn")
+        ->and($contextPanel)->toContain('data-comms-check-in-fallback');
 });
 
 test('conversation work grid renders Check In and New visit without a Vehicle & Visit button', function (): void {
@@ -162,7 +163,79 @@ test('conversation work grid renders Check In and New visit without a Vehicle & 
 
     expect($vehicleHtml)->toContain('data-open-ro="RO 12"')
         ->and($vehicleHtml)->toContain('View repair order')
-        ->and($vehicleHtml)->not->toContain('data-comms-check-in');
+        ->and($vehicleHtml)->toContain('data-comms-check-in-fallback')
+        ->and($vehicleHtml)->toContain('data-comms-context-check-in="new_visit"')
+        ->and($vehicleHtml)->toContain('data-comms-check-in')
+        ->and($vehicleHtml)->toContain('btn-outline-secondary')
+        ->and($vehicleHtml)->not->toContain('data-comms-work-unread');
+});
+
+test('Check In remains available when conversation work url is absent', function (): void {
+    $html = view()->file(
+        resource_path('views/operations/communications/workspace/partials/context-panel.blade.php'),
+        [
+            'context' => [
+                'customer' => ['name' => 'No Work', 'status' => 'Customer', 'id' => 9],
+                'vehicle' => [],
+                'open_repair_orders' => [],
+                'check_in' => [
+                    'key' => 'check_in',
+                    'label' => 'Check In',
+                    'url' => '/app/intake/create?customer_id=9',
+                    'style' => 'primary',
+                    'hint' => null,
+                ],
+                'shop' => [],
+                'recent_visits' => [],
+                'work' => ['owner_name' => 'Unassigned'], // present but no url
+            ],
+        ],
+    )->render();
+
+    expect($html)->toContain('data-comms-check-in-fallback')
+        ->and($html)->toContain('data-comms-context-check-in="check_in"')
+        ->and($html)->toContain('btn-primary')
+        ->and($html)->toContain('Check In')
+        ->and($html)->toContain('customer_id=9')
+        ->and($html)->not->toContain('data-comms-work-actions="rail"')
+        ->and($html)->not->toContain('data-comms-work-unread');
+
+    $withWork = view()->file(
+        resource_path('views/operations/communications/workspace/partials/context-panel.blade.php'),
+        [
+            'context' => [
+                'customer' => ['name' => 'With Work', 'status' => 'Customer'],
+                'vehicle' => [],
+                'open_repair_orders' => [],
+                'check_in' => [
+                    'key' => 'check_in',
+                    'label' => 'Check In',
+                    'url' => '/app/intake/create?customer_id=3',
+                    'style' => 'primary',
+                    'hint' => null,
+                ],
+                'shop' => [],
+                'recent_visits' => [],
+                'work' => [
+                    'url' => '/app/communications/conversations/3/work',
+                    'lane' => 'needs',
+                    'filter' => 'needs',
+                    'owner' => 'everyone',
+                    'owner_name' => 'Ada',
+                    'follow_up_due_label' => 'None',
+                    'advisors' => [],
+                    'default_due_at' => '',
+                    'posture_changed_at' => '',
+                    'owned_by_user_id' => null,
+                ],
+            ],
+        ],
+    )->render();
+
+    expect($withWork)->toContain('data-comms-work-actions="rail"')
+        ->and($withWork)->toContain('data-comms-check-in')
+        ->and($withWork)->not->toContain('data-comms-check-in-fallback')
+        ->and($withWork)->toContain('data-comms-work-unread');
 });
 
 test('known customer without an open visit shows Check In prefilling the customer', function (): void {

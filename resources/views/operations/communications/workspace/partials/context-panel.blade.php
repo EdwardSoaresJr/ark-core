@@ -104,7 +104,12 @@
                 </dl>
             </section>
 
-            @if (is_array($work) && filled($work['url'] ?? null))
+            @php
+                $checkIn = is_array($context['check_in'] ?? null) ? $context['check_in'] : null;
+                $checkInAvailable = $checkIn !== null && filled($checkIn['url'] ?? null);
+                $hasWork = is_array($work) && filled($work['url'] ?? null);
+            @endphp
+            @if ($hasWork)
                 <section class="p-3 border-bottom" aria-labelledby="comms-context-work" data-comms-work-summary>
                     <div class="subheader mb-1" id="comms-context-work">Conversation</div>
                     <dl class="row g-0 small mb-2">
@@ -116,8 +121,26 @@
                     @include('operations.communications.workspace.partials.work-actions', [
                         'work' => $work,
                         'variant' => 'rail',
-                        'checkIn' => is_array($context['check_in'] ?? null) ? $context['check_in'] : null,
+                        'checkIn' => $checkIn,
                     ])
+                </section>
+            @elseif ($checkInAvailable)
+                {{-- Check In must not depend on work-lane / assignment controls. --}}
+                <section class="p-3 border-bottom" aria-labelledby="comms-context-work" data-comms-check-in-fallback>
+                    <div class="subheader mb-1" id="comms-context-work">Conversation</div>
+                    <div class="ark-comms-work-grid" role="group" aria-label="Conversation work">
+                        <div data-comms-context-check-in="{{ $checkIn['key'] ?? 'check_in' }}">
+                            <a
+                                href="{{ $checkIn['url'] }}"
+                                class="btn btn-sm w-100 {{ ($checkIn['style'] ?? 'primary') === 'primary' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                data-comms-check-in
+                                @if (filled($checkIn['hint'] ?? null)) title="{{ $checkIn['hint'] }}" @endif
+                            >
+                                <x-tabler.icon name="car" />
+                                {{ $checkIn['label'] ?? 'Check In' }}
+                            </a>
+                        </div>
+                    </div>
                 </section>
             @endif
 
