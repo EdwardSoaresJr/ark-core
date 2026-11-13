@@ -156,7 +156,7 @@
                 $taxStamp = is_array($repairOrder?->tax_profile) ? $repairOrder->tax_profile : [];
                 $taxProfileLabel = (string) ($taxStamp['profile_name'] ?? $taxStamp['label'] ?? '');
                 $taxRateLabel = isset($taxStamp['rate']) ? rtrim(rtrim((string) $taxStamp['rate'], '0'), '.').'%' : '';
-                $taxSummaryBits = array_values(array_filter([$taxProfileLabel, $taxRateLabel]));
+                $taxRowLabel = 'Sales Tax';
                 $taxRowInteractive = (bool) ($taxJurisdictionInteractive ?? false);
             @endphp
             <div class="d-flex justify-content-between align-items-baseline gap-3 py-1" data-tax-summary-row>
@@ -174,15 +174,25 @@
                             data-bs-title="Click to view or change tax jurisdiction."
                             @click="window.dispatchEvent(new CustomEvent('ark-open-tax-jurisdiction'))"
                         >
-                            <span>{{ $taxLabel ?? 'Sales Tax' }}</span>
-                            @if ($taxSummaryBits !== [])
-                                <span class="ops-tax-jurisdiction-label"> · {{ implode(' · ', $taxSummaryBits) }}</span>
+                            <span>{{ $taxRowLabel }}</span>
+                            @if ($taxProfileLabel !== '')
+                                <span class="ops-tax-jurisdiction-label"> · {{ $taxProfileLabel }}</span>
+                            @elseif (($taxLabel ?? '') !== '' && ($taxLabel ?? '') !== $taxRowLabel)
+                                <span class="ops-tax-jurisdiction-label"> · {{ $taxLabel }}</span>
+                            @endif
+                            @if ($taxRateLabel !== '')
+                                <span> · {{ $taxRateLabel }}</span>
                             @endif
                         </button>
                     @else
-                        {{ $taxLabel ?? 'Sales Tax' }}
-                        @if ($taxSummaryBits !== [])
-                            <span class="text-secondary"> · {{ implode(' · ', $taxSummaryBits) }}</span>
+                        {{ $taxRowLabel }}
+                        @if ($taxProfileLabel !== '')
+                            <span class="text-secondary"> · {{ $taxProfileLabel }}</span>
+                        @elseif (($taxLabel ?? '') !== '' && ($taxLabel ?? '') !== $taxRowLabel)
+                            <span class="text-secondary"> · {{ $taxLabel }}</span>
+                        @endif
+                        @if ($taxRateLabel !== '')
+                            <span class="text-secondary"> · {{ $taxRateLabel }}</span>
                         @endif
                     @endif
                 </dt>
