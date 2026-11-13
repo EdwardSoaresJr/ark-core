@@ -45,6 +45,16 @@
             </div>
         </div>
         <div class="small fw-medium">{{ $repairOrder->procurementReadinessSummary() }}</div>
+        @if (app(\App\Ark\Operations\Parts\LinkedPartsQuotes::class)->available())
+            <button
+                type="button"
+                class="btn btn-sm mt-2"
+                data-linked-parts-quote-open
+                @click="window.dispatchEvent(new CustomEvent('ark:linked-parts-quote-open', { detail: { invokeEl: $event.currentTarget } }))"
+            >
+                Manage linked quote
+            </button>
+        @endif
         @if ($repairOrder->status === \App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingParts)
             <div class="small fw-medium text-orange mt-1">When parts arrive, mark them Received here. Then move the RO status off Waiting Parts.</div>
         @elseif (($railMode ?? 'review') === 'builder' && $partsBlockingCount > 0)

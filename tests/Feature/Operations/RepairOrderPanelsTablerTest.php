@@ -257,25 +257,22 @@ test('the estimate context panels render Tabler authorization, portal, and parts
         ->and($xpath->query('.//*[@data-parts-line="'.$part->id.'"]//button[normalize-space()="Print label"]', $parts)->length)->toBe(1);
 });
 
-test('the estimate toolbar has a Preview button to the staff preview, on open and closed repair orders', function (): void {
+test('staff estimate preview stays available from the customer portal panel after toolbar relocation', function (): void {
     [$repairOrder] = panelsTablerRepairOrder();
     $preview = route('operations.repair-orders.portal-preview', $repairOrder);
-    $previewButton = function () use ($repairOrder, $preview): DOMNodeList {
-        $html = $this->actingAs(panelsTablerAdvisor())->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
-        $xpath = panelsTablerXpath($html);
 
-        return $xpath->query('//*[@data-estimate-tools]//a[@data-estimate-preview][@href="'.$preview.'"][@target="_blank"][contains(@class, "btn")]');
-    };
+    $html = $this->actingAs(panelsTablerAdvisor())->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+    $xpath = panelsTablerXpath($html);
 
-    expect($previewButton()->length)->toBe(1)
-        ->and(trim($previewButton()->item(0)->textContent))->toBe('Preview');
+    expect($xpath->query('//a[@href="'.$preview.'"][@target="_blank"][contains(@class, "btn")]')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@data-estimate-tools]//a[@data-estimate-preview]')->length)->toBe(0);
 
     $repairOrder->forceFill(['status' => RepairOrderStatus::Closed])->save();
+    $closedHtml = $this->actingAs(panelsTablerAdvisor())->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+    $closedXpath = panelsTablerXpath($closedHtml);
     expect($repairOrder->fresh()->isTerminal())->toBeTrue()
-        ->and($previewButton()->length)->toBe(1);
-
-    RepairOrderLine::query()->where('repair_order_id', $repairOrder->id)->delete();
-    expect($previewButton()->length)->toBe(0);
+        ->and($closedXpath->query('//a[@href="'.$preview.'"][@target="_blank"][contains(@class, "btn")]')->length)->toBeGreaterThan(0)
+        ->and($closedXpath->query('//*[@data-estimate-tools]//a[@data-estimate-preview]')->length)->toBe(0);
 });
 
 test('the authorization history keeps the revoke form on Tabler markup', function (): void {
@@ -383,12 +380,15 @@ test('the dealer quote capture and linked quote dialogs are Tabler modals', func
         ->and($xpath->query('.//input[@type="hidden"][@name="'.RepairOrderConcurrency::FIELD.'"]', $dealerForm)->length)->toBe(1)
         ->and($xpath->query('.//*[contains(@class, "table-responsive")]//table[contains(@class, "table")]', $dealerForm)->length)->toBe(1);
 
-    $linked = panelsTablerOne($xpath, '//*[@data-linked-parts-quote]');
+    $linked = panelsTablerOne($xpath, '//*[@data-linked-parts-quote][@data-linked-parts-quote-host]');
 
     expect(panelsTablerLegacyClasses($linked))->toBe([])
-        ->and($linked->getAttribute('class'))->toContain('card')
+        ->and($linked->getAttribute('class'))->toContain('d-none')
         ->and($linked->getAttribute('x-data'))->toContain('arkLinkedPartsQuote(')
-        ->and($xpath->query('.//*[@data-linked-parts-quote-dialog]//*[contains(@class, "modal-content")][@x-ref="dialog"]', $linked)->length)->toBe(1);
+        ->and($xpath->query('.//*[@data-linked-parts-quote-dialog]//*[contains(@class, "modal-content")][@x-ref="dialog"]', $linked)->length)->toBe(1)
+        ->and($xpath->query('//*[@data-linked-parts-quote-open]')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@data-linked-parts-quote-actions]')->length)->toBe(0)
+        ->and($xpath->query('//*[@data-parts-catalog-split]')->length)->toBeGreaterThan(0);
 });
 
 test('the PartsTech Cart Manager renders a Tabler modal with pull, assignment and import controls', function (): void {

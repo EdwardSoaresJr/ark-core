@@ -63,6 +63,16 @@
                                     <span x-show="loaded" x-text="' · ' + rows.length + (rows.length === 1 ? ' part' : ' parts')"></span>
                                 </div>
                             </div>
+                            <button
+                                type="button"
+                                class="btn btn-sm"
+                                @click="window.dispatchEvent(new CustomEvent('ark:linked-parts-quote-open', { detail: { invokeEl: $event.currentTarget } }))"
+                                aria-haspopup="dialog"
+                                title="Manage the linked PartsTech quote for this RO"
+                                data-cart-linked-quote
+                            >
+                                Linked quote
+                            </button>
                             <button type="button" class="btn btn-sm" @click="openPartsTech()" aria-label="Open PartsTech" title="Open PartsTech for this RO" data-cart-open-partstech>
                                 <x-tabler.icon name="external-link" />
                                 <span class="d-none d-sm-inline">PartsTech</span>

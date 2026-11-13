@@ -1664,7 +1664,7 @@
             'visitCommands' => $visitCommands,
         ])
 
-        <div class="ops-estimate-layout gap-3 mt-3">
+        <div class="ops-estimate-layout gap-2 mt-2">
             <div class="ops-estimate-main min-w-0">
                 <x-operations.repair-order-workspace-tabs
                     workspaceMode="review"
@@ -1680,6 +1680,7 @@
                     :recommendationOpenCount="$recommendationAwareness['open_count'] ?? 0"
                     :recommendationSafetyCount="$recommendationAwareness['safety_count'] ?? 0"
                 >
+                {{-- Import / Preview / Customer View relocated: Tools, portal panel, context strip. --}}
                 @include('operations.repair-orders.partials.repair-order-estimate-toolbar-actions', [
                     'repairOrder' => $repairOrder,
                     'mode' => 'edit',
@@ -1696,6 +1697,7 @@
                     @include('operations.repair-orders.partials.repair-order-estimate-workspace-header', [
                         'repairOrder' => $repairOrder,
                         'totals' => $totals,
+                        'partsBlockingCount' => $partsBlockingCount ?? 0,
                     ])
 
                     @include('operations.repair-orders.partials.repair-order-estimate-context-strip', [
@@ -1774,11 +1776,11 @@
                         @endif
                         @unless ($canImportPartstechQuote || $isTerminal)
                             @if ($partsTechLauncher->usesPlatform())
-                                <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
+                                <p class="small text-secondary mb-2" data-worksheet-procurement-hint>
                                     {{ $partsTechLauncher->blockedReason($repairOrder) }}
                                 </p>
                             @elseif ($partsTechLauncher->configured())
-                                <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
+                                <p class="small text-secondary mb-2" data-worksheet-procurement-hint>
                                     PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}">Settings → PartsTech</a>.
                                 </p>
                             @endif

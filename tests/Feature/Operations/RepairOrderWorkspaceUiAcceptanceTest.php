@@ -131,9 +131,70 @@ test('header and footer print menus expose identical authoritative items', funct
 
     expect(substr_count($html, 'data-ro-print-menu'))->toBeGreaterThanOrEqual(2)
         ->and($html)->toContain('data-ro-footer-print')
-        ->and($html)->toContain('dropup-menu')
+        ->and($html)->toContain('data-bs-toggle="dropdown"')
+        ->and($html)->toContain('data-ro-footer-print-menu')
+        ->and($html)->toContain('class="dropup ms-auto"')
         ->and(substr_count($html, 'data-ro-print-item="estimate_pdf"'))->toBe(2)
         ->and(substr_count($html, 'data-ro-print-item="check_in_sheet"'))->toBe(2);
+});
+
+test('tax jurisdiction modal teleports above its backdrop and tax row keeps financial-row geometry', function () {
+    $ro = workspaceUiRo();
+
+    $html = $this->get(route('operations.repair-orders.show', $ro))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('x-teleport="body"')
+        ->and($html)->toContain('data-tax-jurisdiction-backdrop')
+        ->and($html)->toContain('data-tax-jurisdiction-dialog')
+        ->and($html)->toContain('ops-tax-jurisdiction-label')
+        ->and($html)->toContain('ops-tax-jurisdiction-trigger')
+        ->and($html)->toContain('Click to view or change tax jurisdiction.')
+        ->and($html)->not->toContain('btn btn-link p-0 align-baseline text-secondary text-decoration-none ops-tax-jurisdiction-trigger');
+});
+
+test('estimate context opens from KPI cards and VIN readback teleports above workspace chrome', function () {
+    $customer = \App\Ark\Operations\Customers\Customer::query()->create([
+        'first_name' => 'Vin',
+        'last_name' => 'Readback',
+        'phone' => '555-0199',
+        'customer_type' => 'Retail',
+    ]);
+    $vehicle = \App\Ark\Operations\Vehicles\Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2018,
+        'make' => 'Ford',
+        'model' => 'Focus',
+        'vin' => '1FADP3F20JL123456',
+    ]);
+    $ro = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'VIN and KPI acceptance',
+    ]);
+
+    $html = $this->get(route('operations.repair-orders.show', $ro))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('data-estimate-context-open="auth"')
+        ->and($html)->toContain('data-estimate-context-open="portal"')
+        ->and($html)->toContain('data-estimate-context-open="parts"')
+        ->and($html)->toContain('data-vin-readback-trigger')
+        ->and($html)->toContain('ops-vin-readback-popover')
+        ->and($html)->toContain('Click to copy VIN')
+        ->and($html)->toContain('VIN copied')
+        ->and($html)->toContain('title="VIN readback"')
+        ->and($html)->toContain('aria-label="VIN readback"')
+        ->and($html)->toContain('toggleReadback()')
+        ->and($html)->toContain('onReadbackHoverEnter()')
+        ->and($html)->not->toContain('ops-vin-copy-btn')
+        ->and($html)->not->toContain('title="Copy VIN"')
+        ->and($html)->not->toContain('title="Phone readback"')
+        ->and($html)->not->toContain('data-linked-parts-quote-actions')
+        ->and($html)->not->toContain('id="authorization-rail"\n            data-continuity-region="authorization-rail"\n            class="nav-link"');
 });
 
 test('concern headers share accent wash and ordinal, not priority stripes', function () {

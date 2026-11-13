@@ -153,10 +153,33 @@
                 </div>
             @endif
             @php
+                use App\Ark\Operations\EstimatePricing\ShopTaxCatalog;
+                use App\Ark\Operations\Settings\ShopSettings;
+
                 $taxStamp = is_array($repairOrder?->tax_profile) ? $repairOrder->tax_profile : [];
-                $taxProfileLabel = (string) ($taxStamp['profile_name'] ?? $taxStamp['label'] ?? '');
+                $taxRowLabel = 'Sales Tax';
+                $taxProfileLabel = trim((string) ($taxStamp['profile_name'] ?? ''));
+                $genericTaxNames = ['tax', 'sales tax'];
+                $catalogProfiles = collect(ShopTaxCatalog::profilesFromShopSettings(ShopSettings::current()));
+                // Stamp "label" is the tax line name (often "Tax"), not the jurisdiction.
+                if ($taxProfileLabel === '' || in_array(strtolower($taxProfileLabel), $genericTaxNames, true)) {
+                    $taxProfileKey = trim((string) ($taxStamp['profile_key'] ?? ''));
+                    $catalogMatch = $taxProfileKey !== ''
+                        ? $catalogProfiles->first(fn (array $profile): bool => (string) ($profile['key'] ?? '') === $taxProfileKey)
+                        : null;
+                    if (! is_array($catalogMatch)) {
+                        $catalogMatch = $catalogProfiles->first(fn (array $profile): bool => (bool) ($profile['is_default'] ?? false))
+                            ?? $catalogProfiles->first();
+                    }
+                    $taxProfileLabel = trim((string) ($catalogMatch['name'] ?? ''));
+                }
+                if ($taxProfileLabel === '') {
+                    $shopTaxLabel = trim((string) ($taxLabel ?? ''));
+                    if ($shopTaxLabel !== '' && ! in_array(strtolower($shopTaxLabel), $genericTaxNames, true)) {
+                        $taxProfileLabel = $shopTaxLabel;
+                    }
+                }
                 $taxRateLabel = isset($taxStamp['rate']) ? rtrim(rtrim((string) $taxStamp['rate'], '0'), '.').'%' : '';
-                $taxSummaryBits = array_values(array_filter([$taxProfileLabel, $taxRateLabel]));
                 $taxRowInteractive = (bool) ($taxJurisdictionInteractive ?? false);
             @endphp
             <div class="d-flex justify-content-between align-items-baseline gap-3 py-1" data-tax-summary-row>
@@ -164,22 +187,31 @@
                     @if ($taxRowInteractive)
                         <button
                             type="button"
-                            class="btn btn-link p-0 align-baseline text-secondary text-decoration-none"
+                            class="ops-tax-jurisdiction-trigger"
                             data-tax-jurisdiction-trigger
                             aria-haspopup="dialog"
                             aria-controls="ro-tax-jurisdiction-modal"
-                            title="Edit tax jurisdiction"
+                            title="Click to view or change tax jurisdiction."
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="left"
+                            data-bs-title="Click to view or change tax jurisdiction."
                             @click="window.dispatchEvent(new CustomEvent('ark-open-tax-jurisdiction'))"
                         >
-                            {{ $taxLabel ?? 'Tax' }}
-                            @if ($taxSummaryBits !== [])
-                                <span class="d-block small fw-normal text-secondary">{{ implode(' · ', $taxSummaryBits) }}</span>
+                            <span>{{ $taxRowLabel }}</span>
+                            @if ($taxProfileLabel !== '')
+                                <span class="ops-tax-jurisdiction-label"> · {{ $taxProfileLabel }}</span>
+                            @endif
+                            @if ($taxRateLabel !== '')
+                                <span> · {{ $taxRateLabel }}</span>
                             @endif
                         </button>
                     @else
-                        {{ $taxLabel ?? 'Tax' }}
-                        @if ($taxSummaryBits !== [])
-                            <span class="d-block small fw-normal text-secondary">{{ implode(' · ', $taxSummaryBits) }}</span>
+                        {{ $taxRowLabel }}
+                        @if ($taxProfileLabel !== '')
+                            <span> · {{ $taxProfileLabel }}</span>
+                        @endif
+                        @if ($taxRateLabel !== '')
+                            <span> · {{ $taxRateLabel }}</span>
                         @endif
                     @endif
                 </dt>

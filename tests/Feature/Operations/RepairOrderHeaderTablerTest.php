@@ -69,10 +69,10 @@ test('the Visit panel keeps the labeled status and technician selects; Review Es
     $actions = $xpath->query('//header[@data-ark-topbar]//*[@id="ark-page-context"]//*[@data-ro-command-actions]')->item(0);
 
     expect($xpath->query('.//*[@data-ro-command-workflow]//form[@id="repair-order-workflow"][@data-lifecycle-form][@action="'.route('operations.repair-orders.lifecycle.update', $repairOrder).'"]//select[@id="status-move-'.$id.'"][@data-lifecycle-select]', $bar)->length)->toBe(1)
-        ->and(trim($xpath->query('.//label[@for="status-move-'.$id.'"]', $bar)->item(0)->textContent))->toBe('Status')
+        ->and($xpath->query('.//*['.repairOrderHeaderHasClass('ark-ro-visit-commands__status').']//*[@data-lifecycle-trigger]', $bar)->length)->toBe(1)
         ->and($xpath->query('.//*['.repairOrderHeaderHasClass('ark-ro-visit-commands__status').']//*[@data-lost-reason-panel][@hidden]', $bar)->length)->toBe(1)
-        ->and(trim($xpath->query('.//label[@for="assigned-technician-toolbar-'.$id.'"]', $bar)->item(0)->textContent))->toBe('Technician')
-        ->and($xpath->query('.//select[@id="assigned-technician-toolbar-'.$id.'"]/option[@value="'.$technician->id.'"]', $bar)->length)->toBe(1)
+        ->and($xpath->query('.//*['.repairOrderHeaderHasClass('ark-ro-visit-commands__tech').']//*[@data-technician-trigger]', $bar)->length)->toBe(1)
+        ->and($xpath->query('.//select[@id="assigned-technician-toolbar-'.$id.'"][@data-technician-select]/option[@value="'.$technician->id.'"]', $bar)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-ro-mode-toolbar-slot]', $bar)->length)->toBe(1)
         ->and($actions)->toBeInstanceOf(DOMElement::class)
         ->and($xpath->query('.//button[@aria-label="Review Estimate Notes"]', $actions)->length)->toBe(1)
