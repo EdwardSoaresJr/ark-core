@@ -47,16 +47,35 @@
 }
 
 /*
- * Repair order Visit panel controls (#review-toolbar): the status and technician selects and the review-request
- * follow-up, as label | control rows on the panel's own label column.
+ * Repair order Visit panel controls (#review-toolbar): Status, Technician, and review follow-up
+ * share the same labeled column as Visit type / Billing / Mileage.
  */
 .ark-ro-visit-commands__workflow {
     display: grid;
-    gap: 0.25rem;
+    gap: 0;
 }
 
-.ark-ro-visit-commands__workflow > :first-child {
-    margin-top: 0.5rem;
+.ark-ro-visit-commands__workflow .row {
+    --tblr-gutter-y: 0;
+}
+
+.ark-ro-visit-commands__status > [class*='col-'],
+.ark-ro-visit-commands__tech > [class*='col-'],
+.ark-ro-visit-commands__review > [class*='col-'] {
+    font-size: inherit;
+}
+
+.ark-ro-visit-commands__status .col-4,
+.ark-ro-visit-commands__tech .col-4,
+.ark-ro-visit-commands__review .col-4 {
+    font-weight: var(--tblr-font-weight-normal, 400);
+}
+
+.ark-ro-visit-commands__status .col-8,
+.ark-ro-visit-commands__tech .col-8,
+.ark-ro-visit-commands__review .col-8 {
+    margin-bottom: 0.25rem;
+    font-weight: var(--tblr-font-weight-medium, 500);
 }
 
 /*
@@ -616,7 +635,7 @@ html:has([data-ark-topbar]) {
     }
 }
 
-/* The Visit section sizes by its own width: wide enough (half the panel from xxl) its controls and details sit side by side. */
+/* Visit facts stay one labeled column (Status/Technician with Visit type/Billing/Mileage). */
 .ark-identity-panel__visit {
     container-type: inline-size;
 }
@@ -625,13 +644,16 @@ html:has([data-ark-topbar]) {
     display: none;
 }
 
-@container (min-width: 32rem) {
-    .ark-ro-visit {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        column-gap: 1.5rem;
-        align-items: start;
-    }
+.ark-ro-visit__details {
+    font-size: 0.875rem;
+}
+
+.ark-ro-visit-commands {
+    margin-bottom: 0;
+}
+
+.ark-ro-visit__facts {
+    margin-top: 0;
 }
 
 /* Money columns align by digit. Tabler has no tabular-figures utility. */

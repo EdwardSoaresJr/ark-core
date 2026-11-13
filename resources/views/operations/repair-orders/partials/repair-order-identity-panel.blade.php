@@ -169,22 +169,21 @@
         <section class="col-md-4 col-xxl-6 p-2 p-md-3 min-w-0 ark-identity-panel__visit" data-identity-present="visit" aria-labelledby="ro-identity-visit-heading">
             <h3 class="subheader mb-1" id="ro-identity-visit-heading">Visit</h3>
             <div class="ark-ro-visit">
-                <div class="min-w-0">
-                    {{-- On the RO editor (with visit commands) the top bar carries the RO number, its status and these actions. --}}
-                    @unless (isset($visitCommands))
-                        <div class="d-flex flex-wrap align-items-center gap-2 min-w-0" data-ro-visit-heading>
-                            <h2 class="page-title mb-0 text-nowrap" data-ro-number>RO #{{ $repairOrder->repair_order_id }}</h2>
-                            <span class="badge bg-secondary-lt" data-ro-status>{{ $repairOrder->statusDisplayLabel() }}</span>
-                        </div>
-                    @endunless
+                {{-- On the RO editor (with visit commands) the top bar carries the RO number and Visit actions. --}}
+                @unless (isset($visitCommands))
+                    <div class="d-flex flex-wrap align-items-center gap-2 min-w-0 mb-1" data-ro-visit-heading>
+                        <h2 class="page-title mb-0 text-nowrap" data-ro-number>RO #{{ $repairOrder->repair_order_id }}</h2>
+                        <span class="badge bg-secondary-lt" data-ro-status>{{ $repairOrder->statusDisplayLabel() }}</span>
+                    </div>
+                @endunless
 
+                {{-- One labeled column: Status/Technician (toolbar) then Visit type/Billing/Mileage. --}}
+                <div class="min-w-0 ark-ro-visit__details">
                     @isset($visitCommands)
                         @include('operations.repair-orders.partials.repair-order-visit-commands', $visitCommands)
                     @endisset
-                </div>
 
-                <div class="min-w-0">
-                    <dl class="row g-0 small mt-1 mb-0">
+                    <dl class="row g-0 small mb-0 ark-ro-visit__facts">
                         <dt class="col-4 text-secondary fw-normal">Visit type</dt>
                         <dd class="col-8 mb-1 fw-medium" data-identity-present="visit-posture">
                             @if ($canEditVisitPosture)
