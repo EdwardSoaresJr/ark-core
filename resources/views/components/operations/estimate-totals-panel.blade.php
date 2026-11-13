@@ -159,16 +159,24 @@
                 $taxStamp = is_array($repairOrder?->tax_profile) ? $repairOrder->tax_profile : [];
                 $taxRowLabel = 'Sales Tax';
                 $taxProfileLabel = trim((string) ($taxStamp['profile_name'] ?? ''));
-                $taxLineLabel = strtolower(trim((string) ($taxStamp['label'] ?? $taxLabel ?? 'tax')));
+                $genericTaxNames = ['tax', 'sales tax'];
+                $catalogProfiles = collect(ShopTaxCatalog::profilesFromShopSettings(ShopSettings::current()));
                 // Stamp "label" is the tax line name (often "Tax"), not the jurisdiction.
-                if ($taxProfileLabel === '' || in_array(strtolower($taxProfileLabel), ['tax', 'sales tax', $taxLineLabel], true)) {
+                if ($taxProfileLabel === '' || in_array(strtolower($taxProfileLabel), $genericTaxNames, true)) {
                     $taxProfileKey = trim((string) ($taxStamp['profile_key'] ?? ''));
-                    if ($taxProfileKey !== '') {
-                        $catalogName = collect(ShopTaxCatalog::profilesFromShopSettings(ShopSettings::current()))
-                            ->first(fn (array $profile): bool => (string) ($profile['key'] ?? '') === $taxProfileKey);
-                        $taxProfileLabel = trim((string) ($catalogName['name'] ?? ''));
-                    } else {
-                        $taxProfileLabel = '';
+                    $catalogMatch = $taxProfileKey !== ''
+                        ? $catalogProfiles->first(fn (array $profile): bool => (string) ($profile['key'] ?? '') === $taxProfileKey)
+                        : null;
+                    if (! is_array($catalogMatch)) {
+                        $catalogMatch = $catalogProfiles->first(fn (array $profile): bool => (bool) ($profile['is_default'] ?? false))
+                            ?? $catalogProfiles->first();
+                    }
+                    $taxProfileLabel = trim((string) ($catalogMatch['name'] ?? ''));
+                }
+                if ($taxProfileLabel === '') {
+                    $shopTaxLabel = trim((string) ($taxLabel ?? ''));
+                    if ($shopTaxLabel !== '' && ! in_array(strtolower($shopTaxLabel), $genericTaxNames, true)) {
+                        $taxProfileLabel = $shopTaxLabel;
                     }
                 }
                 $taxRateLabel = isset($taxStamp['rate']) ? rtrim(rtrim((string) $taxStamp['rate'], '0'), '.').'%' : '';
