@@ -119,8 +119,13 @@
 
             <section class="p-3 border-bottom" aria-labelledby="comms-context-vehicle">
                 <div class="subheader mb-1" id="comms-context-vehicle">Vehicle &amp; visit</div>
-                @if (is_array($context['open_repair_orders'] ?? null))
-                    @forelse ($context['open_repair_orders'] as $order)
+                @php
+                    $openOrders = is_array($context['open_repair_orders'] ?? null) ? $context['open_repair_orders'] : [];
+                    $checkIn = is_array($context['check_in'] ?? null) ? $context['check_in'] : null;
+                    $shop = is_array($context['shop'] ?? null) ? $context['shop'] : [];
+                @endphp
+                @if ($openOrders !== [])
+                    @foreach ($openOrders as $order)
                         <div @class(['small', 'mt-2' => ! $loop->first]) data-open-ro="{{ $order['number'] ?? '' }}">
                             @if (filled($order['vehicle'] ?? null))
                                 <div class="fw-bold">{{ $order['vehicle'] }}</div>
@@ -135,9 +140,7 @@
                                 <a href="{{ $order['url'] }}">View repair order</a>
                             @endif
                         </div>
-                    @empty
-                        <div class="text-secondary small">No current visit</div>
-                    @endforelse
+                    @endforeach
                 @elseif (filled($vehicle['label'] ?? null) || filled($vehicle['ro_number'] ?? null))
                     <div class="small">
                         @if (filled($vehicle['label'] ?? null))
@@ -156,9 +159,21 @@
                 @else
                     <div class="text-secondary small">No current visit</div>
                 @endif
-                @php
-                    $shop = is_array($context['shop'] ?? null) ? $context['shop'] : [];
-                @endphp
+                @if ($checkIn !== null && filled($checkIn['url'] ?? null))
+                    <div class="mt-2" data-comms-context-check-in="{{ $checkIn['key'] ?? 'check_in' }}">
+                        <a
+                            href="{{ $checkIn['url'] }}"
+                            class="btn btn-sm {{ ($checkIn['style'] ?? 'primary') === 'primary' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                            data-comms-check-in
+                        >
+                            <x-tabler.icon name="car" />
+                            {{ $checkIn['label'] ?? 'Check In' }}
+                        </a>
+                        @if (filled($checkIn['hint'] ?? null))
+                            <div class="small text-secondary mt-1">{{ $checkIn['hint'] }}</div>
+                        @endif
+                    </div>
+                @endif
                 @if (filled($shop['approval'] ?? null) || filled($shop['balance'] ?? null) || filled($shop['appointment'] ?? null))
                     <dl class="row g-0 small mt-2 mb-0" data-comms-context-visit>
                         @if (filled($shop['approval'] ?? null))

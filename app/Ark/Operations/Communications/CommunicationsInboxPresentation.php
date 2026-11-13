@@ -6,6 +6,7 @@ use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Intake\VisitCheckInAction;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -23,6 +24,7 @@ final class CommunicationsInboxPresentation
 {
     public function __construct(
         private readonly ConversationWork $work,
+        private readonly VisitCheckInAction $checkInAction,
     ) {}
 
     /**
@@ -192,6 +194,8 @@ final class CommunicationsInboxPresentation
             'status' => $primary['status'] ?? data_get($context, 'current_visit.lifecycle_label'),
             'url' => $primary['url'] ?? null,
         ];
+        $context['open_repair_orders'] = $this->openRepairOrderSummaries($customer, $context);
+        $context['check_in'] = $this->checkInAction->forContext($context, auth()->user());
 
         if ($conversation instanceof Conversation) {
             $context['work'] = array_merge([
@@ -413,6 +417,70 @@ final class CommunicationsInboxPresentation
                 'status' => $repairOrder->statusDisplayLabel(),
                 'url' => route('operations.repair-orders.show', $repairOrder),
             ])
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     * @return list<array{repair_order_id: ?int, number: string, vehicle: ?string, status: string, url: string}>
+     */
+    private function openRepairOrderSummaries(?Customer $customer, array $context): array
+    {
+        if (is_array($context['open_repair_orders'] ?? null) && $context['open_repair_orders'] !== []) {
+            return array_values(array_filter(array_map(function (mixed $row): ?array {
+                if (! is_array($row)) {
+                    return null;
+                }
+
+                $id = (int) ($row['repair_order_id'] ?? $row['id'] ?? 0);
+
+                return [
+                    'repair_order_id' => $id > 0 ? $id : null,
+                    'number' => (string) ($row['number'] ?? $row['ro_number'] ?? ''),
+                    'vehicle' => filled($row['vehicle'] ?? null) ? (string) $row['vehicle'] : null,
+                    'status' => (string) ($row['status'] ?? ''),
+                    'url' => (string) ($row['url'] ?? ''),
+                ];
+            }, $context['open_repair_orders'])));
+        }
+
+        if (! $customer instanceof Customer) {
+            $primary = is_array($context['primary_ro'] ?? null) ? $context['primary_ro'] : [];
+            if ($primary === [] || ! filled($primary['url'] ?? null)) {
+                return [];
+            }
+
+            $id = (int) ($primary['repair_order_id'] ?? 0);
+
+            return [[
+                'repair_order_id' => $id > 0 ? $id : null,
+                'number' => (string) ($primary['number'] ?? ''),
+                'vehicle' => filled($primary['vehicle'] ?? null) ? (string) $primary['vehicle'] : null,
+                'status' => (string) ($primary['status'] ?? ''),
+                'url' => (string) $primary['url'],
+            ]];
+        }
+
+        return RepairOrder::query()
+            ->with('vehicle')
+            ->where('customer_id', $customer->id)
+            ->whereIn('status', RepairOrderStatus::operationalQueueValues())
+            ->latest('id')
+            ->limit(5)
+            ->get()
+            ->map(function (RepairOrder $repairOrder): array {
+                $vehicle = $repairOrder->vehicle;
+
+                return [
+                    'repair_order_id' => $repairOrder->id,
+                    'number' => 'RO '.$repairOrder->repair_order_id,
+                    'vehicle' => $vehicle !== null
+                        ? trim(implode(' ', array_filter([(string) $vehicle->year, (string) $vehicle->make, (string) $vehicle->model])))
+                        : null,
+                    'status' => $repairOrder->statusDisplayLabel(),
+                    'url' => route('operations.repair-orders.show', $repairOrder),
+                ];
+            })
             ->all();
     }
 
