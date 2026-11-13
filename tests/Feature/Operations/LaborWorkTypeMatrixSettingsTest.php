@@ -42,6 +42,7 @@ test('labor settings show hybrid inline work-type matrix without a save button',
         ->assertSee('Hourly Rate')
         ->assertSee('Min Hrs')
         ->assertSee('Round To')
+        ->assertSee('>Per concern</option>', false)
         ->assertSee('data-labor-rate-mode', false)
         ->assertSee('data-labor-min-hours', false)
         ->assertSee('data-labor-rounding', false)
@@ -266,6 +267,22 @@ test('inline billing minimum autosave persists without a Rules popup', function 
     expect($settings->labor_billing_minimums['fleet']['mode'])->toBe('per_line')
         ->and($settings->labor_billing_minimums['fleet']['hours'])->toBe('0.50')
         ->and(collect($settings->laborCategories())->firstWhere('key', 'mechanical')['rounding_rule'])->toBe('quarter');
+});
+
+test('inline billing minimum accepts per-concern mode', function () {
+    $this->actingAs($this->admin)
+        ->patchJson(route('operations.settings.shop.labor-matrix.minimum'), [
+            'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            'mode' => LaborBillingMinimumMode::PerConcern->value,
+            'hours' => '1.00',
+            'shortfall_rate_source' => LaborBillingMinimums::SHORTFALL_STANDARD_MECHANICAL,
+            'expected_version' => 0,
+        ])
+        ->assertOk()
+        ->assertJsonPath('status', 'saved');
+
+    expect(ShopSettings::current()->labor_billing_minimums['customer_pay']['mode'])->toBe('per_concern')
+        ->and(ShopSettings::current()->labor_billing_minimums['customer_pay']['hours'])->toBe('1.00');
 });
 
 test('work-type rounding autosave updates labor category without changing rates or modifiers', function () {

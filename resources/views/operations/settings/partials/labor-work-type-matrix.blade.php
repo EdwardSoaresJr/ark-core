@@ -175,6 +175,7 @@
                                         >
                                             <option value="none">None</option>
                                             <option value="per_line">Per line</option>
+                                            <option value="per_concern">Per concern</option>
                                             <option value="per_ro">Per RO</option>
                                         </select>
                                         <input

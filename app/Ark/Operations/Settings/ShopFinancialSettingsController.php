@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Settings;
 
 use App\Ark\Operations\Documents\EstimateDocumentService;
+use App\Ark\Operations\EstimatePricing\LaborBillingMinimumMode;
 use App\Ark\Operations\EstimatePricing\LaborBillingMinimums;
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
 use App\Ark\Operations\EstimatePricing\LaborRateType;
@@ -70,7 +71,7 @@ class ShopFinancialSettingsController
             'matrix.*.*.mode' => ['nullable', 'string', Rule::in(['standard', 'custom', 'zero'])],
             'matrix.*.*.rate' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'billing_minimums' => ['nullable', 'array'],
-            'billing_minimums.*.mode' => ['nullable', 'string', Rule::in(['none', 'per_line', 'per_ro'])],
+            'billing_minimums.*.mode' => ['nullable', 'string', Rule::in(array_column(LaborBillingMinimumMode::cases(), 'value'))],
             'billing_minimums.*.hours' => ['nullable', 'numeric', 'min:0', 'max:99.99'],
             'billing_minimums.*.shortfall_rate_source' => ['nullable', 'string', Rule::in(['standard_mechanical', 'custom'])],
             'billing_minimums.*.shortfall_rate' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],

@@ -181,6 +181,45 @@ test('C: Warranty hours do not satisfy Retail RO minimum', function () {
         ->and((int) $fee->subtotal_cents)->toBe(9900);
 });
 
+test('D2: per-concern mode applies a shortfall per Retail concern', function () {
+    $repairOrder = repairOrderForFinancialAuthority();
+    stampRetailRoMinimumProfile($repairOrder, LaborBillingMinimumMode::PerConcern->value, '1.00');
+
+    $c1 = concernForFinancialAuthority($repairOrder);
+    $c1->update(['summary' => 'Bulb repair', 'billing_posture' => ConcernBillingPosture::CustomerPay]);
+    createLaborLine($repairOrder, $c1, '0.40');
+
+    $c2 = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Air filter',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'billing_posture' => ConcernBillingPosture::CustomerPay,
+        'recommendation_intent' => 'maintenance',
+        'position' => 2,
+    ]);
+    createLaborLine($repairOrder, $c2, '0.60');
+
+    app(ApplyBillingClassMinimumsAction::class)->synchronize($repairOrder->fresh(['concerns.lines']));
+
+    $fees = RepairOrderLine::query()
+        ->where('repair_order_id', $repairOrder->id)
+        ->where('type', RepairOrderLineType::Fee)
+        ->where('description', 'like', 'Billing minimum · Retail · concern %')
+        ->orderBy('id')
+        ->get();
+
+    expect($fees)->toHaveCount(2)
+        ->and((float) $fees[0]->quantity)->toBe(0.60)
+        ->and((int) $fees[0]->repair_order_concern_id)->toBe($c1->id)
+        ->and((string) $fees[0]->system_line_scope)->toBe('customer_pay|concern:'.$c1->id)
+        ->and((float) $fees[1]->quantity)->toBe(0.40)
+        ->and((int) $fees[1]->repair_order_concern_id)->toBe($c2->id)
+        ->and(RepairOrderLine::query()
+            ->where('repair_order_id', $repairOrder->id)
+            ->where('description', 'Billing minimum · Retail')
+            ->exists())->toBeFalse();
+});
+
 test('D: per-line mode applies a shortfall per eligible labor line', function () {
     $repairOrder = repairOrderForFinancialAuthority();
     stampRetailRoMinimumProfile($repairOrder, LaborBillingMinimumMode::PerLine->value, '1.00');
