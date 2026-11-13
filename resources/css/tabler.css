@@ -1061,24 +1061,24 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
 
 /* Sales Tax row: unstyled text button matching Labor/Parts/Fees dt geometry. */
 .ops-tax-jurisdiction-trigger {
-    display: inline;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: inherit;
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
     cursor: pointer;
-    font: inherit;
-    font-weight: inherit;
-    font-size: inherit;
-    line-height: inherit;
-    letter-spacing: inherit;
+    font: inherit !important;
+    font-weight: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    letter-spacing: inherit !important;
     text-align: inherit;
-    text-decoration: none;
+    text-decoration: none !important;
     vertical-align: baseline;
-    min-height: 0;
-    height: auto;
+    min-height: 0 !important;
+    height: auto !important;
     box-shadow: none !important;
 }
 
