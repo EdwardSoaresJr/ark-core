@@ -11,6 +11,8 @@
     $defaultDue = (string) ($work['default_due_at'] ?? '');
     $postureChangedAt = (string) ($work['posture_changed_at'] ?? '');
     $ownerId = $work['owned_by_user_id'] ?? null;
+    $checkIn = is_array($checkIn ?? null) ? $checkIn : null;
+    $checkInAvailable = $checkIn !== null && filled($checkIn['url'] ?? null);
     $hidden = static fn (string $action): string => '<input type="hidden" name="action" value="'.e($action).'">'
         .'<input type="hidden" name="filter" value="'.e($filter).'">'
         .'<input type="hidden" name="owner" value="'.e($owner).'">'
@@ -192,6 +194,19 @@
                     Waiting
                 </button>
             </form>
+        @endif
+        @if ($checkInAvailable)
+            <div data-comms-context-check-in="{{ $checkIn['key'] ?? 'check_in' }}">
+                <a
+                    href="{{ $checkIn['url'] }}"
+                    class="btn btn-sm w-100 {{ ($checkIn['style'] ?? 'primary') === 'primary' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                    data-comms-check-in
+                    @if (filled($checkIn['hint'] ?? null)) title="{{ $checkIn['hint'] }}" @endif
+                >
+                    <x-tabler.icon name="car" />
+                    {{ $checkIn['label'] ?? 'Check In' }}
+                </a>
+            </div>
         @endif
         <form method="POST" action="{{ $url }}" class="d-flex">
             @csrf

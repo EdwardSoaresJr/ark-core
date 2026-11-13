@@ -19,6 +19,152 @@ beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
 });
 
+test('Check In sits in the conversation work grid below Follow-up and Waiting', function (): void {
+    $workActions = file_get_contents(base_path('resources/views/operations/communications/workspace/partials/work-actions.blade.php'));
+    $contextPanel = file_get_contents(base_path('resources/views/operations/communications/workspace/partials/context-panel.blade.php'));
+    $railStart = strpos($workActions, 'data-comms-work-actions="rail"');
+    expect($railStart)->not->toBeFalse();
+    $rail = substr($workActions, $railStart);
+
+    $checkInPos = strpos($rail, 'data-comms-check-in');
+    $waitingPos = strpos($rail, "hidden('wait')");
+    $unreadPos = strpos($rail, 'data-comms-work-unread');
+
+    expect($checkInPos)->not->toBeFalse()
+        ->and($waitingPos)->not->toBeFalse()
+        ->and($unreadPos)->not->toBeFalse()
+        ->and($checkInPos)->toBeGreaterThan($waitingPos)
+        ->and($checkInPos)->toBeLessThan($unreadPos)
+        ->and($rail)->toContain('btn-primary')
+        ->and($rail)->toContain('btn-outline-secondary')
+        ->and($rail)->toContain('title="{{ $checkIn[\'hint\'] }}"');
+
+    $vehicleStart = strpos($contextPanel, 'id="comms-context-vehicle"');
+    expect($vehicleStart)->not->toBeFalse();
+    $vehicleSection = substr($contextPanel, $vehicleStart);
+    expect($vehicleSection)->not->toContain('data-comms-check-in')
+        ->and($vehicleSection)->not->toContain('data-comms-context-check-in')
+        ->and($contextPanel)->toContain("'checkIn' => is_array(\$context['check_in']");
+});
+
+test('conversation work grid renders Check In and New visit without a Vehicle & Visit button', function (): void {
+    $checkInHtml = view()->file(
+        resource_path('views/operations/communications/workspace/partials/work-actions.blade.php'),
+        [
+            'work' => [
+                'url' => '/app/communications/conversations/1/work',
+                'lane' => 'needs',
+                'filter' => 'needs',
+                'owner' => 'everyone',
+                'advisors' => [],
+                'default_due_at' => '',
+                'posture_changed_at' => '',
+                'owned_by_user_id' => null,
+            ],
+            'variant' => 'rail',
+            'checkIn' => [
+                'key' => 'check_in',
+                'label' => 'Check In',
+                'url' => '/app/intake/create?customer_id=1',
+                'style' => 'primary',
+                'hint' => null,
+            ],
+        ],
+    )->render();
+
+    expect($checkInHtml)->toContain('data-comms-work-actions="rail"')
+        ->and($checkInHtml)->toContain('data-comms-context-check-in="check_in"')
+        ->and($checkInHtml)->toContain('data-comms-check-in')
+        ->and($checkInHtml)->toContain('btn-primary')
+        ->and($checkInHtml)->toContain('Check In')
+        ->and($checkInHtml)->toContain('Mark unread');
+
+    $checkInOffset = strpos($checkInHtml, 'data-comms-check-in');
+    $unreadOffset = strpos($checkInHtml, 'data-comms-work-unread');
+    expect($checkInOffset)->toBeLessThan($unreadOffset);
+
+    $newVisitHtml = view()->file(
+        resource_path('views/operations/communications/workspace/partials/work-actions.blade.php'),
+        [
+            'work' => [
+                'url' => '/app/communications/conversations/1/work',
+                'lane' => 'needs',
+                'filter' => 'needs',
+                'owner' => 'everyone',
+                'advisors' => [],
+                'default_due_at' => '',
+                'posture_changed_at' => '',
+                'owned_by_user_id' => null,
+            ],
+            'variant' => 'rail',
+            'checkIn' => [
+                'key' => 'new_visit',
+                'label' => 'New visit',
+                'url' => '/app/intake/create?customer_id=1',
+                'style' => 'secondary',
+                'hint' => 'This visit already has an open repair order. Use New visit only for a different visit.',
+            ],
+        ],
+    )->render();
+
+    expect($newVisitHtml)->toContain('data-comms-context-check-in="new_visit"')
+        ->and($newVisitHtml)->toContain('btn-outline-secondary')
+        ->and($newVisitHtml)->toContain('New visit')
+        ->and($newVisitHtml)->toContain('title="This visit already has an open repair order. Use New visit only for a different visit."')
+        ->and($newVisitHtml)->not->toContain('small text-secondary mt-1">This visit already has');
+
+    $withoutHtml = view()->file(
+        resource_path('views/operations/communications/workspace/partials/work-actions.blade.php'),
+        [
+            'work' => [
+                'url' => '/app/communications/conversations/1/work',
+                'lane' => 'needs',
+                'filter' => 'needs',
+                'owner' => 'everyone',
+                'advisors' => [],
+                'default_due_at' => '',
+                'posture_changed_at' => '',
+                'owned_by_user_id' => null,
+            ],
+            'variant' => 'rail',
+            'checkIn' => null,
+        ],
+    )->render();
+
+    expect($withoutHtml)->not->toContain('data-comms-check-in')
+        ->and($withoutHtml)->toContain('data-comms-work-unread');
+
+    $vehicleHtml = view()->file(
+        resource_path('views/operations/communications/workspace/partials/context-panel.blade.php'),
+        [
+            'context' => [
+                'customer' => ['name' => 'Pat', 'status' => 'Customer'],
+                'vehicle' => ['label' => '2018 Ford', 'ro_number' => 'RO 12', 'status' => 'In Progress', 'url' => '/ro/12'],
+                'open_repair_orders' => [[
+                    'number' => 'RO 12',
+                    'vehicle' => '2018 Ford',
+                    'status' => 'In Progress',
+                    'url' => '/ro/12',
+                ]],
+                'check_in' => [
+                    'key' => 'new_visit',
+                    'label' => 'New visit',
+                    'url' => '/app/intake/create?customer_id=1',
+                    'style' => 'secondary',
+                    'hint' => 'This visit already has an open repair order.',
+                ],
+                'shop' => [],
+                'recent_visits' => [],
+                'work' => null,
+            ],
+        ],
+    )->render();
+
+    expect($vehicleHtml)->toContain('data-open-ro="RO 12"')
+        ->and($vehicleHtml)->toContain('View repair order')
+        ->and($vehicleHtml)->not->toContain('data-comms-check-in');
+});
+
 test('known customer without an open visit shows Check In prefilling the customer', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $customer = Customer::query()->create([
