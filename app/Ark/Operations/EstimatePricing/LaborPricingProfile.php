@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\EstimatePricing;
 
+use App\Ark\Operations\Labor\LaborRoundingRule;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\Settings\ShopSettings;
 
@@ -12,14 +13,15 @@ use App\Ark\Operations\Settings\ShopSettings;
  *
  * Profile version 2 adds a frozen rates matrix so Standard inheritance cannot
  * pull a later shop default onto an already-created RO.
+ * Profile version 3 adds per-cell rounding_rule on each rates matrix cell.
  */
 final class LaborPricingProfile
 {
-    public const CURRENT_SCHEMA = 2;
+    public const CURRENT_SCHEMA = 3;
 
     /**
      * @param  array<string, mixed>  $billingMinimums
-     * @param  array<string, array<string, array{mode: string, rate_cents: int, operation_class_key: string}>>  $rates
+     * @param  array<string, array<string, array{mode: string, rate_cents: int, operation_class_key: string, rounding_rule?: string}>>  $rates
      * @param  array<string, array{key: string, label: string, operation_class_key: string, labor_category_key: string}>  $workTypes
      * @param  array<string, mixed>  $laborCategories
      */
@@ -38,9 +40,13 @@ final class LaborPricingProfile
         $minimums = LaborBillingMinimums::fromStored(
             is_array($settings->labor_billing_minimums) ? $settings->labor_billing_minimums : null,
         );
+        $rounding = LaborRoundingMatrix::fromStored(
+            is_array($settings->labor_rounding) ? $settings->labor_rounding : null,
+        )->ensureComplete($settings);
         $resolver = app(LaborPolicyResolver::class);
         $rates = [];
         $workTypes = [];
+        $categoriesByKey = collect($settings->laborCategories())->keyBy('key');
 
         foreach (LaborWorkTypeMatrix::workTypes($settings) as $workType) {
             $workTypes[$workType['key']] = [
@@ -50,20 +56,29 @@ final class LaborPricingProfile
                 'labor_category_key' => $workType['labor_category_key'],
             ];
             $rates[$workType['key']] = [];
+            $category = $categoriesByKey->get($workType['labor_category_key']);
+            $fallbackRounding = LaborRoundingRule::tryFrom((string) ($category['rounding_rule'] ?? ''))
+                ?? LaborRoundingRule::Quarter;
 
             foreach (LaborWorkTypeMatrix::matrixBillingColumns($settings) as $column) {
+                $cellRounding = $rounding->ruleFor($workType['key'], $column['value']) ?? $fallbackRounding;
+
                 try {
                     $resolved = $resolver->resolve($column['posture'], $workType['operation_class_key']);
                     $rates[$workType['key']][$column['value']] = [
-                        'mode' => $resolved->rateType->settingsMode(),
+                        'mode' => $resolved->rateType->settingsMode() === 'standard'
+                            ? 'custom'
+                            : $resolved->rateType->settingsMode(),
                         'rate_cents' => $resolved->hourlyRateCents,
                         'operation_class_key' => $workType['operation_class_key'],
+                        'rounding_rule' => $cellRounding->value,
                     ];
                 } catch (\Throwable) {
                     $rates[$workType['key']][$column['value']] = [
                         'mode' => 'custom',
                         'rate_cents' => $settings->defaultLaborRateCents(),
                         'operation_class_key' => $workType['operation_class_key'],
+                        'rounding_rule' => $cellRounding->value,
                     ];
                 }
             }
@@ -126,6 +141,26 @@ final class LaborPricingProfile
 
     public function rateCentsFor(string $workTypeKey, ConcernBillingPosture|string $posture): ?int
     {
+        $cell = $this->cellFor($workTypeKey, $posture);
+
+        return is_array($cell) && isset($cell['rate_cents']) ? (int) $cell['rate_cents'] : null;
+    }
+
+    public function roundingRuleFor(string $workTypeKey, ConcernBillingPosture|string $posture): ?LaborRoundingRule
+    {
+        $cell = $this->cellFor($workTypeKey, $posture);
+        if (! is_array($cell) || ! isset($cell['rounding_rule'])) {
+            return null;
+        }
+
+        return LaborRoundingRule::tryFrom((string) $cell['rounding_rule']);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function cellFor(string $workTypeKey, ConcernBillingPosture|string $posture): ?array
+    {
         $postureValue = $posture instanceof ConcernBillingPosture ? $posture->value : (string) $posture;
         $postureValue = match ($postureValue) {
             'default' => ConcernBillingPosture::CustomerPay->value,
@@ -136,39 +171,39 @@ final class LaborPricingProfile
 
         $cell = $this->rates[$workTypeKey][$postureValue] ?? null;
 
-        return is_array($cell) && isset($cell['rate_cents']) ? (int) $cell['rate_cents'] : null;
+        return is_array($cell) ? $cell : null;
     }
 
     public function rateCentsForOperationClass(string $operationClassKey, ConcernBillingPosture|string $posture): ?int
     {
+        $workTypeKey = $this->workTypeKeyForOperationClass($operationClassKey);
+
+        return $workTypeKey !== null ? $this->rateCentsFor($workTypeKey, $posture) : null;
+    }
+
+    public function roundingRuleForOperationClass(string $operationClassKey, ConcernBillingPosture|string $posture): ?LaborRoundingRule
+    {
+        $workTypeKey = $this->workTypeKeyForOperationClass($operationClassKey);
+
+        return $workTypeKey !== null ? $this->roundingRuleFor($workTypeKey, $posture) : null;
+    }
+
+    private function workTypeKeyForOperationClass(string $operationClassKey): ?string
+    {
         $workTypeKey = collect($this->workTypes)
             ->firstWhere('operation_class_key', $operationClassKey)['key'] ?? null;
 
-        if ($workTypeKey === null) {
-            foreach ($this->rates as $cells) {
-                foreach ($cells as $postureKey => $cell) {
-                    if (($cell['operation_class_key'] ?? null) === $operationClassKey) {
-                        $workTypeKey = array_key_first(array_filter(
-                            $this->rates,
-                            fn ($row): bool => ($row[$postureKey]['operation_class_key'] ?? null) === $operationClassKey,
-                        ));
-                        break 2;
-                    }
-                }
-            }
+        if ($workTypeKey !== null) {
+            return $workTypeKey;
         }
 
-        if ($workTypeKey === null) {
-            $workTypeKey = match ($operationClassKey) {
-                'general_repair' => 'mechanical',
-                'advanced_mechanical' => 'advanced_mechanical',
-                'diagnostics' => 'diagnostic',
-                'programming' => 'programming',
-                default => null,
-            };
-        }
-
-        return $workTypeKey !== null ? $this->rateCentsFor($workTypeKey, $posture) : null;
+        return match ($operationClassKey) {
+            'general_repair' => 'mechanical',
+            'advanced_mechanical' => 'advanced_mechanical',
+            'diagnostics' => 'diagnostic',
+            'programming' => 'programming',
+            default => null,
+        };
     }
 
     /**
@@ -195,5 +230,10 @@ final class LaborPricingProfile
     public function hasFrozenRates(): bool
     {
         return $this->schema >= 2 && $this->rates !== [];
+    }
+
+    public function hasFrozenRounding(): bool
+    {
+        return $this->schema >= 3 && $this->rates !== [];
     }
 }

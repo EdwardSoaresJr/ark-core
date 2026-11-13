@@ -22,7 +22,7 @@ beforeEach(function () {
     ]);
 });
 
-test('labor settings show vertical work-type matrix without a save button', function () {
+test('labor settings show hybrid inline work-type matrix without a save button', function () {
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', [
             'section' => 'financial',
@@ -34,16 +34,29 @@ test('labor settings show vertical work-type matrix without a save button', func
         ->assertSee('+ Add Work Type')
         ->assertSee('+ Add Labor Column')
         ->assertSee('Manage Billing Classes')
-        ->assertSee('Default Labor Rate')
         ->assertSee('Default Work Type')
         ->assertSee('Rates for')
-        ->assertSee('Billing Policy')
-        ->assertSee('Use Default Labor Rate')
+        ->assertSee('Billing Class')
+        ->assertSee('Hourly Rate')
+        ->assertSee('Min Hrs')
+        ->assertSee('Round To')
+        ->assertSee('>Per concern</option>', false)
+        ->assertSee('data-labor-hourly-rate', false)
+        ->assertSee('data-labor-min-hours', false)
+        ->assertSee('data-labor-rounding', false)
+        ->assertDontSee('Default Labor Rate')
+        ->assertDontSee('Rate Type')
+        ->assertDontSee('data-labor-rate-mode', false)
+        ->assertDontSee('data-labor-default-rate', false)
+        ->assertDontSee('Allow Modifiers')
+        ->assertDontSee('Adjust Labor')
         ->assertDontSee('Save Labor Settings')
         ->assertDontSee('Standard hourly rate');
 });
 
-test('autosave rate endpoint updates Mechanical Retail default and profile version', function () {
+test('autosave rate endpoint updates Mechanical Retail cell and profile version', function () {
+    $beforeDefault = (int) ShopSettings::current()->default_labor_rate_cents;
+
     $this->actingAs($this->admin)
         ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
             'work_type' => 'mechanical',
@@ -56,7 +69,7 @@ test('autosave rate endpoint updates Mechanical Retail default and profile versi
         ->assertJsonPath('status', 'saved')
         ->assertJsonPath('applies_to', 'new_repair_orders_only');
 
-    expect((int) ShopSettings::current()->default_labor_rate_cents)->toBe(17500)
+    expect((int) ShopSettings::current()->default_labor_rate_cents)->toBe($beforeDefault)
         ->and((int) ShopSettings::current()->labor_pricing_profile_version)->toBeGreaterThanOrEqual(1);
 
     $resolved = app(LaborPolicyResolver::class)->resolve(
@@ -236,4 +249,93 @@ test('existing open RO keeps stamped rates for new labor after settings change',
     ], $newRo->fresh());
 
     expect($newPriced['labor_rate_cents'])->toBe(21000);
+});
+
+test('inline billing minimum autosave persists without a Rules popup', function () {
+    $this->actingAs($this->admin)
+        ->patchJson(route('operations.settings.shop.labor-matrix.minimum'), [
+            'billing_class' => ConcernBillingPosture::Fleet->value,
+            'mode' => LaborBillingMinimumMode::PerLine->value,
+            'hours' => '0.50',
+            'shortfall_rate_source' => LaborBillingMinimums::SHORTFALL_STANDARD_MECHANICAL,
+            'expected_version' => 0,
+        ])
+        ->assertOk()
+        ->assertJsonPath('status', 'saved');
+
+    $settings = ShopSettings::current();
+
+    expect($settings->labor_billing_minimums['fleet']['mode'])->toBe('per_line')
+        ->and($settings->labor_billing_minimums['fleet']['hours'])->toBe('0.50')
+        ->and(collect($settings->laborCategories())->firstWhere('key', 'mechanical')['rounding_rule'])->toBe('quarter');
+});
+
+test('inline billing minimum accepts per-concern mode', function () {
+    $this->actingAs($this->admin)
+        ->patchJson(route('operations.settings.shop.labor-matrix.minimum'), [
+            'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            'mode' => LaborBillingMinimumMode::PerConcern->value,
+            'hours' => '1.00',
+            'shortfall_rate_source' => LaborBillingMinimums::SHORTFALL_STANDARD_MECHANICAL,
+            'expected_version' => 0,
+        ])
+        ->assertOk()
+        ->assertJsonPath('status', 'saved');
+
+    expect(ShopSettings::current()->labor_billing_minimums['customer_pay']['mode'])->toBe('per_concern')
+        ->and(ShopSettings::current()->labor_billing_minimums['customer_pay']['hours'])->toBe('1.00');
+});
+
+test('cell rounding autosave is independent per billing class', function () {
+    ShopSettings::current()->update([
+        'labor_rounding' => [
+            'mechanical' => [
+                'customer_pay' => 'quarter',
+                'repairpal' => 'quarter',
+            ],
+        ],
+    ]);
+
+    $beforeRate = app(LaborPolicyResolver::class)->resolve(
+        ConcernBillingPosture::CustomerPay,
+        'general_repair',
+    )->hourlyRateCents;
+
+    $this->actingAs($this->admin)
+        ->patchJson(route('operations.settings.shop.labor-matrix.rounding'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::RepairPal->value,
+            'rounding_rule' => 'exact',
+            'expected_version' => (int) ShopSettings::current()->labor_pricing_profile_version,
+        ])
+        ->assertOk()
+        ->assertJsonPath('status', 'saved')
+        ->assertJsonPath('scope', 'work_type_billing_class')
+        ->assertJsonPath('matrix.cells.mechanical.repairpal.rounding_rule', 'exact')
+        ->assertJsonPath('matrix.cells.mechanical.customer_pay.rounding_rule', 'quarter');
+
+    $stored = ShopSettings::current()->labor_rounding;
+
+    expect($stored['mechanical']['repairpal'])->toBe('exact')
+        ->and($stored['mechanical']['customer_pay'])->toBe('quarter')
+        ->and(app(LaborPolicyResolver::class)->resolve(
+            ConcernBillingPosture::CustomerPay,
+            'general_repair',
+        )->hourlyRateCents)->toBe($beforeRate);
+});
+
+test('matrix JSON projection exposes hybrid fields without adjust-labor controls', function () {
+    $this->actingAs($this->admin)
+        ->getJson(route('operations.settings.shop.labor-matrix.show'))
+        ->assertOk()
+        ->assertJsonPath('cells.mechanical.customer_pay.rounding_rule', 'quarter')
+        ->assertJsonStructure([
+            'work_types',
+            'columns',
+            'cells',
+            'work_type_settings',
+            'rounding_options',
+            'billing_minimums',
+            'routes' => ['rate', 'minimum', 'rounding'],
+        ]);
 });

@@ -3,7 +3,6 @@
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
 use App\Ark\Operations\EstimatePricing\LaborRateType;
 use App\Ark\Operations\EstimatePricing\OperationClass;
-use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
 use App\Ark\Operations\Labor\LaborAdjustment;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
@@ -36,22 +35,31 @@ test('labor settings show vertical matrix with Mechanical Retail as the visible 
         ]))
         ->assertOk()
         ->assertSee('Labor rate matrix')
-        ->assertSee('Default Labor Rate')
         ->assertSee('Default Work Type')
         ->assertSee('Rates for')
-        ->assertSee('Use Default Labor Rate')
-        ->assertSee('Custom Rate')
-        ->assertSee('No Charge')
+        ->assertSee('Hourly Rate')
+        ->assertSee('Min Hrs')
+        ->assertSee('Round To')
         ->assertSee('+ Add Work Type')
         ->assertSee('data-labor-matrix', false)
+        ->assertSee('data-labor-hourly-rate', false)
+        ->assertDontSee('Default Labor Rate')
+        ->assertDontSee('Rate Type')
         ->assertDontSee('Save Labor Settings')
+        ->assertDontSee('Use Default Labor Rate')
         ->assertDontSee('Labor categories')
         ->assertDontSee('Advanced billing rates')
         ->assertDontSee('Standard hourly rate')
-        ->assertSee('Default Work Type × Retail', false);
+        ->assertSee('Mechanical is the Default Work Type');
 });
 
-test('saving Mechanical Retail rate syncs matching Customer Pay policies atomically', function () {
+test('saving Mechanical Retail rate updates only that cell without cascading other work types', function () {
+    $beforeDefault = (int) ShopSettings::current()->default_labor_rate_cents;
+    $beforeDiagnostics = app(LaborPolicyResolver::class)->resolve(
+        ConcernBillingPosture::CustomerPay,
+        'diagnostics',
+    )->hourlyRateCents;
+
     $this->actingAs($this->admin)
         ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
             'work_type' => 'mechanical',
@@ -63,29 +71,27 @@ test('saving Mechanical Retail rate syncs matching Customer Pay policies atomica
         ->assertOk()
         ->assertJsonPath('status', 'saved');
 
-    $settings = ShopSettings::current();
-    expect($settings->default_labor_rate_cents)->toBe(18500)
-        ->and(collect($settings->laborCategories())->firstWhere('key', 'mechanical')['rate_cents'])->toBe(18500);
-
-    foreach (OperationClass::query()->pluck('key') as $classKey) {
-        $resolved = app(LaborPolicyResolver::class)->resolve(
+    expect((int) ShopSettings::current()->default_labor_rate_cents)->toBe($beforeDefault)
+        ->and(app(LaborPolicyResolver::class)->resolve(
             ConcernBillingPosture::CustomerPay,
-            $classKey,
-        );
-        expect($resolved->hourlyRateCents)->toBe(18500);
-    }
-
-    expect(app(LaborPolicyResolver::class)->resolve(
-        ConcernBillingPosture::Internal,
-        'general_repair',
-    )->hourlyRateCents)->toBe(0)
+            'general_repair',
+        )->hourlyRateCents)->toBe(18500)
+        ->and(app(LaborPolicyResolver::class)->resolve(
+            ConcernBillingPosture::CustomerPay,
+            'diagnostics',
+        )->hourlyRateCents)->toBe($beforeDiagnostics)
+        ->and(app(LaborPolicyResolver::class)->resolve(
+            ConcernBillingPosture::Internal,
+            'general_repair',
+        )->hourlyRateCents)->toBe(0)
         ->and(app(LaborPolicyResolver::class)->resolve(
             ConcernBillingPosture::Comeback,
             'general_repair',
         )->hourlyRateCents)->toBe(0);
 });
 
-test('standard rate does not overwrite specialty Customer Pay operation-class rates', function () {
+test('Mechanical Retail rate save does not overwrite specialty Customer Pay operation-class rates', function () {
+    $beforeDefault = (int) ShopSettings::current()->default_labor_rate_cents;
     $diagnostics = OperationClass::query()->where('key', 'diagnostics')->firstOrFail();
     app(UpsertLaborPolicyAction::class)->execute(
         ConcernBillingPosture::CustomerPay,
@@ -111,14 +117,9 @@ test('standard rate does not overwrite specialty Customer Pay operation-class ra
     )->hourlyRateCents)->toBe(19000)
         ->and(app(LaborPolicyResolver::class)->resolve(
             ConcernBillingPosture::CustomerPay,
-            'maintenance',
-        )->hourlyRateCents)->toBe(19000)
-        ->and(app(LaborPolicyResolver::class)->resolve(
-            ConcernBillingPosture::CustomerPay,
             'diagnostics',
-        )->hourlyRateCents)->toBe(21000);
-
-    expect(ShopSettings::current()->default_labor_rate_cents)->toBe(19000);
+        )->hourlyRateCents)->toBe(21000)
+        ->and((int) ShopSettings::current()->default_labor_rate_cents)->toBe($beforeDefault);
 });
 
 test('existing labor line snapshot is unchanged after Mechanical Retail rate save', function () {
@@ -186,7 +187,7 @@ test('existing labor line snapshot is unchanged after Mechanical Retail rate sav
         )->hourlyRateCents)->toBe(20000);
 });
 
-test('standard rate inheritance is explicit via LaborRateType::Standard in the matrix', function () {
+test('matrix rate saves are explicit hourly or zero without Standard inheritance', function () {
     $this->actingAs($this->admin)
         ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
             'work_type' => 'mechanical',
@@ -209,20 +210,20 @@ test('standard rate inheritance is explicit via LaborRateType::Standard in the m
         ])
         ->assertOk();
 
-    $operationClass = OperationClass::query()->where('key', 'general_repair')->firstOrFail();
-    app(UpsertLaborPolicyAction::class)->execute(
-        ConcernBillingPosture::Internal,
-        $operationClass,
-        0.0,
-        Carbon::now()->startOfDay(),
-        'Test intentional zero',
-        LaborRateType::Zero,
-    );
+    $this->actingAs($this->admin)
+        ->patchJson(route('operations.settings.shop.labor-matrix.rate'), [
+            'work_type' => 'mechanical',
+            'billing_class' => ConcernBillingPosture::Internal->value,
+            'mode' => 'zero',
+            'rate' => '0.00',
+            'expected_version' => (int) ShopSettings::current()->labor_pricing_profile_version,
+        ])
+        ->assertOk();
 
     $resolver = app(LaborPolicyResolver::class);
 
     $customerPay = $resolver->resolve(ConcernBillingPosture::CustomerPay, 'general_repair');
-    expect($customerPay->rateType->value)->toBe('standard')
+    expect($customerPay->rateType->value)->toBe('hourly')
         ->and($customerPay->hourlyRateCents)->toBe(17500);
 
     $fleet = $resolver->resolve(ConcernBillingPosture::Fleet, 'general_repair');
@@ -289,18 +290,18 @@ test('station bind prompt stays off for multi-station and telephony-only shops u
         ->assertDontSee('Choose the station for this browser.', false);
 });
 
-test('failed Customer Pay verification rolls back labor category and policy writes', function () {
-    $beforeCents = (int) ShopSettings::current()->default_labor_rate_cents;
+test('failed labor policy upsert rolls back matrix rate writes', function () {
+    $beforeDefault = (int) ShopSettings::current()->default_labor_rate_cents;
     $beforePolicyCents = app(LaborPolicyResolver::class)->resolve(
         ConcernBillingPosture::CustomerPay,
         'general_repair',
     )->hourlyRateCents;
 
-    $this->mock(SyncStandardCustomerPayLaborRatesAction::class, function ($mock): void {
+    $this->mock(UpsertLaborPolicyAction::class, function ($mock): void {
         $mock->shouldReceive('execute')
             ->once()
             ->andThrow(\Illuminate\Validation\ValidationException::withMessages([
-                'rate' => 'Forced sync failure for rollback proof.',
+                'rate' => 'Forced upsert failure for rollback proof.',
             ]));
     });
 
@@ -317,9 +318,7 @@ test('failed Customer Pay verification rolls back labor category and policy writ
 
     ShopSettings::forgetCurrent();
 
-    expect((int) ShopSettings::current()->default_labor_rate_cents)->toBe($beforeCents)
-        ->and(collect(ShopSettings::current()->laborCategories())->firstWhere('key', 'mechanical')['rate_cents'])
-        ->toBe($beforeCents)
+    expect((int) ShopSettings::current()->default_labor_rate_cents)->toBe($beforeDefault)
         ->and(app(LaborPolicyResolver::class)->resolve(
             ConcernBillingPosture::CustomerPay,
             'general_repair',

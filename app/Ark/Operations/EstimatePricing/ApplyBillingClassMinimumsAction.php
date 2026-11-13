@@ -88,6 +88,21 @@ final class ApplyBillingClassMinimumsAction
                 continue;
             }
 
+            if ($mode === LaborBillingMinimumMode::PerConcern) {
+                array_push(
+                    $notices,
+                    ...$this->syncPerConcernMinimums(
+                        $repairOrder,
+                        $scope,
+                        (float) $row['hours'],
+                        $rateCents,
+                        $label,
+                    ),
+                );
+
+                continue;
+            }
+
             array_push(
                 $notices,
                 ...$this->syncPerLineMinimums(
@@ -117,7 +132,16 @@ final class ApplyBillingClassMinimumsAction
         $shortfall = max(0, round($requiredHours - $eligible, 2));
         $description = self::SYSTEM_DESCRIPTION_PREFIX.$label;
         $existing = $this->systemMinimumFees($repairOrder, $scope)
-            ->first(fn (RepairOrderLine $fee): bool => ! str_contains((string) $fee->description, ' · line '));
+            ->first(function (RepairOrderLine $fee) use ($scope): bool {
+                $scopeValue = (string) ($fee->system_line_scope ?? '');
+
+                if ($scopeValue !== '' && $scopeValue !== $scope) {
+                    return false;
+                }
+
+                return ! str_contains((string) $fee->description, ' · line ')
+                    && ! str_contains((string) $fee->description, ' · concern ');
+            });
         $previousShortfall = $existing ? (float) $existing->quantity : 0.0;
 
         if ($shortfall < 0.005) {
@@ -170,6 +194,13 @@ final class ApplyBillingClassMinimumsAction
                 'repair_order_id' => $repairOrder->id,
                 ...$payload,
             ]);
+        }
+
+        foreach ($this->systemMinimumFees($repairOrder, $scope) as $fee) {
+            $scopeValue = (string) ($fee->system_line_scope ?? '');
+            if (str_contains($scopeValue, '|line:') || str_contains($scopeValue, '|concern:')) {
+                $fee->delete();
+            }
         }
 
         if (abs($previousShortfall - $shortfall) >= 0.005) {
@@ -267,8 +298,126 @@ final class ApplyBillingClassMinimumsAction
                 if (! in_array($lineId, $keptLineIds, true)) {
                     $fee->delete();
                 }
-            } elseif ($scopeValue === $scope || $fee->description === self::SYSTEM_DESCRIPTION_PREFIX.$label) {
-                // Remove prior per-RO fee when in per-line mode.
+            } elseif (
+                $scopeValue === $scope
+                || str_contains($scopeValue, '|concern:')
+                || $fee->description === self::SYSTEM_DESCRIPTION_PREFIX.$label
+            ) {
+                // Remove prior per-RO / per-concern fees when in per-line mode.
+                $fee->delete();
+            }
+        }
+
+        return $notices;
+    }
+
+    /**
+     * @return list<ChangeNotice>
+     */
+    private function syncPerConcernMinimums(
+        RepairOrder $repairOrder,
+        string $scope,
+        float $requiredHours,
+        int $rateCents,
+        string $label,
+    ): array {
+        $notices = [];
+        $keptConcernIds = [];
+
+        $concerns = $repairOrder->concerns
+            ->filter(fn (RepairOrderConcern $concern): bool => $this->concernBillingKey($concern) === $scope)
+            ->sortBy('id')
+            ->values();
+
+        foreach ($concerns as $concern) {
+            $eligibleLines = $this->eligibleLaborLines($repairOrder, $scope)
+                ->filter(fn (RepairOrderLine $line): bool => (int) $line->repair_order_concern_id === (int) $concern->id);
+
+            if ($eligibleLines->isEmpty()) {
+                continue;
+            }
+
+            $keptConcernIds[] = (int) $concern->id;
+            $billed = round(
+                $eligibleLines->sum(fn (RepairOrderLine $line): float => (float) ($line->labor_billed_hours ?? $line->quantity ?? 0)),
+                2,
+            );
+            $shortfall = max(0, round($requiredHours - $billed, 2));
+            $concernScope = $scope.'|concern:'.$concern->id;
+            $existing = $this->systemMinimumFees($repairOrder, $scope)
+                ->first(fn (RepairOrderLine $fee): bool => (string) $fee->system_line_scope === $concernScope
+                    || (
+                        (int) $fee->repair_order_concern_id === (int) $concern->id
+                        && ! str_contains((string) $fee->system_line_scope, '|line:')
+                        && (string) $fee->system_line_scope !== $scope
+                    ));
+            $previous = $existing ? (float) $existing->quantity : 0.0;
+
+            if ($shortfall < 0.005) {
+                if ($existing) {
+                    $existing->delete();
+                }
+
+                if ($previous >= 0.005) {
+                    $notices[] = [
+                        'posture' => $scope,
+                        'label' => $label,
+                        'from_hours' => number_format($previous, 2, '.', ''),
+                        'to_hours' => '0.00',
+                    ];
+                }
+
+                continue;
+            }
+
+            $subtotal = (int) round($shortfall * $rateCents);
+            $payload = [
+                'repair_order_concern_id' => $concern->id,
+                'type' => RepairOrderLineType::Fee,
+                'system_line_kind' => self::SYSTEM_KIND,
+                'system_line_scope' => $concernScope,
+                'description' => self::SYSTEM_DESCRIPTION_PREFIX.$label.' · concern '.$concern->id,
+                'quantity' => number_format($shortfall, 2, '.', ''),
+                'unit_price_cents' => $rateCents,
+                'subtotal_cents' => $subtotal,
+                'tax_cents' => 0,
+                'shop_fee_cents' => 0,
+                'standing_discount_cents' => 0,
+                'total_cents' => $subtotal,
+            ];
+
+            if ($existing) {
+                $existing->update($payload);
+            } else {
+                RepairOrderLine::query()->create([
+                    'repair_order_id' => $repairOrder->id,
+                    ...$payload,
+                ]);
+            }
+
+            if (abs($previous - $shortfall) >= 0.005) {
+                $notices[] = [
+                    'posture' => $scope,
+                    'label' => $label,
+                    'from_hours' => number_format($previous, 2, '.', ''),
+                    'to_hours' => number_format($shortfall, 2, '.', ''),
+                ];
+            }
+        }
+
+        foreach ($this->systemMinimumFees($repairOrder, $scope) as $fee) {
+            $scopeValue = (string) ($fee->system_line_scope ?? '');
+            if (str_contains($scopeValue, '|concern:')) {
+                $concernId = (int) substr($scopeValue, strrpos($scopeValue, ':') + 1);
+                if (! in_array($concernId, $keptConcernIds, true)) {
+                    $fee->delete();
+                }
+            } elseif (
+                $scopeValue === $scope
+                || str_contains($scopeValue, '|line:')
+                || $fee->description === self::SYSTEM_DESCRIPTION_PREFIX.$label
+            ) {
+                // Remove prior per-RO / per-line fees when in per-concern mode.
                 $fee->delete();
             }
         }
@@ -391,7 +540,10 @@ final class ApplyBillingClassMinimumsAction
         $mode = LaborBillingMinimumMode::tryFrom($row['mode']) ?? LaborBillingMinimumMode::None;
 
         // RO-wide minimums are rendered once near totals, not inside every concern.
-        if ($mode !== LaborBillingMinimumMode::PerLine || (float) $row['hours'] <= 0) {
+        if (
+            ! in_array($mode, [LaborBillingMinimumMode::PerLine, LaborBillingMinimumMode::PerConcern], true)
+            || (float) $row['hours'] <= 0
+        ) {
             return null;
         }
 
@@ -434,11 +586,12 @@ final class ApplyBillingClassMinimumsAction
         return $repairOrder->lines()
             ->where('type', RepairOrderLineType::Fee->value)
             ->where(function ($query) use ($scope): void {
-                $query->where(function ($inner) use ($scope): void {
+                        $query->where(function ($inner) use ($scope): void {
                     $inner->where('system_line_kind', self::SYSTEM_KIND)
                         ->where(function ($scopeQuery) use ($scope): void {
                             $scopeQuery->where('system_line_scope', $scope)
-                                ->orWhere('system_line_scope', 'like', $scope.'|line:%');
+                                ->orWhere('system_line_scope', 'like', $scope.'|line:%')
+                                ->orWhere('system_line_scope', 'like', $scope.'|concern:%');
                         });
                 })->orWhere(function ($legacy) use ($scope): void {
                     $label = LaborWorkTypeMatrix::billingColumnLabel($scope);

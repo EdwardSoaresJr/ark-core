@@ -57,6 +57,10 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
         ->name('operations.settings.shop.labor-matrix.rate');
     Route::patch('/app/settings/shop/labor-matrix/minimum', [LaborMatrixSettingsController::class, 'updateMinimum'])
         ->name('operations.settings.shop.labor-matrix.minimum');
+    Route::patch('/app/settings/shop/labor-matrix/work-type-rounding', [LaborMatrixSettingsController::class, 'updateWorkTypeRounding'])
+        ->name('operations.settings.shop.labor-matrix.work-type-rounding');
+    Route::patch('/app/settings/shop/labor-matrix/rounding', [LaborMatrixSettingsController::class, 'updateCellRounding'])
+        ->name('operations.settings.shop.labor-matrix.rounding');
     Route::post('/app/settings/shop/labor-matrix/work-types', [LaborMatrixSettingsController::class, 'storeWorkType'])
         ->name('operations.settings.shop.labor-matrix.work-types.store');
     Route::post('/app/settings/shop/labor-matrix/billing-classes', [LaborMatrixSettingsController::class, 'storeBillingClass'])

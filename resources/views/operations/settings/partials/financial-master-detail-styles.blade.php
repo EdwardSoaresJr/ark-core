@@ -55,4 +55,35 @@
     .ops-financial-master-detail__editor > :first-child {
         margin-top: 0;
     }
+
+    /* Labor Matrix hybrid: denser Billing Class rows (#194). */
+    .labor-matrix-table--hybrid > :is(thead, tbody) > tr > :is(th, td) {
+        padding-top: 0.4rem;
+        padding-bottom: 0.4rem;
+        vertical-align: middle;
+    }
+
+    .labor-matrix-table--hybrid .labor-matrix-th {
+        /* Native Tabler tokens only — no light-mode hex fallbacks that flash white in dark theme. */
+        background-color: var(--tblr-bg-surface-tertiary);
+        color: var(--tblr-secondary);
+        border-bottom-color: var(--tblr-border-color);
+        font-weight: 600;
+    }
+
+    .labor-matrix-table--hybrid .form-hint {
+        font-size: 0.7rem;
+        line-height: 1.2;
+        color: var(--tblr-secondary);
+    }
+
+    .labor-matrix-table--hybrid tbody tr:hover > td {
+        background: color-mix(in srgb, var(--tblr-primary, #206bc4) 6%, transparent);
+    }
+
+    @media (max-width: 991.98px) {
+        .labor-matrix-table--hybrid {
+            min-width: 44rem;
+        }
+    }
 </style>

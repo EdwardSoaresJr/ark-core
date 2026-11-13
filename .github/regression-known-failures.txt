@@ -212,4 +212,3 @@ tests/Unit/Operations/PdfRuntimeConfiguratorTest.php::it re-resolves chrome when
 tests/Unit/Operations/TelephonyHealthTest.php::connection tone is success when transport endpoints and shop number are ready
 tests/Unit/Operations/TelephonyHealthTest.php::connection tone is warning when shop number is saved but no ring targets exist
 tests/Unit/TablerXShowDisplayUtilityTest.php::no view hides an element with x-show while a Bootstrap display utility forces it visible
-tests/Feature/Operations/ScheduleWeekAllocationTest.php::week technician allocation keeps unassigned visible and groups by technician

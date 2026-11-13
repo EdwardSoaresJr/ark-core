@@ -8,11 +8,12 @@ use App\Ark\Operations\EstimatePricing\LaborBillingMinimumMode;
 use App\Ark\Operations\EstimatePricing\LaborBillingMinimums;
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolver;
 use App\Ark\Operations\EstimatePricing\LaborRateType;
+use App\Ark\Operations\EstimatePricing\LaborRoundingMatrix;
 use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrix;
 use App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrixProjection;
 use App\Ark\Operations\EstimatePricing\OperationClass;
-use App\Ark\Operations\EstimatePricing\SyncStandardCustomerPayLaborRatesAction;
 use App\Ark\Operations\EstimatePricing\UpsertLaborPolicyAction;
+use App\Ark\Operations\Labor\LaborRoundingRule;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,6 @@ class LaborMatrixSettingsController
 {
     public function __construct(
         private readonly UpsertLaborPolicyAction $upsertLaborPolicy,
-        private readonly SyncStandardCustomerPayLaborRatesAction $syncStandardCustomerPayLaborRates,
         private readonly CreateLaborWorkTypeAction $createLaborWorkType,
         private readonly CreateLaborBillingClassAction $createLaborBillingClass,
         private readonly LaborWorkTypeMatrixProjection $projection,
@@ -56,11 +56,8 @@ class LaborMatrixSettingsController
         $workType = collect(LaborWorkTypeMatrix::workTypes($settings))->firstWhere('key', $data['work_type']);
         $operationClass = OperationClass::query()->where('key', $workType['operation_class_key'])->firstOrFail();
         $mode = (string) $data['mode'];
-        $isDefaultCell = $data['work_type'] === 'mechanical'
-            && $data['billing_class'] === ConcernBillingPosture::CustomerPay->value;
 
-        DB::transaction(function () use ($settings, $data, $operationClass, $mode, $isDefaultCell): void {
-            $previousStandard = (int) $settings->default_labor_rate_cents;
+        DB::transaction(function () use ($settings, $data, $operationClass, &$mode): void {
             $effectiveFrom = Carbon::now()->startOfDay();
             $rateCents = match ($mode) {
                 'zero' => 0,
@@ -68,43 +65,13 @@ class LaborMatrixSettingsController
                 default => (int) round(((float) ($data['rate'] ?? 0)) * 100),
             };
 
-            if ($isDefaultCell && $mode !== 'zero') {
-                $nextStandard = $mode === 'standard'
-                    ? $previousStandard
-                    : $rateCents;
-
-                if ($nextStandard !== $previousStandard) {
-                    $categories = collect($settings->laborCategories())
-                        ->map(function (array $category) use ($nextStandard): array {
-                            return [
-                                'key' => $category['key'],
-                                'name' => $category['name'],
-                                'rate' => $category['key'] === 'mechanical'
-                                    ? number_format($nextStandard / 100, 2, '.', '')
-                                    : number_format($category['rate_cents'] / 100, 2, '.', ''),
-                                'minimum_hours' => $category['minimum_hours'],
-                                'rounding_rule' => $category['rounding_rule'],
-                                'allows_modifiers' => $category['allows_modifiers'] ? '1' : '0',
-                                'is_active' => ($category['is_active'] ?? true) ? '1' : '0',
-                            ];
-                        })
-                        ->all();
-
-                    $settings->update([
-                        'default_labor_rate_cents' => $nextStandard,
-                        'labor_categories' => $settings->normalizeLaborCategories($categories, 'mechanical'),
-                    ]);
-
-                    $this->syncStandardCustomerPayLaborRates->execute(
-                        $previousStandard,
-                        $nextStandard,
-                        $effectiveFrom,
-                        'Mechanical × Retail default',
-                    );
+            // Matrix UI is explicit-rate only ($0 = no charge). Do not rewrite shop-wide
+            // default_labor_rate_cents or cascade Standard inheritance to other cells.
+            if ($mode === 'standard') {
+                $mode = $rateCents <= 0 ? 'zero' : 'custom';
+                if ($mode === 'zero') {
+                    $rateCents = 0;
                 }
-
-                $mode = 'standard';
-                $rateCents = (int) $settings->fresh()->default_labor_rate_cents;
             }
 
             $posture = ConcernBillingPosture::tryFrom($data['billing_class']);
@@ -205,6 +172,56 @@ class LaborMatrixSettingsController
             'applies_to' => 'new_repair_orders_only',
             'matrix' => $this->projection->build(),
         ]);
+    }
+
+    /**
+     * Round To is Work Type × Billing Class (#194 R1).
+     */
+    public function updateCellRounding(Request $request): JsonResponse
+    {
+        $workTypeKeys = collect(LaborWorkTypeMatrix::workTypes())->pluck('key')->all();
+        $columnValues = collect(LaborWorkTypeMatrix::matrixBillingColumns())->pluck('value')->all();
+        $roundingValues = array_column(LaborRoundingRule::cases(), 'value');
+
+        $data = $request->validate([
+            'work_type' => ['required', 'string', Rule::in($workTypeKeys)],
+            'billing_class' => ['required', 'string', Rule::in($columnValues)],
+            'rounding_rule' => ['required', 'string', Rule::in($roundingValues)],
+            'expected_version' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $settings = ShopSettings::current();
+        $this->assertVersion($settings, $data['expected_version'] ?? null);
+
+        $rule = LaborRoundingRule::from($data['rounding_rule']);
+        $matrix = LaborRoundingMatrix::fromStored(
+            is_array($settings->labor_rounding) ? $settings->labor_rounding : null,
+        )->ensureComplete($settings)
+            ->withRule($data['work_type'], $data['billing_class'], $rule);
+
+        $settings->update([
+            'labor_rounding' => $matrix->toArray(),
+            'labor_pricing_profile_version' => max(1, (int) ($settings->labor_pricing_profile_version ?? 0) + 1),
+        ]);
+
+        return response()->json([
+            'status' => 'saved',
+            'applies_to' => 'new_repair_orders_only',
+            'scope' => 'work_type_billing_class',
+            'matrix' => $this->projection->build(),
+        ]);
+    }
+
+    /** @deprecated Use updateCellRounding */
+    public function updateWorkTypeRounding(Request $request): JsonResponse
+    {
+        if (! $request->filled('billing_class')) {
+            $request->merge([
+                'billing_class' => ConcernBillingPosture::CustomerPay->value,
+            ]);
+        }
+
+        return $this->updateCellRounding($request);
     }
 
     public function storeWorkType(Request $request): JsonResponse
