@@ -9,11 +9,6 @@
     use App\Ark\Runtime\Authorization\ArkCapability;
 
     $assignedTechnicianId = $repairOrder->assigned_technician_id ? (string) $repairOrder->assigned_technician_id : '';
-    $soloOwnerShop = $soloOwnerShop ?? false;
-    $needsTechnician = $repairOrder->assigned_technician_id === null
-        && ! $repairOrder->hasRepairActionOwner()
-        && ! $soloOwnerShop
-        && ! $repairOrder->isTerminal();
     $allowsTechnicianClear = $repairOrder->allowsTechnicianClear();
     $fieldId = $selectId.'-'.$repairOrder->repair_order_id;
     $menuId = $fieldId.'-menu';
@@ -50,10 +45,9 @@
                             aria-haspopup="listbox"
                             aria-controls="{{ $menuId }}"
                             aria-label="Technician"
-                            title="Assign a technician so In Progress can start. Repair Actions can own work separately when present."
                             data-technician-trigger
                         >
-                            <span @class(['ops-visit-inline-value', 'is-warning' => $needsTechnician])>{{ $assignedLabel }}</span>
+                            <span class="ops-visit-inline-value">{{ $assignedLabel }}</span>
                         </button>
                         <ul
                             id="{{ $menuId }}"
@@ -61,12 +55,6 @@
                             role="listbox"
                             aria-label="Technician"
                         >
-                            @if ($needsTechnician)
-                                <li>
-                                    <span class="dropdown-item-text small text-warning">Needed before In Progress</span>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                            @endif
                             @if ($allowsTechnicianClear)
                                 <li>
                                     <button
