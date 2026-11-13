@@ -1681,6 +1681,11 @@
                     :recommendationSafetyCount="$recommendationAwareness['safety_count'] ?? 0"
                 >
                 {{-- Import / Preview / Customer View relocated: Tools, portal panel, context strip. --}}
+                @include('operations.repair-orders.partials.repair-order-estimate-toolbar-actions', [
+                    'repairOrder' => $repairOrder,
+                    'mode' => 'edit',
+                    'isTerminal' => $isTerminal,
+                ])
 
                 @include('operations.repair-orders.partials.repair-order-visit-reason', [
                     'repairOrder' => $repairOrder,

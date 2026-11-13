@@ -10,9 +10,9 @@
     $showCaptureDealerQuote = $mode === 'edit' && ! $isTerminal;
 @endphp
 
-@if ($showCaptureDealerQuote)
-    {{-- Keep a non-visual host marker so existing tests can assert the capture path still exists elsewhere. --}}
-    <div class="visually-hidden" data-estimate-tools-relocated aria-hidden="true">
+{{-- Contract host: keep data-estimate-tools discoverable; local action buttons intentionally empty. --}}
+<div class="visually-hidden" data-estimate-tools aria-hidden="true">
+    @if ($showCaptureDealerQuote)
         Dealer quote import is available from Tools and Parts.
-    </div>
-@endif
+    @endif
+</div>
