@@ -90,8 +90,18 @@ export const arkVinDisplay = (vin) => ({
         this.attachScroll();
     },
 
+    toggleTooltip() {
+        if (this.tooltipOpen) {
+            this.hideTooltip();
+            return;
+        }
+
+        this.showTooltip();
+    },
+
     hideTooltip(event) {
-        if (event?.relatedTarget && this.$el.contains(event.relatedTarget)) {
+        const related = event?.relatedTarget;
+        if (related && (this.$el.contains(related) || this.$refs.tooltip?.contains(related))) {
             return;
         }
 
@@ -122,7 +132,8 @@ export const arkVinDisplay = (vin) => ({
             left = Math.max(8, window.innerWidth - width - 8);
         }
 
-        this.tooltipStyle = `top:${Math.round(top)}px;left:${Math.round(left)}px;`;
+        // Keep above sticky RO tabs (1021) and orientation chrome (1022).
+        this.tooltipStyle = `top:${Math.round(top)}px;left:${Math.round(left)}px;z-index:1085;`;
     },
 
     attachScroll() {

@@ -1059,19 +1059,39 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
     border-bottom-color: color-mix(in srgb, var(--tblr-primary) 28%, var(--tblr-border-color));
 }
 
-/* Sales Tax row: same geometry as Labor/Parts/Fees; only the jurisdiction name looks interactive. */
+/* Sales Tax row: unstyled text button matching Labor/Parts/Fees dt geometry. */
 .ops-tax-jurisdiction-trigger {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
     cursor: pointer;
-    line-height: inherit;
+    font: inherit;
     font-weight: inherit;
     font-size: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    text-align: inherit;
+    text-decoration: none;
     vertical-align: baseline;
+    min-height: 0;
+    height: auto;
     box-shadow: none !important;
 }
 
 .ops-tax-jurisdiction-trigger:hover,
 .ops-tax-jurisdiction-trigger:focus-visible {
     color: inherit;
+    background: transparent;
+    text-decoration: none;
+}
+
+.ops-tax-jurisdiction-trigger:focus-visible {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 2px;
 }
 
 .ops-tax-jurisdiction-label {
@@ -1079,6 +1099,32 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
     text-decoration-style: dotted;
     text-decoration-thickness: from-font;
     text-underline-offset: 0.18em;
+}
+
+/* VIN: copyable text + compact readback; teleported tooltip above sticky RO tabs. */
+.ops-vin-copyable {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.15em;
+    min-height: 0;
+    height: auto;
+    line-height: inherit;
+}
+
+.ops-vin-copyable:hover,
+.ops-vin-copyable:focus-visible {
+    color: inherit;
+}
+
+.ops-vin-readback-btn {
+    min-width: 1.25rem;
+    min-height: 1.25rem;
+}
+
+.ops-vin-tooltip-layer {
+    z-index: 1085 !important;
+    pointer-events: auto;
 }
 
 /* Sticky footer Print: Bootstrap static dropup opens upward above the dock without Alpine click.outside races. */

@@ -65,6 +65,7 @@
             @include('operations.repair-orders.partials.repair-order-footer-estimating-tools', [
                 'tools' => $estimatingTools,
                 'presentActions' => $footer->present,
+                'repairOrder' => $repairOrder,
             ])
         @endif
 

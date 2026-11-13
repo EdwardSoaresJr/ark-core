@@ -187,7 +187,7 @@
                     @if ($taxRowInteractive)
                         <button
                             type="button"
-                            class="btn btn-link p-0 align-baseline text-secondary text-decoration-none ops-tax-jurisdiction-trigger"
+                            class="ops-tax-jurisdiction-trigger"
                             data-tax-jurisdiction-trigger
                             aria-haspopup="dialog"
                             aria-controls="ro-tax-jurisdiction-modal"
@@ -208,10 +208,10 @@
                     @else
                         {{ $taxRowLabel }}
                         @if ($taxProfileLabel !== '')
-                            <span class="text-secondary"> · {{ $taxProfileLabel }}</span>
+                            <span> · {{ $taxProfileLabel }}</span>
                         @endif
                         @if ($taxRateLabel !== '')
-                            <span class="text-secondary"> · {{ $taxRateLabel }}</span>
+                            <span> · {{ $taxRateLabel }}</span>
                         @endif
                     @endif
                 </dt>

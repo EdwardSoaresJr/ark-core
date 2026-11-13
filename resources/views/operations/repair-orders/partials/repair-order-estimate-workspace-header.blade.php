@@ -8,5 +8,6 @@
         'repairOrder' => $repairOrder,
         'totals' => $totals,
         'estimateInstruments' => $estimateInstruments ?? null,
+        'partsBlockingCount' => $partsBlockingCount ?? 0,
     ])
 </div>

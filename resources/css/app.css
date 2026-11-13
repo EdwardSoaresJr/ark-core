@@ -8694,7 +8694,7 @@
         letter-spacing: 0.02em;
     }
 
-    .ops-vin-display--strip .ops-vin-copy-btn {
+    .ops-vin-display--strip .ops-vin-readback-btn {
         width: 1rem;
         height: 1rem;
     }
@@ -8720,7 +8720,7 @@
         color: theme('colors.slate.950');
     }
 
-    .ops-vin-copy-btn {
+    .ops-vin-readback-btn {
         display: inline-flex;
         flex-shrink: 0;
         align-items: center;
@@ -8735,14 +8735,23 @@
         transition: color 120ms ease, background-color 120ms ease;
     }
 
-    .ops-vin-copy-btn:hover {
+    .ops-vin-readback-btn:hover,
+    .ops-vin-readback-btn:focus-visible {
         background: theme('colors.slate.100');
         color: theme('colors.slate.700');
     }
 
-    .ops-vin-copy-icon {
-        width: 0.75rem;
-        height: 0.75rem;
+    .ops-vin-readback-glyph {
+        font-size: 0.75rem;
+        line-height: 1;
+        font-weight: 700;
+    }
+
+    .ops-vin-copyable {
+        text-decoration-line: underline;
+        text-decoration-style: dotted;
+        text-decoration-thickness: from-font;
+        text-underline-offset: 0.15em;
     }
 
     .ops-vin-prefix {
@@ -8778,9 +8787,11 @@
         pointer-events: none;
     }
 
-    .ops-vin-tooltip--fixed {
+    .ops-vin-tooltip--fixed,
+    .ops-vin-tooltip-layer {
         position: fixed;
-        z-index: 125;
+        z-index: 1085;
+        pointer-events: auto;
     }
 
     .ops-vin-phonetic-head {

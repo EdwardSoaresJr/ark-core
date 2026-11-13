@@ -1697,6 +1697,7 @@
                     @include('operations.repair-orders.partials.repair-order-estimate-workspace-header', [
                         'repairOrder' => $repairOrder,
                         'totals' => $totals,
+                        'partsBlockingCount' => $partsBlockingCount ?? 0,
                     ])
 
                     @include('operations.repair-orders.partials.repair-order-estimate-context-strip', [
@@ -1772,24 +1773,14 @@
                             @include('operations.repair-orders.partials.repair-order-linked-quote', [
                                 'repairOrder' => $repairOrder,
                             ])
-                            <div class="d-flex flex-wrap gap-2 mb-2" data-linked-parts-quote-actions>
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-ghost-secondary"
-                                    data-linked-parts-quote-open
-                                    @click="window.dispatchEvent(new CustomEvent('ark:linked-parts-quote-open', { detail: { invokeEl: $event.currentTarget } }))"
-                                >
-                                    Linked quote
-                                </button>
-                            </div>
                         @endif
                         @unless ($canImportPartstechQuote || $isTerminal)
                             @if ($partsTechLauncher->usesPlatform())
-                                <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
+                                <p class="small text-secondary mb-2" data-worksheet-procurement-hint>
                                     {{ $partsTechLauncher->blockedReason($repairOrder) }}
                                 </p>
                             @elseif ($partsTechLauncher->configured())
-                                <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
+                                <p class="small text-secondary mb-2" data-worksheet-procurement-hint>
                                     PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}">Settings → PartsTech</a>.
                                 </p>
                             @endif

@@ -150,7 +150,44 @@ test('tax jurisdiction modal teleports above its backdrop and tax row keeps fina
         ->and($html)->toContain('data-tax-jurisdiction-dialog')
         ->and($html)->toContain('ops-tax-jurisdiction-label')
         ->and($html)->toContain('ops-tax-jurisdiction-trigger')
-        ->and($html)->toContain('Click to view or change tax jurisdiction.');
+        ->and($html)->toContain('Click to view or change tax jurisdiction.')
+        ->and($html)->not->toContain('btn btn-link p-0 align-baseline text-secondary text-decoration-none ops-tax-jurisdiction-trigger');
+});
+
+test('estimate context opens from KPI cards and VIN readback teleports above workspace chrome', function () {
+    $customer = \App\Ark\Operations\Customers\Customer::query()->create([
+        'first_name' => 'Vin',
+        'last_name' => 'Readback',
+        'phone' => '555-0199',
+        'customer_type' => 'Retail',
+    ]);
+    $vehicle = \App\Ark\Operations\Vehicles\Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2018,
+        'make' => 'Ford',
+        'model' => 'Focus',
+        'vin' => '1FADP3F20JL123456',
+    ]);
+    $ro = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'VIN and KPI acceptance',
+    ]);
+
+    $html = $this->get(route('operations.repair-orders.show', $ro))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('data-estimate-context-open="auth"')
+        ->and($html)->toContain('data-estimate-context-open="portal"')
+        ->and($html)->toContain('data-estimate-context-open="parts"')
+        ->and($html)->toContain('data-vin-readback-trigger')
+        ->and($html)->toContain('ops-vin-tooltip-layer')
+        ->and($html)->toContain('Click to copy VIN')
+        ->and($html)->not->toContain('ops-vin-copy-btn')
+        ->and($html)->not->toContain('data-linked-parts-quote-actions')
+        ->and($html)->not->toContain('id="authorization-rail"\n            data-continuity-region="authorization-rail"\n            class="nav-link"');
 });
 
 test('concern headers share accent wash and ordinal, not priority stripes', function () {

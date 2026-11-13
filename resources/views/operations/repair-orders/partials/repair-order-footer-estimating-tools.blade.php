@@ -14,6 +14,12 @@
     $catalogColors = "{ yellow: 'btn-outline-yellow', green: 'btn-outline-green', orange: 'btn-outline-orange', red: 'btn-outline-red', blue: 'btn-outline-blue', navy: 'btn-outline-indigo', slate: 'btn-outline-secondary' }";
     $guideColors = "{ rte: 'btn-outline-teal', alldata: 'btn-outline-yellow', prodemand: 'btn-outline-indigo' }";
     $openCart = "window.dispatchEvent(new CustomEvent('ark:partstech-cart-open', { detail: { pull: \$store.partsCart.attention } }))";
+    $linkedQuotesAvailable = app(\App\Ark\Operations\Parts\LinkedPartsQuotes::class)->available();
+    $linkedQuotePanel = $linkedQuotesAvailable
+        ? app(\App\Ark\Operations\Parts\LinkedPartsQuotes::class)->present($repairOrder)
+        : null;
+    $linkedQuoteLinked = (bool) ($linkedQuotePanel['current'] ?? null);
+    $partsCatalogSplit = $linkedQuotesAvailable || count($partsCatalogs) > 1;
 @endphp
 
 <div class="d-none d-md-flex align-items-center gap-1" role="group" aria-label="Estimating tools" data-ro-footer-tools>
@@ -45,7 +51,7 @@
                     <span x-show="partstechCatalogOpening" x-cloak class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
                     <span x-text="partsCatalogSelected()?.label">{{ $selectedCatalog['label'] ?? 'Parts catalog' }}</span>
                 </button>
-                @if (count($partsCatalogs) > 1)
+                @if ($partsCatalogSplit)
                     <button
                         type="button"
                         class="btn btn-sm dropdown-toggle dropdown-toggle-split"
@@ -53,12 +59,25 @@
                         @click="partsCatalogMenu = ! partsCatalogMenu"
                         :aria-expanded="partsCatalogMenu ? 'true' : 'false'"
                         aria-haspopup="menu"
-                        aria-label="Choose a parts catalog"
-                        title="Choose a catalog or open a parts link"
+                        aria-label="PartsTech quote and catalog options"
+                        title="Linked quote and catalog options"
+                        data-parts-catalog-split
                     ></button>
                 @endif
             </div>
-            <div class="dropdown-menu bottom-100 start-0 mb-1" :class="{ show: partsCatalogMenu }" role="menu" @keydown.escape.stop="partsCatalogMenu = false">
+            <div class="dropdown-menu bottom-100 start-0 mb-1" :class="{ show: partsCatalogMenu }" role="menu" @keydown.escape.stop="partsCatalogMenu = false" data-parts-catalog-menu>
+                @if ($linkedQuotesAvailable)
+                    <button
+                        type="button"
+                        class="dropdown-item"
+                        role="menuitem"
+                        data-linked-parts-quote-open
+                        @click="partsCatalogMenu = false; window.dispatchEvent(new CustomEvent('ark:linked-parts-quote-open', { detail: { invokeEl: $event.currentTarget } }))"
+                    >
+                        {{ $linkedQuoteLinked ? 'Manage linked quote' : 'Link PartsTech quote' }}
+                    </button>
+                    <div class="dropdown-divider"></div>
+                @endif
                 <template x-for="item in partsCatalogItems" :key="'footer-catalog-' + item.key">
                     <div>
                         <button type="button" class="dropdown-item" role="menuitem" @click="activatePartsCatalogItem(item)" :aria-current="item.key === partsCatalogSelectedKey && item.mode === 'catalog' ? 'true' : 'false'">
@@ -74,6 +93,19 @@
                     </div>
                 </template>
             </div>
+        </div>
+    @elseif ($linkedQuotesAvailable)
+        <div class="position-relative d-none d-md-inline-flex" data-toolbar-group="linked-quote">
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                data-linked-parts-quote-open
+                data-parts-catalog-split
+                @click="window.dispatchEvent(new CustomEvent('ark:linked-parts-quote-open', { detail: { invokeEl: $event.currentTarget } }))"
+                title="{{ $linkedQuoteLinked ? 'Manage the linked PartsTech quote' : 'Link a PartsTech quote' }}"
+            >
+                {{ $linkedQuoteLinked ? 'Manage linked quote' : 'Link PartsTech quote' }}
+            </button>
         </div>
     @endif
 
@@ -160,6 +192,14 @@
                     data-ro-footer-dealer-quote
                     @click="toolsOpen = false; window.dispatchEvent(new CustomEvent('ark:dealer-quote-capture-open'))"
                 >Import Dealer Quote</button>
+                @if ($linkedQuotesAvailable)
+                    <button
+                        type="button"
+                        class="list-group-item list-group-item-action"
+                        data-linked-parts-quote-open
+                        @click="toolsOpen = false; window.dispatchEvent(new CustomEvent('ark:linked-parts-quote-open', { detail: { invokeEl: $event.currentTarget } }))"
+                    >{{ $linkedQuoteLinked ? 'Manage linked quote' : 'Link PartsTech quote' }}</button>
+                @endif
                 <template x-for="item in partsCatalogItems" :key="'sheet-catalog-' + item.key">
                     <button
                         type="button"

@@ -387,7 +387,8 @@ test('the dealer quote capture and linked quote dialogs are Tabler modals', func
         ->and($linked->getAttribute('x-data'))->toContain('arkLinkedPartsQuote(')
         ->and($xpath->query('.//*[@data-linked-parts-quote-dialog]//*[contains(@class, "modal-content")][@x-ref="dialog"]', $linked)->length)->toBe(1)
         ->and($xpath->query('//*[@data-linked-parts-quote-open]')->length)->toBeGreaterThan(0)
-        ->and($xpath->query('//*[@data-linked-parts-quote-actions]')->length)->toBe(1);
+        ->and($xpath->query('//*[@data-linked-parts-quote-actions]')->length)->toBe(0)
+        ->and($xpath->query('//*[@data-parts-catalog-split]')->length)->toBeGreaterThan(0);
 });
 
 test('the PartsTech Cart Manager renders a Tabler modal with pull, assignment and import controls', function (): void {
