@@ -6,9 +6,8 @@
 
 | Layer | SHA | Notes |
 | --- | --- | --- |
-| Core (Alpha runtime) | `e5f082eb5966582f4a9277afde31de2123d39f5b` | Behavior tip deployed on Alpha |
-| Core (PR tip) | `7f551c3ab66112e63bf25a76dfb17dc685651413` | Adds this report + screenshots only |
-| Stancl / SaaS | `ab5661341b35548b631e2749885b8c033bcc257e` | PR https://github.com/EdwardSoaresJr/ark-stancl/pull/253 · pins Core `e5f082eb` |
+| Core (code-bearing / Alpha) | `00012cda276f1b4e1093ee702b28b3ec51848f8f` | Fingerprint-required acknowledgment contract |
+| Stancl / SaaS | `502096e3e42944bfc7ef480a1d983163daecf1e5` | Pins Core `00012cda` |
 
 ## Baseline SHAs (before this work)
 
@@ -69,3 +68,10 @@ Alpha SaaS `ab566134…` / Core `e5f082eb…` confirmed after deploy (`/up` 200)
 - [ ] **ACCEPT Alpha** — authorize production prep / deploy naming these SHAs
 - [ ] **CHANGES REQUIRED** — list notes
 - [ ] **HOLD** — leave Alpha pin; do not promote
+
+
+## Fingerprint contract (final correction)
+
+New acknowledgments require a fingerprint matching the current outstanding set. Missing/invalid/stale fingerprints re-challenge. Prior matching acknowledgment reuse is unchanged.
+
+**Tested SHAs:** Core `00012cda…` · SaaS `502096e3…`
