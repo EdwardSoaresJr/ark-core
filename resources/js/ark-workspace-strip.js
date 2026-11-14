@@ -45,6 +45,7 @@ function syncOrientationDockReserve(orientationHeader) {
     }
 
     document.documentElement.style.setProperty('--ops-ro-dock-reserve', `${height}px`);
+    document.body?.style.setProperty('--ops-ro-dock-reserve', `${height}px`);
 }
 
 function initOrientationHeader() {

@@ -56,7 +56,8 @@ test('the fit script only marks a desktop rail that does not fit, and watches wh
         ->toContain("rail.classList.toggle('ops-review-rail--scrolls', scrolls);")
         ->toContain("if (window.innerWidth < 1024) {\n                        rail.classList.remove('ops-review-rail--scrolls');")
         ->toContain("rail.style.setProperty('--ops-rail-max-height', available + 'px');")
-        ->toContain("document.documentElement.style.setProperty('--ops-ro-dock-reserve', Math.ceil(footer.offsetHeight) + 'px');")
+        ->toContain("document.documentElement.style.setProperty('--ops-ro-dock-reserve', dockReserve);")
+        ->toContain("document.body.style.setProperty('--ops-ro-dock-reserve', dockReserve);")
         ->toContain("document.querySelectorAll('#ops-workspace-tabs, [data-ro-orientation-header]')")
         ->not->toContain('rail.style.top =');
 });
