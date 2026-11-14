@@ -56,22 +56,17 @@
                 <div class="mb-3">
                     <div class="form-label required">Visit</div>
                     <div class="form-selectgroup" role="radiogroup" aria-label="Visit posture" aria-required="true">
-                        @foreach ([
-                            'waiting_here' => 'Waiting',
-                            'drop_off' => 'Drop Off',
-                            'needs_shuttle' => 'Shuttle',
-                            'tow_incoming' => 'Tow-In',
-                        ] as $value => $label)
-                            <label class="form-selectgroup-item">
+                        @foreach (\App\Ark\Operations\RepairOrders\RepairOrderVisitMode::cases() as $mode)
+                            <label class="form-selectgroup-item" title="{{ $mode->description() }}">
                                 <input
                                     name="visit_mode"
-                                    value="{{ $value }}"
+                                    value="{{ $mode->value }}"
                                     type="radio"
                                     class="form-selectgroup-input"
-                                    @checked($selectedVisitMode === $value)
+                                    @checked($selectedVisitMode === $mode->value)
                                     @if ($loop->first && $selectedVisitMode === '') required @endif
                                 >
-                                <span class="form-selectgroup-label">{{ $label }}</span>
+                                <span class="form-selectgroup-label">{{ $mode->label() }}</span>
                             </label>
                         @endforeach
                     </div>

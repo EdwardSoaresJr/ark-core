@@ -144,7 +144,7 @@ test('check in renders on tabler across the customer, vehicle, and open steps', 
     expect($form->getAttribute('action'))->toBe(route('operations.intake.store'))
         ->and(trim($open->query('//*[@data-intake-steps]/li['.$hasClass('active').']')->item(0)->textContent))->toBe('Open RO')
         ->and($open->query('.//textarea[@name="visit_reason"]['.$hasClass('form-control').']', $form)->length)->toBe(1)
-        ->and($open->query('.//input[@name="visit_mode"][@type="radio"]['.$hasClass('form-selectgroup-input').']', $form)->length)->toBe(4)
+        ->and($open->query('.//input[@name="visit_mode"][@type="radio"]['.$hasClass('form-selectgroup-input').']', $form)->length)->toBe(5)
         ->and($open->query('.//input[@name="billing_class"][@type="radio"]['.$hasClass('form-selectgroup-input').']', $form)->length)->toBeGreaterThanOrEqual(1)
         ->and($open->query('.//*[@data-ro-mention-menu]['.$hasClass('dropdown-menu').'][@role="listbox"]', $form)->length)->toBe(1)
         ->and($open->query('.//*['.$hasClass('ark-legacy').']', $form)->length)->toBe(0)

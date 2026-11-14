@@ -130,6 +130,7 @@ final class ConversationContextProjection
             RepairOrderVisitMode::DropOff => 'Drop off',
             RepairOrderVisitMode::NeedsShuttle => 'Needs shuttle',
             RepairOrderVisitMode::TowIncoming => 'Tow incoming',
+            RepairOrderVisitMode::OnSite => 'On-site / mobile',
             default => null,
         };
     }

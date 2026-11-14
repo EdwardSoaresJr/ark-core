@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Settings;
 
 use App\Ark\Operations\RepairOrders\RepairOrderVisitMode;
+use App\Ark\Operations\Workstations\Workstation;
 
 /**
  * Applies operational profile defaults onto existing ShopSettings columns.
@@ -10,6 +11,10 @@ use App\Ark\Operations\RepairOrders\RepairOrderVisitMode;
  */
 final class ApplyOperationalProfileDefaults
 {
+    public const MOBILE_WORKSTATION_NAME = 'Mobile unit';
+
+    public const DEFAULT_SHOP_WORKSTATION_NAME = 'Main Shop';
+
     /**
      * @return array{profile: OperationalProfile, changed: list<string>}
      */
@@ -30,10 +35,41 @@ final class ApplyOperationalProfileDefaults
             'operational_profile' => $profile->value,
         ]);
 
+        if ($this->alignDefaultWorkstation($profile)) {
+            $changed[] = 'workstation_name';
+        }
+
         return [
             'profile' => $profile,
             'changed' => $changed,
         ];
+    }
+
+    /**
+     * Keep conventional shops on "Main Shop"; mobile profiles rename that stock label only.
+     */
+    private function alignDefaultWorkstation(OperationalProfile $profile): bool
+    {
+        $station = Workstation::query()->orderBy('id')->first();
+        if ($station === null) {
+            return false;
+        }
+
+        if ($profile === OperationalProfile::MobileMechanic
+            && $station->name === self::DEFAULT_SHOP_WORKSTATION_NAME) {
+            $station->forceFill(['name' => self::MOBILE_WORKSTATION_NAME])->save();
+
+            return true;
+        }
+
+        if ($profile !== OperationalProfile::MobileMechanic
+            && $station->name === self::MOBILE_WORKSTATION_NAME) {
+            $station->forceFill(['name' => self::DEFAULT_SHOP_WORKSTATION_NAME])->save();
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -56,7 +92,7 @@ final class ApplyOperationalProfileDefaults
             ],
             OperationalProfile::MobileMechanic => [
                 'appointments_enabled' => true,
-                'default_visit_mode' => RepairOrderVisitMode::WaitingHere->value,
+                'default_visit_mode' => RepairOrderVisitMode::OnSite->value,
                 'qz_printing_enabled' => false,
                 'learn_training_gate_enabled' => false,
             ],

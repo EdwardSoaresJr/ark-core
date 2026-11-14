@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Intake;
 
 use App\Ark\Operations\Leads\LeadConverter;
+use App\Ark\Operations\RepairOrders\RepairOrderVisitMode;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,19 +28,20 @@ class AdvisorIntakeStoreController
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
             'visit_reason' => ['nullable', 'string', 'max:5000'],
-            'visit_mode' => ['required', Rule::in(['waiting_here', 'drop_off', 'needs_shuttle', 'tow_incoming'])],
+            'visit_mode' => ['required', Rule::enum(RepairOrderVisitMode::class)],
             'billing_class' => ['nullable', Rule::in($billingClassNames)],
             'lead_id' => ['nullable', 'integer', 'exists:leads,id'],
             'appointment_id' => ['nullable', 'integer', 'exists:appointments,id'],
         ]);
 
-        $visitMode = $request->input('visit_mode');
+        $visitMode = RepairOrderVisitMode::from((string) $request->input('visit_mode'));
         $billingClass = trim((string) $request->input('billing_class', ''));
 
-        $data['waiting_here'] = $visitMode === 'waiting_here';
-        $data['drop_off'] = $visitMode === 'drop_off';
-        $data['needs_shuttle'] = $visitMode === 'needs_shuttle';
-        $data['tow_incoming'] = $visitMode === 'tow_incoming';
+        $data['waiting_here'] = $visitMode === RepairOrderVisitMode::WaitingHere;
+        $data['drop_off'] = $visitMode === RepairOrderVisitMode::DropOff;
+        $data['needs_shuttle'] = $visitMode === RepairOrderVisitMode::NeedsShuttle;
+        $data['tow_incoming'] = $visitMode === RepairOrderVisitMode::TowIncoming;
+        $data['on_site'] = $visitMode === RepairOrderVisitMode::OnSite;
         $data['billing_class'] = $billingClass !== '' ? $billingClass : null;
         $data['fleet'] = strcasecmp($billingClass, 'Fleet') === 0;
         $data['warranty'] = strcasecmp($billingClass, 'Warranty') === 0;
