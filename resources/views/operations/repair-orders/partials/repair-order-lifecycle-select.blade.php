@@ -197,6 +197,56 @@
                     </div>
                     </div>
                 </div>
+
+                @php
+                    $operationalChallenge = session('operational_closeout_challenge');
+                    $showOperationalPanel = is_array($operationalChallenge)
+                        && ($operationalChallenge['required'] ?? false) === true
+                        && ! empty($operationalChallenge['items']);
+                @endphp
+                <div
+                    class="card card-sm mt-2 border-warning {{ $showOperationalPanel ? '' : 'hidden' }}"
+                    style="max-width: 24rem"
+                    data-operational-closeout-panel
+                    @if (! $showOperationalPanel) hidden @endif
+                >
+                    <div class="card-body p-2">
+                        <div class="fw-bold small mb-1">Unfinished work on this RO</div>
+                        <div class="text-secondary small mb-2">ARK found items that have not been completed. Document why you are proceeding — this does not mark the work finished.</div>
+                        <ul class="list-unstyled small mb-2" data-operational-closeout-items>
+                            @foreach (($operationalChallenge['items'] ?? []) as $item)
+                                <li class="mb-1">
+                                    <div class="fw-medium">{{ $item['title'] ?? 'Outstanding item' }}</div>
+                                    <div class="text-secondary">{{ $item['detail'] ?? '' }}</div>
+                                </li>
+                            @endforeach
+                        </ul>
+                        <label for="operational-closeout-reason-{{ $repairOrder->repair_order_id }}" class="form-label small mb-1">Reason for proceeding</label>
+                        <textarea
+                            id="operational-closeout-reason-{{ $repairOrder->repair_order_id }}"
+                            name="operational_closeout_reason"
+                            rows="3"
+                            maxlength="1000"
+                            class="form-control form-control-sm mb-2"
+                            placeholder="Example: Customer requested vehicle release. Parts will be installed during a return visit."
+                            data-operational-closeout-reason
+                        >{{ old('operational_closeout_reason') }}</textarea>
+                        <input
+                            type="hidden"
+                            name="operational_closeout_fingerprint"
+                            value="{{ $operationalChallenge['fingerprint'] ?? '' }}"
+                            data-operational-closeout-fingerprint
+                        >
+                        <div class="btn-list">
+                            <button type="submit" class="btn btn-warning btn-sm" data-operational-closeout-confirm>
+                                Confirm closeout
+                            </button>
+                            <button type="button" class="btn btn-link btn-sm" data-operational-closeout-cancel>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>

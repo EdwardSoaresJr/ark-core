@@ -48,6 +48,8 @@ final class MobileRepairOrderLifecycleController
             'status' => ['required', 'string', 'max:120'],
             'lost_reason_key' => ['nullable', Rule::enum(RepairOrderLostReason::class)],
             'lost_reason_note' => ['nullable', 'string', 'max:500'],
+            'operational_closeout_reason' => ['nullable', 'string', 'max:1000'],
+            'operational_closeout_fingerprint' => ['nullable', 'string', 'max:128'],
         ]);
 
         $requestedStatus = $data['status'];
@@ -58,9 +60,35 @@ final class MobileRepairOrderLifecycleController
         }
 
         $toStatusSlug = RepairOrderWorkflowStatus::normalizeSlug($requestedStatus);
+        $operationalCloseoutReason = isset($data['operational_closeout_reason'])
+            ? trim((string) $data['operational_closeout_reason'])
+            : null;
+        $operationalCloseoutFingerprint = isset($data['operational_closeout_fingerprint'])
+            ? trim((string) $data['operational_closeout_fingerprint'])
+            : null;
+        $operationalCloseoutReason = $operationalCloseoutReason === '' ? null : $operationalCloseoutReason;
+        $operationalCloseoutFingerprint = $operationalCloseoutFingerprint === '' ? null : $operationalCloseoutFingerprint;
 
-        if (($reason = $lifecycle->blockingReason($repairOrder, $toStatusSlug, $user, $closeVariantKey)) !== null) {
-            return response()->json(['message' => $reason], 422);
+        if (($reason = $lifecycle->blockingReason(
+            $repairOrder,
+            $toStatusSlug,
+            $user,
+            $closeVariantKey,
+            operationalCloseoutReason: $operationalCloseoutReason,
+            operationalCloseoutFingerprint: $operationalCloseoutFingerprint,
+        )) !== null) {
+            $challenge = $lifecycle->operationalCloseoutChallenge(
+                $repairOrder,
+                $toStatusSlug,
+                $closeVariantKey,
+                $operationalCloseoutReason,
+                $operationalCloseoutFingerprint,
+            );
+
+            return response()->json([
+                'message' => $reason,
+                'operational_closeout' => $challenge,
+            ], 422);
         }
 
         $lostReason = null;
@@ -89,6 +117,8 @@ final class MobileRepairOrderLifecycleController
             $closeVariantKey,
             $lostReason,
             $lostReasonNote,
+            operationalCloseoutReason: $operationalCloseoutReason,
+            operationalCloseoutFingerprint: $operationalCloseoutFingerprint,
         );
 
         $this->recordRepairOrderEstimateMutation($repairOrder->fresh(), $user);

@@ -12,6 +12,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\RepairOrders\ScopeProductionStatus;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use Illuminate\Support\Str;
@@ -52,6 +53,7 @@ function financialCloseoutRepairOrder(
         'repair_order_id' => $repairOrder->id,
         'summary' => 'Approved brakes',
         'disposition' => RepairOrderConcernDisposition::Approved,
+        'production_status' => ScopeProductionStatus::Completed,
         'recommendation_intent' => 'maintenance',
         'position' => 1,
     ]);
@@ -145,6 +147,7 @@ function zeroBalanceCourtesyRepairOrder(
         'repair_order_id' => $repairOrder->id,
         'summary' => 'Courtesy follow-up',
         'disposition' => RepairOrderConcernDisposition::Approved,
+        'production_status' => ScopeProductionStatus::Completed,
         'recommendation_intent' => 'maintenance',
         'position' => 1,
     ]);
