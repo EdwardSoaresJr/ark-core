@@ -35,7 +35,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'shop_fee_profile', 'commercial_pricing_profile', 'tax_profile', 'labor_pricing_profile', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
+#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'shop_fee_profile', 'commercial_pricing_profile', 'tax_profile', 'labor_pricing_profile', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'on_site', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
 class RepairOrder extends Model
 {
     protected static function booted(): void
@@ -152,6 +152,7 @@ class RepairOrder extends Model
             'waiting_here' => 'boolean',
             'drop_off' => 'boolean',
             'needs_shuttle' => 'boolean',
+            'on_site' => 'boolean',
             'warranty' => 'boolean',
             'fleet' => 'boolean',
             'appointment' => 'boolean',
@@ -355,6 +356,7 @@ class RepairOrder extends Model
     public function intakeQuickFlags(): array
     {
         return collect([
+            $this->on_site ? 'On-site' : null,
             $this->waiting_here ? 'Waiting Here' : null,
             $this->drop_off ? 'Drop Off' : null,
             $this->needs_shuttle ? 'Needs Shuttle' : null,

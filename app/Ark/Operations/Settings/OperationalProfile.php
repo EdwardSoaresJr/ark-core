@@ -26,7 +26,7 @@ enum OperationalProfile: string
         return match ($this) {
             self::RepairShop => 'Bays, appointments, and printing-friendly defaults for a full shop floor.',
             self::SoloShop => 'Owner-operator defaults - appointments off until you turn them on.',
-            self::MobileMechanic => 'Route-friendly scheduling on; label printing off; waiting-here intake default.',
+            self::MobileMechanic => 'On-site intake default; route-friendly scheduling on; label printing off.',
         };
     }
 }

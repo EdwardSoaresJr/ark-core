@@ -84,6 +84,7 @@ class AdvisorIntakeService
                 'waiting_here' => (bool) ($data['waiting_here'] ?? false),
                 'drop_off' => (bool) ($data['drop_off'] ?? false),
                 'needs_shuttle' => (bool) ($data['needs_shuttle'] ?? false),
+                'on_site' => (bool) ($data['on_site'] ?? false),
                 'warranty' => (bool) ($data['warranty'] ?? false),
                 'fleet' => (bool) ($data['fleet'] ?? false),
                 'appointment' => (bool) ($data['appointment'] ?? false),
