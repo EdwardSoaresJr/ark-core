@@ -36,6 +36,7 @@ class RepairOrderLifecycleTransition
         ?RepairOrderLifecycleSelectCache $selectCache = null,
         ?string $operationalCloseoutReason = null,
         ?string $operationalCloseoutFingerprint = null,
+        bool $includeOperationalCloseout = true,
     ): ?string {
         $toStatusSlug = RepairOrderWorkflowStatus::from($toStatus)->value;
         $roleNames = $selectCache?->actorRoleNames();
@@ -81,6 +82,10 @@ class RepairOrderLifecycleTransition
 
                 if ($authorizationReason !== null) {
                     return $authorizationReason;
+                }
+
+                if (! $includeOperationalCloseout) {
+                    return null;
                 }
 
                 return $this->operationalCloseoutBlockingReason(
@@ -139,6 +144,10 @@ class RepairOrderLifecycleTransition
 
         if ($mileageReason !== null) {
             return $mileageReason;
+        }
+
+        if (! $includeOperationalCloseout) {
+            return null;
         }
 
         return $this->operationalCloseoutBlockingReason(

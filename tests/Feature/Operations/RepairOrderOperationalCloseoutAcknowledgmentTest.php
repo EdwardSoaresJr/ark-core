@@ -135,6 +135,30 @@ test('never-started inspection does not require operational acknowledgment', fun
     expect($repairOrder->fresh()->status->is(RepairOrderStatus::Completed))->toBeTrue();
 });
 
+test('lifecycle select keeps unfinished-work moves clickable so the reason panel can open', function () {
+    $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
+    $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
+    operationalCloseoutPart($repairOrder, PartProcurementState::Ordered);
+
+    $hardBlock = app(\App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition::class)->blockingReason(
+        $repairOrder->fresh(),
+        RepairOrderStatus::Completed->value,
+    );
+    $selectBlock = app(\App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition::class)->blockingReason(
+        $repairOrder->fresh(),
+        RepairOrderStatus::Completed->value,
+        includeOperationalCloseout: false,
+    );
+
+    expect($hardBlock)->toBe(RepairOrderOperationalCloseoutAcknowledgment::MISSING_REASON)
+        ->and($selectBlock)->toBeNull();
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertDontSee('data-blocked-reason="'.RepairOrderOperationalCloseoutAcknowledgment::MISSING_REASON.'"', false)
+        ->assertSee('data-status-value="completed"', false);
+});
+
 test('quality check does not require operational unfinished-work acknowledgment', function () {
     $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::InProgress);
     $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
