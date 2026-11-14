@@ -88,8 +88,8 @@
  * Docked repair order footer. On phones it is one row of full-size touch targets clear of the home indicator;
  * the Tools sheet holds what does not fit.
  *
- * The dock is position:sticky;bottom:0, so without a content reserve the last estimate lines sit under it.
- * Legacy ops-estimate-workspace padding does not apply on Tabler RO pages (they use .page-body).
+ * Fixed to the viewport bottom (not sticky): sticky-bottom leaves a mid-page gap when the RO is shorter than
+ * the window. page-body padding keeps long estimates from sitting under the dock.
  */
 html:has([data-ro-orientation-header]) {
     scroll-padding-bottom: calc(var(--ops-ro-dock-reserve) + env(safe-area-inset-bottom, 0px));
@@ -100,7 +100,19 @@ body:has([data-ro-orientation-header]) .page-body {
 }
 
 [data-ro-orientation-header] {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1020;
+    margin-top: 0 !important;
     padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (min-width: 992px) {
+    [data-ro-orientation-header] {
+        left: var(--tblr-sidebar-width, 15rem);
+    }
 }
 
 @media (max-width: 767.98px) {
