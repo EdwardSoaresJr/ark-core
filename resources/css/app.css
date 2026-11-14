@@ -36320,11 +36320,9 @@ html.dark .ops-printing-cmd,
 
 }
 
-/* RO orientation dock - compact next-step chrome (footer-first) */
-body:has([data-ro-orientation-header]) {
-    --ops-ro-dock-reserve: 5.25rem;
-}
-
+/* RO orientation dock - compact next-step chrome (footer-first).
+ * Default --ops-ro-dock-reserve lives on :root (tabler.css). Do not re-declare it on body —
+ * that shadows the measured height JS writes on documentElement. */
 body:has([data-ro-orientation-header]) .ops-estimate-workspace,
 body:has([data-ro-orientation-header]) .page-body {
     padding-bottom: calc(var(--ops-ro-dock-reserve) + env(safe-area-inset-bottom, 0px));
