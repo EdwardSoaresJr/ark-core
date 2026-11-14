@@ -51,8 +51,12 @@ Dock reserve CSS only padded legacy `.ops-estimate-workspace`. Tabler RO pages u
 - No production deploy.
 - Workflows and authorization unchanged.
 
+## Fix PR
+
+- Core: https://github.com/EdwardSoaresJr/ark-core/pull/200 (`186edd70232feb3d5218c252cb23fd730ba2008f`)
+
 ## Next
 
-1. Land Core PR for dock reserve; pin + deploy to Alpha only.
+1. Merge Core #200; SaaS pin + Alpha deploy only (no production).
 2. Owner re-check RO #41 at 1440 / 768 / 320.
 3. Then Labor Matrix presentation review (rates/rules/classes UI only).
