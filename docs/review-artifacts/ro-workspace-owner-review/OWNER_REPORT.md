@@ -9,6 +9,13 @@
 | SaaS (ark-stancl) | `54532a9bdbc3c45bc391af5fd95221dd6968c5db` |
 | Core (ark/core pin) | `cb669eaaf9f858ba8d589b7ceb852abfce686965` |
 
+**Alpha after dock-reserve deploy (review now):**
+
+| Layer | SHA |
+| --- | --- |
+| SaaS (ark-stancl) | `601948b66b3277cc5d8bd2dcf71c77cbfa732fa0` |
+| Core (ark/core pin) | `e7d1ba1ae5473bb6bd72ac19241703eb882db6b1` |
+
 Labor Matrix / Billing Classes UI and #85 inbox acceptance are out of scope for this pass.
 
 ## Confirmed defect (fixed in PR)
@@ -51,12 +58,17 @@ Dock reserve CSS only padded legacy `.ops-estimate-workspace`. Tabler RO pages u
 - No production deploy.
 - Workflows and authorization unchanged.
 
-## Fix PR
+## Fix PRs (merged + on Alpha)
 
-- Core: https://github.com/EdwardSoaresJr/ark-core/pull/200 (`186edd70232feb3d5218c252cb23fd730ba2008f`)
+- Core #200: https://github.com/EdwardSoaresJr/ark-core/pull/200 — page-body dock reserve
+- Core #201: https://github.com/EdwardSoaresJr/ark-core/pull/201 — stop body CSS from shadowing measured height
+- SaaS #249 / #250: pin Core through `e7d1ba1a` on staging
+
+**Verified on Alpha @ 768:** `--ops-ro-dock-reserve` and `.page-body` padding track live dock height (125px); Full ledger clears dock by ~53px.
 
 ## Next
 
-1. Merge Core #200; SaaS pin + Alpha deploy only (no production).
-2. Owner re-check RO #41 at 1440 / 768 / 320.
-3. Then Labor Matrix presentation review (rates/rules/classes UI only).
+1. Owner re-check RO #41 at 1440 / 768 / 320 on Alpha.
+2. Decide duplicate Print / PartsTech / banner density (table above).
+3. Then Labor Matrix presentation review (rates/rules/classes UI only — no pricing math).
+4. Production RO deploy only with explicit authorization.
