@@ -37,6 +37,16 @@ function applyWorkspaceStripVisibility(strip, visible) {
     syncModeControlSlots(visible);
 }
 
+function syncOrientationDockReserve(orientationHeader) {
+    const height = Math.ceil(orientationHeader.getBoundingClientRect().height);
+
+    if (height < 1) {
+        return;
+    }
+
+    document.documentElement.style.setProperty('--ops-ro-dock-reserve', `${height}px`);
+}
+
 function initOrientationHeader() {
     const orientationHeader = document.querySelector('[data-ro-orientation-header]');
     const toolbarSlot = document.querySelector('[data-ro-mode-toolbar-slot]');
@@ -52,6 +62,13 @@ function initOrientationHeader() {
 
     toolbarControl?.removeAttribute('data-ro-mode-control');
     headerControl?.setAttribute('data-ro-mode-control', '');
+
+    syncOrientationDockReserve(orientationHeader);
+
+    if (typeof ResizeObserver !== 'undefined' && ! orientationHeader.dataset.roDockReserveObserved) {
+        orientationHeader.dataset.roDockReserveObserved = '1';
+        new ResizeObserver(() => syncOrientationDockReserve(orientationHeader)).observe(orientationHeader);
+    }
 
     return true;
 }

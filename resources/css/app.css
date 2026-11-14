@@ -36325,8 +36325,9 @@ body:has([data-ro-orientation-header]) {
     --ops-ro-dock-reserve: 5.25rem;
 }
 
-body:has([data-ro-orientation-header]) .ops-estimate-workspace {
-    padding-bottom: max(5.25rem, calc(4.5rem + env(safe-area-inset-bottom, 0px)));
+body:has([data-ro-orientation-header]) .ops-estimate-workspace,
+body:has([data-ro-orientation-header]) .page-body {
+    padding-bottom: calc(var(--ops-ro-dock-reserve) + env(safe-area-inset-bottom, 0px));
 }
 
 .ops-ro-orientation-header.ops-ro-orientation-header--dock {

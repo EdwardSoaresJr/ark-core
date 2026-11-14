@@ -2011,6 +2011,9 @@
                     const header = rail.querySelector('#estimate-total-panel > .card-header');
                     const summary = rail.querySelector('[data-rail-summary]');
                     const top = parseFloat(getComputedStyle(rail).top) || 0;
+                    if (footer) {
+                        document.documentElement.style.setProperty('--ops-ro-dock-reserve', Math.ceil(footer.offsetHeight) + 'px');
+                    }
                     // A sticky rail cannot outrun its column, so on a short page also leave the room the page has below it.
                     const container = rail.parentElement.getBoundingClientRect().bottom + window.scrollY;
                     const below = document.documentElement.scrollHeight - container;
