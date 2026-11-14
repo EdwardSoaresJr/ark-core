@@ -50,7 +50,7 @@
                             <p class="small" x-show="notice" x-cloak x-text="notice" role="status"></p>
                             <p class="small text-orange" x-show="cached && panel?.current" x-cloak>Showing the last saved quote. This check did not verify it.</p>
                             <p class="small text-secondary" x-show="!cached && panel?.current?.confirmed" x-cloak>Verified with the catalog.</p>
-                            <p class="small text-danger" x-show="panel?.current?.message" x-cloak x-text="panel.current.message" role="alert"></p>
+                            <p class="small text-danger" x-show="panel?.current?.message" x-cloak x-text="panel?.current?.message" role="alert"></p>
 
                             <div class="list-group mb-3" x-show="panel?.current?.lines?.length" x-cloak>
                                 <template x-for="line in (panel?.current?.lines || [])" :key="(line.part_number || '') + line.description">

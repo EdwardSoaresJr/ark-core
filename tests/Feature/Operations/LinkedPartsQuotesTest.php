@@ -74,6 +74,8 @@ test('the repair order can show a provider neutral linked quote without importin
         ->and($html)->toContain('Quote history')
         ->and($html)->toContain('Showing the last saved quote. This check did not verify it.')
         ->and($html)->toContain('x-data="arkLinkedPartsQuote(')
+        ->and($html)->toContain('x-text="panel?.current?.message"')
+        ->and($html)->not->toContain('x-text="panel.current.message"')
         ->and($html)->not->toContain('<script')
         ->and($html)->not->toContain('ops-worksheet-procurement-panel')
         ->and($html)->not->toContain('window.arkLinkedPartsQuote')
