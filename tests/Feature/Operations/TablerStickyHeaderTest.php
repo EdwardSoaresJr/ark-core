@@ -55,6 +55,15 @@ test('the top bar stays at the top of the viewport at one height, with the works
 
     expect(tablerCssRule($css, 'html:has([data-ark-topbar])'))
         ->toContain('scroll-padding-top: calc(var(--ark-topbar-height) + var(--ops-workspace-tabs-height, 0px));');
+
+    expect(tablerCssRule($css, ':root'))
+        ->toContain('--ops-ro-dock-reserve: 5.25rem;');
+
+    expect(tablerCssRule($css, 'html:has([data-ro-orientation-header])'))
+        ->toContain('scroll-padding-bottom: calc(var(--ops-ro-dock-reserve) + env(safe-area-inset-bottom, 0px));');
+
+    expect(tablerCssRule($css, 'body:has([data-ro-orientation-header]) .page-body'))
+        ->toContain('padding-bottom: calc(var(--ops-ro-dock-reserve) + env(safe-area-inset-bottom, 0px));');
 });
 
 test('the payment workspace and deposit breakdown cover the sticky shell, and the station lock stays above them', function (): void {
