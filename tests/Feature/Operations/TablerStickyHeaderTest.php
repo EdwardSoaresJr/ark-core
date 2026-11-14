@@ -64,6 +64,12 @@ test('the top bar stays at the top of the viewport at one height, with the works
 
     expect(tablerCssRule($css, 'body:has([data-ro-orientation-header]) .page-body'))
         ->toContain('padding-bottom: calc(var(--ops-ro-dock-reserve) + env(safe-area-inset-bottom, 0px));');
+
+    // Fixed (not sticky): sticky-bottom leaves a mid-page gap when the RO is shorter than the viewport.
+    expect(tablerCssRule($css, '[data-ro-orientation-header]'))
+        ->toContain('position: fixed;')
+        ->toContain('bottom: 0;')
+        ->toContain('z-index: 1020;');
 });
 
 test('the payment workspace and deposit breakdown cover the sticky shell, and the station lock stays above them', function (): void {

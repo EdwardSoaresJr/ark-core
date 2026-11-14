@@ -18,9 +18,9 @@
     @endphp
 
     {{--
-      Contextual dock - next step, not a status dashboard. It sticks to the bottom of the viewport as the last
-      child of the page body. Worksheet continuity replaces it by its id; the rail and inspect popovers measure it
-      through data-ro-orientation-header.
+      Contextual dock - next step, not a status dashboard. Fixed to the viewport bottom (CSS); sticky-bottom alone
+      floats mid-page on short ROs. Worksheet continuity replaces it by its id; the rail and inspect popovers measure
+      it through data-ro-orientation-header.
     --}}
     <aside
         class="card sticky-bottom mt-3 shadow-lg"
