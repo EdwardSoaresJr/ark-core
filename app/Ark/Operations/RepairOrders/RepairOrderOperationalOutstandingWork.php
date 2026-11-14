@@ -19,9 +19,13 @@ final class RepairOrderOperationalOutstandingWork
 
     public const KIND_LABOR_INCOMPLETE = 'labor_incomplete';
 
-    /** @var list<string> */
+    /**
+     * Owner policy: gate finish / pickup / paid close only.
+     * Quality Check stays a normal operational move (authorization integrity tests rely on that).
+     *
+     * @var list<string>
+     */
     private const GATED_STATUSES = [
-        'quality_check',
         'completed',
         'ready_pickup',
     ];

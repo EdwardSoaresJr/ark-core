@@ -135,6 +135,69 @@ test('never-started inspection does not require operational acknowledgment', fun
     expect($repairOrder->fresh()->status->is(RepairOrderStatus::Completed))->toBeTrue();
 });
 
+test('quality check does not require operational unfinished-work acknowledgment', function () {
+    $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::InProgress);
+    $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
+    operationalCloseoutPart($repairOrder, PartProcurementState::Ordered);
+    $repairOrder->concerns()->firstOrFail()->forceFill([
+        'production_status' => ScopeProductionStatus::InProgress,
+    ])->save();
+
+    $challenge = app(RepairOrderOperationalCloseoutAcknowledgment::class)->challenge(
+        $repairOrder->fresh(),
+        RepairOrderStatus::QualityCheck->value,
+    );
+
+    expect($challenge)->toBeNull();
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => RepairOrderStatus::QualityCheck->value,
+    ])->assertRedirect()->assertSessionDoesntHaveErrors('lifecycle');
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::QualityCheck))->toBeTrue();
+});
+
+test('mobile lifecycle API returns operational closeout challenge for unfinished work', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $token = $advisor->createToken('phone')->plainTextToken;
+    $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
+    $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
+    operationalCloseoutPart($repairOrder, PartProcurementState::Ordered);
+
+    $this->withToken($token)
+        ->patchJson('/api/mobile/repair-orders/'.$repairOrder->repair_order_id.'/status', [
+            'status' => RepairOrderStatus::Completed->value,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('message', RepairOrderOperationalCloseoutAcknowledgment::MISSING_REASON)
+        ->assertJsonStructure([
+            'operational_closeout' => [
+                'required',
+                'fingerprint',
+                'items',
+                'message',
+            ],
+        ]);
+
+    $challenge = app(RepairOrderOperationalCloseoutAcknowledgment::class)->challenge(
+        $repairOrder->fresh(),
+        RepairOrderStatus::Completed->value,
+    );
+
+    $this->withToken($token)
+        ->patchJson('/api/mobile/repair-orders/'.$repairOrder->repair_order_id.'/status', [
+            'status' => RepairOrderStatus::Completed->value,
+            'operational_closeout_reason' => 'Customer waiting; pads arrive tomorrow morning.',
+            'operational_closeout_fingerprint' => $challenge['fingerprint'],
+        ])
+        ->assertOk();
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::Completed))->toBeTrue()
+        ->and(OperationalEvent::query()
+            ->where('event_name', OperationalEventName::RepairOrderOperationalCloseoutAcknowledged->value)
+            ->count())->toBe(1);
+});
+
 test('partially completed inspection requires reason before completed', function () {
     $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
     $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
