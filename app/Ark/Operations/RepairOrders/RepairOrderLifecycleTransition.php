@@ -24,6 +24,8 @@ class RepairOrderLifecycleTransition
         private readonly SoloShopOperations $soloShop,
         private readonly RepairOrderStatusCatalog $statusCatalog,
         private readonly WorkCompletionAuthorization $workAuthorization,
+        private readonly RepairOrderOperationalCloseoutAcknowledgment $operationalCloseout,
+        private readonly RepairOrderOperationalOutstandingWork $operationalOutstanding,
     ) {}
 
     public function blockingReason(
@@ -32,6 +34,9 @@ class RepairOrderLifecycleTransition
         ?User $actor = null,
         ?string $closeVariantKey = null,
         ?RepairOrderLifecycleSelectCache $selectCache = null,
+        ?string $operationalCloseoutReason = null,
+        ?string $operationalCloseoutFingerprint = null,
+        bool $includeOperationalCloseout = true,
     ): ?string {
         $toStatusSlug = RepairOrderWorkflowStatus::from($toStatus)->value;
         $roleNames = $selectCache?->actorRoleNames();
@@ -61,10 +66,38 @@ class RepairOrderLifecycleTransition
             }
 
             if ($selectCache !== null && ! $this->statusCatalog->closeVariantBypassesRules($closeVariantKey)) {
-                return $selectCache->standardCloseBlockingReason();
+                $closeReason = $selectCache->standardCloseBlockingReason();
+            } else {
+                $closeReason = $this->closeout->blockingReason($repairOrder, $closeVariantKey);
             }
 
-            return $this->closeout->blockingReason($repairOrder, $closeVariantKey);
+            if ($closeReason !== null) {
+                return $closeReason;
+            }
+
+            // Paid close still enforces unauthorized-work hard blocks, then documented
+            // operational unfinished-work acknowledgment (not a hard completion gate).
+            if ($closeVariantKey === 'paid') {
+                $authorizationReason = $this->workAuthorization->lifecycleBlockedReason($repairOrder, $toStatusSlug);
+
+                if ($authorizationReason !== null) {
+                    return $authorizationReason;
+                }
+
+                if (! $includeOperationalCloseout) {
+                    return null;
+                }
+
+                return $this->operationalCloseoutBlockingReason(
+                    $repairOrder,
+                    $toStatusSlug,
+                    $closeVariantKey,
+                    $operationalCloseoutReason,
+                    $operationalCloseoutFingerprint,
+                );
+            }
+
+            return null;
         }
 
         $requiresTechnicianAssignment = $selectCache !== null
@@ -107,7 +140,76 @@ class RepairOrderLifecycleTransition
             return $authorizationReason;
         }
 
-        return $this->mileageBlockingReason($repairOrder, $toStatusSlug);
+        $mileageReason = $this->mileageBlockingReason($repairOrder, $toStatusSlug);
+
+        if ($mileageReason !== null) {
+            return $mileageReason;
+        }
+
+        if (! $includeOperationalCloseout) {
+            return null;
+        }
+
+        return $this->operationalCloseoutBlockingReason(
+            $repairOrder,
+            $toStatusSlug,
+            $closeVariantKey,
+            $operationalCloseoutReason,
+            $operationalCloseoutFingerprint,
+        );
+    }
+
+    /**
+     * @return array{
+     *     required: bool,
+     *     fingerprint: string,
+     *     items: list<array{key: string, kind: string, title: string, detail: string}>,
+     *     message: string|null,
+     *     reason?: string
+     * }|null
+     */
+    public function operationalCloseoutChallenge(
+        RepairOrder $repairOrder,
+        RepairOrderStatus|RepairOrderWorkflowStatus|string $toStatus,
+        ?string $closeVariantKey = null,
+        ?string $operationalCloseoutReason = null,
+        ?string $operationalCloseoutFingerprint = null,
+    ): ?array {
+        $toStatusSlug = RepairOrderWorkflowStatus::from($toStatus)->value;
+
+        return $this->operationalCloseout->challenge(
+            $repairOrder,
+            $toStatusSlug,
+            $closeVariantKey,
+            $operationalCloseoutReason,
+            $operationalCloseoutFingerprint,
+        );
+    }
+
+    private function operationalCloseoutBlockingReason(
+        RepairOrder $repairOrder,
+        string $toStatusSlug,
+        ?string $closeVariantKey,
+        ?string $operationalCloseoutReason,
+        ?string $operationalCloseoutFingerprint,
+    ): ?string {
+        $challenge = $this->operationalCloseout->challenge(
+            $repairOrder,
+            $toStatusSlug,
+            $closeVariantKey,
+            $operationalCloseoutReason,
+            $operationalCloseoutFingerprint,
+        );
+
+        if ($challenge === null) {
+            return null;
+        }
+
+        if (($challenge['required'] ?? false) === true) {
+            return $challenge['message'] ?? RepairOrderOperationalCloseoutAcknowledgment::MISSING_REASON;
+        }
+
+        return null;
     }
 
     private function mileageBlockingReason(RepairOrder $repairOrder, string $toStatusSlug): ?string
@@ -143,6 +245,8 @@ class RepairOrderLifecycleTransition
         ?string $lostReasonNote = null,
         ?bool $reviewRequestSent = null,
         ?string $reviewNotRequestedReason = null,
+        ?string $operationalCloseoutReason = null,
+        ?string $operationalCloseoutFingerprint = null,
     ): RepairOrder {
         $repairOrder->ensureOpenForEditing();
 
@@ -150,9 +254,24 @@ class RepairOrderLifecycleTransition
         $fromStatus = $repairOrder->status->value;
 
         abort_if(
-            ($reason = $this->blockingReason($repairOrder, $toStatusSlug, $actor, $closeVariantKey)) !== null,
+            ($reason = $this->blockingReason(
+                $repairOrder,
+                $toStatusSlug,
+                $actor,
+                $closeVariantKey,
+                operationalCloseoutReason: $operationalCloseoutReason,
+                operationalCloseoutFingerprint: $operationalCloseoutFingerprint,
+            )) !== null,
             422,
             $reason,
+        );
+
+        $operationalChallenge = $this->operationalCloseout->challenge(
+            $repairOrder,
+            $toStatusSlug,
+            $closeVariantKey,
+            $operationalCloseoutReason,
+            $operationalCloseoutFingerprint,
         );
 
         $operationalDates = app(RepairOrderOperationalDates::class);
@@ -177,7 +296,22 @@ class RepairOrderLifecycleTransition
             }
         }
 
-        $applyMove = function () use ($repairOrder, $attributes, $toStatusSlug, $fromStatus, $actor, $closeVariantKey, $lostReason, $reviewRequestSent, $operationalDates): ?EstimateDocument {
+        $applyMove = function () use ($repairOrder, $attributes, $toStatusSlug, $fromStatus, $actor, $closeVariantKey, $lostReason, $reviewRequestSent, $operationalDates, $operationalChallenge): ?EstimateDocument {
+            if (
+                is_array($operationalChallenge)
+                && ($operationalChallenge['required'] ?? true) === false
+                && filled($operationalChallenge['reason'] ?? null)
+            ) {
+                $this->operationalCloseout->record(
+                    $repairOrder,
+                    $toStatusSlug,
+                    $closeVariantKey,
+                    (string) $operationalChallenge['reason'],
+                    (string) $operationalChallenge['fingerprint'],
+                    $operationalChallenge['items'] ?? [],
+                    $actor,
+                );
+            }
             $repairOrder->update($attributes);
 
             if ($toStatusSlug === RepairOrderStatus::ReadyPickup->value || $this->statusCatalog->isTerminalSlug($toStatusSlug)) {

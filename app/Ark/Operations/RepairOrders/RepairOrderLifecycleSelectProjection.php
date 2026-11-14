@@ -47,7 +47,16 @@ final readonly class RepairOrderLifecycleSelectProjection
         $statusOptions = [];
 
         foreach ($lifecycleSlugs as $nextStatusSlug) {
-            $blockedReason = $transition->blockingReason($repairOrder, $nextStatusSlug, $actor, null, $selectCache);
+            // Operational unfinished-work acknowledgment is a soft challenge (reason panel),
+            // not a hard lifecycle block. Keep it out of dropdown blockedReason so the UI can submit.
+            $blockedReason = $transition->blockingReason(
+                $repairOrder,
+                $nextStatusSlug,
+                $actor,
+                null,
+                $selectCache,
+                includeOperationalCloseout: false,
+            );
             $label = $statusCatalog->labelForSlug($nextStatusSlug);
 
             if ($statusCatalog->isRetreatTransition($repairOrder->status->value, $nextStatusSlug)) {
@@ -84,6 +93,7 @@ final readonly class RepairOrderLifecycleSelectProjection
                     $actor,
                     $variant->variant_key,
                     $selectCache,
+                    includeOperationalCloseout: false,
                 ),
             ];
         }
@@ -94,6 +104,7 @@ final readonly class RepairOrderLifecycleSelectProjection
             $actor,
             'lost',
             $selectCache,
+            includeOperationalCloseout: false,
         );
 
         return new self(
