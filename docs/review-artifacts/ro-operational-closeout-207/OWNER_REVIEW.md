@@ -6,8 +6,9 @@
 
 | Layer | SHA | Notes |
 | --- | --- | --- |
-| Core | `e5f082eb5966582f4a9277afde31de2123d39f5b` | PR https://github.com/EdwardSoaresJr/ark-core/pull/207 |
-| Stancl / SaaS | `ab5661341b35548b631e2749885b8c033bcc257e` | PR https://github.com/EdwardSoaresJr/ark-stancl/pull/253 |
+| Core (Alpha runtime) | `e5f082eb5966582f4a9277afde31de2123d39f5b` | Behavior tip deployed on Alpha |
+| Core (PR tip) | `7f551c3ab66112e63bf25a76dfb17dc685651413` | Adds this report + screenshots only |
+| Stancl / SaaS | `ab5661341b35548b631e2749885b8c033bcc257e` | PR https://github.com/EdwardSoaresJr/ark-stancl/pull/253 · pins Core `e5f082eb` |
 
 ## Baseline SHAs (before this work)
 
