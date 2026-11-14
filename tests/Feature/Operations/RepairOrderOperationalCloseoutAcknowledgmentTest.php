@@ -346,6 +346,131 @@ test('missing reason is rejected and audit is not written', function () {
         ->count())->toBe(0);
 });
 
+test('web lifecycle rejects a valid reason without a fingerprint', function () {
+    $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
+    $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
+    operationalCloseoutPart($repairOrder, PartProcurementState::Ordered);
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => RepairOrderStatus::Completed->value,
+        'operational_closeout_reason' => 'Customer waiting; pads arrive tomorrow morning.',
+    ])->assertRedirect()
+        ->assertSessionHasErrors('lifecycle')
+        ->assertSessionHas('operational_closeout_challenge');
+
+    $challenge = session('operational_closeout_challenge');
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::QualityCheck))->toBeTrue()
+        ->and($challenge['required'] ?? false)->toBeTrue()
+        ->and($challenge['message'] ?? null)->toBe(RepairOrderOperationalCloseoutAcknowledgment::FINGERPRINT_MISMATCH)
+        ->and(OperationalEvent::query()
+            ->where('event_name', OperationalEventName::RepairOrderOperationalCloseoutAcknowledged->value)
+            ->count())->toBe(0);
+});
+
+test('web lifecycle rejects an invalid fingerprint even with a valid reason', function () {
+    $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
+    $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
+    operationalCloseoutPart($repairOrder, PartProcurementState::Ordered);
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => RepairOrderStatus::Completed->value,
+        'operational_closeout_reason' => 'Customer waiting; pads arrive tomorrow morning.',
+        'operational_closeout_fingerprint' => str_repeat('a', 64),
+    ])->assertRedirect()
+        ->assertSessionHasErrors('lifecycle')
+        ->assertSessionHas('operational_closeout_challenge');
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::QualityCheck))->toBeTrue()
+        ->and(session('operational_closeout_challenge.message'))
+        ->toBe(RepairOrderOperationalCloseoutAcknowledgment::FINGERPRINT_MISMATCH)
+        ->and(OperationalEvent::query()
+            ->where('event_name', OperationalEventName::RepairOrderOperationalCloseoutAcknowledged->value)
+            ->count())->toBe(0);
+});
+
+test('web lifecycle rejects a stale fingerprint after outstanding work changes', function () {
+    $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
+    $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
+    $part = operationalCloseoutPart($repairOrder, PartProcurementState::Ordered);
+
+    $stale = app(RepairOrderOperationalCloseoutAcknowledgment::class)->challenge(
+        $repairOrder->fresh(),
+        RepairOrderStatus::Completed->value,
+    );
+
+    $part->forceFill(['procurement_state' => PartProcurementState::Received])->save();
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => RepairOrderStatus::Completed->value,
+        'operational_closeout_reason' => 'Customer waiting; pads arrive tomorrow morning.',
+        'operational_closeout_fingerprint' => $stale['fingerprint'],
+    ])->assertRedirect()
+        ->assertSessionHasErrors('lifecycle')
+        ->assertSessionHas('operational_closeout_challenge');
+
+    $challenge = session('operational_closeout_challenge');
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::QualityCheck))->toBeTrue()
+        ->and($challenge['message'] ?? null)->toBe(RepairOrderOperationalCloseoutAcknowledgment::FINGERPRINT_MISMATCH)
+        ->and($challenge['fingerprint'] ?? null)->not->toBe($stale['fingerprint'])
+        ->and(collect($challenge['items'] ?? [])->pluck('kind')->all())
+        ->toContain(RepairOrderOperationalOutstandingWork::KIND_PART_NOT_INSTALLED)
+        ->and(OperationalEvent::query()
+            ->where('event_name', OperationalEventName::RepairOrderOperationalCloseoutAcknowledged->value)
+            ->count())->toBe(0);
+});
+
+test('mobile lifecycle rejects missing invalid and stale fingerprints', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $token = $advisor->createToken('phone')->plainTextToken;
+    $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
+    $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
+    $part = operationalCloseoutPart($repairOrder, PartProcurementState::Ordered);
+
+    $current = app(RepairOrderOperationalCloseoutAcknowledgment::class)->challenge(
+        $repairOrder->fresh(),
+        RepairOrderStatus::Completed->value,
+    );
+
+    $this->withToken($token)
+        ->patchJson('/api/mobile/repair-orders/'.$repairOrder->repair_order_id.'/status', [
+            'status' => RepairOrderStatus::Completed->value,
+            'operational_closeout_reason' => 'Customer waiting; pads arrive tomorrow morning.',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('message', RepairOrderOperationalCloseoutAcknowledgment::FINGERPRINT_MISMATCH)
+        ->assertJsonPath('operational_closeout.required', true)
+        ->assertJsonPath('operational_closeout.fingerprint', $current['fingerprint']);
+
+    $this->withToken($token)
+        ->patchJson('/api/mobile/repair-orders/'.$repairOrder->repair_order_id.'/status', [
+            'status' => RepairOrderStatus::Completed->value,
+            'operational_closeout_reason' => 'Customer waiting; pads arrive tomorrow morning.',
+            'operational_closeout_fingerprint' => str_repeat('b', 64),
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('message', RepairOrderOperationalCloseoutAcknowledgment::FINGERPRINT_MISMATCH);
+
+    $staleFingerprint = $current['fingerprint'];
+    $part->forceFill(['procurement_state' => PartProcurementState::Received])->save();
+
+    $this->withToken($token)
+        ->patchJson('/api/mobile/repair-orders/'.$repairOrder->repair_order_id.'/status', [
+            'status' => RepairOrderStatus::Completed->value,
+            'operational_closeout_reason' => 'Customer waiting; pads arrive tomorrow morning.',
+            'operational_closeout_fingerprint' => $staleFingerprint,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('message', RepairOrderOperationalCloseoutAcknowledgment::FINGERPRINT_MISMATCH)
+        ->assertJsonPath('operational_closeout.required', true);
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::QualityCheck))->toBeTrue()
+        ->and(OperationalEvent::query()
+            ->where('event_name', OperationalEventName::RepairOrderOperationalCloseoutAcknowledged->value)
+            ->count())->toBe(0);
+});
+
 test('direct paid close API without reason is rejected when unfinished work remains', function () {
     $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::ReadyPickup);
     operationalCloseoutPart($repairOrder, PartProcurementState::Ordered);

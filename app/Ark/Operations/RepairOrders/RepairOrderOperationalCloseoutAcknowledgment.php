@@ -79,7 +79,9 @@ final class RepairOrderOperationalCloseoutAcknowledgment
             ];
         }
 
-        if ($providedFingerprint !== '' && ! hash_equals($currentFingerprint, $providedFingerprint)) {
+        // A new acknowledgment must bind to the current outstanding fingerprint.
+        // Missing, invalid, or stale fingerprints re-challenge — they never authorize.
+        if ($providedFingerprint === '' || ! hash_equals($currentFingerprint, $providedFingerprint)) {
             return [
                 'required' => true,
                 'fingerprint' => $currentFingerprint,
