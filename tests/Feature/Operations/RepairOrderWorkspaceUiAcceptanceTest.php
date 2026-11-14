@@ -136,6 +136,60 @@ test('header and footer print menus expose identical authoritative items', funct
         ->and($html)->toContain('class="dropup ms-auto"')
         ->and(substr_count($html, 'data-ro-print-item="estimate_pdf"'))->toBe(2)
         ->and(substr_count($html, 'data-ro-print-item="check_in_sheet"'))->toBe(2);
+
+    // Header and docked footer both render print actions; empty closeExpr must not emit a leading ";".
+    expect($html)->not->toMatch('/@click="\s*;/')
+        ->and(substr_count($html, "window.arkPrintDocument?.(window.ARK_PRINTERS?.keyTag"))->toBe(2)
+        ->and(substr_count($html, "window.arkPrintDocument?.(window.ARK_PRINTERS?.oilSticker"))->toBe(2)
+        ->and(substr_count($html, 'data-ro-print-item="key_tag"'))->toBe(2)
+        ->and(substr_count($html, 'data-ro-print-item="oil_sticker"'))->toBe(2);
+
+    preg_match_all('/@click="([^"]*)"/', $html, $clickExprs);
+    foreach ($clickExprs[1] as $expr) {
+        if (str_contains($expr, 'arkPrintDocument') || str_contains($expr, 'estimate') || str_contains($expr, 'Date.now()')) {
+            expect(ltrim($expr))->not->toStartWith(';');
+        }
+    }
+
+    // Ordinary menu links with empty closeExpr omit @click entirely.
+    preg_match_all('/<(?:a|button)[^>]*data-ro-print-item="check_in_sheet"[^>]*>/', $html, $checkInTags);
+    expect($checkInTags[0])->toHaveCount(2);
+    foreach ($checkInTags[0] as $tag) {
+        expect($tag)->not->toContain('@click=');
+    }
+});
+
+test('print menu items keep a nonempty close expression ahead of the print call', function () {
+    $html = view('operations.repair-orders.partials.repair-order-print-menu-items', [
+        'closeExpr' => 'open = false',
+        'printItems' => [
+            [
+                'key' => 'key_tag',
+                'label' => 'Key Tag',
+                'href' => 'https://example.test/key-tag',
+                'opens_in_new_tab' => false,
+                'is_print' => true,
+                'print_document' => 'key_tag',
+                'blocked_reason' => null,
+                'cache_bust_estimate_pdf' => false,
+            ],
+            [
+                'key' => 'check_in_sheet',
+                'label' => 'Check-In Sheet',
+                'href' => 'https://example.test/check-in',
+                'opens_in_new_tab' => true,
+                'is_print' => false,
+                'print_document' => null,
+                'blocked_reason' => null,
+                'cache_bust_estimate_pdf' => false,
+            ],
+        ],
+    ])->render();
+
+    expect($html)->toContain('@click="open = false; window.arkPrintDocument?.(window.ARK_PRINTERS?.keyTag')
+        ->and($html)->toContain('data-ro-print-item="check_in_sheet"')
+        ->and($html)->toContain('@click="open = false"')
+        ->and($html)->not->toMatch('/@click="\s*;/');
 });
 
 test('tax jurisdiction modal teleports above its backdrop and tax row keeps financial-row geometry', function () {

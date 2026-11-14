@@ -2,7 +2,9 @@
 @php
     /** @var list<array{key: string, label: string, href: ?string, opens_in_new_tab: bool, is_print: bool, print_document: ?string, blocked_reason: ?string, cache_bust_estimate_pdf: bool}> $printItems */
     $printItems = $printItems ?? [];
-    $closeExpr = $closeExpr ?? 'open = false';
+    // Empty closeExpr is intentional for Bootstrap dropdowns; never emit a leading ";" (Alpine SyntaxError).
+    $closeExpr = trim((string) ($closeExpr ?? 'open = false'));
+    $closePrefix = $closeExpr !== '' ? $closeExpr.'; ' : '';
 @endphp
 
 @foreach ($printItems as $action)
@@ -13,7 +15,7 @@
                 role="menuitem"
                 class="dropdown-item flex-column align-items-start"
                 data-ro-print-item="{{ $action['key'] }}"
-                @click="{{ $closeExpr }}; window.alert(@js($action['blocked_reason']))"
+                @click="{{ $closePrefix }}window.alert(@js($action['blocked_reason']))"
             >
                 {{ $action['label'] }}
                 <span class="d-block small text-secondary text-wrap">{{ $action['blocked_reason'] }}</span>
@@ -24,7 +26,7 @@
                 role="menuitem"
                 class="dropdown-item"
                 data-ro-print-item="{{ $action['key'] }}"
-                @click="{{ $closeExpr }}; window.arkPrintDocument?.(window.ARK_PRINTERS?.keyTag, @js($action['href']), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
+                @click="{{ $closePrefix }}window.arkPrintDocument?.(window.ARK_PRINTERS?.keyTag, @js($action['href']), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
             >
                 {{ $action['label'] }}
             </button>
@@ -35,7 +37,7 @@
             role="menuitem"
             class="dropdown-item"
             data-ro-print-item="{{ $action['key'] }}"
-            @click="{{ $closeExpr }}; window.arkPrintDocument?.(window.ARK_PRINTERS?.oilSticker, @js($action['href']), $event.currentTarget, { document: 'oil_change_sticker', resolvePrinter: true })"
+            @click="{{ $closePrefix }}window.arkPrintDocument?.(window.ARK_PRINTERS?.oilSticker, @js($action['href']), $event.currentTarget, { document: 'oil_change_sticker', resolvePrinter: true })"
         >
             {{ $action['label'] }}
         </button>
@@ -46,7 +48,7 @@
             role="menuitem"
             class="dropdown-item"
             data-ro-print-item="{{ $action['key'] }}"
-            @click="{{ $closeExpr }}; $event.currentTarget.href = @js($action['href']) + '?t=' + Date.now()"
+            @click="{{ $closePrefix }}$event.currentTarget.href = @js($action['href']) + '?t=' + Date.now()"
         >
             {{ $action['label'] }}
         </a>
@@ -57,7 +59,7 @@
             role="menuitem"
             class="dropdown-item"
             data-ro-print-item="{{ $action['key'] }}"
-            @click="{{ $closeExpr }}"
+            @if ($closeExpr !== '') @click="{{ $closeExpr }}" @endif
         >
             {{ $action['label'] }}
         </a>
