@@ -230,11 +230,6 @@ function worksheet({ lineTwo, labor, total, composerValue = '' }) {
         { id: 'financial-position', 'data-continuity-region': 'financial-position' },
         `Owe today ${total} Deposits $20.00`,
     ));
-    root.append(h(
-        'button',
-        { id: 'authorization-rail', 'data-continuity-region': 'authorization-rail' },
-        `Authorization ${total}`,
-    ));
     const amount = h('input', {
         id: 'authorization-approved-amount',
         name: 'approved_amount',
@@ -242,9 +237,11 @@ function worksheet({ lineTwo, labor, total, composerValue = '' }) {
         value: total.replace('$', ''),
     });
     amount.defaultValue = total.replace('$', '');
+    // Mirrors production: the auth panel is one continuity region (not nested).
     root.append(h(
         'div',
-        { id: 'authorization-record-1', 'data-continuity-region': 'authorization-record', 'data-authorization-record': '' },
+        { id: 'authorization-rail', 'data-continuity-region': 'authorization-record', 'data-authorization-record': '' },
+        `Authorization ${total}`,
         amount,
     ));
 
@@ -313,7 +310,7 @@ test('lines scope keeps a dirty authorization amount while totals update', () =>
     });
 
     assert.equal(result.ok, true);
-    assert.ok(result.preserved.includes('authorization-record-1'));
+    assert.ok(result.preserved.includes('authorization-rail'));
     assert.equal(amount.value, '200.00');
     assert.match(current.getElementById('estimate-totals-region').textContent, /Total \$495\.00/);
 });
@@ -533,7 +530,7 @@ function authorizationWorksheet({ approvedLabel, otherLabel, authorized, owe, st
     root.append(h('div', { id: 'authorized-money', 'data-continuity-region': 'authorized-money' }, authorized));
     root.append(h('div', { id: 'financial-position', 'data-continuity-region': 'financial-position' }, `Owe today ${owe} Deposits $20.00`));
     root.append(h('form', { id: 'repair-order-workflow', 'data-continuity-region': 'workflow' }, status));
-    root.append(h('button', { id: 'authorization-rail', 'data-continuity-region': 'authorization-rail' }, rail));
+    root.append(h('button', { id: 'authorization-rail', 'data-continuity-region': 'authorization-record' }, rail));
     root.append(h('button', { id: 'parts-procurement' }, parts));
 
     return root;
@@ -640,7 +637,7 @@ function settlementWorksheet({ owe, deposits, history, posture, balance, lineTex
     root.append(h('div', { id: 'payment-posture', 'data-continuity-region': 'settlement' }, posture));
     root.append(h('div', { id: 'closeout-eligibility', 'data-continuity-region': 'settlement' }, ''));
     root.append(h('div', { id: 'take-payment' }, capture));
-    root.append(h('button', { id: 'authorization-rail', 'data-continuity-region': 'authorization-rail' }, rail));
+    root.append(h('button', { id: 'authorization-rail', 'data-continuity-region': 'authorization-record' }, rail));
 
     return root;
 }

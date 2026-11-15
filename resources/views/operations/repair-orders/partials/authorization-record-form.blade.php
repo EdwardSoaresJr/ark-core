@@ -27,7 +27,6 @@
             id="authorization-record-{{ $repairOrder->repair_order_id }}"
             class="card-body"
             data-authorization-record
-            data-continuity-region="authorization-record"
         >
             <div class="subheader">Record approval</div>
             <p class="small text-secondary mb-3">
