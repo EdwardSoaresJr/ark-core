@@ -1357,6 +1357,32 @@ function hideLifecycleLostPanel(form) {
     panel.classList.add('hidden');
 }
 
+function hideOperationalCloseoutPanel(form) {
+    const panel = form?.querySelector('[data-operational-closeout-panel]');
+
+    if (! panel) {
+        return;
+    }
+
+    panel.hidden = true;
+    panel.classList.add('hidden');
+}
+
+function resetOperationalCloseoutPanel(form) {
+    hideOperationalCloseoutPanel(form);
+
+    const reason = form?.querySelector('[data-operational-closeout-reason]');
+    const fingerprint = form?.querySelector('[data-operational-closeout-fingerprint]');
+
+    if (reason) {
+        reason.value = '';
+    }
+
+    if (fingerprint) {
+        fingerprint.value = '';
+    }
+}
+
 function openLifecycleReviewModal(form, select) {
     window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', {
         detail: {
@@ -1414,6 +1440,8 @@ export function initRepairOrderLifecycleSelect() {
         const currentStatus = select.dataset.currentStatus ?? '';
 
         if (select.value === 'closed:lost') {
+            resetOperationalCloseoutPanel(form);
+
             if (lostPanel) {
                 lostPanel.hidden = false;
                 lostPanel.classList.remove('hidden');
@@ -1424,7 +1452,10 @@ export function initRepairOrderLifecycleSelect() {
 
         if (select.value === 'closed:paid') {
             hideLifecycleLostPanel(form);
-            openLifecycleReviewModal(form, select);
+            // Keep an open unfinished-work panel if the server just challenged paid close.
+            if (! form.querySelector('[data-operational-closeout-panel]:not([hidden])')) {
+                openLifecycleReviewModal(form, select);
+            }
 
             return;
         }
@@ -1518,6 +1549,17 @@ export function initRepairOrderLifecycleSelect() {
             }
 
             select.dispatchEvent(new Event('change', { bubbles: true }));
+
+            return;
+        }
+
+        const operationalCancel = event.target.closest('[data-operational-closeout-cancel]');
+
+        if (operationalCancel) {
+            const form = operationalCancel.closest('[data-lifecycle-form]');
+
+            resetOperationalCloseoutPanel(form);
+            resetLifecycleSelect(form);
 
             return;
         }

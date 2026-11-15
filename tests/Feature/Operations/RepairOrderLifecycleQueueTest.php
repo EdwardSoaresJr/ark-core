@@ -16,6 +16,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderWorkGroup;
+use App\Ark\Operations\RepairOrders\ScopeProductionStatus;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use Database\Seeders\ArkAuthorizationSeeder;
@@ -95,7 +96,10 @@ test('lifecycle authority snapshots terminal closeout and rejects drift', functi
 
     $repairOrder = repairOrderForLifecycleQueue(status: RepairOrderStatus::ReadyPickup);
     $line = lineForLifecycleQueue($repairOrder);
-    $line->concern->forceFill(['disposition' => RepairOrderConcernDisposition::Approved])->save();
+    $line->concern->forceFill([
+        'disposition' => RepairOrderConcernDisposition::Approved,
+        'production_status' => ScopeProductionStatus::Completed,
+    ])->save();
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
     issueFinalInvoiceFor($repairOrder->fresh());
     payRepairOrderInFull($repairOrder->fresh());
@@ -328,7 +332,10 @@ test('paid ready pickup can close and leaves active queue', function () {
 
     $repairOrder = repairOrderForLifecycleQueue(status: RepairOrderStatus::ReadyPickup, customerName: 'Paid Pickup');
     $line = lineForLifecycleQueue($repairOrder);
-    $line->concern->forceFill(['disposition' => RepairOrderConcernDisposition::Approved])->save();
+    $line->concern->forceFill([
+        'disposition' => RepairOrderConcernDisposition::Approved,
+        'production_status' => ScopeProductionStatus::Completed,
+    ])->save();
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
     issueFinalInvoiceFor($repairOrder->fresh());
 

@@ -12,6 +12,7 @@ enum OperationalEventName: string
     case EncounterDismissed = 'encounter_dismissed';
     case RepairOrderCreated = 'repair_order_created';
     case RepairOrderLifecycleChanged = 'repair_order_lifecycle_changed';
+    case RepairOrderOperationalCloseoutAcknowledged = 'repair_order_operational_closeout_acknowledged';
     case RepairOrderPosted = 'repair_order_posted';
     case RepairOrderPaymentReceived = 'repair_order_payment_received';
     case RepairOrderTechnicianAssigned = 'repair_order_technician_assigned';

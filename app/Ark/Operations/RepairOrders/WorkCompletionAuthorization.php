@@ -28,6 +28,7 @@ final class WorkCompletionAuthorization
         'completed',
         'invoiced',
         'ready_pickup',
+        'closed',
     ];
 
     public function installBlockedReason(RepairOrderLine $line): ?string

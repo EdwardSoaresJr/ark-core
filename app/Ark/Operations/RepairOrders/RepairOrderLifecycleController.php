@@ -35,10 +35,32 @@ class RepairOrderLifecycleController
 
         $toStatusSlug = RepairOrderWorkflowStatus::normalizeSlug($requestedStatus);
 
-        if (($reason = $lifecycle->blockingReason($repairOrder, $toStatusSlug, $request->user(), $closeVariantKey)) !== null) {
+        $operationalCloseoutReason = trim((string) $request->input('operational_closeout_reason', ''));
+        $operationalCloseoutFingerprint = trim((string) $request->input('operational_closeout_fingerprint', ''));
+        $operationalCloseoutReason = $operationalCloseoutReason === '' ? null : $operationalCloseoutReason;
+        $operationalCloseoutFingerprint = $operationalCloseoutFingerprint === '' ? null : $operationalCloseoutFingerprint;
+
+        if (($reason = $lifecycle->blockingReason(
+            $repairOrder,
+            $toStatusSlug,
+            $request->user(),
+            $closeVariantKey,
+            operationalCloseoutReason: $operationalCloseoutReason,
+            operationalCloseoutFingerprint: $operationalCloseoutFingerprint,
+        )) !== null) {
+            $challenge = $lifecycle->operationalCloseoutChallenge(
+                $repairOrder,
+                $toStatusSlug,
+                $closeVariantKey,
+                $operationalCloseoutReason,
+                $operationalCloseoutFingerprint,
+            );
+
             return redirect()
                 ->back()
-                ->withErrors(['lifecycle' => $reason]);
+                ->withInput()
+                ->withErrors(['lifecycle' => $reason])
+                ->with('operational_closeout_challenge', $challenge);
         }
 
         $lostReason = null;
@@ -77,6 +99,8 @@ class RepairOrderLifecycleController
             $lostReasonNote,
             $reviewRequestSent,
             $reviewNotRequestedReason,
+            $operationalCloseoutReason,
+            $operationalCloseoutFingerprint,
         );
 
         $this->recordRepairOrderEstimateMutation($repairOrder, $request->user());
