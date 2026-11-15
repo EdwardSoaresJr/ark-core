@@ -731,6 +731,10 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.intake.create');
 
+        // Product language is "Check In"; canonical workspace remains /app/intake/new.
+        Route::redirect('/app/check-in', '/app/intake/new')
+            ->name('operations.check-in');
+
         Route::get('/app/intake/customers/search', AdvisorIntakeCustomerSearchController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.intake.customers.search');
@@ -805,6 +809,10 @@ SurfaceRouting::appRoutes(function (): void {
                 ShopOperatingScoreboardAccess::capabilities(),
             )))
             ->name('operations.owner.scoreboard');
+
+        // Short path used in docs and typed URLs; owner workspace remains canonical.
+        Route::redirect('/app/day-review', '/app/owner/day-review')
+            ->name('operations.day-review');
 
         Route::middleware('owner.workspace')->group(function (): void {
             Route::get('/app/owner/day-review', OwnerDayReviewController::class)
