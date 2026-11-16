@@ -53,7 +53,7 @@ test('approving one concern declares authorization and workflow without authoriz
         ->assertSee('id="repair-order-workflow"', false)
         ->assertSee('id="worksheet-line-editor"', false)
         ->assertSee('id="authorization-rail"', false)
-        ->assertSee('data-continuity-region="authorization-rail"', false);
+        ->assertSee('data-continuity-region="authorization-record"', false);
 
     expect($pads->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
         ->and($rotors->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)

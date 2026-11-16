@@ -29,7 +29,7 @@
 
     <div
         id="authorization-rail"
-        data-continuity-region="authorization-rail"
+        data-continuity-region="authorization-record"
         class="card card-sm mt-2"
         x-show="estimateContext === 'auth'"
         x-cloak
