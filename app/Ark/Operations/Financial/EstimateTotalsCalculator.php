@@ -173,7 +173,9 @@ class EstimateTotalsCalculator
         $repairOrder->loadMissing(['lines.concern']);
         $authorization = app(WorkCompletionAuthorization::class);
         $coveredLaborAndParts = $authorization->customerApprovedLaborAndPartIdSet($repairOrder);
-        $approvedBeforeIncrease = $authorization->approvedLinesBeforeIncrease($repairOrder);
+        // Prefer recorded amounts for every covered line — not only raised ones — so a
+        // fee/tax reallocation caused by an unrelated edit cannot shrink authorization.
+        $recordedApproved = $authorization->approvedRecordedAmountsForCoveredLines($repairOrder);
         $settings = ShopSettings::current();
 
         return $repairOrder->lines
@@ -188,15 +190,21 @@ class EstimateTotalsCalculator
 
                 return true;
             })
-            ->map(fn (RepairOrderLine $line): RepairOrderLine => isset($approvedBeforeIncrease[(int) $line->id])
-                ? $this->approvedCopyOfLine($line, $approvedBeforeIncrease[(int) $line->id], $settings)
+            ->map(fn (RepairOrderLine $line): RepairOrderLine => isset($recordedApproved[(int) $line->id])
+                ? $this->approvedCopyOfLine($line, $recordedApproved[(int) $line->id], $settings)
                 : $line)
             ->values();
     }
 
     /**
-     * An unsaved copy of a raised approved line at what the customer approved. When the approval
+     * An unsaved copy of an approved line at what the customer approved. When the approval
      * kept every priced amount, the copy carries exactly those; otherwise it is the prorated portion.
+     *
+     * Intentional reductions of that line's own priced work (qty/price/subtotal/discount) may
+     * bill below the record while living total stays at or under the ceiling. Once living total
+     * exceeds the recorded authorized cents, the ceiling holds until supplemental approval —
+     * even if a unit/qty component was cut earlier. Fee or tax drift alone must not shrink
+     * authorization (F-FIN-01).
      *
      * @param  array{subtotal_cents: int, amounts: array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null}  $approved
      */
@@ -206,14 +214,67 @@ class EstimateTotalsCalculator
             return $this->approvedPortionOfLine($line, $approved['subtotal_cents'], $settings);
         }
 
-        if ((int) $line->total_cents <= $approved['amounts']['total_cents']) {
+        $amounts = $approved['amounts'];
+        $approvedTotalCents = (int) $amounts['total_cents'];
+        $livingTotalCents = (int) $line->total_cents;
+
+        // Living above the recorded ceiling is always an unauthorized increase: hold the ceiling.
+        if ($livingTotalCents > $approvedTotalCents) {
+            return $this->frozenApprovedLineCopy($line, $amounts);
+        }
+
+        // Intentional priced-work cut (and living still at/under ceiling): bill the lower amount.
+        if ($this->linePricedWorkReducedBelowApproval($line, $amounts)) {
             return $line;
         }
 
+        // Fee/tax-only drift with living at or under the ceiling: keep authorized cents.
+        if ($livingTotalCents === $approvedTotalCents
+            && (int) $line->subtotal_cents === (int) $amounts['subtotal_cents']
+            && (int) $line->shop_fee_cents === (int) $amounts['shop_fee_cents']
+            && (int) $line->tax_cents === (int) $amounts['tax_cents']
+            && (int) $line->standing_discount_cents === (int) $amounts['standing_discount_cents']) {
+            return $line;
+        }
+
+        return $this->frozenApprovedLineCopy($line, $amounts);
+    }
+
+    /**
+     * @param  array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}  $amounts
+     */
+    private function frozenApprovedLineCopy(RepairOrderLine $line, array $amounts): RepairOrderLine
+    {
         $copy = clone $line;
-        $copy->setRawAttributes([...$line->getAttributes(), ...$approved['amounts']]);
+        $copy->setRawAttributes([...$line->getAttributes(), ...$amounts]);
 
         return $copy;
+    }
+
+    /**
+     * True when this line's own priced work was reduced below the approval record.
+     * Fee/tax-only changes (other lines moving a shared fee pool) are not reductions.
+     *
+     * @param  array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}  $amounts
+     */
+    private function linePricedWorkReducedBelowApproval(RepairOrderLine $line, array $amounts): bool
+    {
+        if ((int) $line->subtotal_cents < (int) $amounts['subtotal_cents']) {
+            return true;
+        }
+
+        if ((int) $line->unit_price_cents < (int) $amounts['unit_price_cents']) {
+            return true;
+        }
+
+        if ((int) $line->standing_discount_cents > (int) $amounts['standing_discount_cents']) {
+            return true;
+        }
+
+        $liveQty = BigDecimal::of((string) $line->quantity);
+        $approvedQty = BigDecimal::of((string) $amounts['quantity']);
+
+        return $liveQty->isLessThan($approvedQty);
     }
 
     /**
