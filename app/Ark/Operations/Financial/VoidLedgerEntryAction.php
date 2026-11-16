@@ -73,8 +73,9 @@ final class VoidLedgerEntryAction
     }
 
     /**
-     * A ledger payment posted from a confirmed processor capture must not be voided as if
-     * the card were refunded. Manual cash/check/external-card rows remain voidable.
+     * Processor-linked payments must not be voided as if the card were refunded.
+     * Confirmed captures, ambiguous/in-flight attempts, and missing processor references
+     * are all refused. Manual cash/check/external-card rows without a processor attempt remain voidable.
      */
     private function assertNotProcessorSettledCapture(RepairOrderLedgerEntry $entry): void
     {
@@ -82,15 +83,14 @@ final class VoidLedgerEntryAction
             return;
         }
 
-        $capture = PaymentCaptureAttempt::query()
+        $captures = PaymentCaptureAttempt::query()
             ->where('ledger_entry_id', $entry->id)
-            ->where('status', PaymentCaptureAttemptStatus::Succeeded)
-            ->first();
+            ->get();
 
-        if ($capture !== null && $this->isSettledProviderPayment($capture->provider, $capture->provider_payment_id)) {
-            throw new RuntimeException(
-                'This payment was collected by the card processor. Voiding it in ARK would show the balance as unpaid while the customer\'s card remains charged. Record a processor-confirmed refund instead of voiding.',
-            );
+        foreach ($captures as $capture) {
+            if ($this->mustNotVoidProcessorAttempt($capture->status, $capture->provider, $capture->provider_payment_id)) {
+                throw new RuntimeException($this->processorVoidBlockedMessage($capture->status));
+            }
         }
 
         if (! Schema::hasTable('payment_gateway_attempts')) {
@@ -99,28 +99,70 @@ final class VoidLedgerEntryAction
 
         $legacy = PaymentGatewayAttempt::query()
             ->where('ledger_entry_id', $entry->id)
-            ->whereNotNull('square_payment_id')
-            ->where('square_payment_id', '!=', '')
             ->first();
 
-        if ($legacy !== null && $this->isSettledProviderPayment('square', $legacy->square_payment_id)) {
-            throw new RuntimeException(
-                'This payment was collected by the card processor. Voiding it in ARK would show the balance as unpaid while the customer\'s card remains charged. Record a processor-confirmed refund instead of voiding.',
-            );
+        if ($legacy === null) {
+            return;
         }
+
+        $legacyPaymentId = trim((string) ($legacy->square_payment_id ?? ''));
+        if ($legacyPaymentId !== '') {
+            throw new RuntimeException($this->processorVoidBlockedMessage(PaymentCaptureAttemptStatus::Succeeded));
+        }
+
+        // A legacy gateway row without a Square id is still an uncertain processor link.
+        throw new RuntimeException($this->processorVoidBlockedMessage(PaymentCaptureAttemptStatus::ReconciliationRequired));
     }
 
-    private function isSettledProviderPayment(mixed $provider, mixed $providerPaymentId): bool
-    {
+    private function mustNotVoidProcessorAttempt(
+        PaymentCaptureAttemptStatus $status,
+        mixed $provider,
+        mixed $providerPaymentId,
+    ): bool {
         $providerKey = strtolower(trim((string) $provider));
-        $paymentId = trim((string) $providerPaymentId);
-
-        if ($providerKey === '' || $providerKey === 'record' || $paymentId === '') {
+        if ($providerKey === '' || $providerKey === 'record') {
             return false;
         }
 
-        // Local recorder placeholders are not processor settlements.
-        return preg_match('/^capture-\d+$/', $paymentId) !== 1;
+        $paymentId = trim((string) $providerPaymentId);
+        $isPlaceholderId = $paymentId !== '' && preg_match('/^capture-\d+$/', $paymentId) === 1;
+
+        // In-flight or reconciliation-required: never treat as a safe manual void.
+        if (in_array($status, [
+            PaymentCaptureAttemptStatus::Accepted,
+            PaymentCaptureAttemptStatus::Pending,
+            PaymentCaptureAttemptStatus::ReconciliationRequired,
+        ], true)) {
+            return true;
+        }
+
+        if ($status === PaymentCaptureAttemptStatus::Succeeded) {
+            // Local recorder placeholders remain voidable; missing or real processor ids are not.
+            return ! $isPlaceholderId;
+        }
+
+        // Failed/cancelled with a real provider payment id may still represent money movement.
+        if (in_array($status, [
+            PaymentCaptureAttemptStatus::Failed,
+            PaymentCaptureAttemptStatus::Cancelled,
+        ], true)) {
+            return $paymentId !== '' && ! $isPlaceholderId;
+        }
+
+        return true;
+    }
+
+    private function processorVoidBlockedMessage(PaymentCaptureAttemptStatus $status): string
+    {
+        if (in_array($status, [
+            PaymentCaptureAttemptStatus::Accepted,
+            PaymentCaptureAttemptStatus::Pending,
+            PaymentCaptureAttemptStatus::ReconciliationRequired,
+        ], true) || $status === PaymentCaptureAttemptStatus::Succeeded) {
+            return 'This payment was collected by the card processor. Voiding it in ARK would show the balance as unpaid while the customer\'s card remains charged. Record a processor-confirmed refund instead of voiding.';
+        }
+
+        return 'This payment is linked to a card processor attempt. Voiding it in ARK could misstate whether the customer was charged. Record a processor-confirmed refund or wait until the processor outcome is certain.';
     }
 
     private function reverseStoreCredit(RepairOrderLedgerEntry $entry): void
