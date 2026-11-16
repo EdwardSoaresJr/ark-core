@@ -177,6 +177,10 @@ class EstimateTotalsCalculator
         // fee/tax reallocation caused by an unrelated edit cannot shrink authorization.
         $recordedApproved = $authorization->approvedRecordedAmountsForCoveredLines($repairOrder);
         $settings = ShopSettings::current();
+        // While any covered line sits above its recorded ceiling, fee/tax reallocations on
+        // siblings must not shrink authorization (F-FIN-01). With no such increase, a fee/tax
+        // drop (e.g. Customer Pay → warranty) may bill the lower living amounts.
+        $holdFeeTaxDrift = $this->coveredLineRaisedAboveRecordedApproval($repairOrder->lines, $recordedApproved);
 
         return $repairOrder->lines
             ->filter(function (RepairOrderLine $line) use ($coveredLaborAndParts): bool {
@@ -191,9 +195,38 @@ class EstimateTotalsCalculator
                 return true;
             })
             ->map(fn (RepairOrderLine $line): RepairOrderLine => isset($recordedApproved[(int) $line->id])
-                ? $this->approvedCopyOfLine($line, $recordedApproved[(int) $line->id], $settings)
+                ? $this->approvedCopyOfLine($line, $recordedApproved[(int) $line->id], $settings, $holdFeeTaxDrift)
                 : $line)
             ->values();
+    }
+
+    /**
+     * @param  Collection<int, RepairOrderLine>  $lines
+     * @param  array<int, array{subtotal_cents: int, amounts: array{total_cents: int}|null}>  $recordedApproved
+     */
+    private function coveredLineRaisedAboveRecordedApproval(Collection $lines, array $recordedApproved): bool
+    {
+        foreach ($lines as $line) {
+            $approved = $recordedApproved[(int) $line->id] ?? null;
+            if ($approved === null) {
+                continue;
+            }
+
+            $approvedTotal = $approved['amounts'] !== null
+                ? (int) $approved['amounts']['total_cents']
+                : (int) $approved['subtotal_cents'];
+
+            if ($approved['amounts'] !== null && (int) $line->total_cents > $approvedTotal) {
+                return true;
+            }
+
+            if ($approved['amounts'] === null
+                && app(WorkCompletionAuthorization::class)->approvalSubtotalCents($line) > $approvedTotal) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -203,13 +236,17 @@ class EstimateTotalsCalculator
      * Intentional reductions of that line's own priced work (qty/price/subtotal/discount) may
      * bill below the record while living total stays at or under the ceiling. Once living total
      * exceeds the recorded authorized cents, the ceiling holds until supplemental approval —
-     * even if a unit/qty component was cut earlier. Fee or tax drift alone must not shrink
-     * authorization (F-FIN-01).
+     * even if a unit/qty component was cut earlier. Fee/tax-only drops freeze while another
+     * covered line is raised (F-FIN-01); without such a raise they bill live (billing posture).
      *
      * @param  array{subtotal_cents: int, amounts: array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null}  $approved
      */
-    public function approvedCopyOfLine(RepairOrderLine $line, array $approved, ?ShopSettings $settings = null): RepairOrderLine
-    {
+    public function approvedCopyOfLine(
+        RepairOrderLine $line,
+        array $approved,
+        ?ShopSettings $settings = null,
+        bool $holdFeeTaxDrift = true,
+    ): RepairOrderLine {
         if ($approved['amounts'] === null) {
             return $this->approvedPortionOfLine($line, $approved['subtotal_cents'], $settings);
         }
@@ -228,7 +265,7 @@ class EstimateTotalsCalculator
             return $line;
         }
 
-        // Fee/tax-only drift with living at or under the ceiling: keep authorized cents.
+        // Exact match — no copy needed.
         if ($livingTotalCents === $approvedTotalCents
             && (int) $line->subtotal_cents === (int) $amounts['subtotal_cents']
             && (int) $line->shop_fee_cents === (int) $amounts['shop_fee_cents']
@@ -237,7 +274,13 @@ class EstimateTotalsCalculator
             return $line;
         }
 
-        return $this->frozenApprovedLineCopy($line, $amounts);
+        // Fee/tax-only change at/under the ceiling: freeze while an unapproved increase exists
+        // elsewhere; otherwise bill living (e.g. warranty removed the shop fee).
+        if ($holdFeeTaxDrift) {
+            return $this->frozenApprovedLineCopy($line, $amounts);
+        }
+
+        return $line;
     }
 
     /**
