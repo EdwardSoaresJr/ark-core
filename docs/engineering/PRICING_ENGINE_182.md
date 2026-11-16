@@ -80,6 +80,8 @@ Explicit customer-class change (`ApplyCustomerBillingClassChangeAction`) restamp
 - Explicit matrix keys resolve with **exact match only** against the RO stamp.
 - A matrix created after the RO was opened is not on the stamp → visible 422, never live shop fallback.
 - Concern default matrices resolve only from the stamp when a commercial profile is present.
+- When a billing class names a matrix key, that key must exist on the stamp. ARK does **not** silently substitute the stamp default matrix.
+- Terminal / non-live ROs never invent a parts matrix from current `ShopSettings`.
 
 ---
 

@@ -245,11 +245,20 @@ class RepairOrderConcern extends Model
         $resolveKey = function (?string $className) use ($commercial, $context, $settings, $roHasCommercialStamp): array {
             if ($roHasCommercialStamp) {
                 $matrixKey = $commercial?->defaultPartsMatrixKeyFor($className);
-                $matrix = filled($matrixKey)
-                    ? $context?->partsMatrixByKey($matrixKey)
-                    : null;
-                $matrix ??= $context?->partsMatrixByKey(null);
-                $matrix ??= $commercial?->partsMatrixByKey(null);
+                // Class-named keys must match the stamp exactly. Do not silently swap to the
+                // stamp default when the named matrix is missing from this RO's freeze.
+                if (filled($matrixKey)) {
+                    $matrix = $context?->partsMatrixByKey($matrixKey);
+                    abort_if(
+                        $matrix === null || ($matrix['rows'] ?? []) === [],
+                        422,
+                        'This repair order\'s frozen pricing does not include the parts matrix required for this billing class. Open a new repair order to use current shop matrices.',
+                    );
+
+                    return $matrix;
+                }
+
+                $matrix = $context?->partsMatrixByKey(null);
 
                 // Stamped RO: never invent from live shop matrices. Schema-1 without frozen
                 // tiers cannot reconstruct historical brackets — fail visibly.
@@ -262,6 +271,8 @@ class RepairOrderConcern extends Model
                 return $matrix;
             }
 
+            // Living unstamped ROs only: live shop fallback remains until the next
+            // matrix/billing activation freezes definitions onto the RO.
             $matrixKey = $commercial?->defaultPartsMatrixKeyFor($className);
             if (filled($matrixKey)) {
                 return $context?->partsMatrixByKey($matrixKey)
@@ -292,8 +303,15 @@ class RepairOrderConcern extends Model
             return $resolveKey(null);
         }
 
-        if ($context !== null && ! $context->allowsLiveCommercialFallback && $commercial !== null) {
-            return $commercial->partsMatrixByKey(null) ?? $settings->defaultPartsMatrix();
+        if ($context !== null && ! $context->allowsLiveCommercialFallback) {
+            $matrix = $commercial?->partsMatrixByKey(null);
+            abort_if(
+                $matrix === null || ($matrix['rows'] ?? []) === [],
+                422,
+                'This repair order has no recoverable parts matrix. Historical pricing cannot be invented from current shop settings.',
+            );
+
+            return $matrix;
         }
 
         return $this->billing_posture->defaultPartsMatrix($settings);

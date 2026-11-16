@@ -386,13 +386,12 @@ test('hosted repair order offers the reader in take payment after go pay wiring'
     $repairOrder->customer->forceFill(['phone' => '7195558080'])->save();
     issueFinalInvoiceFor($repairOrder);
 
-    Http::fake(function (Request $request) {
-        if (str_contains($request->url(), '/readiness') || str_contains($request->url(), '/payments/')) {
-            return Http::response(platformPaymentReadinessPayload(), 200);
-        }
-
-        return Http::response(['ok' => true], 200);
-    });
+    // Match PlatformTerminalCaptureTest: URL-keyed readiness fake. A catch-all Http::fake()
+    // callback can miss the hosted payments readiness path under focused CI suites that only
+    // pull this file in because it imports RepairOrderConcern.
+    Http::fake([
+        'https://cloud.test/api/v1/services/payments/readiness' => Http::response(platformPaymentReadinessPayload(), 200),
+    ]);
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()

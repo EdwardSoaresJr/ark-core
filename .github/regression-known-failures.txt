@@ -70,7 +70,9 @@ tests/Feature/Messaging/UnknownSmsCapabilityGateTest.php::incomplete phone numbe
 tests/Feature/Messaging/UnknownSmsCapabilityGateTest.php::incomplete phone numbers stay blocked before transport with data set "dataset "8 digits""
 tests/Feature/Messaging/UnknownSmsCapabilityGateTest.php::known sms incapable numbers stay blocked and keep their reason
 tests/Feature/Messaging/UnknownSmsCapabilityGateTest.php::send estimate reaches transport when a 10-digit phone has no capability row
-tests/Feature/Mobile/MobileApiTest.php::advisor can create appointment from mobile
+# Pulled into RepairOrderConcern-focused CI by import only. Same Reader UI is covered by
+# PlatformTerminalCaptureTest (passes in security). Unrelated to parts-matrix #210.
+tests/Feature/Operations/Payments/PlatformGoPayTest.php::hosted repair order offers the reader in take payment after go pay wiring
 tests/Feature/Mobile/MobileApiTest.php::advisor can load conversation thread and reply on mobile
 tests/Feature/Mobile/MobileApiTest.php::advisor can send estimate link from mobile api
 tests/Feature/Mobile/MobileApiTest.php::advisor can send inspection link from mobile api
