@@ -48,9 +48,7 @@ class CallQueuePresenter
                 ? $customerUrl.'#open-repair-orders'
                 : null,
             'show_text_customer_action' => $canTextCustomer,
-            'text_customer_url' => $canTextCustomer && filled($customerUrl)
-                ? $customerUrl.'?compose=text#customer-communication'
-                : null,
+            'text_customer_url' => $this->textCustomerUrl($base, $canTextCustomer, $customerUrl),
             'is_owned_by_me' => $ownedByViewer,
             'show_claim_action' => ! $ownedByViewer,
             'show_handled_action' => true,
@@ -82,15 +80,35 @@ class CallQueuePresenter
      */
     private function canTextCustomer(array $base): bool
     {
-        if (! ($base['matched'] ?? false)) {
-            return false;
-        }
-
-        if (! filled($base['display_phone'] ?? null)) {
+        if (! filled($base['display_phone'] ?? null) && ! filled($base['normalized_from'] ?? null)) {
             return false;
         }
 
         return $this->credentials->twilioConfigured();
+    }
+
+    /**
+     * @param  array<string, mixed>  $base
+     */
+    private function textCustomerUrl(array $base, bool $canTextCustomer, ?string $customerUrl): ?string
+    {
+        if (! $canTextCustomer) {
+            return null;
+        }
+
+        if (($base['matched'] ?? false) && filled($customerUrl)) {
+            return $customerUrl.'?compose=text#customer-communication';
+        }
+
+        $phone = (string) ($base['normalized_from'] ?? '');
+
+        if ($phone === '') {
+            return null;
+        }
+
+        return route('operations.communications.compose.create', [
+            'phone' => $phone,
+        ]);
     }
 
     /**

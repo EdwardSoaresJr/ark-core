@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Communications;
 
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Telephony\CallRecordingPlayback;
 use App\Ark\Operations\Telephony\CallSession;
@@ -83,9 +84,7 @@ final class CallLibraryProjection
             'customer_url' => $session->customer_id !== null
                 ? route('operations.customers.show', $session->customer_id)
                 : null,
-            'text_url' => $session->customer_id !== null && filled($displayPhone)
-                ? route('operations.customers.show', $session->customer_id).'?compose=text#customer-communication'
-                : null,
+            'text_url' => $this->textUrl($session, $phone, $displayPhone),
             'repair_order_url' => $session->repair_order_id !== null
                 ? route('operations.repair-orders.show', $session->repair_order_id)
                 : null,
@@ -94,5 +93,22 @@ final class CallLibraryProjection
                 : null,
             'mark_handled_url' => route('operations.communications.calls.mark-handled', $session),
         ];
+    }
+
+    private function textUrl(CallSession $session, ?string $phone, string $displayPhone): ?string
+    {
+        if ($session->customer_id !== null && filled($displayPhone)) {
+            return route('operations.customers.show', $session->customer_id).'?compose=text#customer-communication';
+        }
+
+        $normalized = PhoneNumber::normalize($phone);
+
+        if ($normalized === null || strlen(PhoneNumber::digits($normalized)) < 10) {
+            return null;
+        }
+
+        return route('operations.communications.compose.create', [
+            'phone' => $normalized,
+        ]);
     }
 }
