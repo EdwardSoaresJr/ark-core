@@ -83,7 +83,7 @@ const WORKSPACE_EXCEPTION = [
     // Core #119 / SaaS #159: compose by phone or email without creating a customer (owner-approved, 2026-11-15).
     'resources/views/operations/communications/compose.blade.php' => 'Compose form for opening a workspace thread from a phone or email without a customer record',
     'tests/Feature/Communications/ComposeWithoutCustomerTest.php' => 'Tests compose-by-phone/email, search entry points, call-to-text deep links, and later linking without creating customers',
-    'GET app/communications/compose' => 'Opens the compose form and optional start=1 deep link into an existing contact-key conversation',
+    'GET app/communications/compose' => 'Shows the compose form (GET prefills only; opening a thread is POST-only)',
 ];
 
 $namespaces = array_map(

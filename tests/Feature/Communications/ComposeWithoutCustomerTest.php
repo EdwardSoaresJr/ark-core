@@ -156,23 +156,27 @@ test('compose rejects empty contact input', function (): void {
         ->assertSessionHasErrors('phone');
 });
 
-test('compose start query opens a phone conversation for call-to-text deep links', function (): void {
+test('compose GET prefills phone for call-to-text without creating a conversation', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    $response = $this->actingAs($advisor)
+    $this->actingAs($advisor)
         ->get(route('operations.communications.compose.create', [
             'phone' => '7195558806',
-            'channel' => 'sms',
             'start' => 1,
-        ]));
+        ]))
+        ->assertOk()
+        ->assertSee('value="7195558806"', false)
+        ->assertSee('Open conversation', false);
 
-    $conversation = app(ConversationResolver::class)->findForPhone('7195558806');
+    expect(app(ConversationResolver::class)->findForPhone('7195558806'))->toBeNull();
+});
 
-    expect($conversation)->not->toBeNull();
+test('guests cannot open compose or create conversations', function (): void {
+    $this->get(route('operations.communications.compose.create', ['phone' => '7195558807']))
+        ->assertRedirect();
 
-    $response->assertRedirect(route('operations.communications.inbox', [
-        'filter' => 'needs',
-        'conversation' => $conversation->id,
-        'compose' => 1,
-    ]));
+    $this->post(route('operations.communications.compose'), ['phone' => '7195558807'])
+        ->assertRedirect();
+
+    expect(app(ConversationResolver::class)->findForPhone('7195558807'))->toBeNull();
 });

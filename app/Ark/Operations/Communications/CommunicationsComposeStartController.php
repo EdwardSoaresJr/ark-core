@@ -20,12 +20,10 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  */
 class CommunicationsComposeStartController
 {
-    public function create(Request $request, ConversationResolver $resolver): View|RedirectResponse
+    public function create(Request $request): View
     {
-        if ($request->boolean('start')) {
-            return $this->open($request, $resolver, fromQuery: true);
-        }
-
+        // GET only prefills the form. Opening a conversation is POST-only so prefetch,
+        // crawlers, and shared links cannot create contact-key threads.
         return view('operations.communications.compose', [
             'phone' => (string) $request->query('phone', ''),
             'email' => (string) $request->query('email', ''),
@@ -35,18 +33,11 @@ class CommunicationsComposeStartController
 
     public function __invoke(Request $request, ConversationResolver $resolver): RedirectResponse
     {
-        return $this->open($request, $resolver, fromQuery: false);
-    }
-
-    private function open(Request $request, ConversationResolver $resolver, bool $fromQuery): RedirectResponse
-    {
-        $source = $fromQuery ? $request->query() : $request->all();
-
-        $validated = validator($source, [
+        $validated = $request->validate([
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'phone' => ['nullable', 'string', 'max:32'],
             'email' => ['nullable', 'string', 'email:filter', 'max:255'],
-        ])->validate();
+        ]);
 
         $customerId = filled($validated['customer_id'] ?? null) ? (int) $validated['customer_id'] : null;
         $phone = filled($validated['phone'] ?? null) ? (string) $validated['phone'] : null;

@@ -108,7 +108,6 @@ class CallQueuePresenter
 
         return route('operations.communications.compose.create', [
             'phone' => $phone,
-            'start' => 1,
         ]);
     }
 
