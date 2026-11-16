@@ -197,6 +197,81 @@ test('invoice while increase is unapproved stays at the exact authorization unde
     expect(InvoiceSnapshotBuilder::invoiceTotalCents($invoice->snapshot_json ?? []))->toBe(90000);
 });
 
+test('intentional reduction on one approved line with an unapproved raise on another keeps pending honest', function () {
+    // Aggregate pending must surface the raise; the reduction must not conceal it.
+    ShopSettings::current()->update([
+        'tax_enabled' => false,
+        'shop_fee_enabled' => false,
+        'portal_signature_required' => false,
+    ]);
+
+    $customer = Customer::query()->create(['first_name' => 'Mix', 'last_name' => 'Delta', 'phone' => '555-0144', 'customer_type' => 'Retail']);
+    $vehicle = Vehicle::query()->create(['customer_id' => $customer->id, 'year' => 2015, 'make' => 'Nissan', 'model' => 'Altima']);
+    $ro = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::WaitingApproval,
+        'concern_summary' => 'Reduce and raise',
+    ]);
+    $concern = RepairOrderConcern::query()->create([
+        'repair_order_id' => $ro->id,
+        'summary' => 'Brakes',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'billing_posture' => ConcernBillingPosture::CustomerPay,
+        'position' => 1,
+    ]);
+    $reduced = RepairOrderLine::query()->create([
+        'repair_order_id' => $ro->id,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Part,
+        'description' => 'Pads',
+        'quantity' => '1.00',
+        'unit_price_cents' => 20000,
+        'part_cost_cents' => 8000,
+        'subtotal_cents' => 20000,
+        'total_cents' => 20000,
+    ]);
+    $raised = RepairOrderLine::query()->create([
+        'repair_order_id' => $ro->id,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Part,
+        'description' => 'Rotors',
+        'quantity' => '1.00',
+        'unit_price_cents' => 30000,
+        'part_cost_cents' => 12000,
+        'subtotal_cents' => 30000,
+        'total_cents' => 30000,
+    ]);
+    $calculator = app(EstimateTotalsCalculator::class);
+    $calculator->recalculateRepairOrder($ro->fresh(['lines', 'customer', 'concerns']));
+    driftApprove($ro, null);
+
+    $authorizedAtApproval = $calculator->approvedTotalsForRead($ro->fresh(['lines.concern']))->totalCents();
+    expect($authorizedAtApproval)->toBe(50000);
+
+    // Intentional cut on Pads; unapproved raise on Rotors.
+    $reduced->fresh()->update(['unit_price_cents' => 10000]);
+    $raised->fresh()->update(['unit_price_cents' => 40000]);
+    $calculator->recalculateRepairOrder($ro->fresh(['lines', 'customer', 'concerns']));
+    $ro = $ro->fresh(['lines.concern', 'concerns']);
+
+    $livingReduced = (int) $reduced->fresh()->total_cents;
+    $livingRaised = (int) $raised->fresh()->total_cents;
+    $livingConcern = $livingReduced + $livingRaised;
+    $authorized = $calculator->approvedTotalsForRead($ro)->totalCents();
+    $outside = app(WorkCompletionAuthorization::class)->workOutsideApprovedSalesCents($ro);
+
+    // Independent expectations: Pads bill live at 10000; Rotors hold 30000; pending is the +10000 raise only.
+    expect($livingReduced)->toBe(10000)
+        ->and($livingRaised)->toBe(40000)
+        ->and($livingConcern)->toBe(50000)
+        ->and($authorized)->toBe(40000)
+        ->and($outside)->toBe(10000)
+        ->and($authorized + $outside)->toBe($livingConcern)
+        ->and($outside)->not->toBe(0)
+        ->and(ApprovalEvent::query()->where('visit_id', $ro->id)->count())->toBe(1);
+});
+
 test('quantity increase after approval holds the authorized ceiling until supplemental approval', function () {
     [$ro, $part, $authorized] = driftSinglePartShop(feeCapCents: 4000, unitPriceCents: 50000, qty: '1.00');
     $calculator = app(EstimateTotalsCalculator::class);
