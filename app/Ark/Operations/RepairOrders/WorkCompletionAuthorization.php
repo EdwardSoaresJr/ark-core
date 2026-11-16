@@ -211,6 +211,74 @@ final class WorkCompletionAuthorization
     }
 
     /**
+     * Recorded approved amounts for every currently covered labor/part line (latest scope).
+     * Used so fee/tax reallocations on living lines cannot shrink the authorized ceiling —
+     * only an intentional reduction of that line's own priced work may bill below the record.
+     *
+     * @return array<int, array{subtotal_cents: int, amounts: array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null}>
+     */
+    public function approvedRecordedAmountsForCoveredLines(RepairOrder $repairOrder): array
+    {
+        return app(RepairOrderReadCache::class)->remember(
+            'approved-recorded-amounts:'.$repairOrder->getKey(),
+            function () use ($repairOrder): array {
+                $repairOrder->loadMissing(['concerns', 'lines.concern']);
+                $covered = $this->customerApprovedLaborAndPartIdSet($repairOrder);
+
+                if ($covered === []) {
+                    return [];
+                }
+
+                $approvedConcernIds = $repairOrder->concerns
+                    ->filter(fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Approved)
+                    ->pluck('id')
+                    ->map(fn (mixed $id): int => (int) $id)
+                    ->all();
+
+                $scopes = ApprovedWorkScope::query()
+                    ->whereIn('repair_order_concern_id', $approvedConcernIds)
+                    ->orderBy('id')
+                    ->get()
+                    ->groupBy('repair_order_concern_id')
+                    ->map(fn (Collection $rows): ApprovedWorkScope => $rows->last());
+
+                $recorded = [];
+
+                foreach ($repairOrder->lines as $line) {
+                    $lineId = (int) $line->id;
+
+                    if (! isset($covered[$lineId])) {
+                        continue;
+                    }
+
+                    $concernId = (int) $line->repair_order_concern_id;
+                    $scope = $scopes->get($concernId);
+                    $approved = $scope?->approvedLines()[$lineId] ?? null;
+
+                    if ($approved === null && $scope?->approved_lines === null && is_array($line->legacy_approved_amounts)) {
+                        $ceiling = ApprovedWorkScope::recordedAmounts($line->legacy_approved_amounts);
+                        $approved = $ceiling === null ? null : [
+                            'subtotal_cents' => $ceiling['subtotal_cents'],
+                            'amounts' => $ceiling,
+                        ];
+                    }
+
+                    if ($approved === null) {
+                        continue;
+                    }
+
+                    $recorded[$lineId] = [
+                        'subtotal_cents' => (int) $approved['subtotal_cents'],
+                        'amounts' => $approved['amounts'],
+                    ];
+                }
+
+                return $recorded;
+            },
+        );
+    }
+
+    /**
      * Lines the customer approved that are no longer on their approved concern.
      *
      * @return list<array{id: int, concern_id: int, description: string, customer_description: string, subtotal_cents: int}>
@@ -276,12 +344,24 @@ final class WorkCompletionAuthorization
     }
 
     /**
-     * Money on approved concerns outside approved sales: added lines and the increase on raised lines.
+     * Money on approved concerns outside approved sales: added lines and increases on raised lines.
+     *
+     * Computed as living approved-concern totals minus the frozen authorization ceiling so a
+     * capped shop-fee re-proration cannot overstate the unapproved delta (F-FIN-01).
      */
     public function workOutsideApprovedSalesCents(RepairOrder $repairOrder): int
     {
-        return (int) $this->linesRequiringAuthorization($repairOrder)
-            ->sum(fn (RepairOrderLine $line): int => $this->pendingApprovalCents($repairOrder, $line));
+        $repairOrder->loadMissing(['lines.concern']);
+        $livingApprovedConcernCents = (int) $repairOrder->lines
+            ->filter(fn (RepairOrderLine $line): bool => $line->concern?->disposition === RepairOrderConcernDisposition::Approved
+                && ! $line->type->isNote())
+            ->sum(fn (RepairOrderLine $line): int => (int) $line->total_cents);
+
+        $authorizedCents = app(EstimateTotalsCalculator::class)
+            ->approvedTotalsForRead($repairOrder)
+            ->totalCents();
+
+        return max(0, $livingApprovedConcernCents - $authorizedCents);
     }
 
     /**
