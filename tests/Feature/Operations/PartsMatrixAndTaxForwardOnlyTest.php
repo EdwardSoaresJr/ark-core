@@ -2,6 +2,7 @@
 
 use App\Ark\Operations\Customers\ApplyCustomerBillingClassChangeAction;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\EstimatePricing\RepairOrderPricingContext;
 use App\Ark\Operations\EstimatePricing\TaxProfile;
@@ -373,4 +374,167 @@ test('taxable and exempt bases follow the stamped tax profile', function () {
 
     expect($labor->fresh()->tax_cents)->toBe(0)
         ->and($part->fresh()->tax_cents)->toBe(200);
+});
+
+test('parts matrix settings edit does not refresh open estimate snapshots', function () {
+    $ro = safetyRo(safetyCustomer());
+    safetyPart($ro, 1000, 2500, 'aft-parts');
+
+    $document = EstimateDocument::query()->create([
+        'repair_order_id' => $ro->id,
+        'document_number' => 1,
+        'document_type' => 'estimate',
+        'status' => 'draft',
+        'snapshot_json' => ['marker' => 'pre-matrix-edit', 'schema_version' => 1],
+    ]);
+
+    $matrices = collect(ShopSettings::current()->partsMatrices())
+        ->map(function (array $matrix): array {
+            if ($matrix['key'] !== 'aft-parts') {
+                return $matrix;
+            }
+            $matrix['rows'] = [
+                ['min_cost' => '0.00', 'max_cost' => null, 'markup_percentage' => '500.00', 'sort_order' => 0],
+            ];
+
+            return $matrix;
+        })
+        ->values()
+        ->all();
+
+    $this->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
+        'default_parts_matrix_key' => 'aft-parts',
+        'parts_matrices' => $matrices,
+    ])->assertRedirect();
+
+    expect($document->fresh()->snapshot_json['marker'] ?? null)->toBe('pre-matrix-edit');
+});
+
+test('matrix tier edits keep RO A frozen while RO B adopts the new shop matrix', function () {
+    $roA = safetyRo(safetyCustomer());
+    $stampMarkup = CommercialPricingProfile::tryFromStored($roA->commercial_pricing_profile)
+        ?->partsMatrixExact('aft-parts')['rows'][0]['markup_percentage'] ?? null;
+    expect($stampMarkup)->not->toBeNull();
+
+    $matrices = collect(ShopSettings::current()->partsMatrices())
+        ->map(function (array $matrix): array {
+            if ($matrix['key'] !== 'aft-parts') {
+                return $matrix;
+            }
+            $matrix['rows'] = [
+                ['min_cost' => '0.00', 'max_cost' => '9.99', 'markup_percentage' => '50.00', 'sort_order' => 0],
+                ['min_cost' => '10.00', 'max_cost' => null, 'markup_percentage' => '400.00', 'sort_order' => 1],
+            ];
+
+            return $matrix;
+        })
+        ->values()
+        ->all();
+
+    $this->patch(route('operations.settings.shop.parts-matrices.update', 'aft-parts'), [
+        'default_parts_matrix_key' => 'aft-parts',
+        'parts_matrices' => $matrices,
+    ])->assertRedirect();
+
+    $concernA = RepairOrderConcern::query()->create([
+        'repair_order_id' => $roA->id,
+        'summary' => 'Old RO part',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'billing_posture' => ConcernBillingPosture::CustomerPay,
+    ]);
+    $previewA = app(RepairOrderLinePricing::class)->previewFor([
+        'repair_order_concern_id' => $concernA->id,
+        'part_cost' => '10.00',
+        'pricing_mode' => 'matrix',
+        'pricing_matrix_key' => 'aft-parts',
+        'pricing_matrix_explicit' => true,
+    ], $roA->fresh(['customer', 'concerns']));
+
+    $roB = safetyRo(safetyCustomer());
+    $concernB = RepairOrderConcern::query()->create([
+        'repair_order_id' => $roB->id,
+        'summary' => 'New RO part',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'billing_posture' => ConcernBillingPosture::CustomerPay,
+    ]);
+    $previewB = app(RepairOrderLinePricing::class)->previewFor([
+        'repair_order_concern_id' => $concernB->id,
+        'part_cost' => '10.00',
+        'pricing_mode' => 'matrix',
+        'pricing_matrix_key' => 'aft-parts',
+        'pricing_matrix_explicit' => true,
+    ], $roB->fresh(['customer', 'concerns']));
+
+    expect($roA->fresh()->pricingContext()->partsMatrixByKey('aft-parts')['rows'][0]['markup_percentage'])
+        ->toBe($stampMarkup)
+        ->and($previewA['matrix_suggested_price_cents'])->not->toBe($previewB['matrix_suggested_price_cents'])
+        ->and($previewB['matrix_suggested_price_cents'])->toBe(5000);
+});
+
+test('stamped RO fails visibly when billing class names a matrix missing from the freeze', function () {
+    $ro = safetyRo(safetyCustomer());
+    $profile = CommercialPricingProfile::tryFromStored($ro->commercial_pricing_profile);
+    expect($profile)->not->toBeNull();
+
+    $types = collect($profile->customerTypeRows())
+        ->map(function (array $row): array {
+            if (($row['name'] ?? null) === 'Retail') {
+                $row['default_parts_matrix_key'] = 'missing-from-stamp';
+            }
+
+            return $row;
+        })
+        ->values()
+        ->all();
+
+    $ro->forceFill([
+        'commercial_pricing_profile' => array_merge($profile->toArray(), [
+            'customer_types' => $types,
+        ]),
+    ])->saveQuietly();
+
+    $concern = RepairOrderConcern::query()->create([
+        'repair_order_id' => $ro->id,
+        'summary' => 'Missing matrix',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'billing_posture' => ConcernBillingPosture::CustomerPay,
+    ]);
+
+    expect(fn () => $concern->fresh(['repairOrder.customer'])->defaultPartsMatrix())
+        ->toThrow(HttpException::class);
+});
+
+test('archived matrix still prices new parts on the original RO from frozen tiers', function () {
+    $ro = safetyRo(safetyCustomer());
+    $filters = CommercialPricingProfile::tryFromStored($ro->commercial_pricing_profile)?->partsMatrixExact('filters');
+    expect($filters)->not->toBeNull();
+
+    $this->delete(route('operations.settings.shop.parts-matrices.destroy', 'filters'), [
+        'confirm_name' => 'Filters',
+    ])->assertRedirect();
+
+    $concern = RepairOrderConcern::query()->create([
+        'repair_order_id' => $ro->id,
+        'summary' => 'Filter after archive',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'billing_posture' => ConcernBillingPosture::CustomerPay,
+    ]);
+
+    $preview = app(RepairOrderLinePricing::class)->previewFor([
+        'repair_order_concern_id' => $concern->id,
+        'part_cost' => '5.00',
+        'pricing_mode' => 'matrix',
+        'pricing_matrix_key' => 'filters',
+        'pricing_matrix_explicit' => true,
+    ], $ro->fresh(['customer', 'concerns']));
+
+    $expected = app(EstimateTotalsCalculator::class)->matrixSuggestionForCost(
+        500,
+        ShopSettings::current(),
+        'filters',
+        $filters,
+    );
+
+    expect($preview['pricing_matrix_key'])->toBe('filters')
+        ->and($preview['matrix_suggested_price_cents'])->toBe($expected['suggested_price_cents']);
 });
