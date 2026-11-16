@@ -109,7 +109,6 @@ final class CallLibraryProjection
 
         return route('operations.communications.compose.create', [
             'phone' => $normalized,
-            'channel' => 'sms',
             'start' => 1,
         ]);
     }

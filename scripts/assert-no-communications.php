@@ -80,6 +80,10 @@ const WORKSPACE_EXCEPTION = [
     'database/migrations/2026_11_04_120000_index_conversation_messages_by_direction_channel_time.php' => 'Index for the workspace\'s unread-message badge query on every staff page (owner-approved, 2026-11-04)',
     'app/Console/Commands/RepairDocumentEmailRecipientsCommand.php' => 'Reports and repairs email threads a document send attached to a customer who was not its recipient, with a backup and rollback (owner-approved, 2026-11-04)',
     'tests/Feature/Operations/DocumentEmailRecipientTest.php' => 'Tests that an emailed document stays its recipient\'s thread, on the repair order and in the customer\'s history (owner-approved, 2026-11-04)',
+    // Core #119 / SaaS #159: compose by phone or email without creating a customer (owner-approved, 2026-11-15).
+    'resources/views/operations/communications/compose.blade.php' => 'Compose form for opening a workspace thread from a phone or email without a customer record',
+    'tests/Feature/Communications/ComposeWithoutCustomerTest.php' => 'Tests compose-by-phone/email, search entry points, call-to-text deep links, and later linking without creating customers',
+    'GET app/communications/compose' => 'Opens the compose form and optional start=1 deep link into an existing contact-key conversation',
 ];
 
 $namespaces = array_map(
@@ -299,8 +303,11 @@ foreach (['composer.json' => ['require', 'require-dev'], 'package.json' => ['dep
     }
 }
 
-// The workspace exception covers exactly its listed files; an entry whose file is gone is stale and fails.
+// The workspace exception covers exactly its listed files (or route subjects); a missing file entry is stale and fails.
 foreach (array_keys(WORKSPACE_EXCEPTION) as $path) {
+    if (preg_match('/^(GET|POST|PUT|PATCH|DELETE|OPTIONS)(\|[A-Z]+)* /', $path) === 1) {
+        continue;
+    }
     if ($root === dirname(__DIR__) && ! is_file($root.'/'.$path)) {
         fwrite(STDERR, "WORKSPACE_EXCEPTION lists {$path}, which does not exist. Remove the entry.\n");
         exit(1);
