@@ -76,14 +76,17 @@ export function initOpsGlobalSearch() {
                 chunks.push(`<div class="${ui.group}">${escapeHtml(group)}</div>`);
 
                 for (const row of entityRows) {
-                    const composeAttr = row.compose_customer_id
-                        ? ` data-compose-customer-id="${row.compose_customer_id}"`
-                        : '';
-                    chunks.push(`<button type="button" class="${ui.row}" data-ops-global-search-row data-index="${index}" data-url="${escapeAttr(row.url)}"${composeAttr}>
+                    const composeAttrs = [
+                        row.compose_customer_id ? ` data-compose-customer-id="${row.compose_customer_id}"` : '',
+                        row.compose_phone ? ` data-compose-phone="${escapeAttr(row.compose_phone)}"` : '',
+                        row.compose_email ? ` data-compose-email="${escapeAttr(row.compose_email)}"` : '',
+                    ].join('');
+                    const canCompose = Boolean(row.compose_customer_id || row.compose_phone || row.compose_email);
+                    chunks.push(`<button type="button" class="${ui.row}" data-ops-global-search-row data-index="${index}" data-url="${escapeAttr(row.url)}"${composeAttrs}>
                 <span class="${ui.rowType}">${escapeHtml(row.type)}</span>
                 <span class="${ui.rowLabel}">${escapeHtml(row.label)}</span>
                 <span class="${ui.rowDetail}">${escapeHtml(row.detail || '')}</span>
-                ${row.compose_customer_id ? `<span class="${ui.rowCompose}" data-ops-global-search-compose>Compose</span>` : ''}
+                ${canCompose ? `<span class="${ui.rowCompose}" data-ops-global-search-compose>Compose</span>` : ''}
             </button>`);
                     index += 1;
                 }
@@ -135,20 +138,43 @@ export function initOpsGlobalSearch() {
         });
     };
 
+    const submitCompose = (fields) => {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = composeUrl;
+        const inputs = Object.entries(fields)
+            .map(([name, value]) => `<input type="hidden" name="${name}" value="${escapeAttr(String(value))}">`)
+            .join('');
+        form.innerHTML = `<input type="hidden" name="_token" value="${csrf}">${inputs}`;
+        document.body.appendChild(form);
+        form.submit();
+    };
+
     const activate = (row) => {
         if (!row || !row.dataset.url) {
             return;
         }
 
         const composeId = row.dataset.composeCustomerId;
+        const composePhone = row.dataset.composePhone;
+        const composeEmail = row.dataset.composeEmail;
+        const wantCompose =
+            row.querySelector('[data-ops-global-search-compose]')?.matches(':hover') ||
+            preferCompose ||
+            Boolean(composePhone || composeEmail);
 
-        if (composeId && (row.querySelector('[data-ops-global-search-compose]')?.matches(':hover') || preferCompose)) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = composeUrl;
-            form.innerHTML = `<input type="hidden" name="_token" value="${csrf}"><input type="hidden" name="customer_id" value="${composeId}">`;
-            document.body.appendChild(form);
-            form.submit();
+        if (wantCompose && composePhone) {
+            submitCompose({ phone: composePhone });
+            return;
+        }
+
+        if (wantCompose && composeEmail) {
+            submitCompose({ email: composeEmail });
+            return;
+        }
+
+        if (wantCompose && composeId) {
+            submitCompose({ customer_id: composeId });
             return;
         }
 

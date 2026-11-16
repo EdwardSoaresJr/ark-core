@@ -130,9 +130,27 @@ final class RegisterCoreOperationsCommands
             id: 'create.message',
             title: 'New Message',
             group: 'Create',
-            keywords: ['create', 'new', 'message', 'text', 'sms', 'compose'],
+            keywords: ['create', 'new', 'message', 'text', 'sms', 'email', 'compose'],
             permission: ArkCapability::OperationsAccess->value,
-            url: route('operations.communications.inbox'),
+            url: route('operations.communications.compose.create'),
+        ));
+
+        $registry->register(new OperationsCommand(
+            id: 'create.sms',
+            title: 'New SMS',
+            group: 'Create',
+            keywords: ['create', 'new', 'sms', 'text', 'phone', 'compose'],
+            permission: ArkCapability::OperationsAccess->value,
+            url: route('operations.communications.compose.create', ['channel' => 'sms']),
+        ));
+
+        $registry->register(new OperationsCommand(
+            id: 'create.email',
+            title: 'New Email',
+            group: 'Create',
+            keywords: ['create', 'new', 'email', 'mail', 'compose'],
+            permission: ArkCapability::OperationsAccess->value,
+            url: route('operations.communications.compose.create', ['channel' => 'email']),
         ));
     }
 

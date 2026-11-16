@@ -467,6 +467,10 @@ SurfaceRouting::appRoutes(function (): void {
                 ->middleware('front_door:attention')
                 ->name('operations.communications.inbox');
 
+            Route::get('/app/communications/compose', [CommunicationsComposeStartController::class, 'create'])
+                ->middleware('front_door:attention')
+                ->name('operations.communications.compose.create');
+
             Route::post('/app/communications/compose', CommunicationsComposeStartController::class)
                 ->middleware('front_door:attention')
                 ->name('operations.communications.compose');

@@ -5,10 +5,12 @@ namespace App\Ark\Operations\Search;
 use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSearchQuery;
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Vehicles\VehicleSearchQuery;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 /**
  * One search everywhere - customer · plate · VIN · phone · RO · estimate · appointment.
@@ -19,7 +21,15 @@ final class OperationsGlobalSearchProjection
     /**
      * @return array{
      *     query: string,
-     *     results: list<array{type: string, label: string, detail: string|null, url: string, compose_customer_id: int|null}>,
+     *     results: list<array{
+     *         type: string,
+     *         label: string,
+     *         detail: string|null,
+     *         url: string,
+     *         compose_customer_id: int|null,
+     *         compose_phone: string|null,
+     *         compose_email: string|null
+     *     }>,
      *     count: int
      * }
      */
@@ -41,7 +51,13 @@ final class OperationsGlobalSearchProjection
                 'detail' => $customer->phone ?: $customer->email,
                 'url' => route('operations.customers.show', $customer),
                 'compose_customer_id' => (int) $customer->id,
+                'compose_phone' => null,
+                'compose_email' => null,
             ];
+        }
+
+        foreach ($this->contactComposeRows($query, $results) as $contactRow) {
+            array_unshift($results, $contactRow);
         }
 
         foreach (VehicleSearchQuery::matching($query, 6) as $vehicle) {
@@ -58,6 +74,8 @@ final class OperationsGlobalSearchProjection
                     ? route('operations.customers.show', $vehicle->customer_id)
                     : route('operations.customers.search', ['q' => $vehicle->plate ?: $vehicle->vin ?: $vehicle->display_name]),
                 'compose_customer_id' => $vehicle->customer_id !== null ? (int) $vehicle->customer_id : null,
+                'compose_phone' => null,
+                'compose_email' => null,
             ];
         }
 
@@ -77,6 +95,8 @@ final class OperationsGlobalSearchProjection
                     ]))),
                     'url' => route('operations.repair-orders.show', $ro),
                     'compose_customer_id' => $ro->customer_id !== null ? (int) $ro->customer_id : null,
+                    'compose_phone' => null,
+                    'compose_email' => null,
                 ];
             }
         }
@@ -104,6 +124,8 @@ final class OperationsGlobalSearchProjection
                 ]))),
                 'url' => route('operations.repair-orders.show', $ro),
                 'compose_customer_id' => $ro->customer_id !== null ? (int) $ro->customer_id : null,
+                'compose_phone' => null,
+                'compose_email' => null,
             ];
         }
 
@@ -136,6 +158,8 @@ final class OperationsGlobalSearchProjection
                     ]))),
                     'url' => route('operations.appointments.show', $appointment),
                     'compose_customer_id' => $appointment->customer_id !== null ? (int) $appointment->customer_id : null,
+                    'compose_phone' => null,
+                    'compose_email' => null,
                 ];
             }
         }
@@ -143,7 +167,7 @@ final class OperationsGlobalSearchProjection
         $deduped = [];
         $seen = [];
         foreach ($results as $row) {
-            $key = $row['type'].':'.$row['url'];
+            $key = $row['type'].':'.$row['url'].':'.($row['compose_phone'] ?? '').':'.($row['compose_email'] ?? '');
             if (isset($seen[$key])) {
                 continue;
             }
@@ -158,5 +182,75 @@ final class OperationsGlobalSearchProjection
             'results' => $deduped,
             'count' => count($deduped),
         ];
+    }
+
+    /**
+     * Offer compose-to-contact when the query itself is a phone or email, without creating a customer.
+     *
+     * @param  list<array{type: string, compose_customer_id: int|null, detail: string|null}>  $existing
+     * @return list<array{
+     *     type: string,
+     *     label: string,
+     *     detail: string|null,
+     *     url: string,
+     *     compose_customer_id: int|null,
+     *     compose_phone: string|null,
+     *     compose_email: string|null
+     * }>
+     */
+    private function contactComposeRows(string $query, array $existing): array
+    {
+        $rows = [];
+        $normalizedPhone = PhoneNumber::normalize($query);
+        $digits = $normalizedPhone !== null ? PhoneNumber::digits($normalizedPhone) : '';
+
+        if (strlen($digits) >= 10) {
+            $alreadyCustomerPhone = collect($existing)->contains(function (array $row) use ($digits): bool {
+                if (($row['type'] ?? null) !== 'customer' || ($row['compose_customer_id'] ?? null) === null) {
+                    return false;
+                }
+
+                return PhoneNumber::digits((string) ($row['detail'] ?? '')) === $digits
+                    || PhoneNumber::normalize((string) ($row['detail'] ?? '')) === $digits;
+            });
+
+            if (! $alreadyCustomerPhone) {
+                $display = PhoneNumber::display($normalizedPhone) ?? $query;
+                $rows[] = [
+                    'type' => 'message',
+                    'label' => 'Message '.$display,
+                    'detail' => 'SMS without a customer record',
+                    'url' => route('operations.communications.compose.create', ['phone' => $normalizedPhone, 'channel' => 'sms']),
+                    'compose_customer_id' => null,
+                    'compose_phone' => $normalizedPhone,
+                    'compose_email' => null,
+                ];
+            }
+        }
+
+        $email = Str::lower(trim($query));
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $alreadyCustomerEmail = collect($existing)->contains(function (array $row) use ($email): bool {
+                if (($row['type'] ?? null) !== 'customer' || ($row['compose_customer_id'] ?? null) === null) {
+                    return false;
+                }
+
+                return Str::lower(trim((string) ($row['detail'] ?? ''))) === $email;
+            });
+
+            if (! $alreadyCustomerEmail) {
+                $rows[] = [
+                    'type' => 'message',
+                    'label' => 'Email '.$email,
+                    'detail' => 'Email without a customer record',
+                    'url' => route('operations.communications.compose.create', ['email' => $email, 'channel' => 'email']),
+                    'compose_customer_id' => null,
+                    'compose_phone' => null,
+                    'compose_email' => $email,
+                ];
+            }
+        }
+
+        return $rows;
     }
 }
