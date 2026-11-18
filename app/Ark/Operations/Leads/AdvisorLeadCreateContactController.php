@@ -50,7 +50,7 @@ class AdvisorLeadCreateContactController
             $request->merge(['contact_preference' => null]);
         }
 
-        $customerTypes = collect(ShopSettings::current()->customerTypeRows())
+        $customerTypes = collect(\App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current()))
             ->pluck('name')
             ->all();
 

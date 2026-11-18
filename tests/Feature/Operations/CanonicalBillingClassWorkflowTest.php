@@ -265,6 +265,36 @@ test('a name collision with a labor-only column is reported and both are preserv
         ->toContain('custom_business', 'custom_military');
 });
 
+test('an unresolved collision class cannot be assigned to a customer and would otherwise price at Retail', function () {
+    ShopSettings::current()->update([
+        'custom_labor_billing_classes' => [['key' => 'custom_business', 'label' => 'Business', 'base_posture' => 'customer_pay', 'is_active' => true]],
+    ]);
+    app(\App\Ark\Operations\EstimatePricing\CreateCanonicalBillingClassAction::class)
+        ->linkLegacyCustomerOnlyClasses(ShopSettings::current());
+
+    $settings = ShopSettings::current();
+    $business = collect($settings->customerTypeRows())->firstWhere('key', 'business');
+    $military = collect($settings->customerTypeRows())->firstWhere('key', 'military');
+
+    expect($business['labor_column_key'] ?? null)->toBeNull()
+        ->and(CanonicalBillingClassCatalog::laborColumnForClassRow($business))->toBe('customer_pay')
+        ->and(CanonicalBillingClassCatalog::isAssignableToCustomer($business, $settings))->toBeFalse()
+        ->and(CanonicalBillingClassCatalog::isAssignableToCustomer($military, $settings))->toBeTrue()
+        ->and(collect(CanonicalBillingClassCatalog::selectableForCustomers($settings))->pluck('key'))
+        ->not->toContain('business')
+        ->and(collect(CanonicalBillingClassCatalog::selectableForCustomers($settings))->pluck('key'))
+        ->toContain('military');
+
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value))
+        ->post(route('operations.customers.store'), [
+            'first_name' => 'Blocked',
+            'last_name' => 'Business',
+            'phone' => '555-0199',
+            'customer_type' => 'Business',
+        ])
+        ->assertSessionHasErrors('customer_type');
+});
+
 test('a closed repair order refuses concern billing changes and keeps its stored labor rate', function () {
     $repairOrder = canonicalRepairOrder('warranty');
     $concern = canonicalConcern($repairOrder, 'Closed brakes');

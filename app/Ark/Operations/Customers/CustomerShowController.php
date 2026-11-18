@@ -5,6 +5,7 @@ namespace App\Ark\Operations\Customers;
 use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Documents\DocumentProjection;
 use App\Ark\Operations\Documents\EstimateDocument;
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Financial\InvoiceStatus;
@@ -100,7 +101,7 @@ class CustomerShowController
             'hubInitialTask' => $hubInitialTask,
             'hubInitialContext' => $hubInitialContext,
             'showVehicleRail' => $showVehicleRail,
-            'customerTypes' => ShopSettings::current()->customerTypeRows(),
+            'customerTypes' => $this->customerBillingClassOptions($customer),
             'activeStatuses' => $activeStatuses,
             'activeRepairOrders' => $activeRepairOrders,
             'creditDueRepairOrders' => $creditDueRepairOrders,
@@ -122,5 +123,31 @@ class CustomerShowController
                 $request->query('doc_q') ? (string) $request->query('doc_q') : null,
             ),
         ]);
+    }
+
+    /**
+     * @return list<array{key: string, name: string, labor_column_key: string|null, is_active: bool}>
+     */
+    private function customerBillingClassOptions(Customer $customer): array
+    {
+        $options = CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current());
+        $current = $customer->billingClassRow();
+        if (! is_array($current)) {
+            return $options;
+        }
+
+        if (collect($options)->contains(fn (array $row): bool => ($row['key'] ?? null) === ($current['key'] ?? null))) {
+            return $options;
+        }
+
+        return [
+            [
+                'key' => (string) ($current['key'] ?? ''),
+                'name' => (string) ($current['name'] ?? $customer->customer_type ?: 'Retail'),
+                'labor_column_key' => filled($current['labor_column_key'] ?? null) ? (string) $current['labor_column_key'] : null,
+                'is_active' => (bool) ($current['is_active'] ?? true),
+            ],
+            ...$options,
+        ];
     }
 }

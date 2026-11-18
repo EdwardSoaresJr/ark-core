@@ -19,7 +19,7 @@ final class MobileIntakeCustomerStoreController
     ): JsonResponse {
         abort_unless($access->canManageCustomers($request->user()), 403);
 
-        $customerTypes = collect(ShopSettings::current()->customerTypeRows())
+        $customerTypes = collect(\App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current()))
             ->pluck('name')
             ->all();
 

@@ -5,7 +5,7 @@
     $isTerminal = $isTerminal ?? false;
     $identityCustomer = $repairOrder->customer;
     $identityVehicle = $repairOrder->vehicle;
-    $identityCustomerTypes = ShopSettings::current()->customerTypeRows();
+    $identityCustomerTypes = \App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current());
     $visitModes = App\Ark\Operations\RepairOrders\RepairOrderVisitMode::cases();
     $currentVisitMode = App\Ark\Operations\RepairOrders\RepairOrderVisitMode::fromRepairOrder($repairOrder);
 @endphp

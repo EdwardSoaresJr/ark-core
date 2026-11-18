@@ -1,7 +1,7 @@
 @php
     use App\Ark\Operations\Settings\ShopSettings;
 
-    $hubCustomerTypes = $customerTypes ?? ShopSettings::current()->customerTypeRows();
+    $hubCustomerTypes = $customerTypes ?? \App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current());
     $customerFieldInvalid = fn (string $field): bool => $errors->has($field);
 @endphp
 
