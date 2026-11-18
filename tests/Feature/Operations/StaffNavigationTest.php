@@ -274,6 +274,59 @@ test('both account menus render the shared entries', function (): void {
     }
 });
 
+test('standalone Core uses the null navigation augmentor by default', function (): void {
+    expect(app(\App\Ark\Operations\Staff\StaffNavigationAugmentor::class))
+        ->toBeInstanceOf(\App\Ark\Operations\Staff\NullStaffNavigationAugmentor::class);
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    expect(navigationKeys($advisor)['Operations'])->toBe(['job-board', 'work-queues', 'schedule', 'communications']);
+});
+
+test('a request-scoped augmentor can insert destinations without Core learning their meaning', function (): void {
+    $this->app->scoped(
+        \App\Ark\Operations\Staff\StaffNavigationAugmentor::class,
+        fn (): \App\Ark\Operations\Staff\StaffNavigationAugmentor => new class implements \App\Ark\Operations\Staff\StaffNavigationAugmentor
+        {
+            public function augment(array $sections, ?User $user, Request $request): array
+            {
+                foreach ($sections as &$section) {
+                    if (($section['label'] ?? null) !== 'Operations') {
+                        continue;
+                    }
+
+                    $items = [];
+                    foreach ($section['items'] as $item) {
+                        $items[] = $item;
+                        if ($item['key'] === 'schedule') {
+                            $items[] = [
+                                'key' => 'my-day',
+                                'label' => 'My Day',
+                                'url' => 'https://shop.test/app/my-day',
+                                'icon' => 'calendar-event',
+                                'active' => false,
+                                'live_count' => false,
+                            ];
+                        }
+                    }
+                    $section['items'] = $items;
+                }
+                unset($section);
+
+                return $sections;
+            }
+        },
+    );
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    expect(navigationKeys($advisor)['Operations'])
+        ->toBe(['job-board', 'work-queues', 'schedule', 'my-day', 'communications']);
+
+    expect(Blade::render('<x-operations.rail-icon name="my-day" />'))->toContain('<svg');
+    expect(Blade::render('<x-operations.rail-icon name="field-queue" />'))->toContain('<svg');
+});
+
 test('advisors and technicians see the repair order board under one name', function (): void {
     $labels = function (User $user): array {
         $found = [];

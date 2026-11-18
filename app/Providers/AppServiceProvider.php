@@ -38,6 +38,8 @@ use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopIntegrationRuntimeConfig;
 use App\Ark\Operations\Settings\ShopSettingsSchema;
+use App\Ark\Operations\Staff\NullStaffNavigationAugmentor;
+use App\Ark\Operations\Staff\StaffNavigationAugmentor;
 use App\Ark\Operations\Telephony\Contracts\TelephonyProvider;
 use App\Ark\Operations\Telephony\Providers\NotConfiguredTelephonyProvider;
 use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
@@ -88,6 +90,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(RepairOrderReadCache::class);
         $this->app->bind(LinkedPartsQuotes::class, UnavailableLinkedPartsQuotes::class);
         $this->app->bind(CommunicationsWorkspaceSignals::class, CoreCommunicationsWorkspaceSignals::class);
+        // Request-scoped so a host binding cannot leak across HTTP requests or tenants.
+        $this->app->scoped(StaffNavigationAugmentor::class, NullStaffNavigationAugmentor::class);
 
         // Pre-DB first-run: avoid database session/cache before installer configures MySQL.
         // A hosted shop's install marker lives in tenant storage, which is not active yet.
