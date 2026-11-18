@@ -118,7 +118,7 @@ final class StaffNavigation
             }
         }
 
-        return $visible;
+        return app(StaffNavigationAugmentor::class)->augment($visible, $user, $request);
     }
 
     /**

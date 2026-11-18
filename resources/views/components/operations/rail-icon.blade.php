@@ -30,6 +30,18 @@
             <path d="M7 3v3M13 3v3M3.5 9h13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
         </svg>
         @break
+    @case('my-day')
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+            <rect x="3.5" y="4.5" width="13" height="12" rx="0.5" stroke="currentColor" stroke-width="1.4" />
+            <path d="M7 3v3M13 3v3M3.5 9h13M7.5 12.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+        </svg>
+        @break
+    @case('field-queue')
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+            <path d="M4 5.5h12M4 10h12M4 14.5h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            <circle cx="15.5" cy="14.5" r="1.5" stroke="currentColor" stroke-width="1.4" />
+        </svg>
+        @break
     @case('communications')
         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
             <path d="M3.5 4.5h13v9h-13v-9z" stroke="currentColor" stroke-width="1.4" />
