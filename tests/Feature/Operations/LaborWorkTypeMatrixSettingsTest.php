@@ -32,7 +32,7 @@ test('labor settings show hybrid inline work-type matrix without a save button',
         ->assertSee('Labor rate matrix')
         ->assertSee('data-labor-work-type-nav', false)
         ->assertSee('+ Add Work Type')
-        ->assertSee('+ Add Labor Column')
+        ->assertSee('+ Add Billing Class')
         ->assertSee('Manage Billing Classes')
         ->assertSee('Default Work Type')
         ->assertSee('Rates for')

@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
@@ -15,8 +16,20 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ConcernBillingPostureCast implements CastsAttributes
 {
+    /**
+     * An inheriting concern's posture follows its customer, which can change without this
+     * attribute being written - never cache the resolved enum on the model.
+     */
+    public bool $withoutObjectCaching = true;
+
     public function get(Model $model, string $key, mixed $value, array $attributes): ConcernBillingPosture
     {
+        if ($model instanceof RepairOrderConcern && $model->inheritsCustomerBilling()) {
+            return CanonicalBillingClassCatalog::postureForLaborColumn(
+                $model->repairOrder?->customer?->billingClassLaborColumnKey(),
+            );
+        }
+
         if (is_string($value) && $value !== '') {
             $enum = ConcernBillingPosture::tryFrom($value);
             if ($enum instanceof ConcernBillingPosture) {

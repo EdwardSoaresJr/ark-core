@@ -197,19 +197,6 @@
                                 {{ $visitMode?->label() ?? 'Not set' }}
                             @endif
                         </dd>
-                        <dt class="col-4 text-secondary fw-normal">Billing</dt>
-                        <dd class="col-8 fw-medium" data-visit-billing="{{ $repairOrder->defaultBillingPosture()->value }}">
-                            @if ($canEditVisitPosture)
-                                <button
-                                    type="button"
-                                    class="ops-visit-inline-trigger fw-medium"
-                                    title="Open to change billing for this visit"
-                                    @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'visit-billing', invokeEl: $event.currentTarget } }))"
-                                ><span class="ops-visit-inline-value">{{ $repairOrder->defaultBillingPosture()->label() }}</span></button>
-                            @else
-                                {{ $repairOrder->defaultBillingPosture()->label() }}
-                            @endif
-                        </dd>
                         @if ($showMileageInlineEditor)
                             @include('operations.repair-orders.partials.repair-order-mileage-inline', [
                                 'repairOrder' => $repairOrder,

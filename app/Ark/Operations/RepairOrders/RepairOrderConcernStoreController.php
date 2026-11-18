@@ -91,7 +91,7 @@ class RepairOrderConcernStoreController
         $concern = $repairOrder->concerns()->create([
             ...$data,
             'disposition' => RepairOrderConcernDisposition::Draft,
-            'billing_posture' => $repairOrder->defaultBillingPosture(),
+            ...\App\Ark\Operations\RepairOrders\RepairOrderConcern::inheritedBillingAttributes(),
         ]);
 
         $conceptLearner->record(

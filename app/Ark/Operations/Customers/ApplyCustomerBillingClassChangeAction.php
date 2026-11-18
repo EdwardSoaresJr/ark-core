@@ -2,10 +2,12 @@
 
 namespace App\Ark\Operations\Customers;
 
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\RefreshCustomerInvoiceAction;
+use App\Ark\Operations\RepairOrders\ChangeConcernBillingPostureAction;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -35,16 +37,20 @@ final class ApplyCustomerBillingClassChangeAction
         private readonly OperationalEventRecorder $events,
         private readonly RefreshCustomerInvoiceAction $refreshInvoice,
         private readonly WorkCompletionAuthorization $authorization,
+        private readonly ChangeConcernBillingPostureAction $changeConcernBilling,
     ) {}
 
     public function execute(Customer $customer, ?string $priorBillingClass, ?User $actor = null): void
     {
         $settings = ShopSettings::current();
+        $priorLaborColumn = CanonicalBillingClassCatalog::laborColumnForClassRow(
+            $settings->customerTypeRowByKeyOrName(null, $priorBillingClass),
+        );
 
         $customer->repairOrders()
             ->where('status', '!=', RepairOrderStatus::Closed->value)
             ->with(['lines.concern', 'customer', 'concerns'])
-            ->each(function (RepairOrder $repairOrder) use ($customer, $priorBillingClass, $actor, $settings): void {
+            ->each(function (RepairOrder $repairOrder) use ($customer, $priorBillingClass, $priorLaborColumn, $actor, $settings): void {
                 $priorTotalCents = $this->calculator->totalsFor($repairOrder)->totalCents();
                 $hadApprovedWork = $repairOrder->concerns->contains(
                     fn ($concern): bool => $concern->disposition === RepairOrderConcernDisposition::Approved,
@@ -56,6 +62,14 @@ final class ApplyCustomerBillingClassChangeAction
                 // Adopt current commercial rules for the newly selected customer class.
                 $repairOrder->restampCommercialPricingProfile($settings);
                 $repairOrder->refresh();
+
+                // Concerns that follow the customer's class move with it; overrides never change.
+                // Approved, manual and special-priced labor keeps its rate (see ChangeConcernBillingPostureAction).
+                foreach ($repairOrder->concerns as $concern) {
+                    if ($concern->inheritsCustomerBilling()) {
+                        $this->changeConcernBilling->repriceInheritedForCustomerChange($repairOrder, $concern, $priorLaborColumn);
+                    }
+                }
 
                 $this->calculator->recalculateRepairOrder($repairOrder);
 

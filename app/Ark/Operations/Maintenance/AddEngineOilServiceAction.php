@@ -85,7 +85,7 @@ final class AddEngineOilServiceAction
                 'repair_order_id' => $repairOrder->id,
                 'summary' => $label,
                 'disposition' => RepairOrderConcernDisposition::Recommended,
-                'billing_posture' => $repairOrder->defaultBillingPosture(),
+                ...\App\Ark\Operations\RepairOrders\RepairOrderConcern::inheritedBillingAttributes(),
                 'recommendation_intent' => RecommendationIntent::Maintenance->value,
                 'position' => max(1, $position),
             ]);

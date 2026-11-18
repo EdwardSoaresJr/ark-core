@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Settings;
 
 use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
+use App\Ark\Operations\EstimatePricing\CreateCanonicalBillingClassAction;
 use App\Ark\Operations\EstimatePricing\CustomerBillingClassIdentity;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -107,8 +108,17 @@ final class PersistCustomerBillingClasses
                 'key' => $attributes['key'] ?? null,
             ], $reserved);
 
-            // New customer classes are customer-only unless an explicit built-in labor link applies.
-            $rows[] = array_merge([
+            // Canonical create (#217): every class gets a labor column link, so it is selectable
+            // for customers, concern overrides, the labor matrix and commercial rules.
+            $laborColumnKey = app(CreateCanonicalBillingClassAction::class)->ensureLaborColumn(
+                $locked,
+                $key,
+                $name,
+                isset($attributes['base_posture']) ? (string) $attributes['base_posture'] : null,
+                isset($attributes['labor_column_key']) ? (string) $attributes['labor_column_key'] : null,
+            );
+
+            $row = array_merge([
                 'shop_fees_enabled' => true,
                 'shop_fee_rate_override' => null,
                 'discount_type' => 'none',
@@ -123,8 +133,10 @@ final class PersistCustomerBillingClasses
                 'key' => $key,
                 'name' => $name,
                 'is_active' => true,
+                'labor_column_key' => $laborColumnKey,
             ]);
-            unset($rows[array_key_last($rows)]['labor_column_key']);
+            unset($row['base_posture']);
+            $rows[] = $row;
 
             $normalized = $this->normalizeIncoming($rows, $locked);
             $locked->update([

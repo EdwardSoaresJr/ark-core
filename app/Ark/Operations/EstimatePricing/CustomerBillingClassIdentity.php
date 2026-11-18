@@ -147,13 +147,13 @@ final class CustomerBillingClassIdentity
                 ? (string) $row['labor_column_key']
                 : null;
 
-            // Only keep labor_column_key when it is the built-in explicit link for this key,
-            // or a previously stored explicit link that still matches the built-in map.
+            // Built-in classes always carry their built-in link. Other classes keep an explicit
+            // stored link to a custom_* labor column (created by the canonical create action).
             $builtinLabor = self::laborColumnForClassKey($key);
-            if ($explicitLabor !== null && $builtinLabor !== null && $explicitLabor === $builtinLabor) {
-                $row['labor_column_key'] = $explicitLabor;
-            } elseif ($builtinLabor !== null) {
+            if ($builtinLabor !== null) {
                 $row['labor_column_key'] = $builtinLabor;
+            } elseif ($explicitLabor !== null && str_starts_with($explicitLabor, 'custom_')) {
+                $row['labor_column_key'] = $explicitLabor;
             } else {
                 unset($row['labor_column_key']);
             }

@@ -1596,14 +1596,27 @@ TEXT;
      */
     public function customerTypeRows(): array
     {
-        $normalized = collect($this->customer_types ?: self::DEFAULT_CUSTOMER_TYPES)
+        // Inheriting concerns resolve their customer's class on every posture read; memoize per stored value.
+        $source = $this->customer_types ?: self::DEFAULT_CUSTOMER_TYPES;
+        $signature = md5((string) json_encode($source));
+        if ($this->customerTypeRowsMemo !== null && $this->customerTypeRowsMemo[0] === $signature) {
+            return $this->customerTypeRowsMemo[1];
+        }
+
+        $normalized = collect($source)
             ->filter(fn ($row): bool => is_array($row))
             ->map(fn (array $row): array => $this->normalizeCustomerTypeRow($row))
             ->values()
             ->all();
 
-        return \App\Ark\Operations\EstimatePricing\CustomerBillingClassIdentity::ensureKeysOnRows($normalized);
+        $rows = \App\Ark\Operations\EstimatePricing\CustomerBillingClassIdentity::ensureKeysOnRows($normalized);
+        $this->customerTypeRowsMemo = [$signature, $rows];
+
+        return $rows;
     }
+
+    /** @var array{0: string, 1: list<array<string, mixed>>}|null */
+    private ?array $customerTypeRowsMemo = null;
 
     /**
      * Billing classes as saved, in the same order as customerTypeRows(). A null

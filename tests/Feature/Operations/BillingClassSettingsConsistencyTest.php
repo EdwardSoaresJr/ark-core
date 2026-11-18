@@ -97,7 +97,7 @@ test('a custom billing class can name the billing its new concerns start with', 
     $labor = classSettingsLabor($insured, $concern, 'warranty-other');
 
     expect($concern->billing_posture)->toBe(ConcernBillingPosture::WarrantyOther)
-        ->and($insured->fresh()->defaultBillingPosture())->toBe(ConcernBillingPosture::WarrantyOther)
+        ->and($concern->inheritsCustomerBilling())->toBeTrue()
         ->and($labor->fresh())
         ->unit_price_cents->toBe(16500)
         ->resolved_from_posture->toBe('warranty_other')
@@ -109,7 +109,7 @@ test('a custom billing class can name the billing its new concerns start with', 
     expect(classSettingsConcern($rideshare, 'Rideshare brakes')->billing_posture)->toBe(ConcernBillingPosture::Default);
 });
 
-test('saving which billing a class starts concerns with leaves existing concerns alone', function () {
+test('a legacy unlinked class that names its concern billing applies to inheriting concerns, never to overrides', function () {
     $rideshare = classSettingsRepairOrder('Rideshare');
     $existing = classSettingsConcern($rideshare, 'Existing rideshare concern');
 
@@ -122,7 +122,7 @@ test('saving which billing a class starts concerns with leaves existing concerns
     $this->patch(route('operations.settings.shop.customer-types.update'), ['customer_types' => $rows])->assertSessionHasNoErrors();
 
     expect(collect(ShopSettings::current()->customerTypeRows())->firstWhere('name', 'Rideshare')['concern_billing_posture'])->toBe('fleet')
-        ->and($existing->fresh()->billing_posture)->toBe(ConcernBillingPosture::Default)
+        ->and($existing->fresh()->billing_posture)->toBe(ConcernBillingPosture::Fleet)
         ->and(classSettingsConcern($rideshare, 'New rideshare concern')->billing_posture)->toBe(ConcernBillingPosture::Fleet);
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']))

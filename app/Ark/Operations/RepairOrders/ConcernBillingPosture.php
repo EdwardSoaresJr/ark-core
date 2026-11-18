@@ -24,7 +24,7 @@ enum ConcernBillingPosture: string
     {
         return match ($this) {
             self::Default => 'Shop default',
-            self::CustomerPay => 'Customer pay',
+            self::CustomerPay => 'Retail',
             self::Warranty, self::WarrantyOther => 'Warranty',
             self::WarrantyRepairPal, self::RepairPal => 'RepairPal',
             self::Fleet => 'Fleet',

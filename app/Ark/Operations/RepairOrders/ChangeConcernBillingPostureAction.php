@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -53,11 +54,15 @@ final class ChangeConcernBillingPostureAction
      *     skipped: list<array{line: RepairOrderLine, reason: string}>
      * }
      */
-    public function plan(RepairOrderConcern $concern, ConcernBillingPosture|string $next): array
-    {
+    public function plan(
+        RepairOrderConcern $concern,
+        ConcernBillingPosture|string $next,
+        ?ConcernBillingPosture $priorPosture = null,
+        ?string $priorKeyOverride = null,
+    ): array {
         $settings = ShopSettings::current();
-        $prior = $concern->billing_posture;
-        $priorKey = $concern->billingClassKey();
+        $prior = $priorPosture ?? $concern->billing_posture;
+        $priorKey = $priorKeyOverride ?? $concern->effectiveBillingClassKey();
         $nextEnum = $next instanceof ConcernBillingPosture
             ? $next
             : (ConcernBillingPosture::tryFrom((string) $next)
@@ -113,6 +118,8 @@ final class ChangeConcernBillingPostureAction
     }
 
     /**
+     * Explicit override: the concern bills as $next whatever its customer's class is.
+     *
      * @return array{changed: bool, repriced: int, kept: int}
      */
     public function execute(
@@ -124,29 +131,142 @@ final class ChangeConcernBillingPostureAction
     ): array {
         $nextKey = $next instanceof ConcernBillingPosture ? $next->value : (string) $next;
 
-        if ($concern->billingClassKey() === $nextKey) {
+        if (! $concern->inheritsCustomerBilling() && $concern->billingClassKey() === $nextKey) {
             return ['changed' => false, 'repriced' => 0, 'kept' => 0];
         }
 
-        $plan = DB::transaction(function () use ($repairOrder, $concern, $next, $nextKey, $actor, $source): array {
-            $plan = $this->plan($concern, $next);
+        return $this->change(
+            $repairOrder,
+            $concern,
+            $next,
+            $nextKey,
+            ['billing_posture' => $nextKey, 'billing_inherits_customer' => false],
+            $actor,
+            $source,
+        );
+    }
 
-            $concern->update(['billing_posture' => $nextKey]);
+    /**
+     * Clear an override: the concern follows its customer's billing class again.
+     *
+     * @return array{changed: bool, repriced: int, kept: int}
+     */
+    public function inherit(
+        RepairOrder $repairOrder,
+        RepairOrderConcern $concern,
+        ?User $actor = null,
+        string $source = 'concern_inherit',
+    ): array {
+        $raw = $concern->getAttributes();
 
-            foreach ($plan['repriced'] as $entry) {
-                $attributes = $entry['attributes'];
-                $quantity = $attributes['quantity'] ?? (string) $entry['line']->quantity;
-
-                $entry['line']->update([
-                    'quantity' => $quantity,
-                    'unit_price_cents' => $attributes['unit_price_cents'],
-                    'subtotal_cents' => $this->calculator->lineTotalCents($quantity, $attributes['unit_price_cents']),
-                    ...array_intersect_key(
-                        RepairOrderLineLaborInput::persistenceAttributes($attributes),
-                        $attributes,
-                    ),
-                ]);
+        if (($raw['billing_inherits_customer'] ?? null) === true || ($raw['billing_inherits_customer'] ?? null) === 1) {
+            if ($concern->billingClassKey() === ConcernBillingPosture::Default->value) {
+                return ['changed' => false, 'repriced' => 0, 'kept' => 0];
             }
+        }
+
+        $concern->setRelation('repairOrder', $repairOrder);
+        $targetKey = (string) ($repairOrder->customer?->billingClassLaborColumnKey() ?? 'customer_pay');
+
+        return $this->change(
+            $repairOrder,
+            $concern,
+            $this->pricingTarget($targetKey),
+            $targetKey,
+            RepairOrderConcern::inheritedBillingAttributes(),
+            $actor,
+            $source,
+        );
+    }
+
+    /**
+     * Customer's class changed: reprice this inheriting concern's policy-priced labor to the
+     * customer's new class. Stored billing is untouched; approved/manual/special lines keep their
+     * rate. The caller recalculates the repair order.
+     *
+     * @return array{repriced: int, kept: int}
+     */
+    public function repriceInheritedForCustomerChange(
+        RepairOrder $repairOrder,
+        RepairOrderConcern $concern,
+        ?string $priorLaborColumnKey,
+    ): array {
+        $concern->setRelation('repairOrder', $repairOrder);
+        $targetKey = (string) ($repairOrder->customer?->billingClassLaborColumnKey() ?? 'customer_pay');
+
+        if ($priorLaborColumnKey === $targetKey) {
+            return ['repriced' => 0, 'kept' => 0];
+        }
+
+        $plan = $this->persistPlan(
+            $concern,
+            $this->pricingTarget($targetKey),
+            [],
+            CanonicalBillingClassCatalog::postureForLaborColumn($priorLaborColumnKey),
+            $priorLaborColumnKey,
+        );
+
+        return ['repriced' => count($plan['repriced']), 'kept' => count($plan['skipped'])];
+    }
+
+    private function pricingTarget(string $laborColumnKey): ConcernBillingPosture|string
+    {
+        return $laborColumnKey === CanonicalBillingClassCatalog::RETAIL_LABOR_COLUMN
+            ? ConcernBillingPosture::Default
+            : (ConcernBillingPosture::tryFrom($laborColumnKey) ?? $laborColumnKey);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function persistPlan(
+        RepairOrderConcern $concern,
+        ConcernBillingPosture|string $pricingNext,
+        array $attributes,
+        ?ConcernBillingPosture $priorPosture = null,
+        ?string $priorKey = null,
+    ): array {
+        // Plan against the billing the concern has now, before the new attributes are stored.
+        $plan = $this->plan($concern, $pricingNext, $priorPosture, $priorKey);
+
+        if ($attributes !== []) {
+            $concern->update($attributes);
+        }
+
+        foreach ($plan['repriced'] as $entry) {
+            $lineAttributes = $entry['attributes'];
+            $quantity = $lineAttributes['quantity'] ?? (string) $entry['line']->quantity;
+
+            $entry['line']->update([
+                'quantity' => $quantity,
+                'unit_price_cents' => $lineAttributes['unit_price_cents'],
+                'subtotal_cents' => $this->calculator->lineTotalCents($quantity, $lineAttributes['unit_price_cents']),
+                ...array_intersect_key(
+                    RepairOrderLineLaborInput::persistenceAttributes($lineAttributes),
+                    $lineAttributes,
+                ),
+            ]);
+        }
+
+        return $plan;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array{changed: bool, repriced: int, kept: int}
+     */
+    private function change(
+        RepairOrder $repairOrder,
+        RepairOrderConcern $concern,
+        ConcernBillingPosture|string $pricingNext,
+        string $nextKey,
+        array $attributes,
+        ?User $actor,
+        string $source,
+    ): array {
+        $plan = DB::transaction(function () use ($repairOrder, $concern, $pricingNext, $nextKey, $attributes, $actor, $source): array {
+            $plan = $this->persistPlan($concern, $pricingNext, $attributes);
 
             $this->calculator->recalculateRepairOrder($repairOrder);
 
@@ -159,6 +279,7 @@ final class ChangeConcernBillingPostureAction
                     'source' => $source,
                     'prior_billing_posture' => $plan['prior_key'],
                     'new_billing_posture' => $nextKey,
+                    'inherits_customer' => (bool) ($attributes['billing_inherits_customer'] ?? false),
                     'repriced' => array_map(fn (array $entry): array => [
                         'line_id' => $entry['line']->id,
                         'prior_rate_cents' => $entry['prior_rate_cents'],

@@ -128,7 +128,7 @@ final class InvoiceSnapshotBuilder
             'disposition' => $concern->disposition->value,
             'disposition_label' => $concern->disposition->label(),
             'billing_posture' => $concern->billing_posture->value,
-            'billing_posture_label' => $concern->billing_posture->label(),
+            'billing_posture_label' => $concern->billingClassLabel(),
             'subtotal_cents' => $totals->concernSubtotalCents($concern->id),
             'subtotal' => $this->formatCents($totals->concernSubtotalCents($concern->id)),
             'lines' => $concern->lines

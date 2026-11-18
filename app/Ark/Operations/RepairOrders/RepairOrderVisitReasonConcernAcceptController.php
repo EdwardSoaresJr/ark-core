@@ -55,7 +55,7 @@ final class RepairOrderVisitReasonConcernAcceptController
                 'customer_states' => null,
                 'disposition' => RepairOrderConcernDisposition::Draft,
                 ...ConcernRecommendationDefaults::forEntryKind($entryKind),
-                'billing_posture' => $repairOrder->defaultBillingPosture(),
+                ...\App\Ark\Operations\RepairOrders\RepairOrderConcern::inheritedBillingAttributes(),
                 'scope_entry_kind' => $entryKind,
                 'position' => $position,
             ]);

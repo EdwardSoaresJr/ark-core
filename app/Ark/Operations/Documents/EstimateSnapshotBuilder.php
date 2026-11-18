@@ -372,7 +372,7 @@ class EstimateSnapshotBuilder
             'disposition' => $concern->disposition->value,
             'disposition_label' => $concern->disposition->label(),
             'billing_posture' => $concern->billing_posture->value,
-            'billing_posture_label' => $concern->billing_posture->label(),
+            'billing_posture_label' => $concern->billingClassLabel(),
             ...$concern->recommendationDocumentAttributes(),
             'position' => $concern->position,
             'subtotal_cents' => $totals->concernSubtotalCents($concern->id),

@@ -641,9 +641,10 @@ final class ApplyBillingClassMinimumsAction
 
     private function concernBillingKey(RepairOrderConcern $concern): string
     {
-        $raw = $concern->getAttributes()['billing_posture'] ?? null;
+        // Inheriting concerns bill as their customer's class; overrides bill as the stored key.
+        $raw = $concern->effectiveBillingClassKey();
 
-        if (is_string($raw) && $raw !== '') {
+        if ($raw !== '') {
             return LaborBillingMinimums::postureKey($raw);
         }
 

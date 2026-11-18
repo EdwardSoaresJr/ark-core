@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Operations\EstimatePricing\CreateCanonicalBillingClassAction;
 use App\Ark\Operations\EstimatePricing\CreateLaborBillingClassAction;
 use App\Ark\Operations\EstimatePricing\CreateLaborWorkTypeAction;
 use App\Ark\Operations\EstimatePricing\LaborBillingMinimumMode;
@@ -252,16 +253,23 @@ class LaborMatrixSettingsController
             ))],
         ]);
 
-        $created = $this->createLaborBillingClass->execute(
-            $data['name'],
-            $data['base_posture'],
-            ShopSettings::current(),
-        );
+        // One canonical registry: adding from the matrix creates a full billing class.
+        $class = app(CreateCanonicalBillingClassAction::class)->execute(ShopSettings::current(), [
+            'name' => $data['name'],
+            'base_posture' => $data['base_posture'],
+        ]);
+        $laborKey = (string) $class['labor_column_key'];
+        $created = [
+            'key' => $laborKey,
+            'label' => (string) $class['name'],
+            'base_posture' => $data['base_posture'],
+        ];
 
         return response()->json([
             'status' => 'saved',
             'applies_to' => 'new_repair_orders_only',
             'billing_class' => $created,
+            'customer_class' => $class,
             'matrix' => $this->projection->build(),
         ]);
     }
