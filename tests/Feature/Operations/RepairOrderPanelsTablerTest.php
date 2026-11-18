@@ -194,7 +194,7 @@ test('the repair order workspace modal is a Tabler modal with every authoring pa
     foreach ($xpath->query('.//*[@name][not(@type="hidden")]', $customerForm) as $field) {
         $customerFields[] = $field->getAttribute('name');
     }
-    expect($customerFields)->toBe(['first_name', 'last_name', 'customer_type', 'contact_preference', 'phone', 'email', 'address_line_1', 'address_line_2', 'city', 'state', 'postal_code'])
+    expect($customerFields)->toBe(['first_name', 'last_name', 'billing_class_key', 'contact_preference', 'phone', 'email', 'address_line_1', 'address_line_2', 'city', 'state', 'postal_code'])
         ->and($xpath->query('.//input[contains(@class, "form-control")][@name="first_name"]', $customerForm)->length)->toBe(1);
 
     $vehicleForm = panelsTablerOne($xpath, './/form[@data-workspace-modal-form="vehicle-identity"]', $host);
