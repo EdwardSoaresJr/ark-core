@@ -80,7 +80,7 @@ test('item update saves commercial fields without rewriting open RO commercial s
         ->and($military['pill_color'] ?? null)->toBe('green');
 });
 
-test('creating a customer billing class does not create a labor column', function () {
+test('creating a billing class creates one linked labor column', function () {
     $columnsBefore = collect(app(LaborWorkTypeMatrixProjection::class)->build()['columns'])->pluck('value')->all();
 
     $this->actingAs($this->admin)
@@ -93,12 +93,11 @@ test('creating a customer billing class does not create a labor column', functio
         ])
         ->assertCreated()
         ->assertJsonPath('class.key', 'preferred_partner')
-        ->assertJsonMissingPath('class.labor_column_key');
+        ->assertJsonPath('class.labor_column_key', 'custom_preferred_partner');
 
     $columnsAfter = collect(app(LaborWorkTypeMatrixProjection::class)->build()['columns'])->pluck('value')->all();
 
-    expect($columnsAfter)->toBe($columnsBefore)
-        ->and(CustomerBillingClassIdentity::classKeyForLaborColumn('preferred_partner'))->toBeNull();
+    expect(array_values(array_diff($columnsAfter, $columnsBefore)))->toBe(['custom_preferred_partner']);
 });
 
 test('labor matrix projection links only explicit built-in associations', function () {
@@ -123,12 +122,12 @@ test('labor settings page uses shared billing classes editor and renamed labor c
         ]))
         ->assertOk()
         ->assertSee('data-billing-classes-shared', false)
-        ->assertSee('+ Add Labor Column')
+        ->assertSee('+ Add Billing Class')
         ->assertSee('Manage Billing Classes')
         ->assertSee('data-labor-class-settings', false)
         ->assertSee('aria-label="Class Settings"', false)
         ->assertSee('Linked labor pricing:', false)
-        ->assertSee('Does not create a customer Billing Class', false);
+        ->assertSee('Creates one billing class', false);
 });
 
 test('legacy billing-classes deep link lands on Labor with Manage Billing Classes', function () {

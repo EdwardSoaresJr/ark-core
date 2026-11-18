@@ -115,7 +115,7 @@ final class ApplyWorkTemplateAction
                     'repair_order_id' => $repairOrder->id,
                     'summary' => $template->title,
                     'disposition' => RepairOrderConcernDisposition::Recommended,
-                    'billing_posture' => $repairOrder->defaultBillingPosture(),
+                    ...\App\Ark\Operations\RepairOrders\RepairOrderConcern::inheritedBillingAttributes(),
                     'recommendation_intent' => $semantic?->value,
                     'recommendation_priority' => $priority?->value,
                     'information_only' => $informationOnly,

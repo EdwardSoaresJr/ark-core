@@ -62,7 +62,7 @@ final class MobileConcernStoreController
                 filled($data['recommendation_intent'] ?? null) ? (string) $data['recommendation_intent'] : null,
             ),
             'disposition' => RepairOrderConcernDisposition::Draft,
-            'billing_posture' => $repairOrder->defaultBillingPosture(),
+            ...\App\Ark\Operations\RepairOrders\RepairOrderConcern::inheritedBillingAttributes(),
         ]);
 
         $conceptLearner->record(

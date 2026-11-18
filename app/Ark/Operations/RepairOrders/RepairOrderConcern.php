@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'disposition',
     'production_status',
     'billing_posture',
+    'billing_inherits_customer',
     'recommendation_intent',
     'recommendation_priority',
     'information_only',
@@ -44,6 +46,12 @@ class RepairOrderConcern extends Model
     protected static function booted(): void
     {
         static::saving(function (RepairOrderConcern $concern): void {
+            // Writing a posture without saying how is an explicit choice: "default" follows the
+            // customer, anything else is an override. Callers that mean otherwise set both.
+            if ($concern->isDirty('billing_posture') && ! $concern->isDirty('billing_inherits_customer')) {
+                $concern->billing_inherits_customer = $concern->billingClassKey() === ConcernBillingPosture::Default->value;
+            }
+
             if ($concern->isInformationOnly()) {
                 $concern->recommendation_priority = null;
             }
@@ -60,6 +68,7 @@ class RepairOrderConcern extends Model
             'recommendation_intent' => RecommendationIntentCast::class,
             'recommendation_priority' => RecommendationPriority::class,
             'information_only' => 'boolean',
+            'billing_inherits_customer' => 'boolean',
         ];
     }
 
@@ -318,7 +327,48 @@ class RepairOrderConcern extends Model
     }
 
     /**
-     * Raw billing class key (built-in posture value or shop-defined custom_* key).
+     * Attributes for a concern that follows its customer's billing class (the default for every new concern).
+     *
+     * @return array{billing_posture: string, billing_inherits_customer: bool}
+     */
+    public static function inheritedBillingAttributes(): array
+    {
+        return ['billing_posture' => 'default', 'billing_inherits_customer' => true];
+    }
+
+    /**
+     * Billing attributes to copy onto a duplicate of this concern (inheritance travels with it).
+     *
+     * @return array{billing_posture: string, billing_inherits_customer: bool|null}
+     */
+    public function billingAttributesToCopy(): array
+    {
+        return [
+            'billing_posture' => $this->billingClassKey(),
+            'billing_inherits_customer' => $this->getAttributes()['billing_inherits_customer'] ?? null,
+        ];
+    }
+
+    /**
+     * True when this concern follows the customer's billing class. NULL flag is legacy: a stored
+     * "default" posture means inherit; any other stored posture is an explicit override.
+     */
+    public function inheritsCustomerBilling(): bool
+    {
+        $flag = $this->getAttributes()['billing_inherits_customer'] ?? null;
+
+        if ($flag !== null) {
+            return (bool) $flag;
+        }
+
+        $raw = $this->getAttributes()['billing_posture'] ?? null;
+
+        return ! is_string($raw) || $raw === '' || $raw === ConcernBillingPosture::Default->value;
+    }
+
+    /**
+     * Raw stored billing class key (built-in posture value or shop-defined custom_* key).
+     * For what the concern actually bills as, use {@see self::effectiveBillingClassKey()}.
      */
     public function billingClassKey(): string
     {
@@ -326,16 +376,49 @@ class RepairOrderConcern extends Model
 
         return is_string($raw) && $raw !== ''
             ? $raw
-            : $this->billing_posture->value;
+            : ConcernBillingPosture::Default->value;
+    }
+
+    /**
+     * The labor column this concern bills as: the customer's class unless explicitly overridden.
+     */
+    public function effectiveBillingClassKey(): string
+    {
+        if ($this->inheritsCustomerBilling()) {
+            return $this->repairOrder?->customer?->billingClassLaborColumnKey()
+                ?? CanonicalBillingClassCatalog::RETAIL_LABOR_COLUMN;
+        }
+
+        $raw = $this->billingClassKey();
+
+        return $raw === ConcernBillingPosture::Default->value
+            ? CanonicalBillingClassCatalog::RETAIL_LABOR_COLUMN
+            : $raw;
+    }
+
+    /**
+     * Key to hand the labor rate resolver. Inherited Retail leaves the posture to the labor
+     * category, exactly as a shop-default concern always has.
+     */
+    public function laborBillingPostureKey(): string
+    {
+        $key = $this->effectiveBillingClassKey();
+
+        return $this->inheritsCustomerBilling() && $key === CanonicalBillingClassCatalog::RETAIL_LABOR_COLUMN
+            ? ConcernBillingPosture::Default->value
+            : $key;
     }
 
     public function billingClassLabel(): string
     {
-        $key = $this->billingClassKey();
-        $custom = ShopSettings::current()->customLaborBillingClass($key);
+        return CanonicalBillingClassCatalog::labelForLaborColumn($this->effectiveBillingClassKey());
+    }
 
-        return is_array($custom)
-            ? (string) $custom['label']
-            : $this->billing_posture->label();
+    /**
+     * "Fleet (Customer default)" or "Warranty (Override)".
+     */
+    public function billingClassSourceLabel(): string
+    {
+        return $this->billingClassLabel().($this->inheritsCustomerBilling() ? ' (Customer default)' : ' (Override)');
     }
 }

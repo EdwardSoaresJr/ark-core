@@ -328,7 +328,7 @@ final class LaborAuthority
             return [];
         }
 
-        return self::billingPostureInput($concern->billingClassKey());
+        return self::billingPostureInput($concern->laborBillingPostureKey());
     }
 
     /**

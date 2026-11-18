@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -56,17 +57,18 @@ test('the concern header shows the short billing choice with its details in the 
     $this->actingAs(actingAsLearnCurrentStaff(ArkRole::Advisor));
     $repairOrder = repairOrderForEstimateWorkspace();
     $concern = billingControlConcern($repairOrder);
-    $presentation = ShopSettings::current()->billingPostureOptionPresentation(ConcernBillingPosture::Default);
+    $presentation = ShopSettings::current()->billingPostureOptionPresentation(ConcernBillingPosture::CustomerPay);
 
     $html = $this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
     $xpath = billingControlXPath($html);
     $toggle = $xpath->query('//*[@id="concern-'.$concern->id.'"]//*[@data-concern-billing-choices]/button')->item(0);
 
     expect($toggle)->toBeInstanceOf(DOMElement::class)
-        ->and(trim($toggle->textContent))->toBe('Shop default')
-        ->and($toggle->getAttribute('data-billing-current'))->toBe('default')
-        ->and($toggle->getAttribute('title'))->toBe($presentation['title'])
-        ->and($toggle->getAttribute('aria-label'))->toContain('Shop default, $'.$presentation['rate'].'/hr · '.$presentation['matrix_name'])
+        ->and(trim($toggle->textContent))->toBe('Retail (Customer default)')
+        ->and($toggle->getAttribute('data-billing-current'))->toBe('customer_pay')
+        ->and($toggle->getAttribute('data-billing-source'))->toBe('customer')
+        ->and($toggle->getAttribute('title'))->toBe('Retail (Customer default) · '.$presentation['title'])
+        ->and($toggle->getAttribute('aria-label'))->toContain('Retail (Customer default), $'.$presentation['rate'].'/hr · '.$presentation['matrix_name'])
         ->and($html)->not->toContain("task: 'concern-billing'")
         ->and($html)->not->toContain('data-workspace-modal-form="concern-billing"');
 });
@@ -89,11 +91,12 @@ test('the billing dropdown lists every selectable choice and submits only a diff
     expect($form->getAttribute('action'))->toBe(route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $concern]))
         ->and($xpath->query('.//input[@name="billing_posture"]', $form)->item(0)->getAttribute('value'))->toBe('fleet')
         ->and($xpath->query('.//input[@name="'.RepairOrderConcurrency::FIELD.'"]', $form)->length)->toBe(1)
-        ->and(array_keys($options))->toBe(array_map(
-            fn (ConcernBillingPosture $posture): string => $posture->value,
-            ConcernBillingPosture::advisorSelectableCases(),
-        ))
+        ->and(array_keys($options))->toBe([
+            'inherit',
+            ...CanonicalBillingClassCatalog::selectableConcernLaborColumnKeys(ShopSettings::current()),
+        ])
         ->and($options['fleet']->getAttribute('aria-current'))->toBe('true')
+        ->and($options['inherit']->textContent)->toContain('Use customer default')
         ->and($xpath->query('.//*[@aria-current="true"]', $dropdown)->length)->toBe(1)
         ->and(billingControlOptionTag($html, 'fleet'))->not->toContain('requestSubmit()')
         ->and(billingControlOptionTag($html, 'internal'))->toContain("billing_posture.value = 'internal'")
@@ -140,8 +143,8 @@ test('staff who cannot manage repair orders see billing as read-only text', func
 
     expect($readOnly)->toBeInstanceOf(DOMElement::class)
         ->and($readOnly->getAttribute('data-billing-readonly'))->toBe('fleet')
-        ->and($readOnly->getAttribute('title'))->toBe($presentation['title'])
-        ->and($readOnly->textContent)->toContain('Fleet')
+        ->and($readOnly->getAttribute('title'))->toBe('Fleet (Override) · '.$presentation['title'])
+        ->and($readOnly->textContent)->toContain('Fleet (Override)')
         ->and($html)->not->toContain('data-concern-billing-choices')
         ->and($html)->not->toContain('data-billing-option')
         ->and($html)->not->toContain(route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $concern]));

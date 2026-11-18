@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
 final class RepairOrderOrientationEngine
 {
     public const ORIENTATION_RELATIONS = [
+        'customer',
         'concerns.lines',
         'communicationEvents',
         'assignedTechnician',

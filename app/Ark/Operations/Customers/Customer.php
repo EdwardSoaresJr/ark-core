@@ -6,6 +6,8 @@ use App\Ark\Operations\Leads\LeadContactNameParser;
 use App\Ark\Operations\Leads\LeadContactPreference;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\Vehicles\Vehicle;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
@@ -35,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'postal_code',
     'referral_source',
     'customer_type',
+    'billing_class_key',
     'store_credit_balance_cents',
     'notes',
 ])]
@@ -44,6 +47,30 @@ class Customer extends Model implements AuthenticatableContract
 
     protected static function booted(): void
     {
+        // billing_class_key is identity; customer_type is the display name legacy readers use.
+        // Whichever the caller changed, the other follows the canonical registry.
+        static::saving(function (Customer $customer): void {
+            if (! $customer->isDirty(['customer_type', 'billing_class_key'])) {
+                return;
+            }
+
+            $settings = ShopSettings::current();
+
+            if ($customer->isDirty('billing_class_key') && filled($customer->billing_class_key)) {
+                $row = $settings->customerTypeRowByKeyOrName($customer->billing_class_key);
+                if ($row !== null) {
+                    $customer->customer_type = $row['name'];
+                }
+
+                return;
+            }
+
+            if ($customer->isDirty('customer_type')) {
+                $row = $settings->customerTypeRowByKeyOrName(null, $customer->customer_type);
+                $customer->billing_class_key = $row['key'] ?? null;
+            }
+        });
+
         // The last delivery result describes the main phone; a new number starts without one.
         static::updating(function (Customer $customer): void {
             if ($customer->isDirty('phone') && ! $customer->isDirty('last_sms_delivery_status')) {
@@ -66,6 +93,37 @@ class Customer extends Model implements AuthenticatableContract
             'last_sms_delivered_at' => 'datetime',
             'last_sms_failed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The customer's catalog row: stored key first, then the display name (legacy rows).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function billingClassRow(): ?array
+    {
+        return ShopSettings::current()->customerTypeRowByKeyOrName(
+            $this->billing_class_key,
+            $this->customer_type,
+        );
+    }
+
+    public function billingClassKey(): ?string
+    {
+        return $this->billingClassRow()['key'] ?? null;
+    }
+
+    public function billingClassName(): string
+    {
+        return $this->billingClassRow()['name'] ?? (filled($this->customer_type) ? (string) $this->customer_type : 'Retail');
+    }
+
+    /**
+     * Labor column this customer's class prices at (retail -> customer_pay). Unlinked classes use Retail.
+     */
+    public function billingClassLaborColumnKey(): string
+    {
+        return CanonicalBillingClassCatalog::laborColumnForClassRow($this->billingClassRow());
     }
 
     public function vehicles(): HasMany

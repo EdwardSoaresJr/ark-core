@@ -225,7 +225,7 @@
                         Linked labor pricing: <span x-text="draft.name"></span>
                     </p>
                     <p class="form-hint mb-0 mt-3" x-show="!draft.labor_column_key">
-                        Customer-only class — no Labor matrix column. Use Add Labor Column on Labor if you need rates for a separate posture.
+                        Unlinked legacy class — no Labor matrix column yet. Retail labor rates apply until a column is linked.
                     </p>
                 </div>
                 <div class="modal-footer justify-content-between">

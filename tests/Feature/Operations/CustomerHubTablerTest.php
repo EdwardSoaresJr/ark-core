@@ -123,7 +123,7 @@ test('the customer and vehicle edit modal is Tabler markup on the same forms and
         ->assertSee('data-workspace-modal-form="hub-vehicle"', false)
         ->assertSee('action="'.route('operations.customers.vehicles.store', $customer).'"', false)
         ->assertSee('data-workspace-modal-form="hub-vehicle-create"', false)
-        ->assertSee('name="customer_type"', false)
+        ->assertSee('name="billing_class_key"', false)
         ->assertSee('name="private_notes"', false)
         ->assertDontSee('ops-workspace-modal__dialog', false)
         ->assertDontSee('ops-workspace-modal__panel', false);

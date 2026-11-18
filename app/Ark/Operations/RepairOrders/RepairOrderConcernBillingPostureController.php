@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\EstimatePricing\SynchronizeRepairOrderBillingMinimums;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,9 @@ use Illuminate\Validation\Rule;
 
 class RepairOrderConcernBillingPostureController
 {
+    /** Posted value that clears an override so the concern follows its customer's billing class. */
+    public const INHERIT = 'inherit';
+
     public function __invoke(
         Request $request,
         RepairOrder $repairOrder,
@@ -24,9 +28,11 @@ class RepairOrderConcernBillingPostureController
         $repairOrder->ensureOpenForEditing();
         $concurrency->guard($request, $repairOrder);
 
-        $allowed = collect(ConcernBillingPosture::advisorSelectableCases())
-            ->map(fn (ConcernBillingPosture $posture): string => $posture->value)
-            ->merge(collect(ShopSettings::current()->customLaborBillingClasses())->pluck('key'))
+        $settings = ShopSettings::current();
+        // Selectable: the one catalog, plus what the concern already bills as (so a re-post never fails).
+        $allowed = collect(CanonicalBillingClassCatalog::selectableConcernLaborColumnKeys($settings))
+            ->push($concern->billingClassKey())
+            ->push(self::INHERIT)
             ->unique()
             ->values()
             ->all();
@@ -35,20 +41,27 @@ class RepairOrderConcernBillingPostureController
             'billing_posture' => ['required', 'string', Rule::in($allowed)],
         ]);
 
-        $next = ConcernBillingPosture::tryFrom($data['billing_posture']) ?? $data['billing_posture'];
+        if ($data['billing_posture'] === self::INHERIT) {
+            $result = $changeBilling->inherit($repairOrder, $concern, $request->user());
+        } else {
+            $next = ConcernBillingPosture::tryFrom($data['billing_posture']) ?? $data['billing_posture'];
 
-        $result = $changeBilling->execute(
-            $repairOrder,
-            $concern,
-            $next,
-            $request->user(),
-        );
+            $result = $changeBilling->execute(
+                $repairOrder,
+                $concern,
+                $next,
+                $request->user(),
+            );
+        }
+
         $concern->refresh();
         $billingMinimums->execute($repairOrder);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'billing_posture' => $concern->billingClassKey(),
+                'effective_billing_class' => $concern->effectiveBillingClassKey(),
+                'inherits_customer' => $concern->inheritsCustomerBilling(),
                 'label' => $concern->billingClassLabel(),
                 'labor_lines_repriced' => $result['repriced'],
                 'labor_lines_kept' => $result['kept'],

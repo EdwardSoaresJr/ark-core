@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Customers;
 
 use App\Ark\Operations\Conversations\ConversationContactSurface;
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\Conversations\ConversationLinker;
 use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Documents\EstimateDocumentService;
@@ -26,11 +27,14 @@ class CustomerUpdateController
         EstimateDocumentService $documents,
         ApplyCustomerBillingClassChangeAction $applyBillingClassChange,
     ): RedirectResponse|JsonResponse {
-        $customerTypes = collect(ShopSettings::current()->activeCustomerTypeRows())
-            ->pluck('name')
-            ->all();
+        $catalog = collect(CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current()));
+        $customerTypes = $catalog->pluck('name')->all();
+        $classKeys = $catalog->pluck('key')->all();
         if (filled($customer->customer_type) && ! in_array($customer->customer_type, $customerTypes, true)) {
             $customerTypes[] = (string) $customer->customer_type;
+        }
+        if (filled($customer->billingClassKey()) && ! in_array($customer->billingClassKey(), $classKeys, true)) {
+            $classKeys[] = (string) $customer->billingClassKey();
         }
 
         if ($request->input('contact_preference') === '') {
@@ -51,7 +55,9 @@ class CustomerUpdateController
             'state' => ['nullable', 'string', 'max:32'],
             'postal_code' => ['nullable', 'string', 'max:16'],
             'referral_source' => ['nullable', Rule::enum(EncounterSource::class)],
-            'customer_type' => ['required', Rule::in($customerTypes)],
+            // The class key is identity; the display name is accepted for older forms and API callers.
+            'billing_class_key' => ['nullable', 'string', Rule::in($classKeys)],
+            'customer_type' => ['required_without:billing_class_key', 'nullable', Rule::in($customerTypes)],
             'notes' => ['nullable', 'string'],
             'messenger_psid' => ['nullable', 'string', 'max:64', Rule::unique('customers', 'messenger_psid')->ignore($customer->id)],
             'repair_order_id' => ['nullable', 'integer'],
@@ -60,8 +66,17 @@ class CustomerUpdateController
         $data['last_name'] = LeadContactNameParser::normalizeLastName($data['last_name'] ?? null);
 
         $previousCustomerType = $customer->customer_type;
+        $previousClassKey = $customer->billingClassKey();
 
-        $customer->update(collect($data)->except('repair_order_id')->all());
+        $attributes = collect($data)->except('repair_order_id')->all();
+        if (filled($attributes['billing_class_key'] ?? null)) {
+            // Name is derived from the key (Customer::saving) so the two can never disagree.
+            unset($attributes['customer_type']);
+        } else {
+            unset($attributes['billing_class_key']);
+        }
+
+        $customer->update($attributes);
         $customer->refresh();
 
         $linkedPsid = trim((string) $customer->messenger_psid);
@@ -76,7 +91,8 @@ class CustomerUpdateController
             ->where('status', '!=', RepairOrderStatus::Closed->value)
             ->each(fn ($repairOrder) => $documents->markDirtyForRepairOrder($repairOrder));
 
-        if ($previousCustomerType !== $customer->fresh()->customer_type) {
+        $updated = $customer->fresh();
+        if ($previousCustomerType !== $updated->customer_type || $previousClassKey !== $updated->billingClassKey()) {
             $applyBillingClassChange->execute($customer->fresh(), $previousCustomerType, $request->user());
         }
 

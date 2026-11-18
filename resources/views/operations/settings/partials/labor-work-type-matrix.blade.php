@@ -195,14 +195,14 @@
             </div>
             <div class="d-flex flex-wrap gap-2 mt-2">
                 <button type="button" class="btn btn-outline-primary btn-sm" @click="promptAddLaborColumn()" data-labor-add-column>
-                    + Add Labor Column
+                    + Add Billing Class
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" @click="openManageBillingClasses()" data-labor-manage-billing-classes>
                     Customer-only &amp; archived
                 </button>
             </div>
             <p class="form-hint mb-0 mt-1">
-                Manual line overrides still follow each work type’s stored permission. Class Settings gear edits labor-linked customer classes. Customer-only &amp; archived opens discovery for classes without a labor column.
+                Manual line overrides still follow each work type’s stored permission. Every billing class is one registry: the matrix columns are the billing classes. Class Settings gear edits a class's fees, discounts and parts rules; Manage Billing Classes lists archived classes and legacy unlinked ones.
             </p>
         </div>
     </div>
@@ -465,9 +465,9 @@ document.addEventListener('alpine:init', () => {
             this.addDialogName = '';
             this.addDialog = {
                 kind: 'billing_class',
-                title: 'Add labor column',
-                label: 'Labor column name',
-                hint: 'Creates a labor-pricing column with its own rates. Does not create a customer Billing Class — use Manage Billing Classes for that.',
+                title: 'Add billing class',
+                label: 'Billing class name',
+                hint: 'Creates one billing class: customer assignment, concern override, labor matrix column and commercial rules. Applies to new repair orders only.',
             };
         },
         promptAddBillingClass() {

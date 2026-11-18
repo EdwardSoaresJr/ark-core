@@ -96,7 +96,6 @@ final class RepairOrderIntakeConcerns
     ): array {
         $defaults = ConcernRecommendationDefaults::forIntake($repairOrder);
         $repairOrder->loadMissing('customer');
-        $defaultBillingPosture = $repairOrder->defaultBillingPosture();
 
         $created = [];
         $position = 0;
@@ -115,8 +114,11 @@ final class RepairOrderIntakeConcerns
                 ? ConcernRecommendationDefaults::forEntryKind(ScopeEntryKind::CustomerConcern, $explicit)
                 : $defaults;
 
-            $billingPosture = ConcernBillingPosture::tryFrom(trim((string) ($row['billing_posture'] ?? '')))
-                ?? $defaultBillingPosture;
+            // Concerns follow the customer's billing class unless intake names an explicit override.
+            $explicitBilling = ConcernBillingPosture::tryFrom(trim((string) ($row['billing_posture'] ?? '')));
+            $billingAttributes = $explicitBilling instanceof ConcernBillingPosture && $explicitBilling !== ConcernBillingPosture::Default
+                ? ['billing_posture' => $explicitBilling, 'billing_inherits_customer' => false]
+                : RepairOrderConcern::inheritedBillingAttributes();
 
             $concern = RepairOrderConcern::query()->create([
                 'repair_order_id' => $repairOrder->id,
@@ -135,7 +137,7 @@ final class RepairOrderIntakeConcerns
                 'disposition' => RepairOrderConcernDisposition::Draft,
                 ...$intent,
                 'position' => $position,
-                'billing_posture' => $billingPosture,
+                ...$billingAttributes,
             ]);
 
             $this->events->record(

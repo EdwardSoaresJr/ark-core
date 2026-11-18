@@ -54,11 +54,20 @@
                 </div>
                 <div class="col-12">
                     <label class="form-label" for="hub-customer-type">Billing class</label>
-                    <select id="hub-customer-type" name="customer_type" @class(['form-select', 'is-invalid' => $customerFieldInvalid('customer_type')])>
-                        @foreach ($hubCustomerTypes as $type)
-                            <option value="{{ $type['name'] }}" @selected(old('customer_type', $customer->customer_type ?: 'Retail') === $type['name'])>{{ $type['name'] }}</option>
+                    @php
+                        $hubClassOptions = collect($hubCustomerTypes)->values();
+                        $hubCurrentClass = $customer->billingClassRow();
+                        $hubSelectedClassKey = old('billing_class_key', $hubCurrentClass['key'] ?? null);
+                        if ($hubCurrentClass !== null && ! $hubClassOptions->contains('key', $hubCurrentClass['key'])) {
+                            $hubClassOptions->prepend($hubCurrentClass);
+                        }
+                    @endphp
+                    <select id="hub-customer-type" name="billing_class_key" @class(['form-select', 'is-invalid' => $customerFieldInvalid('billing_class_key') || $customerFieldInvalid('customer_type')])>
+                        @foreach ($hubClassOptions as $type)
+                            <option value="{{ $type['key'] }}" @selected($hubSelectedClassKey === $type['key'])>{{ $type['name'] }}</option>
                         @endforeach
                     </select>
+                    @error('billing_class_key')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     @error('customer_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-12">

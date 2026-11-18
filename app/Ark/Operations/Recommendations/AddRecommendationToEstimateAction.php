@@ -82,8 +82,9 @@ final class AddRecommendationToEstimateAction
                 'recommendation' => $source?->recommendation ?: $recommendation->customer_description,
                 'disposition' => RepairOrderConcernDisposition::Recommended,
                 'production_status' => ScopeProductionStatus::Pending,
-                'billing_posture' => $source?->billing_posture
-                    ?? $repairOrder->defaultBillingPosture(),
+                ...($source instanceof RepairOrderConcern
+                    ? $source->billingAttributesToCopy()
+                    : RepairOrderConcern::inheritedBillingAttributes()),
                 ...($source instanceof RepairOrderConcern
                     ? $source->recommendationAttributes()
                     : ConcernRecommendationDefaults::forEntryKind(ScopeEntryKind::CustomerRequested)),

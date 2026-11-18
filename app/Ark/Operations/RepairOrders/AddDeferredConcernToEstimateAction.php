@@ -76,7 +76,7 @@ final class AddDeferredConcernToEstimateAction
                 'recommendation' => $source->recommendation,
                 'disposition' => RepairOrderConcernDisposition::Recommended,
                 'production_status' => ScopeProductionStatus::Pending,
-                'billing_posture' => $source->billing_posture,
+                ...$source->billingAttributesToCopy(),
                 ...$source->recommendationAttributes(),
                 'position' => max(1, $position),
             ]);
