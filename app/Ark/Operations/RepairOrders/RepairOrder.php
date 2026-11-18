@@ -221,7 +221,7 @@ class RepairOrder extends Model
 
     public function concerns(): HasMany
     {
-        return $this->hasMany(RepairOrderConcern::class)->orderBy('position')->orderBy('id');
+        return $this->hasMany(RepairOrderConcern::class)->chaperone('repairOrder')->orderBy('position')->orderBy('id');
     }
 
     public function lines(): HasMany
