@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Customers;
 
 use App\Ark\Operations\Encounters\EncounterSource;
+use App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog;
 use App\Ark\Operations\Intake\IntakeWorkspaceSession;
 use App\Ark\Operations\Leads\LeadContactNameParser;
 use App\Ark\Operations\Leads\LeadContactPreference;
@@ -15,7 +16,7 @@ class CustomerStoreController
 {
     public function __invoke(Request $request): RedirectResponse
     {
-        $customerTypes = collect(ShopSettings::current()->activeCustomerTypeRows())
+        $customerTypes = collect(CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current()))
             ->pluck('name')
             ->all();
 

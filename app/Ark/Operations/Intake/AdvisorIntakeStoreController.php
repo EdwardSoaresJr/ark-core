@@ -18,7 +18,7 @@ class AdvisorIntakeStoreController
 
     public function __invoke(Request $request): RedirectResponse
     {
-        $billingClassNames = collect(ShopSettings::current()->customerTypeRows())
+        $billingClassNames = collect(\App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current()))
             ->pluck('name')
             ->filter()
             ->values()

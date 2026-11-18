@@ -86,7 +86,7 @@ final class IngressCreateContactFormProjection
         ?int $callSessionId = null,
         bool $lastNameOptional = false,
     ): array {
-        $customerTypes = collect(ShopSettings::current()->customerTypeRows())
+        $customerTypes = collect(\App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current()))
             ->pluck('name')
             ->all();
 

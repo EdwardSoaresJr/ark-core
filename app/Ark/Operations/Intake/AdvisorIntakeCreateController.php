@@ -135,7 +135,7 @@ class AdvisorIntakeCreateController
             'selectedVehicleId' => $vehicleId,
             'selectedVehicle' => $selectedVehicle,
             'intakeStep' => $intakeStep,
-            'customerTypes' => ShopSettings::current()->customerTypeRows(),
+            'customerTypes' => \App\Ark\Operations\EstimatePricing\CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current()),
             'referralSources' => EncounterSource::options(),
             'initialVisitReason' => $initialVisitReason,
             'priorVisitMentions' => PriorVisitMentionProjection::for(

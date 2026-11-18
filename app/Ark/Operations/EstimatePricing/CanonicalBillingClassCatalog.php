@@ -14,14 +14,16 @@ final class CanonicalBillingClassCatalog
     public const RETAIL_LABOR_COLUMN = 'customer_pay';
 
     /**
-     * Active classes a customer can be assigned.
+     * Active classes a customer can be assigned. Unresolved migration collisions (customer class
+     * label matches a labor-only column, but the class has no labor_column_key) are excluded so
+     * staff cannot silently price that customer at Retail under the colliding label.
      *
      * @return list<array{key: string, name: string, labor_column_key: string|null, is_active: bool}>
      */
     public static function selectableForCustomers(ShopSettings $settings): array
     {
         return collect($settings->customerTypeRows())
-            ->filter(fn (array $row): bool => (bool) ($row['is_active'] ?? true))
+            ->filter(fn (array $row): bool => self::isAssignableToCustomer($row, $settings))
             ->map(fn (array $row): array => [
                 'key' => (string) $row['key'],
                 'name' => (string) $row['name'],
@@ -30,6 +32,52 @@ final class CanonicalBillingClassCatalog
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * True when a customer may be assigned this class. Linked classes and legacy
+     * concern_billing_posture rows are fine. An unlinked class whose label collides with an
+     * active labor-only column is not — that is the migration collision case that would
+     * otherwise fall through to Retail labor rates.
+     *
+     * @param  array<string, mixed>  $row
+     */
+    public static function isAssignableToCustomer(array $row, ?ShopSettings $settings = null): bool
+    {
+        if (! (bool) ($row['is_active'] ?? true)) {
+            return false;
+        }
+
+        if (filled($row['labor_column_key'] ?? null)) {
+            return true;
+        }
+
+        $legacy = ConcernBillingPosture::tryFrom((string) ($row['concern_billing_posture'] ?? ''));
+        if (
+            $legacy instanceof ConcernBillingPosture
+            && $legacy !== ConcernBillingPosture::Default
+            && $legacy !== ConcernBillingPosture::CustomerPay
+        ) {
+            return true;
+        }
+
+        $settings ??= ShopSettings::current();
+        $name = mb_strtolower(trim((string) ($row['name'] ?? '')));
+        if ($name === '') {
+            return false;
+        }
+
+        foreach ($settings->allCustomLaborBillingClasses() as $custom) {
+            if (! ($custom['is_active'] ?? true)) {
+                continue;
+            }
+
+            if (mb_strtolower(trim((string) ($custom['label'] ?? ''))) === $name) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
