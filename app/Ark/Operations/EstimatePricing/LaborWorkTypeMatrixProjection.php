@@ -85,7 +85,7 @@ final class LaborWorkTypeMatrixProjection
         $columns = [];
 
         foreach (LaborWorkTypeMatrix::matrixBillingColumns($settings) as $column) {
-            $customerClassKey = CustomerBillingClassIdentity::classKeyForLaborColumn($column['value']);
+            $customerClassKey = CustomerBillingClassIdentity::classKeyForLaborColumn($column['value'], $settings);
             $columns[] = [
                 'value' => $column['value'],
                 'label' => $column['label'],

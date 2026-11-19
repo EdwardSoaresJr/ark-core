@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Documents;
 
+use App\Ark\Operations\EstimatePricing\CommercialPricingProfile;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -46,22 +47,33 @@ class EstimateDocumentService
                 ->lockForUpdate()
                 ->first();
 
+            if ($document) {
+                if ($this->contractualSnapshotIsFrozen($document)) {
+                    return $document;
+                }
+
+                $snapshot = $this->preserveLegacyPricingOnlyDocuments(
+                    $repairOrder,
+                    $this->snapshotBuilder->build($repairOrder, $user),
+                    is_array($document->snapshot_json) ? $document->snapshot_json : null,
+                );
+
+                $document->forceFill([
+                    'snapshot_json' => $snapshot,
+                    'status' => 'draft',
+                    'needs_pdf_refresh' => true,
+                    'refreshed_at' => now(),
+                ])->save();
+
+                return $document;
+            }
+
             $attributes = [
                 'snapshot_json' => $this->snapshotBuilder->build($repairOrder, $user),
                 'status' => 'draft',
                 'needs_pdf_refresh' => true,
                 'refreshed_at' => now(),
             ];
-
-            if ($document) {
-                if ($this->isLegacyImportFrozen($document)) {
-                    return $document;
-                }
-
-                $document->forceFill($attributes)->save();
-
-                return $document;
-            }
 
             return EstimateDocument::query()->create([
                 'repair_order_id' => $repairOrder->id,
@@ -80,14 +92,79 @@ class EstimateDocumentService
     {
         $document->loadMissing('repairOrder');
 
+        // Issued / presented evidence must not be rebuilt. Restoring only the documents
+        // block after a living rebuild is not sufficient contractual freeze. Terminal
+        // ROs still get one final createOrRefresh stamp at close; markDirty/ensureCurrent
+        // already refuse living rebuilds once the RO is terminal.
+        if ($this->contractualSnapshotIsFrozen($document)) {
+            return $document;
+        }
+
+        $snapshot = $this->preserveLegacyPricingOnlyDocuments(
+            $document->repairOrder,
+            $this->snapshotBuilder->build($document->repairOrder, $user),
+            is_array($document->snapshot_json) ? $document->snapshot_json : null,
+        );
+
         $document->forceFill([
-            'snapshot_json' => $this->snapshotBuilder->build($document->repairOrder, $user),
+            'snapshot_json' => $snapshot,
             'status' => 'draft',
             'needs_pdf_refresh' => true,
             'refreshed_at' => now(),
         ])->save();
 
         return $document;
+    }
+
+    /**
+     * Pricing-only commercial stamps predate warranty/document-term freezing. Resolvers return
+     * empty terms for those stamps rather than inventing later Shop Settings language. Keep any
+     * disclaimer already stored on the living document so a refresh cannot blank it.
+     *
+     * @param  array<string, mixed>  $snapshot
+     * @param  array<string, mixed>|null  $priorSnapshot
+     * @return array<string, mixed>
+     */
+    private function preserveLegacyPricingOnlyDocuments(
+        RepairOrder $repairOrder,
+        array $snapshot,
+        ?array $priorSnapshot,
+    ): array {
+        $priorDocuments = data_get($priorSnapshot, 'documents');
+        if (! is_array($priorDocuments) || ! filled($priorDocuments['global_disclaimer'] ?? null)) {
+            return $snapshot;
+        }
+
+        $stored = $repairOrder->commercial_pricing_profile;
+        if (! is_array($stored) || $stored === []) {
+            return $snapshot;
+        }
+
+        $profile = CommercialPricingProfile::tryFromStored($stored);
+        if ($profile === null || $profile->hasDocumentTermsStamp) {
+            return $snapshot;
+        }
+
+        $snapshot['documents'] = $priorDocuments;
+
+        return $snapshot;
+    }
+
+    /**
+     * Customer-presented or issued snapshots are contractual evidence for that document.
+     * Does not freeze merely because the RO is terminal — close still stamps the final PDF.
+     */
+    public function contractualSnapshotIsFrozen(EstimateDocument $document): bool
+    {
+        $document->loadMissing('repairOrder');
+
+        if ($this->isLegacyImportFrozen($document)) {
+            return true;
+        }
+
+        return $document->isIssuedInvoice()
+            || $document->customer_presented_at !== null
+            || $document->issued_at !== null;
     }
 
     public function generatePdf(EstimateDocument $document, ?string $contentFingerprint = null): string
@@ -452,13 +529,9 @@ class EstimateDocumentService
 
     private function isLegacyImportFrozen(EstimateDocument $document): bool
     {
-        if (data_get($document->snapshot_json, 'schema_version') === 'legacy_import') {
-            return true;
-        }
-
-        $document->loadMissing('repairOrder');
-
-        return $document->repairOrder?->estimateDocumentIsFrozen() === true;
+        // Terminal ROs are frozen by estimateDocumentIsFrozen() at markDirty/ensureCurrent —
+        // not here. createOrRefresh must still stamp the final Closed snapshot at close.
+        return data_get($document->snapshot_json, 'schema_version') === 'legacy_import';
     }
 
     private function frozenEstimateApprovalPresentationDrifted(EstimateDocument $document): bool

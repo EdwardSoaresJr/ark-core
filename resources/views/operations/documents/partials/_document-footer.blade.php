@@ -163,6 +163,16 @@
                 <p class="footer-disclosure"><span>{{ $footer['customer_type_terms']['heading'] }}:</span> {{ $pdfTermsDisclosure }}</p>
             @endif
 
+            @foreach (($footer['concern_terms'] ?? []) as $concernTerms)
+                @php
+                    $concernDisclosure = app(\App\Ark\Operations\Documents\DocumentFooterPresenter::class)
+                        ->pdfImportantInformationDisclosure($concernTerms['bullets'] ?? []);
+                @endphp
+                @if (filled($concernDisclosure))
+                    <p class="footer-disclosure"><span>{{ $concernTerms['heading'] }}:</span> {{ $concernDisclosure }}</p>
+                @endif
+            @endforeach
+
             @php $repairPortal = $snapshot['repair_portal'] ?? null; @endphp
             @if (is_array($repairPortal) && filled($repairPortal['qr_data_uri'] ?? null))
                 @php

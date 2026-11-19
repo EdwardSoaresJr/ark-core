@@ -91,6 +91,7 @@ test('shop settings can save document disclaimer fields', function () {
             'fleet' => 'Updated fleet disclaimer.',
         ],
         'estimate_validity_days' => 21,
+        'customer_part_description_mode' => 'cleaned',
     ])->assertRedirect(route('operations.settings.shop.edit'));
 
     $settings = ShopSettings::current()->fresh();

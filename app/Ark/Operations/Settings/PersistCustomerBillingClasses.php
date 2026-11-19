@@ -60,7 +60,16 @@ final class PersistCustomerBillingClasses
                 'labor_column_key' => $rows[$index]['labor_column_key'] ?? null,
             ]);
 
+            if (($rows[$index]['is_default'] ?? false) === true) {
+                foreach ($rows as $i => $row) {
+                    if (($row['key'] ?? '') !== $classKey) {
+                        $rows[$i]['is_default'] = false;
+                    }
+                }
+            }
+
             $normalized = $this->normalizeIncoming($rows, $locked);
+            $normalized = $this->ensureExactlyOneDefault($normalized);
             $locked->update([
                 'customer_types' => $normalized,
                 'commercial_pricing_profile_version' => max(1, (int) ($locked->commercial_pricing_profile_version ?? 0) + 1),
@@ -70,6 +79,16 @@ final class PersistCustomerBillingClasses
             return collect($normalized)->firstWhere('key', $classKey)
                 ?? throw ValidationException::withMessages(['key' => 'Billing class not found after save.']);
         });
+    }
+
+    /**
+     * Designate exactly one active billing class as the shop default.
+     *
+     * @return array<string, mixed>
+     */
+    public function setDefault(ShopSettings $settings, string $classKey): array
+    {
+        return $this->upsertOne($settings, $classKey, ['is_default' => true]);
     }
 
     /**
@@ -129,6 +148,11 @@ final class PersistCustomerBillingClasses
                 'document_show_vendor' => false,
                 'pill_color' => 'slate',
                 'is_active' => true,
+                'is_default' => false,
+                'warranty_mode' => \App\Ark\Operations\EstimatePricing\BillingClassWarrantyMode::InheritShop->value,
+                'warranty' => \App\Ark\Operations\EstimatePricing\BillingClassWarranty::none()->toArray(),
+                'document_terms_mode' => \App\Ark\Operations\EstimatePricing\BillingClassDocumentTermsMode::ShopDefaults->value,
+                'document_terms' => null,
             ], $attributes, [
                 'key' => $key,
                 'name' => $name,
@@ -138,7 +162,7 @@ final class PersistCustomerBillingClasses
             unset($row['base_posture']);
             $rows[] = $row;
 
-            $normalized = $this->normalizeIncoming($rows, $locked);
+            $normalized = $this->ensureExactlyOneDefault($this->normalizeIncoming($rows, $locked));
             $locked->update([
                 'customer_types' => $normalized,
                 'commercial_pricing_profile_version' => max(1, (int) ($locked->commercial_pricing_profile_version ?? 0) + 1),
@@ -165,6 +189,7 @@ final class PersistCustomerBillingClasses
         $classes = collect($settings->storedCustomerTypeRows())
             ->map(function (array $row): array {
                 $row['is_active'] = (bool) ($row['is_active'] ?? true);
+                $row['is_default'] = (bool) ($row['is_default'] ?? false);
                 $row['is_labor_linked'] = CustomerBillingClassLifecycle::isLaborLinked($row);
                 $row['is_customer_only'] = ! $row['is_labor_linked'];
 
@@ -184,12 +209,19 @@ final class PersistCustomerBillingClasses
 
         return [
             'classes' => $classes,
-            // Manage modal: customer-only + archived customer classes (labor-linked actives edit via Class Settings gear).
-            'manage_classes' => collect($classes)
-                ->filter(fn (array $row): bool => $row['is_customer_only'] || ! $row['is_active'])
+            // Manage modal: every billing class (active + archived). One registry for Class Settings.
+            'manage_classes' => collect($classes)->values()->all(),
+            'labor_only_columns' => $laborOnlyColumns,
+            'default_billing_class_key' => $settings->defaultBillingClassKey(),
+            'shop_warranty' => $settings->shopWarranty()->toArray(),
+            'warranty_modes' => collect(\App\Ark\Operations\EstimatePricing\BillingClassWarrantyMode::cases())
+                ->map(fn ($mode): array => ['value' => $mode->value, 'label' => $mode->label()])
                 ->values()
                 ->all(),
-            'labor_only_columns' => $laborOnlyColumns,
+            'document_terms_modes' => collect(\App\Ark\Operations\EstimatePricing\BillingClassDocumentTermsMode::cases())
+                ->map(fn ($mode): array => ['value' => $mode->value, 'label' => $mode->label()])
+                ->values()
+                ->all(),
             'parts_matrices' => collect($settings->partsMatrices())
                 ->map(fn (array $matrix): array => [
                     'key' => $matrix['key'],
@@ -268,5 +300,36 @@ final class PersistCustomerBillingClasses
     private function normalizeIncoming(array $customerTypes, ShopSettings $settings): array
     {
         return $settings->normalizeCustomerTypesInput($customerTypes, $settings->partsMatrices());
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function ensureExactlyOneDefault(array $rows): array
+    {
+        $defaultSeen = false;
+        foreach ($rows as $i => $row) {
+            if (! ($row['is_active'] ?? true)) {
+                $rows[$i]['is_default'] = false;
+                continue;
+            }
+            if (($row['is_default'] ?? false) && ! $defaultSeen) {
+                $defaultSeen = true;
+                continue;
+            }
+            $rows[$i]['is_default'] = false;
+        }
+
+        if (! $defaultSeen) {
+            foreach ($rows as $i => $row) {
+                if ($row['is_active'] ?? true) {
+                    $rows[$i]['is_default'] = true;
+                    break;
+                }
+            }
+        }
+
+        return $rows;
     }
 }

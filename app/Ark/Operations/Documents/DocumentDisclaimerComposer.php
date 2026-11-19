@@ -2,26 +2,84 @@
 
 namespace App\Ark\Operations\Documents;
 
+use App\Ark\Operations\EstimatePricing\BillingClassDocumentTermsMode;
+use App\Ark\Operations\EstimatePricing\EffectiveDocumentTermsResolver;
 use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
 
 final class DocumentDisclaimerComposer
 {
+    public function __construct(
+        private readonly EffectiveDocumentTermsResolver $termsResolver = new EffectiveDocumentTermsResolver,
+    ) {}
+
     /**
      * @return array{
      *     global_disclaimer: string,
      *     customer_type: string|null,
      *     customer_type_disclaimer: string|null,
-     *     authorization_language: string|null
+     *     authorization_language: string|null,
+     *     concern_terms: list<array<string, mixed>>,
+     *     shop_terms_fingerprint: string
      * }
      */
-    public function snapshotFor(FinancialDocumentType $documentType, ShopSettings $settings, ?string $customerType): array
-    {
+    public function snapshotFor(
+        FinancialDocumentType $documentType,
+        ShopSettings $settings,
+        ?string $customerType,
+        ?RepairOrder $repairOrder = null,
+    ): array {
+        $resolved = $repairOrder !== null
+            ? $this->termsResolver->forRepairOrder($repairOrder, $documentType, $settings)
+            : [
+                'global_disclaimer' => $settings->globalDocumentDisclaimerFor($documentType),
+                'authorization_language' => $this->authorizationLanguageForSnapshot($settings),
+                'shop_terms_fingerprint' => '',
+                'concern_terms' => [],
+            ];
+
+        // Legacy single customer-type disclaimer kept for older PDF presenters / readers.
+        // Deduplicate against concern terms: class rows often fall back to the same map entry.
+        $customerTypeDisclaimer = $settings->customerTypeDocumentDisclaimerFor($customerType);
+        if ($repairOrder !== null && $resolved['concern_terms'] !== []) {
+            $modes = collect($resolved['concern_terms'])
+                ->pluck('terms_mode')
+                ->unique()
+                ->values();
+            $hasReplace = $modes->contains(BillingClassDocumentTermsMode::Replace->value);
+            $concernTexts = collect($resolved['concern_terms'])
+                ->pluck('terms')
+                ->filter()
+                ->map(fn (mixed $text): string => trim((string) $text))
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($hasReplace) {
+                $customerTypeDisclaimer = $concernTexts->isNotEmpty()
+                    ? $concernTexts->implode("\n\n")
+                    : null;
+            } elseif ($concernTexts->isNotEmpty()) {
+                $parts = collect([
+                    filled($customerTypeDisclaimer) ? trim((string) $customerTypeDisclaimer) : null,
+                ])
+                    ->merge($concernTexts)
+                    ->filter()
+                    ->unique()
+                    ->values();
+                $customerTypeDisclaimer = $parts->isNotEmpty() ? $parts->implode("\n\n") : null;
+            }
+        }
+
         return [
-            'global_disclaimer' => $settings->globalDocumentDisclaimerFor($documentType),
+            'global_disclaimer' => $resolved['global_disclaimer'],
             'customer_type' => filled($customerType) ? trim((string) $customerType) : null,
-            'customer_type_disclaimer' => $settings->customerTypeDocumentDisclaimerFor($customerType),
-            'authorization_language' => $this->authorizationLanguageForSnapshot($settings),
+            'customer_type_disclaimer' => filled($customerTypeDisclaimer) ? trim((string) $customerTypeDisclaimer) : null,
+            'authorization_language' => $resolved['authorization_language']
+                ?? $this->authorizationLanguageForSnapshot($settings),
+            'concern_terms' => $resolved['concern_terms'],
+            'shop_terms_fingerprint' => $resolved['shop_terms_fingerprint'] ?? '',
         ];
     }
 
@@ -46,7 +104,8 @@ final class DocumentDisclaimerComposer
      *     global_disclaimer: string,
      *     customer_type: string|null,
      *     customer_type_disclaimer: string|null,
-     *     authorization_language: string|null
+     *     authorization_language: string|null,
+     *     concern_terms: list<array<string, mixed>>
      * }
      */
     public function resolveFromSnapshot(array $snapshot): array
@@ -65,6 +124,9 @@ final class DocumentDisclaimerComposer
                 'authorization_language' => filled($documents['authorization_language'] ?? null)
                     ? trim((string) $documents['authorization_language'])
                     : null,
+                'concern_terms' => is_array($documents['concern_terms'] ?? null)
+                    ? $documents['concern_terms']
+                    : [],
             ];
         }
 
@@ -85,6 +147,7 @@ final class DocumentDisclaimerComposer
             'authorization_language' => filled($settingsBlock['authorization_language'] ?? null)
                 ? trim((string) $settingsBlock['authorization_language'])
                 : null,
+            'concern_terms' => [],
         ];
     }
 }

@@ -106,7 +106,6 @@ tests/Feature/Operations/CustomerVehicleRepairOrderDraftTest.php::plate decode s
 tests/Feature/Operations/CustomerVehicleRepairOrderDraftTest.php::the shop can decode a plate via partstech
 tests/Feature/Operations/CustomerVehicleRepairOrderDraftTest.php::the shop can edit customer and vehicle details from the customer page
 tests/Feature/Operations/DeferredWorkContinuityTest.php::current deferred work feeds queue pressure and document snapshots
-tests/Feature/Operations/DocumentDisclaimerTest.php::shop settings can save document disclaimer fields
 tests/Feature/Operations/EstimateDocumentSnapshotTest.php::terminal repair order statuses snapshot a final pdf that no longer auto refreshes
 tests/Feature/Operations/EstimateSentWithMissingVinTest.php::send estimate sms with missing vin override records operational fact
 tests/Feature/Operations/Financial/RepairOrderFinancialPresenterBalanceAxesTest.php::presenter with preloaded balance projection does not add BalanceDueCalculator queries

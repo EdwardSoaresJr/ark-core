@@ -106,6 +106,7 @@ final class InvoiceSnapshotBuilder
                 FinancialDocumentType::Invoice,
                 $settings,
                 $repairOrder->customer?->customer_type,
+                $repairOrder,
             ),
             'intake' => [
                 'concern_summary' => $repairOrder->concern_summary,

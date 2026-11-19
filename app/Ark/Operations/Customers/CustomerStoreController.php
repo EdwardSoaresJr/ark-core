@@ -16,9 +16,12 @@ class CustomerStoreController
 {
     public function __invoke(Request $request): RedirectResponse
     {
-        $customerTypes = collect(CanonicalBillingClassCatalog::selectableForCustomers(ShopSettings::current()))
-            ->pluck('name')
-            ->all();
+        $settings = ShopSettings::current();
+        $selectable = CanonicalBillingClassCatalog::selectableForCustomers($settings);
+        $customerTypes = collect($selectable)->pluck('name')->all();
+        $classKeys = collect($selectable)->pluck('key')->all();
+        $defaultKey = $settings->defaultBillingClassKey();
+        $defaultName = $settings->defaultBillingClassName();
 
         $intakeCreate = $request->boolean('intake');
 
@@ -38,12 +41,22 @@ class CustomerStoreController
             'state' => ['nullable', 'string', 'max:32'],
             'postal_code' => ['nullable', 'string', 'max:16'],
             'referral_source' => ['nullable', Rule::enum(EncounterSource::class)],
+            'billing_class_key' => ['nullable', 'string', Rule::in($classKeys)],
             'customer_type' => ['nullable', Rule::in($customerTypes)],
             'notes' => ['nullable', 'string'],
             'intake' => ['nullable', 'boolean'],
         ]);
 
-        $data['customer_type'] ??= $customerTypes[0] ?? 'Retail';
+        if (filled($data['billing_class_key'] ?? null)) {
+            unset($data['customer_type']);
+        } elseif (filled($data['customer_type'] ?? null)) {
+            unset($data['billing_class_key']);
+        } else {
+            $data['billing_class_key'] = in_array($defaultKey, $classKeys, true)
+                ? $defaultKey
+                : ($classKeys[0] ?? 'retail');
+            unset($data['customer_type']);
+        }
         $data['last_name'] = LeadContactNameParser::normalizeLastName($data['last_name'] ?? null);
         $returnToIntake = $request->boolean('intake');
         $returnToSchedule = $request->input('return_to') === 'schedule';

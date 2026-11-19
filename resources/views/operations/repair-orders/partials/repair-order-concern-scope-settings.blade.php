@@ -33,6 +33,12 @@
             'estimateVersion' => $estimateVersion,
             'laborRate' => $concernDefaultLaborRate ?? $laborRate ?? null,
         ])
+        @include('operations.repair-orders.partials.repair-order-concern-warranty-control', [
+            'repairOrder' => $repairOrder,
+            'concern' => $concern,
+            'isTerminal' => $isTerminal,
+            'estimateVersion' => $estimateVersion,
+        ])
     </div>
     <div class="d-flex flex-wrap align-items-center gap-1">
         @if (($partsCatalogs ?? []) !== [])

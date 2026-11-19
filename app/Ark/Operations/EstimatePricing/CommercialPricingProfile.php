@@ -11,6 +11,9 @@ use App\Ark\Operations\Settings\ShopSettings;
  *
  * Schema 1: customer_types commercial slice (discounts, fee overrides, matrix keys, presentation).
  * Schema 2: also freezes parts_matrices definitions so tier/markup edits cannot reprice old ROs.
+ * Schema 2+ also carries warranty / document-terms fields on each customer_types row plus shop-level
+ * warranty and document disclaimers when stamped from current settings. Older stamps omit those keys;
+ * readers must not invent them from live ShopSettings for an already-stamped RO.
  *
  * null on the RO means legacy live-settings behavior until stamped (living only).
  * Terminal ROs must not invent rules from live settings — see RepairOrderPricingContext.
@@ -22,6 +25,8 @@ final class CommercialPricingProfile
     /**
      * @param  list<array<string, mixed>>  $customerTypes
      * @param  list<array{key: string, name: string, is_default: bool, rows: array<int, array<string, mixed>>}>  $partsMatrices
+     * @param  array<string, mixed>|null  $shopWarranty
+     * @param  array<string, string>  $customerTypeDisclaimers
      */
     public function __construct(
         public readonly array $customerTypes,
@@ -29,6 +34,12 @@ final class CommercialPricingProfile
         public readonly int $schema = self::CURRENT_SCHEMA,
         public readonly array $partsMatrices = [],
         public readonly ?string $defaultPartsMatrixKey = null,
+        public readonly ?array $shopWarranty = null,
+        public readonly ?string $estimateDisclaimer = null,
+        public readonly ?string $invoiceDisclaimer = null,
+        public readonly ?string $authorizationLanguage = null,
+        public readonly array $customerTypeDisclaimers = [],
+        public readonly bool $hasDocumentTermsStamp = false,
     ) {}
 
     public static function fromShopSettings(ShopSettings $settings): self
@@ -43,12 +54,29 @@ final class CommercialPricingProfile
             ->values()
             ->all();
 
+        $disclaimers = collect($settings->customerTypeDisclaimerMap())
+            ->map(fn ($text): string => trim((string) $text))
+            ->filter()
+            ->all();
+
         return new self(
             customerTypes: $rows,
             version: max(1, (int) ($settings->commercial_pricing_profile_version ?? 1)),
             schema: self::CURRENT_SCHEMA,
             partsMatrices: $matrices,
             defaultPartsMatrixKey: $settings->defaultPartsMatrix()['key'] ?? null,
+            shopWarranty: $settings->shopWarranty()->toArray(),
+            estimateDisclaimer: filled($settings->estimate_disclaimer)
+                ? trim((string) $settings->estimate_disclaimer)
+                : null,
+            invoiceDisclaimer: filled($settings->invoice_disclaimer)
+                ? trim((string) $settings->invoice_disclaimer)
+                : null,
+            authorizationLanguage: filled($settings->authorizationLanguage())
+                ? trim((string) $settings->authorizationLanguage())
+                : null,
+            customerTypeDisclaimers: $disclaimers,
+            hasDocumentTermsStamp: true,
         );
     }
 
@@ -77,6 +105,19 @@ final class CommercialPricingProfile
             ->values()
             ->all();
 
+        $hasDocumentTermsStamp = array_key_exists('shop_warranty', $stored)
+            || array_key_exists('estimate_disclaimer', $stored)
+            || array_key_exists('document_terms_stamp', $stored)
+            || collect($rows)->contains(
+                fn (array $row): bool => array_key_exists('warranty_mode', $row)
+                    || array_key_exists('document_terms_mode', $row),
+            );
+
+        $disclaimers = collect($stored['customer_type_disclaimers'] ?? [])
+            ->map(fn ($text): string => trim((string) $text))
+            ->filter()
+            ->all();
+
         return new self(
             customerTypes: $rows,
             version: (int) ($stored['version'] ?? 1),
@@ -85,11 +126,24 @@ final class CommercialPricingProfile
             defaultPartsMatrixKey: filled($stored['default_parts_matrix_key'] ?? null)
                 ? (string) $stored['default_parts_matrix_key']
                 : null,
+            shopWarranty: is_array($stored['shop_warranty'] ?? null) ? $stored['shop_warranty'] : null,
+            estimateDisclaimer: filled($stored['estimate_disclaimer'] ?? null)
+                ? trim((string) $stored['estimate_disclaimer'])
+                : null,
+            invoiceDisclaimer: filled($stored['invoice_disclaimer'] ?? null)
+                ? trim((string) $stored['invoice_disclaimer'])
+                : null,
+            authorizationLanguage: filled($stored['authorization_language'] ?? null)
+                ? trim((string) $stored['authorization_language'])
+                : null,
+            customerTypeDisclaimers: $disclaimers,
+            hasDocumentTermsStamp: $hasDocumentTermsStamp,
         );
     }
 
     /**
      * Merge current shop parts matrices into an existing stamp that only has keys (schema 1).
+     * Does not refresh warranty or document terms from live settings.
      */
     public function withPartsMatricesFrom(ShopSettings $settings): self
     {
@@ -109,6 +163,12 @@ final class CommercialPricingProfile
             partsMatrices: $matrices,
             defaultPartsMatrixKey: $this->defaultPartsMatrixKey
                 ?? ($settings->defaultPartsMatrix()['key'] ?? null),
+            shopWarranty: $this->shopWarranty,
+            estimateDisclaimer: $this->estimateDisclaimer,
+            invoiceDisclaimer: $this->invoiceDisclaimer,
+            authorizationLanguage: $this->authorizationLanguage,
+            customerTypeDisclaimers: $this->customerTypeDisclaimers,
+            hasDocumentTermsStamp: $this->hasDocumentTermsStamp,
         );
     }
 
@@ -216,13 +276,74 @@ final class CommercialPricingProfile
         return $this->customerTypes;
     }
 
+    public function shopWarranty(): BillingClassWarranty
+    {
+        return BillingClassWarranty::fromArray($this->shopWarranty);
+    }
+
+    public function globalDocumentDisclaimerFor(string $documentType): string
+    {
+        $text = $documentType === 'invoice'
+            ? ($this->invoiceDisclaimer ?? $this->estimateDisclaimer)
+            : $this->estimateDisclaimer;
+
+        return filled($text) ? trim((string) $text) : '';
+    }
+
+    public function customerTypeDocumentDisclaimerFor(?string $customerType): ?string
+    {
+        if (! filled($customerType)) {
+            return null;
+        }
+
+        $key = mb_strtolower(trim($customerType));
+        $map = collect($this->customerTypeDisclaimers)
+            ->mapWithKeys(fn ($text, $mapKey): array => [mb_strtolower((string) $mapKey) => trim((string) $text)]);
+
+        $direct = $map->get($key);
+        if (filled($direct)) {
+            return $direct;
+        }
+
+        $row = $this->customerTypeRowByKeyOrName($key, $customerType);
+
+        return filled($row['document_terms'] ?? null) ? trim((string) $row['document_terms']) : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function customerTypeRowByKeyOrName(?string $key, ?string $name = null): ?array
+    {
+        $normalizedKey = filled($key) ? mb_strtolower(trim($key)) : null;
+        $normalizedName = filled($name) ? mb_strtolower(trim($name)) : null;
+
+        return collect($this->customerTypes)
+            ->first(function (array $row) use ($normalizedKey, $normalizedName): bool {
+                $rowKey = filled($row['key'] ?? null) ? mb_strtolower((string) $row['key']) : null;
+                $rowName = filled($row['name'] ?? null) ? mb_strtolower((string) $row['name']) : null;
+                $laborKey = filled($row['labor_column_key'] ?? null)
+                    ? mb_strtolower((string) $row['labor_column_key'])
+                    : null;
+
+                return ($normalizedKey !== null && ($rowKey === $normalizedKey || $laborKey === $normalizedKey || $rowName === $normalizedKey))
+                    || ($normalizedName !== null && $rowName === $normalizedName);
+            });
+    }
+
     /**
      * @return array{
      *     schema: int,
      *     version: int,
      *     customer_types: list<array<string, mixed>>,
      *     parts_matrices: list<array<string, mixed>>,
-     *     default_parts_matrix_key: string|null
+     *     default_parts_matrix_key: string|null,
+     *     shop_warranty: array<string, mixed>|null,
+     *     estimate_disclaimer: string|null,
+     *     invoice_disclaimer: string|null,
+     *     authorization_language: string|null,
+     *     customer_type_disclaimers: array<string, string>,
+     *     document_terms_stamp: bool
      * }
      */
     public function toArray(): array
@@ -233,6 +354,12 @@ final class CommercialPricingProfile
             'customer_types' => $this->customerTypes,
             'parts_matrices' => $this->partsMatrices,
             'default_parts_matrix_key' => $this->defaultPartsMatrixKey,
+            'shop_warranty' => $this->shopWarranty,
+            'estimate_disclaimer' => $this->estimateDisclaimer,
+            'invoice_disclaimer' => $this->invoiceDisclaimer,
+            'authorization_language' => $this->authorizationLanguage,
+            'customer_type_disclaimers' => $this->customerTypeDisclaimers,
+            'document_terms_stamp' => $this->hasDocumentTermsStamp,
         ];
     }
 
@@ -257,7 +384,7 @@ final class CommercialPricingProfile
             'name' => $name,
         ]);
 
-        return [
+        $slice = [
             'name' => $name,
             'shop_fees_enabled' => $shopFeesEnabled,
             'shop_fee_rate_override' => $rateOverride,
@@ -283,6 +410,31 @@ final class CommercialPricingProfile
                 : null,
             'pill_color' => $row['pill_color'] ?? null,
         ];
+
+        if (filled($row['key'] ?? null)) {
+            $slice['key'] = (string) $row['key'];
+        }
+        if (filled($row['labor_column_key'] ?? null)) {
+            $slice['labor_column_key'] = (string) $row['labor_column_key'];
+        }
+
+        // Preserve absence on older stamps: only write warranty/terms keys when present upstream.
+        if (array_key_exists('warranty_mode', $row) || array_key_exists('warranty', $row)) {
+            $slice['warranty_mode'] = BillingClassWarrantyMode::tryFromMixed($row['warranty_mode'] ?? null)->value;
+            $slice['warranty'] = BillingClassWarranty::fromArray(
+                is_array($row['warranty'] ?? null) ? $row['warranty'] : null,
+            )->toArray();
+        }
+        if (array_key_exists('document_terms_mode', $row) || array_key_exists('document_terms', $row)) {
+            $slice['document_terms_mode'] = BillingClassDocumentTermsMode::tryFromMixed(
+                $row['document_terms_mode'] ?? null,
+            )->value;
+            $slice['document_terms'] = filled($row['document_terms'] ?? null)
+                ? trim((string) $row['document_terms'])
+                : null;
+        }
+
+        return $slice;
     }
 
     /**

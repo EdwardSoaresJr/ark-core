@@ -26,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'production_status',
     'billing_posture',
     'billing_inherits_customer',
+    'warranty_inherits_class',
+    'warranty_override',
     'recommendation_intent',
     'recommendation_priority',
     'information_only',
@@ -69,6 +71,8 @@ class RepairOrderConcern extends Model
             'recommendation_priority' => RecommendationPriority::class,
             'information_only' => 'boolean',
             'billing_inherits_customer' => 'boolean',
+            'warranty_inherits_class' => 'boolean',
+            'warranty_override' => 'array',
         ];
     }
 
@@ -329,24 +333,52 @@ class RepairOrderConcern extends Model
     /**
      * Attributes for a concern that follows its customer's billing class (the default for every new concern).
      *
-     * @return array{billing_posture: string, billing_inherits_customer: bool}
+     * @return array{billing_posture: string, billing_inherits_customer: bool, warranty_inherits_class: bool, warranty_override: null}
      */
     public static function inheritedBillingAttributes(): array
     {
-        return ['billing_posture' => 'default', 'billing_inherits_customer' => true];
+        return [
+            'billing_posture' => 'default',
+            'billing_inherits_customer' => true,
+            'warranty_inherits_class' => true,
+            'warranty_override' => null,
+        ];
     }
 
     /**
      * Billing attributes to copy onto a duplicate of this concern (inheritance travels with it).
+     * Explicit warranty overrides copy with the concern; billing-class changes never clear them.
      *
-     * @return array{billing_posture: string, billing_inherits_customer: bool|null}
+     * @return array{billing_posture: string, billing_inherits_customer: bool|null, warranty_inherits_class: bool|null, warranty_override: array<string, mixed>|null}
      */
     public function billingAttributesToCopy(): array
     {
         return [
             'billing_posture' => $this->billingClassKey(),
             'billing_inherits_customer' => $this->getAttributes()['billing_inherits_customer'] ?? null,
+            'warranty_inherits_class' => $this->getAttributes()['warranty_inherits_class'] ?? null,
+            'warranty_override' => $this->warrantyOverridePayload(),
         ];
+    }
+
+    /**
+     * True when warranty follows the effective billing class. Missing flag means inherit.
+     */
+    public function inheritsClassWarranty(): bool
+    {
+        $flag = $this->getAttributes()['warranty_inherits_class'] ?? null;
+
+        return $flag === null ? true : (bool) $flag;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function warrantyOverridePayload(): ?array
+    {
+        $raw = $this->warranty_override;
+
+        return is_array($raw) ? $raw : null;
     }
 
     /**

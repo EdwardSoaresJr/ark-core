@@ -75,6 +75,7 @@ use InvalidArgumentException;
     'customer_part_show_supplier_sku',
     'customer_part_allow_description_override',
     'customer_type_disclaimers',
+    'shop_warranty',
     'estimate_validity_days',
     'default_recommendation_intent',
     'default_recommendation_priority',
@@ -361,15 +362,15 @@ class ShopSettings extends Model
     ];
 
     public const DEFAULT_CUSTOMER_TYPES = [
-        ['key' => 'retail', 'labor_column_key' => 'customer_pay', 'name' => 'Retail', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['key' => 'fleet', 'labor_column_key' => 'fleet', 'name' => 'Fleet', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'fleet', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['key' => 'warranty', 'labor_column_key' => 'warranty_other', 'name' => 'Warranty', 'document_show_part_number' => true, 'document_show_part_brand' => false, 'document_show_vendor' => true, 'document_presentation_profile' => 'warranty', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['key' => 'repairpal', 'labor_column_key' => 'repairpal', 'name' => 'RepairPal', 'document_show_part_number' => true, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'repairpal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['key' => 'internal', 'labor_column_key' => 'internal', 'name' => 'Internal', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['key' => 'wholesale', 'labor_column_key' => 'wholesale', 'name' => 'Wholesale', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['key' => 'comeback', 'labor_column_key' => 'comeback', 'name' => 'Comeback', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup'],
-        ['key' => 'business', 'name' => 'Business', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null],
-        ['key' => 'military', 'name' => 'Military', 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'labor', 'discount_amount' => '10.00', 'default_parts_matrix_key' => null],
+        ['key' => 'retail', 'labor_column_key' => 'customer_pay', 'name' => 'Retail', 'is_default' => true, 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null, 'warranty_mode' => 'inherit_shop', 'document_terms_mode' => 'append'],
+        ['key' => 'fleet', 'labor_column_key' => 'fleet', 'name' => 'Fleet', 'is_default' => false, 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'fleet', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null, 'warranty_mode' => 'inherit_shop', 'document_terms_mode' => 'append'],
+        ['key' => 'warranty', 'labor_column_key' => 'warranty_other', 'name' => 'Warranty', 'is_default' => false, 'document_show_part_number' => true, 'document_show_part_brand' => false, 'document_show_vendor' => true, 'document_presentation_profile' => 'warranty', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup', 'warranty_mode' => 'class_specific', 'document_terms_mode' => 'append'],
+        ['key' => 'repairpal', 'labor_column_key' => 'repairpal', 'name' => 'RepairPal', 'is_default' => false, 'document_show_part_number' => true, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'repairpal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup', 'warranty_mode' => 'class_specific', 'document_terms_mode' => 'append'],
+        ['key' => 'internal', 'labor_column_key' => 'internal', 'name' => 'Internal', 'is_default' => false, 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup', 'warranty_mode' => 'none', 'document_terms_mode' => 'append'],
+        ['key' => 'wholesale', 'labor_column_key' => 'wholesale', 'name' => 'Wholesale', 'is_default' => false, 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null, 'warranty_mode' => 'inherit_shop', 'document_terms_mode' => 'append'],
+        ['key' => 'comeback', 'labor_column_key' => 'comeback', 'name' => 'Comeback', 'is_default' => false, 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'fee_override' => 'none', 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => 'warranty-no-markup', 'warranty_mode' => 'inherit_shop', 'document_terms_mode' => 'append'],
+        ['key' => 'business', 'name' => 'Business', 'is_default' => false, 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'none', 'discount_amount' => null, 'default_parts_matrix_key' => null, 'warranty_mode' => 'inherit_shop', 'document_terms_mode' => 'append'],
+        ['key' => 'military', 'name' => 'Military', 'is_default' => false, 'document_show_part_number' => false, 'document_show_part_brand' => false, 'document_show_vendor' => false, 'document_presentation_profile' => 'retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => null, 'fee_override' => null, 'discount_type' => 'labor', 'discount_amount' => '10.00', 'default_parts_matrix_key' => null, 'warranty_mode' => 'inherit_shop', 'document_terms_mode' => 'append'],
     ];
 
     public const DEFAULT_ESTIMATE_DISCLAIMER = <<<'TEXT'
@@ -464,6 +465,7 @@ TEXT;
         'commercial_pricing_profile_version' => 'integer',
         'customer_types' => 'array',
         'customer_type_disclaimers' => 'array',
+        'shop_warranty' => 'array',
         'shop_overhead_state' => 'array',
         'shop_overhead_per_hour_cents' => 'integer',
         'shop_excellence_targets' => 'array',
@@ -626,6 +628,7 @@ TEXT;
             'customer_part_show_supplier_sku' => false,
             'customer_part_allow_description_override' => true,
             'customer_type_disclaimers' => self::defaultCustomerTypeDisclaimerMap(),
+            'shop_warranty' => \App\Ark\Operations\EstimatePricing\BillingClassWarranty::shopDefault()->toArray(),
             'estimate_validity_days' => 30,
             'default_recommendation_intent' => 'maintenance',
             'default_recommendation_priority' => null,
@@ -1728,6 +1731,17 @@ TEXT;
                     'concern_billing_posture' => array_key_exists('concern_billing_posture', $row)
                         ? $row['concern_billing_posture']
                         : ($existing['concern_billing_posture'] ?? null),
+                    'is_default' => array_key_exists('is_default', $row)
+                        ? (bool) $row['is_default']
+                        : (bool) ($existing['is_default'] ?? false),
+                    'warranty_mode' => $row['warranty_mode'] ?? $existing['warranty_mode'] ?? null,
+                    'warranty' => array_key_exists('warranty', $row)
+                        ? $row['warranty']
+                        : ($existing['warranty'] ?? null),
+                    'document_terms_mode' => $row['document_terms_mode'] ?? $existing['document_terms_mode'] ?? null,
+                    'document_terms' => array_key_exists('document_terms', $row)
+                        ? $row['document_terms']
+                        : ($existing['document_terms'] ?? null),
                 ];
 
                 // Drop null flag placeholders so legacy profile migration can still run.
@@ -1963,6 +1977,23 @@ TEXT;
             'is_active' => array_key_exists('is_active', $row)
                 ? (bool) $row['is_active']
                 : (array_key_exists('is_active', $defaults) ? (bool) $defaults['is_active'] : true),
+            'is_default' => array_key_exists('is_default', $row)
+                ? (bool) $row['is_default']
+                : (bool) ($defaults['is_default'] ?? false),
+            'warranty_mode' => \App\Ark\Operations\EstimatePricing\BillingClassWarrantyMode::tryFromMixed(
+                $row['warranty_mode'] ?? $defaults['warranty_mode'] ?? null,
+            )->value,
+            'warranty' => \App\Ark\Operations\EstimatePricing\BillingClassWarranty::fromArray(
+                is_array($row['warranty'] ?? null)
+                    ? $row['warranty']
+                    : (is_array($defaults['warranty'] ?? null) ? $defaults['warranty'] : null),
+            )->toArray(),
+            'document_terms_mode' => \App\Ark\Operations\EstimatePricing\BillingClassDocumentTermsMode::tryFromMixed(
+                $row['document_terms_mode'] ?? $defaults['document_terms_mode'] ?? null,
+            )->value,
+            'document_terms' => filled($row['document_terms'] ?? null)
+                ? trim((string) $row['document_terms'])
+                : (filled($defaults['document_terms'] ?? null) ? trim((string) $defaults['document_terms']) : null),
             ...($concernBillingPosture !== null ? ['concern_billing_posture' => $concernBillingPosture->value] : []),
         ];
 
@@ -1979,6 +2010,40 @@ TEXT;
         }
 
         return $normalized;
+    }
+
+    public function shopWarranty(): \App\Ark\Operations\EstimatePricing\BillingClassWarranty
+    {
+        $stored = \App\Ark\Operations\EstimatePricing\BillingClassWarranty::fromArray(
+            is_array($this->shop_warranty) ? $this->shop_warranty : null,
+        );
+
+        return $stored->isEmpty()
+            ? \App\Ark\Operations\EstimatePricing\BillingClassWarranty::shopDefault()
+            : $stored;
+    }
+
+    /**
+     * Designated shop default billing class key (exactly one active default).
+     */
+    public function defaultBillingClassKey(): string
+    {
+        $rows = collect($this->customerTypeRows())
+            ->filter(fn (array $row): bool => (bool) ($row['is_active'] ?? true));
+
+        $default = $rows->first(fn (array $row): bool => (bool) ($row['is_default'] ?? false));
+
+        return (string) (($default['key'] ?? null) ?: ($rows->first()['key'] ?? 'retail'));
+    }
+
+    /**
+     * Display name for the designated shop default billing class.
+     */
+    public function defaultBillingClassName(): string
+    {
+        $row = $this->customerTypeRowByKeyOrName($this->defaultBillingClassKey());
+
+        return (string) ($row['name'] ?? 'Retail');
     }
 
     /**
