@@ -458,6 +458,106 @@ test('open RO warranty and document terms follow the commercial stamp, not later
         ->and($overridden['warranty']['months'])->toBe(6);
 });
 
+test('legacy pricing-only commercial stamp keeps existing document disclaimer on refresh', function () {
+    $customer = Customer::query()->create([
+        'first_name' => 'Legacy',
+        'last_name' => 'Stamp',
+        'phone' => '555-1007',
+        'billing_class_key' => 'retail',
+        'customer_type' => 'Retail',
+    ]);
+    $vehicle = Vehicle::query()->create(['customer_id' => $customer->id, 'year' => 2016, 'make' => 'Nissan', 'model' => 'Altima']);
+    $repairOrder = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'Legacy pricing stamp',
+    ]);
+    $this->post(route('operations.repair-orders.concerns.store', $repairOrder), ['summary' => 'Brakes'])->assertSessionHasNoErrors();
+    $concern = RepairOrderConcern::query()->where('repair_order_id', $repairOrder->id)->sole();
+    $concern->update(['disposition' => RepairOrderConcernDisposition::Recommended]);
+
+    $repairOrder = $repairOrder->fresh();
+    expect($repairOrder->commercial_pricing_profile)->not->toBeNull();
+
+    // Downgrade to a pricing-only stamp that predates warranty / document-term fields.
+    $slice = \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::tryFromStored(
+        $repairOrder->commercial_pricing_profile,
+    );
+    expect($slice)->not->toBeNull();
+    $pricingOnly = [
+        'schema' => 1,
+        'version' => $slice->version,
+        'customer_types' => collect($slice->customerTypeRows())
+            ->map(function (array $row): array {
+                unset($row['warranty_mode'], $row['warranty'], $row['document_terms_mode'], $row['document_terms']);
+
+                return $row;
+            })
+            ->all(),
+    ];
+    $repairOrder->forceFill(['commercial_pricing_profile' => $pricingOnly])->saveQuietly();
+
+    $legacyProfile = \App\Ark\Operations\EstimatePricing\CommercialPricingProfile::tryFromStored(
+        $repairOrder->fresh()->commercial_pricing_profile,
+    );
+    expect($legacyProfile)->not->toBeNull()
+        ->and($legacyProfile->hasDocumentTermsStamp)->toBeFalse();
+
+    $existingDisclaimer = 'Original estimate disclaimer already on this RO document.';
+    $document = EstimateDocument::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'document_type' => FinancialDocumentType::Estimate,
+        'document_number' => 1,
+        'snapshot_json' => [
+            'documents' => [
+                'global_disclaimer' => $existingDisclaimer,
+                'customer_type' => 'Retail',
+                'customer_type_disclaimer' => null,
+                'authorization_language' => null,
+                'concern_terms' => [
+                    [
+                        'heading' => 'Brakes — Retail',
+                        'terms' => 'Pre-existing concern terms on the document.',
+                        'terms_mode' => BillingClassDocumentTermsMode::Append->value,
+                    ],
+                ],
+                'shop_terms_fingerprint' => 'legacy-doc',
+            ],
+            'document_type' => 'estimate',
+            'totals' => [],
+            'concerns' => [],
+        ],
+        'status' => 'draft',
+        'created_by' => $this->advisor->id,
+    ]);
+
+    ShopSettings::current()->update([
+        'estimate_disclaimer' => 'LIVE rewrite after legacy stamp — must not replace stored document text',
+    ]);
+    ShopSettings::forgetCurrent();
+
+    $resolvedEmpty = app(DocumentDisclaimerComposer::class)->snapshotFor(
+        FinancialDocumentType::Estimate,
+        ShopSettings::current(),
+        $customer->customer_type,
+        $repairOrder->fresh(['concerns', 'customer']),
+    );
+    expect($resolvedEmpty['global_disclaimer'])->toBe('');
+
+    $refreshed = app(\App\Ark\Operations\Documents\EstimateDocumentService::class)
+        ->refreshSnapshot($document->fresh(['repairOrder']));
+
+    expect(data_get($refreshed->snapshot_json, 'documents.global_disclaimer'))->toBe($existingDisclaimer)
+        ->and(data_get($refreshed->snapshot_json, 'documents.concern_terms.0.terms'))
+        ->toBe('Pre-existing concern terms on the document.')
+        ->and(data_get($refreshed->snapshot_json, 'documents.global_disclaimer'))
+        ->not->toContain('LIVE rewrite');
+
+    $fromSnapshot = app(DocumentDisclaimerComposer::class)->resolveFromSnapshot($refreshed->snapshot_json);
+    expect($fromSnapshot['global_disclaimer'])->toBe($existingDisclaimer);
+});
+
 test('concern warranty control is on the repair order worksheet', function () {
     $customer = Customer::query()->create([
         'first_name' => 'Ui',
