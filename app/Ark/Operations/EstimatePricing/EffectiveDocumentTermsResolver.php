@@ -50,6 +50,10 @@ final class EffectiveDocumentTermsResolver
             if (! $concern instanceof RepairOrderConcern) {
                 continue;
             }
+            // Customer documents must not surface Draft (or other non-customer) concern titles.
+            if (! $concern->disposition->visibleToCustomer()) {
+                continue;
+            }
             $concern->setRelation('repairOrder', $repairOrder);
             $concernTerms[] = $this->forConcern($concern, $settings, $context);
         }

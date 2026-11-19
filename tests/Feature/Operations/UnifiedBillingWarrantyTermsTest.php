@@ -268,6 +268,10 @@ test('mixed RO documents scope warranties and freeze issued snapshots', function
     $this->post(route('operations.repair-orders.concerns.store', $repairOrder), ['summary' => 'Transmission warranty'])->assertSessionHasNoErrors();
     $this->post(route('operations.repair-orders.concerns.store', $repairOrder), ['summary' => 'Oil change'])->assertSessionHasNoErrors();
 
+    RepairOrderConcern::query()->where('repair_order_id', $repairOrder->id)->update([
+        'disposition' => RepairOrderConcernDisposition::Recommended->value,
+    ]);
+
     $transmission = RepairOrderConcern::query()->where('repair_order_id', $repairOrder->id)->where('summary', 'like', 'Transmission%')->sole();
     $this->patchJson(route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $transmission]), [
         'billing_posture' => 'warranty_other',
@@ -368,6 +372,7 @@ test('open RO warranty and document terms follow the commercial stamp, not later
     ]);
     $this->post(route('operations.repair-orders.concerns.store', $repairOrder), ['summary' => 'Pads'])->assertSessionHasNoErrors();
     $concern = RepairOrderConcern::query()->where('repair_order_id', $repairOrder->id)->sole();
+    $concern->update(['disposition' => RepairOrderConcernDisposition::Recommended]);
 
     $before = app(\App\Ark\Operations\EstimatePricing\EffectiveWarrantyResolver::class)->forConcern($concern->fresh(['repairOrder']));
     expect($before['source'])->toBe('shop')
