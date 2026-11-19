@@ -84,13 +84,20 @@ final class LaborWorkTypeMatrixProjection
         $minimumRows = [];
         $columns = [];
 
+        $customerTypeByKey = collect($settings->customerTypeRows())
+            ->keyBy(fn (array $row): string => (string) ($row['key'] ?? ''));
+
         foreach (LaborWorkTypeMatrix::matrixBillingColumns($settings) as $column) {
             $customerClassKey = CustomerBillingClassIdentity::classKeyForLaborColumn($column['value'], $settings);
+            $customerRow = $customerClassKey !== null
+                ? ($customerTypeByKey->get($customerClassKey) ?? null)
+                : null;
             $columns[] = [
                 'value' => $column['value'],
                 'label' => $column['label'],
                 'is_system' => $column['is_system'],
                 'is_default' => $column['is_default'],
+                'is_shop_default' => (bool) ($customerRow['is_default'] ?? false),
                 'customer_class_key' => $customerClassKey,
                 'has_customer_class' => $customerClassKey !== null,
             ];
@@ -108,8 +115,28 @@ final class LaborWorkTypeMatrixProjection
                 'key' => $row['key'],
                 'name' => $row['name'],
                 'labor_column_key' => $row['labor_column_key'] ?? null,
-                'customer_only' => CustomerBillingClassIdentity::isCustomerOnlyClassKey($row['key'] ?? null),
+                'customer_only' => CustomerBillingClassIdentity::isCustomerOnlyClassKey($row['key'] ?? null)
+                    || blank($row['labor_column_key'] ?? null),
                 'is_active' => (bool) ($row['is_active'] ?? true),
+                'is_default' => (bool) ($row['is_default'] ?? false),
+            ])
+            ->values()
+            ->all();
+
+        $linkedLaborColumnKeys = collect($settings->customerTypeRows())
+            ->pluck('labor_column_key')
+            ->filter(fn ($key): bool => filled($key))
+            ->map(fn ($key): string => (string) $key)
+            ->all();
+
+        // Archived labor-only columns leave matrixBillingColumns(); keep them visible for restore/delete.
+        $archivedOrphanLaborColumns = collect($settings->allCustomLaborBillingClasses())
+            ->filter(fn (array $column): bool => ! ($column['is_active'] ?? true)
+                && ! in_array($column['key'], $linkedLaborColumnKeys, true))
+            ->map(fn (array $column): array => [
+                'key' => $column['key'],
+                'label' => $column['label'],
+                'is_active' => false,
             ])
             ->values()
             ->all();
@@ -129,6 +156,7 @@ final class LaborWorkTypeMatrixProjection
             'standard_rate_cents' => $standardCents,
             'billing_minimums' => $minimumRows,
             'billing_classes' => $billingClasses,
+            'archived_orphan_labor_columns' => $archivedOrphanLaborColumns,
             'labor_pricing_profile_version' => (int) ($settings->labor_pricing_profile_version ?? 0),
             'routes' => [
                 'rate' => route('operations.settings.shop.labor-matrix.rate'),

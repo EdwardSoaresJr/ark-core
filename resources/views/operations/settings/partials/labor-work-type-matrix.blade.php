@@ -112,7 +112,10 @@
                         <template x-for="column in matrix.columns" :key="column.value">
                             <tr :data-billing-class="column.value">
                                 <td class="py-1">
-                                    <div class="fw-medium" x-text="column.label"></div>
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="fw-medium" x-text="column.label"></span>
+                                        <span class="badge bg-azure-lt text-azure" x-show="column.is_shop_default">Default</span>
+                                    </div>
                                 </td>
                                 <td class="py-1">
                                     <div class="input-group input-group-sm" style="max-width: 7.5rem">
@@ -187,6 +190,83 @@
                                             <x-tabler.icon name="settings" class="icon icon-sm" />
                                         </button>
                                     </template>
+                                    <template x-if="!column.has_customer_class">
+                                        <div class="dropdown d-inline-block" x-data="{ open: false }" @click.outside="open = false">
+                                            <button
+                                                type="button"
+                                                class="btn btn-ghost-secondary btn-icon btn-sm"
+                                                :aria-expanded="open"
+                                                aria-haspopup="true"
+                                                aria-label="Labor column actions"
+                                                title="Labor column actions"
+                                                data-labor-only-column-actions
+                                                @click="open = !open"
+                                            >
+                                                <x-tabler.icon name="dots" class="icon icon-sm" />
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-end" :class="{ show: open }" x-show="open" x-cloak>
+                                                <button type="button" class="dropdown-item" @click="open = false; archiveLaborOnlyColumn(column)">Archive column</button>
+                                                <button type="button" class="dropdown-item text-danger" @click="open = false; deleteLaborOnlyColumn(column)">Delete column</button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-for="row in nonMatrixBillingClasses()" :key="'extra-'+row.key">
+                            <tr :data-billing-class-key="row.key" data-billing-class-extra>
+                                <td class="py-1">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="fw-medium" x-text="row.name"></span>
+                                        <span class="badge bg-azure-lt text-azure" x-show="row.is_default">Default</span>
+                                        <span class="badge bg-secondary-lt" x-show="!row.is_active">Archived</span>
+                                    </div>
+                                    <div class="form-hint mb-0">Customer assignment only — no labor rates</div>
+                                </td>
+                                <td class="py-1 text-secondary small" colspan="3">—</td>
+                                <td class="py-1 text-end">
+                                    <button
+                                        type="button"
+                                        class="btn btn-ghost-secondary btn-icon btn-sm"
+                                        @click="openClassSettingsForKey(row.key)"
+                                        data-labor-class-settings
+                                        title="Class Settings"
+                                        aria-label="Class Settings"
+                                    >
+                                        <x-tabler.icon name="settings" class="icon icon-sm" />
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-for="column in (matrix.archived_orphan_labor_columns || [])" :key="'archived-orphan-'+column.key">
+                            <tr :data-billing-class="column.key" data-archived-orphan-labor-column>
+                                <td class="py-1">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="fw-medium" x-text="column.label"></span>
+                                        <span class="badge bg-secondary-lt">Archived</span>
+                                    </div>
+                                    <div class="form-hint mb-0">Labor rates only — restore to edit rates</div>
+                                </td>
+                                <td class="py-1 text-secondary small" colspan="3">—</td>
+                                <td class="py-1 text-end">
+                                    <div class="dropdown d-inline-block" x-data="{ open: false }" @click.outside="open = false">
+                                        <button
+                                            type="button"
+                                            class="btn btn-ghost-secondary btn-icon btn-sm"
+                                            :aria-expanded="open"
+                                            aria-haspopup="true"
+                                            aria-label="Archived labor column actions"
+                                            title="Archived labor column actions"
+                                            data-labor-only-column-actions
+                                            @click="open = !open"
+                                        >
+                                            <x-tabler.icon name="dots" class="icon icon-sm" />
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end" :class="{ show: open }" x-show="open" x-cloak>
+                                            <button type="button" class="dropdown-item" @click="open = false; restoreLaborOnlyColumn(column)">Restore column</button>
+                                            <button type="button" class="dropdown-item text-danger" @click="open = false; deleteLaborOnlyColumn(column)">Delete column</button>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -196,9 +276,6 @@
             <div class="d-flex flex-wrap gap-2 mt-2">
                 <button type="button" class="btn btn-outline-primary btn-sm" @click="promptAddLaborColumn()" data-labor-add-column>
                     + Add Billing Class
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" @click="openManageBillingClasses()" data-labor-manage-billing-classes>
-                    Manage Billing Classes
                 </button>
             </div>
             <p class="form-hint mb-0 mt-1">
@@ -262,7 +339,14 @@ document.addEventListener('alpine:init', () => {
                     this.selectedWorkType = fromUrl;
                 }
             });
-            this.$el.addEventListener('labor-matrix-refresh', () => this.refreshMatrix());
+            this._onLaborMatrixRefresh = () => this.refreshMatrix();
+            window.addEventListener('labor-matrix-refresh', this._onLaborMatrixRefresh);
+            this.$el.addEventListener('labor-matrix-refresh', this._onLaborMatrixRefresh);
+        },
+        destroy() {
+            if (this._onLaborMatrixRefresh) {
+                window.removeEventListener('labor-matrix-refresh', this._onLaborMatrixRefresh);
+            }
         },
         async refreshMatrix() {
             if (!this.matrix.routes?.rate) return;
@@ -474,10 +558,38 @@ document.addEventListener('alpine:init', () => {
             this.promptAddLaborColumn();
         },
         openClassSettings(column) {
-            this.$dispatch('labor-open-class-settings', { key: column.customer_class_key || null, label: column.label });
+            this.openClassSettingsForKey(column.customer_class_key || null);
         },
-        openManageBillingClasses() {
-            this.$dispatch('labor-open-manage-billing-classes');
+        openClassSettingsForKey(key) {
+            this.$dispatch('labor-open-class-settings', { key: key || null });
+        },
+        nonMatrixBillingClasses() {
+            const linked = new Set(
+                (this.matrix.columns || [])
+                    .map((column) => column.customer_class_key)
+                    .filter(Boolean),
+            );
+            return (this.matrix.billing_classes || []).filter((row) => !linked.has(row.key));
+        },
+        laborOnlyColumnKey(column) {
+            return column?.value || column?.key || null;
+        },
+        async archiveLaborOnlyColumn(column) {
+            const key = this.laborOnlyColumnKey(column);
+            if (!key) return;
+            if (!window.confirm('Archive this labor-only column? Existing repair orders keep their rates.')) return;
+            await this.request(this.matrix.routes.billing_class_archive, 'POST', { billing_class: key });
+        },
+        async restoreLaborOnlyColumn(column) {
+            const key = this.laborOnlyColumnKey(column);
+            if (!key) return;
+            await this.request(this.matrix.routes.billing_class_restore, 'POST', { billing_class: key });
+        },
+        async deleteLaborOnlyColumn(column) {
+            const key = this.laborOnlyColumnKey(column);
+            if (!key) return;
+            if (!window.confirm('Delete this labor-only column only if it was never used on a repair order?')) return;
+            await this.request(this.matrix.routes.billing_class_destroy, 'POST', { billing_class: key });
         },
         async confirmAddDialog() {
             const name = (this.addDialogName || '').trim();
