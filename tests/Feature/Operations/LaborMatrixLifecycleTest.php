@@ -137,7 +137,7 @@ test('unused custom labor column can be deleted without touching customer classe
         ->toBeNull();
 });
 
-test('manage catalog separates labor-linked actives from customer-only discovery', function () {
+test('manage catalog is the full billing-class registry including labor-linked actives', function () {
     $catalog = app(\App\Ark\Operations\Settings\PersistCustomerBillingClasses::class)
         ->catalog(ShopSettings::current());
 
@@ -145,6 +145,6 @@ test('manage catalog separates labor-linked actives from customer-only discovery
 
     expect($manageKeys)->toContain('military')
         ->and($manageKeys)->toContain('business')
-        ->and($manageKeys)->not->toContain('retail')
-        ->and($manageKeys)->not->toContain('warranty');
+        ->and($manageKeys)->toContain('retail')
+        ->and($manageKeys)->toContain('warranty');
 });

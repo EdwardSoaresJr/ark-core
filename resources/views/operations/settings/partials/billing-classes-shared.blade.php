@@ -194,6 +194,17 @@
                                     <span class="form-check-label">Shop Default (new customers)</span>
                                 </label>
                             </div>
+                            <template x-if="billingProfile(draft) !== 'fleet' && billingProfile(draft) !== 'warranty'">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label mb-1">New concerns bill as</label>
+                                    <select class="form-select form-select-sm" x-model="draft.concern_billing_posture">
+                                        <option value="">Shop default (from the class name)</option>
+                                        <template x-for="posture in catalog.postures" :key="posture.value">
+                                            <option :value="posture.value" x-text="posture.label"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
