@@ -238,6 +238,38 @@
                                 </td>
                             </tr>
                         </template>
+                        <template x-for="column in (matrix.archived_orphan_labor_columns || [])" :key="'archived-orphan-'+column.key">
+                            <tr :data-billing-class="column.key" data-archived-orphan-labor-column>
+                                <td class="py-1">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="fw-medium" x-text="column.label"></span>
+                                        <span class="badge bg-secondary-lt">Archived</span>
+                                    </div>
+                                    <div class="form-hint mb-0">Labor rates only — restore to edit rates</div>
+                                </td>
+                                <td class="py-1 text-secondary small" colspan="3">—</td>
+                                <td class="py-1 text-end">
+                                    <div class="dropdown d-inline-block" x-data="{ open: false }" @click.outside="open = false">
+                                        <button
+                                            type="button"
+                                            class="btn btn-ghost-secondary btn-icon btn-sm"
+                                            :aria-expanded="open"
+                                            aria-haspopup="true"
+                                            aria-label="Archived labor column actions"
+                                            title="Archived labor column actions"
+                                            data-labor-only-column-actions
+                                            @click="open = !open"
+                                        >
+                                            <x-tabler.icon name="dots" class="icon icon-sm" />
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end" :class="{ show: open }" x-show="open" x-cloak>
+                                            <button type="button" class="dropdown-item" @click="open = false; restoreLaborOnlyColumn(column)">Restore column</button>
+                                            <button type="button" class="dropdown-item text-danger" @click="open = false; deleteLaborOnlyColumn(column)">Delete column</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
                     </tbody>
                 </table>
             </div>
@@ -539,15 +571,25 @@ document.addEventListener('alpine:init', () => {
             );
             return (this.matrix.billing_classes || []).filter((row) => !linked.has(row.key));
         },
+        laborOnlyColumnKey(column) {
+            return column?.value || column?.key || null;
+        },
         async archiveLaborOnlyColumn(column) {
-            if (!column?.value) return;
+            const key = this.laborOnlyColumnKey(column);
+            if (!key) return;
             if (!window.confirm('Archive this labor-only column? Existing repair orders keep their rates.')) return;
-            await this.request(this.matrix.routes.billing_class_archive, 'POST', { billing_class: column.value });
+            await this.request(this.matrix.routes.billing_class_archive, 'POST', { billing_class: key });
+        },
+        async restoreLaborOnlyColumn(column) {
+            const key = this.laborOnlyColumnKey(column);
+            if (!key) return;
+            await this.request(this.matrix.routes.billing_class_restore, 'POST', { billing_class: key });
         },
         async deleteLaborOnlyColumn(column) {
-            if (!column?.value) return;
+            const key = this.laborOnlyColumnKey(column);
+            if (!key) return;
             if (!window.confirm('Delete this labor-only column only if it was never used on a repair order?')) return;
-            await this.request(this.matrix.routes.billing_class_destroy, 'POST', { billing_class: column.value });
+            await this.request(this.matrix.routes.billing_class_destroy, 'POST', { billing_class: key });
         },
         async confirmAddDialog() {
             const name = (this.addDialogName || '').trim();

@@ -123,6 +123,24 @@ final class LaborWorkTypeMatrixProjection
             ->values()
             ->all();
 
+        $linkedLaborColumnKeys = collect($settings->customerTypeRows())
+            ->pluck('labor_column_key')
+            ->filter(fn ($key): bool => filled($key))
+            ->map(fn ($key): string => (string) $key)
+            ->all();
+
+        // Archived labor-only columns leave matrixBillingColumns(); keep them visible for restore/delete.
+        $archivedOrphanLaborColumns = collect($settings->allCustomLaborBillingClasses())
+            ->filter(fn (array $column): bool => ! ($column['is_active'] ?? true)
+                && ! in_array($column['key'], $linkedLaborColumnKeys, true))
+            ->map(fn (array $column): array => [
+                'key' => $column['key'],
+                'label' => $column['label'],
+                'is_active' => false,
+            ])
+            ->values()
+            ->all();
+
         return [
             'work_types' => $workTypes,
             'columns' => $columns,
@@ -138,6 +156,7 @@ final class LaborWorkTypeMatrixProjection
             'standard_rate_cents' => $standardCents,
             'billing_minimums' => $minimumRows,
             'billing_classes' => $billingClasses,
+            'archived_orphan_labor_columns' => $archivedOrphanLaborColumns,
             'labor_pricing_profile_version' => (int) ($settings->labor_pricing_profile_version ?? 0),
             'routes' => [
                 'rate' => route('operations.settings.shop.labor-matrix.rate'),

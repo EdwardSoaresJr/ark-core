@@ -137,6 +137,33 @@ test('unused custom labor column can be deleted without touching customer classe
         ->toBeNull();
 });
 
+test('archived orphan labor column leaves active matrix rows then restores from the archived list', function () {
+    $created = app(CreateLaborBillingClassAction::class)->execute('Orphan Restore Column', 'customer_pay', ShopSettings::current());
+    $key = $created['key'];
+
+    $active = app(\App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrixProjection::class)->build();
+    expect(collect($active['columns'])->pluck('value'))->toContain($key)
+        ->and(collect($active['archived_orphan_labor_columns'] ?? [])->pluck('key'))->not->toContain($key);
+
+    app(CustomLaborBillingClassLifecycle::class)->archive(ShopSettings::current(), $key);
+
+    $archived = app(\App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrixProjection::class)->build();
+    expect(collect($archived['columns'])->pluck('value'))->not->toContain($key)
+        ->and(collect($archived['archived_orphan_labor_columns'])->pluck('key'))->toContain($key)
+        ->and(collect($archived['archived_orphan_labor_columns'])->firstWhere('key', $key)['label'])->toBe('Orphan Restore Column');
+
+    $this->postJson(route('operations.settings.shop.labor-matrix.billing-classes.restore'), [
+        'billing_class' => $key,
+    ])
+        ->assertOk()
+        ->assertJsonPath('status', 'restored')
+        ->assertJsonPath('matrix.columns', fn ($columns) => collect($columns)->pluck('value')->contains($key));
+
+    $restored = app(\App\Ark\Operations\EstimatePricing\LaborWorkTypeMatrixProjection::class)->build();
+    expect(collect($restored['columns'])->pluck('value'))->toContain($key)
+        ->and(collect($restored['archived_orphan_labor_columns'])->pluck('key'))->not->toContain($key);
+});
+
 test('manage catalog is the full billing-class registry including labor-linked actives', function () {
     $catalog = app(\App\Ark\Operations\Settings\PersistCustomerBillingClasses::class)
         ->catalog(ShopSettings::current());
