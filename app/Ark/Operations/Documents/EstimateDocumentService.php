@@ -54,7 +54,7 @@ class EstimateDocumentService
             ];
 
             if ($document) {
-                if ($this->isLegacyImportFrozen($document)) {
+                if ($this->contractualSnapshotIsFrozen($document)) {
                     return $document;
                 }
 
@@ -80,24 +80,40 @@ class EstimateDocumentService
     {
         $document->loadMissing('repairOrder');
 
-        $snapshot = $this->snapshotBuilder->build($document->repairOrder, $user);
-
-        // Issued / presented documents keep frozen warranty and disclaimer text.
-        if ($document->isIssuedInvoice() || $document->customer_presented_at !== null || $document->issued_at !== null) {
-            $priorDocuments = data_get($document->snapshot_json, 'documents');
-            if (is_array($priorDocuments) && filled($priorDocuments['global_disclaimer'] ?? null)) {
-                $snapshot['documents'] = $priorDocuments;
-            }
+        // Issued / presented / closed evidence must not be rebuilt. Restoring only the
+        // documents block after a living rebuild is not sufficient contractual freeze.
+        if ($this->contractualSnapshotIsFrozen($document)) {
+            return $document;
         }
+
+        $snapshot = $this->snapshotBuilder->build($document->repairOrder, $user);
 
         $document->forceFill([
             'snapshot_json' => $snapshot,
-            'status' => $document->isIssuedInvoice() ? $document->status : 'draft',
+            'status' => 'draft',
             'needs_pdf_refresh' => true,
             'refreshed_at' => now(),
         ])->save();
 
         return $document;
+    }
+
+    /**
+     * Customer-presented or issued snapshots are contractual evidence for that document.
+     */
+    public function contractualSnapshotIsFrozen(EstimateDocument $document): bool
+    {
+        $document->loadMissing('repairOrder');
+
+        if ($this->isLegacyImportFrozen($document)) {
+            return true;
+        }
+
+        if ($document->isIssuedInvoice() || $document->customer_presented_at !== null || $document->issued_at !== null) {
+            return true;
+        }
+
+        return $document->repairOrder?->estimateDocumentIsFrozen() === true;
     }
 
     public function generatePdf(EstimateDocument $document, ?string $contentFingerprint = null): string

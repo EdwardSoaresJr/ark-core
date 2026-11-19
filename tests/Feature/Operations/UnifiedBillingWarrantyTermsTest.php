@@ -291,9 +291,14 @@ test('mixed RO documents scope warranties and freeze issued snapshots', function
     expect($footer['important_information'])->toContain('Shop-wide estimate protection.')
         ->and($footer['concern_terms'])->not->toBeEmpty();
 
-    $headings = collect($footer['concern_terms'])->pluck('heading')->implode(' ');
-    expect($headings)->toContain('Transmission')
+    $headings = collect($footer['concern_terms'])->pluck('heading');
+    expect($headings->implode(' '))->toContain('Transmission')
+        ->and($headings->filter(fn (string $heading): bool => str_contains($heading, 'Brake') || str_contains($heading, 'Oil'))->count())->toBeGreaterThanOrEqual(1)
         ->and(collect($footer['concern_terms'])->flatten()->implode(' '))->toContain('third-party');
+
+    // Identical retail terms must still keep separate concern headings.
+    $retailHeadings = $headings->filter(fn (string $heading): bool => str_contains($heading, 'Retail'))->values();
+    expect($retailHeadings->count())->toBeGreaterThanOrEqual(2);
 
     $document = EstimateDocument::query()->create([
         'repair_order_id' => $repairOrder->id,
@@ -305,6 +310,7 @@ test('mixed RO documents scope warranties and freeze issued snapshots', function
             'document_type' => 'estimate',
             'totals' => [],
             'concerns' => [],
+            'sentinel' => 'presented-contract',
         ],
         'status' => 'draft',
         'customer_presented_at' => now(),
@@ -325,23 +331,11 @@ test('mixed RO documents scope warranties and freeze issued snapshots', function
     ]);
     ShopSettings::forgetCurrent();
 
-    // Presented docs keep frozen documents even if a living rebuild would otherwise run.
-    $prior = data_get($document->snapshot_json, 'documents');
-    $rebuild = app(DocumentDisclaimerComposer::class)->snapshotFor(
-        FinancialDocumentType::Estimate,
-        ShopSettings::current(),
-        $customer->fresh()->customer_type,
-        $repairOrder->fresh(['concerns', 'customer']),
-    );
-    expect($rebuild['global_disclaimer'])->toContain('CHANGED AFTER ISSUE');
-
-    $document->forceFill([
-        'snapshot_json' => array_merge($document->snapshot_json, [
-            'documents' => $prior,
-        ]),
-    ])->save();
-    expect(data_get($document->fresh()->snapshot_json, 'documents.global_disclaimer'))
-        ->toBe('Shop-wide estimate protection.');
+    $refreshed = app(\App\Ark\Operations\Documents\EstimateDocumentService::class)
+        ->refreshSnapshot($document->fresh(['repairOrder']));
+    expect(data_get($refreshed->snapshot_json, 'documents.global_disclaimer'))
+        ->toBe('Shop-wide estimate protection.')
+        ->and(data_get($refreshed->snapshot_json, 'sentinel'))->toBe('presented-contract');
 
     $invoiceDocuments = app(DocumentDisclaimerComposer::class)->snapshotFor(
         FinancialDocumentType::Invoice,
@@ -356,6 +350,132 @@ test('mixed RO documents scope warranties and freeze issued snapshots', function
         'totals' => [],
     ]);
     expect($invoiceFooter['concern_terms'])->not->toBeEmpty();
+});
+
+test('open RO warranty and document terms follow the commercial stamp, not later shop settings', function () {
+    $customer = Customer::query()->create([
+        'first_name' => 'Frozen',
+        'last_name' => 'Terms',
+        'phone' => '555-1005',
+        'billing_class_key' => 'retail',
+    ]);
+    $vehicle = Vehicle::query()->create(['customer_id' => $customer->id, 'year' => 2019, 'make' => 'Ford', 'model' => 'Focus']);
+    $repairOrder = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'Stamp freeze',
+    ]);
+    $this->post(route('operations.repair-orders.concerns.store', $repairOrder), ['summary' => 'Pads'])->assertSessionHasNoErrors();
+    $concern = RepairOrderConcern::query()->where('repair_order_id', $repairOrder->id)->sole();
+
+    $before = app(\App\Ark\Operations\EstimatePricing\EffectiveWarrantyResolver::class)->forConcern($concern->fresh(['repairOrder']));
+    expect($before['source'])->toBe('shop')
+        ->and($before['warranty']['months'])->toBe(24);
+
+    $documentsBefore = app(DocumentDisclaimerComposer::class)->snapshotFor(
+        FinancialDocumentType::Estimate,
+        ShopSettings::current(),
+        $customer->customer_type,
+        $repairOrder->fresh(['concerns', 'customer']),
+    );
+    expect($documentsBefore['global_disclaimer'])->toBe('Shop-wide estimate protection.')
+        ->and(collect($documentsBefore['concern_terms'])->pluck('terms')->implode(' '))->toContain('Retail shop warranty terms');
+
+    ShopSettings::current()->update([
+        'estimate_disclaimer' => 'LIVE SHOP CHANGE — must not rewrite open RO',
+        'shop_warranty' => [
+            'months' => 3,
+            'miles' => 3000,
+            'covers_parts' => false,
+            'covers_labor' => false,
+            'description' => 'live change',
+            'exclusions' => 'live',
+            'third_party' => false,
+        ],
+        'customer_types' => collect(ShopSettings::current()->storedCustomerTypeRows())
+            ->map(function (array $row): array {
+                if (($row['key'] ?? '') === 'retail') {
+                    $row['document_terms'] = 'LIVE retail terms rewrite';
+                    $row['warranty'] = [
+                        'months' => 1,
+                        'miles' => 1,
+                        'covers_parts' => false,
+                        'covers_labor' => false,
+                        'description' => 'live class',
+                        'exclusions' => '',
+                        'third_party' => false,
+                    ];
+                    $row['warranty_mode'] = BillingClassWarrantyMode::ClassSpecific->value;
+                }
+
+                return $row;
+            })
+            ->all(),
+    ]);
+    ShopSettings::forgetCurrent();
+
+    $after = app(\App\Ark\Operations\EstimatePricing\EffectiveWarrantyResolver::class)
+        ->forConcern($concern->fresh(['repairOrder']));
+    expect($after['source'])->toBe('shop')
+        ->and($after['warranty']['months'])->toBe(24)
+        ->and($after['warranty']['description'])->toBe('Shop warranty on parts and labor.');
+
+    $documentsAfter = app(DocumentDisclaimerComposer::class)->snapshotFor(
+        FinancialDocumentType::Estimate,
+        ShopSettings::current(),
+        $customer->customer_type,
+        $repairOrder->fresh(['concerns', 'customer']),
+    );
+    expect($documentsAfter['global_disclaimer'])->toBe('Shop-wide estimate protection.')
+        ->and(collect($documentsAfter['concern_terms'])->pluck('terms')->implode(' '))
+        ->toContain('Retail shop warranty terms.')
+        ->and(collect($documentsAfter['concern_terms'])->pluck('terms')->implode(' '))
+        ->not->toContain('LIVE retail terms rewrite');
+
+    // Explicit concern override remains allowed and auditable after shop changes.
+    $this->patchJson(route('operations.repair-orders.concerns.warranty', [$repairOrder, $concern]), [
+        'action' => 'override',
+        'warranty' => [
+            'months' => 6,
+            'miles' => 6000,
+            'covers_parts' => true,
+            'covers_labor' => true,
+            'description' => 'Advisor override after shop change',
+            'exclusions' => '',
+            'third_party' => false,
+        ],
+    ])->assertOk();
+
+    $overridden = app(\App\Ark\Operations\EstimatePricing\EffectiveWarrantyResolver::class)
+        ->forConcern($concern->fresh(['repairOrder']));
+    expect($overridden['source'])->toBe('override')
+        ->and($overridden['warranty']['months'])->toBe(6);
+});
+
+test('concern warranty control is on the repair order worksheet', function () {
+    $customer = Customer::query()->create([
+        'first_name' => 'Ui',
+        'last_name' => 'Warranty',
+        'phone' => '555-1006',
+        'billing_class_key' => 'retail',
+    ]);
+    $vehicle = Vehicle::query()->create(['customer_id' => $customer->id, 'year' => 2021, 'make' => 'Toyota', 'model' => 'Corolla']);
+    $repairOrder = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'UI warranty',
+    ]);
+    $this->post(route('operations.repair-orders.concerns.store', $repairOrder), ['summary' => 'Oil'])->assertSessionHasNoErrors();
+
+    $this->actingAs($this->advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('data-concern-warranty-choices', false)
+        ->assertSee('Effective warranty', false)
+        ->assertSee('Override for this concern', false)
+        ->assertSee('Save concern warranty', false);
 });
 
 test('closed RO financial fingerprint stays stable after class settings change', function () {

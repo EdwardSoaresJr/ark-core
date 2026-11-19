@@ -131,7 +131,6 @@ final class DocumentFooterPresenter
      */
     private function concernTermSections(array $concernTerms): array
     {
-        $seen = [];
         $sections = [];
 
         foreach ($concernTerms as $term) {
@@ -162,12 +161,8 @@ final class DocumentFooterPresenter
                 continue;
             }
 
-            $fingerprint = hash('sha256', $className.'|'.implode('|', $bullets));
-            if (isset($seen[$fingerprint])) {
-                continue;
-            }
-            $seen[$fingerprint] = true;
-
+            // Keep one section per concern even when terms text matches another concern —
+            // collapsing identical bullets hid which scopes the language covered.
             $sections[] = [
                 'heading' => $summary.' · '.$className,
                 'bullets' => $bullets,
