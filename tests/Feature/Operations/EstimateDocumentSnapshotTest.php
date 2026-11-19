@@ -9,6 +9,7 @@ use App\Ark\Operations\Documents\EstimateDocumentPdfSnapshot;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Documents\PdfRenderer;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -16,11 +17,13 @@ use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\RepairOrders\ScopeProductionStatus;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Support\Facades\Storage;
 
 test('advisor can create a living estimate document snapshot from current repair order state', function () {
@@ -731,6 +734,7 @@ test('refreshing current estimate reuses row and updates snapshot after dirty ch
 
 test('terminal repair order statuses snapshot a final pdf that no longer auto refreshes', function () {
     $this->seed(ArkAuthorizationSeeder::class);
+    $this->seed(RepairOrderStatusCatalogSeeder::class);
     Storage::fake('local');
 
     $this->app->bind(PdfRenderer::class, FakeEstimatePdfRenderer::class);
@@ -741,20 +745,41 @@ test('terminal repair order statuses snapshot a final pdf that no longer auto re
     $this->post(route('operations.repair-orders.estimate-documents.store', $repairOrder));
     $document = EstimateDocument::query()->firstOrFail();
 
-    $repairOrder->concerns()->firstOrFail()->update([
+    $concern = $repairOrder->concerns()->firstOrFail();
+    $concern->forceFill([
         'summary' => 'Final approved concern',
         'disposition' => RepairOrderConcernDisposition::Approved,
-    ]);
+        'production_status' => ScopeProductionStatus::Completed,
+    ])->save();
+    $repairOrder->lines()
+        ->where('type', RepairOrderLineType::Part->value)
+        ->update(['procurement_state' => PartProcurementState::Received->value]);
     $document->refresh();
 
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
-    $repairOrder->forceFill(['status' => RepairOrderStatus::ReadyPickup])->save();
+    $repairOrder->forceFill([
+        'status' => RepairOrderStatus::ReadyPickup,
+        'mileage_in' => 10000,
+        'mileage_out' => 10001,
+    ])->save();
     issueFinalInvoiceFor($repairOrder->fresh());
     payRepairOrderInFull($repairOrder->fresh());
 
-    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
-        'status' => RepairOrderStatus::Closed->value,
-    ])->assertRedirect();
+    $challenge = app(\App\Ark\Operations\RepairOrders\RepairOrderOperationalCloseoutAcknowledgment::class)
+        ->challenge($repairOrder->fresh(), RepairOrderStatus::Closed->value, 'paid');
+
+    $payload = [
+        'status' => 'closed:paid',
+        'review_request_sent' => '1',
+    ];
+    if (($challenge['required'] ?? false) === true) {
+        $payload['operational_closeout_reason'] = 'Test close after paid pickup.';
+        $payload['operational_closeout_fingerprint'] = $challenge['fingerprint'];
+    }
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), $payload)
+        ->assertRedirect()
+        ->assertSessionDoesntHaveErrors('lifecycle');
 
     $closedDocument = $document->fresh();
     $finalPdfContents = Storage::disk('local')->get($closedDocument->pdf_path);

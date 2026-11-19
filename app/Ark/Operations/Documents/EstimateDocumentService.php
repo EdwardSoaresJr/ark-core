@@ -80,8 +80,10 @@ class EstimateDocumentService
     {
         $document->loadMissing('repairOrder');
 
-        // Issued / presented / closed evidence must not be rebuilt. Restoring only the
-        // documents block after a living rebuild is not sufficient contractual freeze.
+        // Issued / presented evidence must not be rebuilt. Restoring only the documents
+        // block after a living rebuild is not sufficient contractual freeze. Terminal
+        // ROs still get one final createOrRefresh stamp at close; markDirty/ensureCurrent
+        // already refuse living rebuilds once the RO is terminal.
         if ($this->contractualSnapshotIsFrozen($document)) {
             return $document;
         }
@@ -100,6 +102,7 @@ class EstimateDocumentService
 
     /**
      * Customer-presented or issued snapshots are contractual evidence for that document.
+     * Does not freeze merely because the RO is terminal — close still stamps the final PDF.
      */
     public function contractualSnapshotIsFrozen(EstimateDocument $document): bool
     {
@@ -109,11 +112,9 @@ class EstimateDocumentService
             return true;
         }
 
-        if ($document->isIssuedInvoice() || $document->customer_presented_at !== null || $document->issued_at !== null) {
-            return true;
-        }
-
-        return $document->repairOrder?->estimateDocumentIsFrozen() === true;
+        return $document->isIssuedInvoice()
+            || $document->customer_presented_at !== null
+            || $document->issued_at !== null;
     }
 
     public function generatePdf(EstimateDocument $document, ?string $contentFingerprint = null): string
@@ -478,13 +479,9 @@ class EstimateDocumentService
 
     private function isLegacyImportFrozen(EstimateDocument $document): bool
     {
-        if (data_get($document->snapshot_json, 'schema_version') === 'legacy_import') {
-            return true;
-        }
-
-        $document->loadMissing('repairOrder');
-
-        return $document->repairOrder?->estimateDocumentIsFrozen() === true;
+        // Terminal ROs are frozen by estimateDocumentIsFrozen() at markDirty/ensureCurrent —
+        // not here. createOrRefresh must still stamp the final Closed snapshot at close.
+        return data_get($document->snapshot_json, 'schema_version') === 'legacy_import';
     }
 
     private function frozenEstimateApprovalPresentationDrifted(EstimateDocument $document): bool
