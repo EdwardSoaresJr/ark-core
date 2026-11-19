@@ -62,6 +62,7 @@ final class DocumentFooterPresenter
      * @return array{
      *     important_information: list<string>,
      *     customer_type_terms: array{heading: string, bullets: list<string>}|null,
+     *     concern_terms: list<array{heading: string, bullets: list<string>}>,
      *     authorization: list<string>,
      *     approval: array{
      *         status: string,
@@ -94,8 +95,11 @@ final class DocumentFooterPresenter
         $customerTypeDisclaimer = trim((string) ($documents['customer_type_disclaimer'] ?? ''));
 
         $customerTypeTerms = null;
+        $concernTermSections = $this->concernTermSections(
+            is_array($documents['concern_terms'] ?? null) ? $documents['concern_terms'] : [],
+        );
 
-        if ($customerTypeDisclaimer !== '') {
+        if ($concernTermSections === [] && $customerTypeDisclaimer !== '') {
             if ($this->usesSeparateTermsSection($customerTypeKey)) {
                 $customerTypeTerms = [
                     'heading' => $this->termsHeading($customerTypeLabel),
@@ -114,10 +118,63 @@ final class DocumentFooterPresenter
         return [
             'important_information' => $this->uniqueBullets($importantInformation),
             'customer_type_terms' => $customerTypeTerms,
+            'concern_terms' => $concernTermSections,
             'authorization' => $this->paragraphsFromText($authorizationLanguage),
             'approval' => $this->approvalStatus($snapshot),
             'total_label' => $this->footerTotalLabel($snapshot),
         ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $concernTerms
+     * @return list<array{heading: string, bullets: list<string>}>
+     */
+    private function concernTermSections(array $concernTerms): array
+    {
+        $seen = [];
+        $sections = [];
+
+        foreach ($concernTerms as $term) {
+            if (! is_array($term)) {
+                continue;
+            }
+
+            $bullets = [];
+            $className = trim((string) ($term['billing_class_name'] ?? 'Billing class'));
+            $summary = trim((string) ($term['concern_summary'] ?? 'Concern'));
+            $warranty = is_array($term['warranty'] ?? null) ? $term['warranty'] : [];
+            $warrantySummary = trim((string) ($warranty['summary'] ?? ''));
+            if ($warrantySummary !== '') {
+                $bullets[] = 'Warranty: '.$warrantySummary;
+            }
+            $thirdParty = trim((string) ($warranty['third_party_disclaimer'] ?? ''));
+            if ($thirdParty !== '') {
+                $bullets[] = $thirdParty;
+            }
+            $mode = (string) ($term['terms_mode'] ?? '');
+            $termsText = trim((string) ($term['terms'] ?? ''));
+            if ($mode !== 'shop_defaults' && $termsText !== '') {
+                $bullets = [...$bullets, ...$this->bulletsFromText($termsText)];
+            }
+
+            $bullets = $this->uniqueBullets($bullets);
+            if ($bullets === []) {
+                continue;
+            }
+
+            $fingerprint = hash('sha256', $className.'|'.implode('|', $bullets));
+            if (isset($seen[$fingerprint])) {
+                continue;
+            }
+            $seen[$fingerprint] = true;
+
+            $sections[] = [
+                'heading' => $summary.' · '.$className,
+                'bullets' => $bullets,
+            ];
+        }
+
+        return $sections;
     }
 
     /**

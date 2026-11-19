@@ -115,6 +115,7 @@ class EstimateSnapshotBuilder
                 FinancialDocumentType::Estimate,
                 $settings,
                 $repairOrder->customer?->customer_type,
+                $repairOrder,
             ),
         ]);
     }

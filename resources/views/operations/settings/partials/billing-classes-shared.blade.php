@@ -28,9 +28,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <div>
-                        <h5 class="modal-title mb-0">Customer-only &amp; archived classes</h5>
+                        <h5 class="modal-title mb-0">Billing Classes</h5>
                         <div class="text-secondary small">
-                            Labor-linked classes edit from the Class Settings gear on the Labor matrix. This list covers customer-only classes, archived customer classes, and labor-only columns.
+                            One shop-managed registry. Every active class has Class Settings. Exactly one class is Default for new customers.
                         </div>
                     </div>
                     <button type="button" class="btn-close" @click="closeManage()"></button>
@@ -43,26 +43,24 @@
                         </div>
                         <button type="button" class="btn btn-primary btn-sm" @click="openCreate()">+ Add Billing Class</button>
                     </div>
-                    <div class="subheader mb-2">Customer Billing Classes</div>
+                    <div class="subheader mb-2">All billing classes</div>
                     <div class="list-group list-group-flush mb-3">
                         <template x-for="row in (catalog.manage_classes || [])" :key="'manage-'+row.key">
                             <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" @click="openClassSettings(row.key)">
                                 <span>
                                     <span class="fw-medium" x-text="row.name"></span>
+                                    <span class="badge bg-azure-lt ms-1" x-show="row.is_default">Default</span>
                                     <span class="badge bg-secondary-lt ms-1" x-show="!row.is_active">Archived</span>
-                                    <span
-                                        class="form-hint d-block mb-0"
-                                        x-text="row.is_customer_only ? 'Customer only — no labor column' : ('Linked labor pricing · ' + row.name)"
-                                    ></span>
+                                    <span class="form-hint d-block mb-0" x-text="row.labor_column_key ? ('Labor pricing linked') : 'Legacy unlinked — open Class Settings'"></span>
                                 </span>
                                 <span class="btn btn-outline-primary btn-sm">Class Settings</span>
                             </button>
                         </template>
                         <div class="list-group-item text-secondary small" x-show="!(catalog.manage_classes || []).length">
-                            No customer-only or archived classes. Labor-linked classes use the Class Settings gear on each Labor matrix row.
+                            No billing classes yet. Add one to get started.
                         </div>
                     </div>
-                    <div class="subheader mb-2" x-show="(catalog.labor_only_columns || []).length">Labor-only columns</div>
+                    <div class="subheader mb-2" x-show="(catalog.labor_only_columns || []).length">Orphan labor columns</div>
                     <div class="list-group list-group-flush" x-show="(catalog.labor_only_columns || []).length">
                         <template x-for="column in (catalog.labor_only_columns || [])" :key="'labor-only-'+column.key">
                             <div class="list-group-item d-flex justify-content-between align-items-center gap-2">
@@ -190,15 +188,88 @@
                                     </template>
                                 </select>
                             </div>
-                            <template x-if="billingProfile(draft) !== 'fleet' && billingProfile(draft) !== 'warranty'">
+                            <div class="col-12 col-md-6">
+                                <label class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" x-model="draft.is_default">
+                                    <span class="form-check-label">Shop Default (new customers)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="subheader mb-2">Warranty</div>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label mb-1">Warranty mode</label>
+                                <select class="form-select form-select-sm" x-model="draft.warranty_mode">
+                                    <template x-for="mode in (catalog.warranty_modes || [])" :key="'wm-'+mode.value">
+                                        <option :value="mode.value" x-text="mode.label"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <template x-if="draft.warranty_mode === 'class_specific'">
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label mb-1">New concerns bill as</label>
-                                    <select class="form-select form-select-sm" x-model="draft.concern_billing_posture">
-                                        <option value="">Shop default (from the class name)</option>
-                                        <template x-for="posture in catalog.postures" :key="posture.value">
-                                            <option :value="posture.value" x-text="posture.label"></option>
-                                        </template>
-                                    </select>
+                                    <label class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" x-model="draft.warranty.third_party">
+                                        <span class="form-check-label">Third-party administrator</span>
+                                    </label>
+                                </div>
+                            </template>
+                            <template x-if="draft.warranty_mode === 'class_specific'">
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label mb-1">Months</label>
+                                    <input type="number" min="0" class="form-control form-control-sm" x-model="draft.warranty.months">
+                                </div>
+                            </template>
+                            <template x-if="draft.warranty_mode === 'class_specific'">
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label mb-1">Miles</label>
+                                    <input type="number" min="0" class="form-control form-control-sm" x-model="draft.warranty.miles">
+                                </div>
+                            </template>
+                            <template x-if="draft.warranty_mode === 'class_specific'">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" x-model="draft.warranty.covers_parts">
+                                        <span class="form-check-label">Covers parts</span>
+                                    </label>
+                                    <label class="form-check ms-3">
+                                        <input class="form-check-input" type="checkbox" x-model="draft.warranty.covers_labor">
+                                        <span class="form-check-label">Covers labor</span>
+                                    </label>
+                                </div>
+                            </template>
+                            <template x-if="draft.warranty_mode === 'class_specific'">
+                                <div class="col-12">
+                                    <label class="form-label mb-1">Description</label>
+                                    <textarea class="form-control form-control-sm" rows="2" x-model="draft.warranty.description"></textarea>
+                                </div>
+                            </template>
+                            <template x-if="draft.warranty_mode === 'class_specific'">
+                                <div class="col-12">
+                                    <label class="form-label mb-1">Exclusions</label>
+                                    <textarea class="form-control form-control-sm" rows="2" x-model="draft.warranty.exclusions"></textarea>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="subheader mb-2">Document terms</div>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label mb-1">Terms mode</label>
+                                <select class="form-select form-select-sm" x-model="draft.document_terms_mode">
+                                    <template x-for="mode in (catalog.document_terms_modes || [])" :key="'dtm-'+mode.value">
+                                        <option :value="mode.value" x-text="mode.label"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <template x-if="draft.document_terms_mode !== 'shop_defaults'">
+                                <div class="col-12">
+                                    <label class="form-label mb-1">Class terms</label>
+                                    <textarea class="form-control form-control-sm" rows="3" x-model="draft.document_terms" placeholder="Shown on estimates and invoices for concerns on this class"></textarea>
                                 </div>
                             </template>
                         </div>
@@ -225,7 +296,7 @@
                         Linked labor pricing: <span x-text="draft.name"></span>
                     </p>
                     <p class="form-hint mb-0 mt-3" x-show="!draft.labor_column_key">
-                        Unlinked legacy class — no Labor matrix column yet. Retail labor rates apply until a column is linked.
+                        Legacy unlinked class — open Save after linking from Add Billing Class, or archive if unused.
                     </p>
                 </div>
                 <div class="modal-footer justify-content-between">
@@ -322,6 +393,11 @@ document.addEventListener('alpine:init', () => {
                 discount_amount: null,
                 concern_billing_posture: '',
                 labor_column_key: null,
+                is_default: false,
+                warranty_mode: 'inherit_shop',
+                warranty: { months: null, miles: null, covers_parts: false, covers_labor: false, description: '', exclusions: '', third_party: false },
+                document_terms_mode: 'shop_defaults',
+                document_terms: '',
             };
         },
         openClassSettings(key) {
@@ -351,6 +427,7 @@ document.addEventListener('alpine:init', () => {
             this.draft = this.cloneDraft(row);
         },
         cloneDraft(row) {
+            const warranty = row.warranty || {};
             return {
                 key: row.key,
                 name: row.name,
@@ -366,7 +443,20 @@ document.addEventListener('alpine:init', () => {
                 concern_billing_posture: row.concern_billing_posture || '',
                 labor_column_key: row.labor_column_key || null,
                 is_active: row.is_active !== false,
+                is_default: !!row.is_default,
                 is_customer_only: !!row.is_customer_only,
+                warranty_mode: row.warranty_mode || 'inherit_shop',
+                warranty: {
+                    months: warranty.months ?? null,
+                    miles: warranty.miles ?? null,
+                    covers_parts: !!warranty.covers_parts,
+                    covers_labor: !!warranty.covers_labor,
+                    description: warranty.description || '',
+                    exclusions: warranty.exclusions || '',
+                    third_party: !!warranty.third_party,
+                },
+                document_terms_mode: row.document_terms_mode || 'shop_defaults',
+                document_terms: row.document_terms || '',
             };
         },
         lifecycleUrl(template, key) {
@@ -516,7 +606,7 @@ document.addEventListener('alpine:init', () => {
         },
         payloadFromDraft() {
             const draft = this.draft;
-            const warranty = this.billingProfile(draft) === 'warranty';
+            const warrantyProfile = this.billingProfile(draft) === 'warranty';
             return {
                 key: draft.key || undefined,
                 name: draft.name,
@@ -524,15 +614,25 @@ document.addEventListener('alpine:init', () => {
                 document_show_part_number: !!draft.document_show_part_number,
                 document_show_part_brand: !!draft.document_show_part_brand,
                 document_show_vendor: !!draft.document_show_vendor,
-                shop_fees_enabled: warranty ? false : !!draft.shop_fees_enabled,
-                shop_fee_rate_override: warranty || !draft.shop_fees_enabled ? null : (draft.shop_fee_rate_override || null),
+                shop_fees_enabled: warrantyProfile ? false : !!draft.shop_fees_enabled,
+                shop_fee_rate_override: warrantyProfile || !draft.shop_fees_enabled ? null : (draft.shop_fee_rate_override || null),
                 default_parts_matrix_key: draft.default_parts_matrix_key || null,
                 discount_type: this.billingProfile(draft) === 'fleet' ? 'none' : (draft.discount_type || 'none'),
                 discount_amount: this.billingProfile(draft) === 'fleet' ? null : draft.discount_amount,
-                concern_billing_posture: this.billingProfile(draft) === 'fleet' || this.billingProfile(draft) === 'warranty'
-                    ? null
-                    : (draft.concern_billing_posture || null),
                 labor_column_key: draft.labor_column_key || null,
+                is_default: !!draft.is_default,
+                warranty_mode: draft.warranty_mode || 'inherit_shop',
+                warranty: draft.warranty_mode === 'class_specific' ? {
+                    months: draft.warranty?.months === '' || draft.warranty?.months === null ? null : Number(draft.warranty.months),
+                    miles: draft.warranty?.miles === '' || draft.warranty?.miles === null ? null : Number(draft.warranty.miles),
+                    covers_parts: !!draft.warranty?.covers_parts,
+                    covers_labor: !!draft.warranty?.covers_labor,
+                    description: draft.warranty?.description || '',
+                    exclusions: draft.warranty?.exclusions || '',
+                    third_party: !!draft.warranty?.third_party,
+                } : null,
+                document_terms_mode: draft.document_terms_mode || 'shop_defaults',
+                document_terms: draft.document_terms_mode === 'shop_defaults' ? null : (draft.document_terms || null),
             };
         },
         async saveDraft() {

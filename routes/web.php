@@ -1601,6 +1601,10 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.concerns.billing-posture');
 
+        Route::patch('/app/repair-orders/{repairOrder}/concerns/{concern}/warranty', \App\Ark\Operations\RepairOrders\RepairOrderConcernWarrantyController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.concerns.warranty');
+
         Route::get('/app/repair-orders/{repairOrder}/billing-posture/preview', [RepairOrderBillingPostureController::class, 'preview'])
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.billing-posture.preview');

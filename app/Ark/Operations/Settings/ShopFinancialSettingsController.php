@@ -741,6 +741,18 @@ class ShopFinancialSettingsController
                 fn (ConcernBillingPosture $posture): string => $posture->value,
                 ConcernBillingPosture::advisorSelectableCases(),
             ))],
+            'customer_types.*.is_default' => ['nullable', 'boolean'],
+            'customer_types.*.warranty_mode' => ['nullable', 'string', Rule::in(array_column(\App\Ark\Operations\EstimatePricing\BillingClassWarrantyMode::cases(), 'value'))],
+            'customer_types.*.warranty' => ['nullable', 'array'],
+            'customer_types.*.warranty.months' => ['nullable', 'integer', 'min:0', 'max:120'],
+            'customer_types.*.warranty.miles' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'customer_types.*.warranty.covers_parts' => ['nullable', 'boolean'],
+            'customer_types.*.warranty.covers_labor' => ['nullable', 'boolean'],
+            'customer_types.*.warranty.description' => ['nullable', 'string', 'max:2000'],
+            'customer_types.*.warranty.exclusions' => ['nullable', 'string', 'max:2000'],
+            'customer_types.*.warranty.third_party' => ['nullable', 'boolean'],
+            'customer_types.*.document_terms_mode' => ['nullable', 'string', Rule::in(array_column(\App\Ark\Operations\EstimatePricing\BillingClassDocumentTermsMode::cases(), 'value'))],
+            'customer_types.*.document_terms' => ['nullable', 'string', 'max:5000'],
         ];
     }
 
@@ -763,11 +775,23 @@ class ShopFinancialSettingsController
             'document_show_vendor' => ['nullable', 'boolean'],
             'document_presentation_profile' => ['nullable', Rule::enum(CustomerPartPresentationProfile::class)],
             'is_active' => ['nullable', 'boolean'],
+            'is_default' => ['nullable', 'boolean'],
             'pill_color' => ['nullable', 'string', Rule::in(\App\Ark\Operations\Settings\BillingClassPillColor::keys())],
             'concern_billing_posture' => ['nullable', 'string', Rule::in(array_map(
                 fn (ConcernBillingPosture $posture): string => $posture->value,
                 ConcernBillingPosture::advisorSelectableCases(),
             ))],
+            'warranty_mode' => ['nullable', 'string', Rule::in(array_column(\App\Ark\Operations\EstimatePricing\BillingClassWarrantyMode::cases(), 'value'))],
+            'warranty' => ['nullable', 'array'],
+            'warranty.months' => ['nullable', 'integer', 'min:0', 'max:120'],
+            'warranty.miles' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'warranty.covers_parts' => ['nullable', 'boolean'],
+            'warranty.covers_labor' => ['nullable', 'boolean'],
+            'warranty.description' => ['nullable', 'string', 'max:2000'],
+            'warranty.exclusions' => ['nullable', 'string', 'max:2000'],
+            'warranty.third_party' => ['nullable', 'boolean'],
+            'document_terms_mode' => ['nullable', 'string', Rule::in(array_column(\App\Ark\Operations\EstimatePricing\BillingClassDocumentTermsMode::cases(), 'value'))],
+            'document_terms' => ['nullable', 'string', 'max:5000'],
         ];
     }
 

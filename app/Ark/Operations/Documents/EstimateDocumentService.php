@@ -80,9 +80,19 @@ class EstimateDocumentService
     {
         $document->loadMissing('repairOrder');
 
+        $snapshot = $this->snapshotBuilder->build($document->repairOrder, $user);
+
+        // Issued / presented documents keep frozen warranty and disclaimer text.
+        if ($document->isIssuedInvoice() || $document->customer_presented_at !== null || $document->issued_at !== null) {
+            $priorDocuments = data_get($document->snapshot_json, 'documents');
+            if (is_array($priorDocuments) && filled($priorDocuments['global_disclaimer'] ?? null)) {
+                $snapshot['documents'] = $priorDocuments;
+            }
+        }
+
         $document->forceFill([
-            'snapshot_json' => $this->snapshotBuilder->build($document->repairOrder, $user),
-            'status' => 'draft',
+            'snapshot_json' => $snapshot,
+            'status' => $document->isIssuedInvoice() ? $document->status : 'draft',
             'needs_pdf_refresh' => true,
             'refreshed_at' => now(),
         ])->save();

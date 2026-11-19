@@ -100,12 +100,12 @@ final class CustomerBillingClassIdentity
 
     /**
      * Explicit customer class key for a labor matrix column value, if any.
-     * Custom labor columns (custom_*) never invent a customer class by label.
+     * Custom labor columns resolve through the stored labor_column_key on customer_types[].
      */
-    public static function classKeyForLaborColumn(?string $laborColumn): ?string
+    public static function classKeyForLaborColumn(?string $laborColumn, ?\App\Ark\Operations\Settings\ShopSettings $settings = null): ?string
     {
         $column = trim((string) $laborColumn);
-        if ($column === '' || str_starts_with($column, 'custom_')) {
+        if ($column === '') {
             return null;
         }
 
@@ -118,6 +118,15 @@ final class CustomerBillingClassIdentity
         // customer_pay is the Retail labor column.
         if ($column === ConcernBillingPosture::CustomerPay->value) {
             return 'retail';
+        }
+
+        if (str_starts_with($column, 'custom_')) {
+            $settings ??= \App\Ark\Operations\Settings\ShopSettings::current();
+            foreach ($settings->storedCustomerTypeRows() as $row) {
+                if (($row['labor_column_key'] ?? null) === $column && ($row['is_active'] ?? true)) {
+                    return (string) $row['key'];
+                }
+            }
         }
 
         return null;

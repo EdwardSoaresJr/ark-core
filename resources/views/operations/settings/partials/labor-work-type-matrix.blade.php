@@ -198,11 +198,11 @@
                     + Add Billing Class
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" @click="openManageBillingClasses()" data-labor-manage-billing-classes>
-                    Customer-only &amp; archived
+                    Manage Billing Classes
                 </button>
             </div>
             <p class="form-hint mb-0 mt-1">
-                Manual line overrides still follow each work type’s stored permission. Every billing class is one registry: the matrix columns are the billing classes. Class Settings gear edits a class's fees, discounts and parts rules; Manage Billing Classes lists archived classes and legacy unlinked ones.
+                One billing-class registry. Add Billing Class creates customer assignment, concern override, labor rates, and Class Settings. The gear opens commercial, warranty, and document terms for that class.
             </p>
         </div>
     </div>
