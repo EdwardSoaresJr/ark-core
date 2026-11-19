@@ -1,7 +1,6 @@
 {{--
-  Shared Billing Classes authority UI (#180 Phase 5).
-  One Alpine component: Labor Class Settings + Manage Billing Classes.
-  No Financial Rules tab panel — deep links open Labor and this Manage modal.
+  Shared Billing Classes authority UI.
+  Class Settings is the single entry for existing classes; Add Billing Class lives on the Labor matrix.
 --}}
 @php
     $billingClassesBootstrap = app(\App\Ark\Operations\Settings\PersistCustomerBillingClasses::class)
@@ -13,78 +12,8 @@
     style="display: contents"
     x-data="arkBillingClasses(@js($billingClassesBootstrap))"
     @labor-open-class-settings.window="openClassSettings($event.detail?.key)"
-    @labor-open-manage-billing-classes.window="openManage()"
+    @labor-open-create-billing-class.window="openCreate()"
 >
-    {{-- Manage Billing Classes modal --}}
-    <div
-        class="modal modal-blur"
-        tabindex="-1"
-        data-billing-classes-manage-modal
-        x-cloak
-        :class="{ show: manageOpen }"
-        :style="manageOpen ? 'display: block !important; background: rgba(22, 28, 45, 0.35);' : 'display: none !important'"
-    >
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div>
-                        <h5 class="modal-title mb-0">Billing Classes</h5>
-                        <div class="text-secondary small">
-                            One shop-managed registry. Every active class has Class Settings. Exactly one class is Default for new customers.
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" @click="closeManage()"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="small" aria-live="polite">
-                            <span class="text-success" x-show="status === 'saved'" x-text="statusMessage || 'Saved'"></span>
-                            <span class="text-danger" x-show="status === 'error'" x-text="statusMessage || 'Not saved'"></span>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-sm" @click="openCreate()">+ Add Billing Class</button>
-                    </div>
-                    <div class="subheader mb-2">All billing classes</div>
-                    <div class="list-group list-group-flush mb-3">
-                        <template x-for="row in (catalog.manage_classes || [])" :key="'manage-'+row.key">
-                            <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" @click="openClassSettings(row.key)">
-                                <span>
-                                    <span class="fw-medium" x-text="row.name"></span>
-                                    <span class="badge bg-azure-lt ms-1" x-show="row.is_default">Default</span>
-                                    <span class="badge bg-secondary-lt ms-1" x-show="!row.is_active">Archived</span>
-                                    <span class="form-hint d-block mb-0" x-text="row.labor_column_key ? ('Labor pricing linked') : 'Legacy unlinked — open Class Settings'"></span>
-                                </span>
-                                <span class="btn btn-outline-primary btn-sm">Class Settings</span>
-                            </button>
-                        </template>
-                        <div class="list-group-item text-secondary small" x-show="!(catalog.manage_classes || []).length">
-                            No billing classes yet. Add one to get started.
-                        </div>
-                    </div>
-                    <div class="subheader mb-2" x-show="(catalog.labor_only_columns || []).length">Orphan labor columns</div>
-                    <div class="list-group list-group-flush" x-show="(catalog.labor_only_columns || []).length">
-                        <template x-for="column in (catalog.labor_only_columns || [])" :key="'labor-only-'+column.key">
-                            <div class="list-group-item d-flex justify-content-between align-items-center gap-2">
-                                <span>
-                                    <span class="fw-medium" x-text="column.label"></span>
-                                    <span class="badge bg-secondary-lt ms-1" x-show="!column.is_active">Archived</span>
-                                    <span class="form-hint d-block mb-0">Labor rates only — no customer Billing Class</span>
-                                </span>
-                                <div class="btn-list flex-nowrap">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" x-show="column.is_active" @click="archiveLaborColumn(column.key)">Archive</button>
-                                    <button type="button" class="btn btn-outline-primary btn-sm" x-show="!column.is_active" @click="restoreLaborColumn(column.key)">Restore</button>
-                                    <button type="button" class="btn btn-outline-danger btn-sm" @click="deleteLaborColumn(column.key)">Delete</button>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" @click="closeManage()">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- Class Settings / create modal (single instance) --}}
     <div
         class="modal modal-blur"
@@ -332,7 +261,6 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('arkBillingClasses', (initial) => ({
         catalog: initial,
-        manageOpen: false,
         draft: null,
         creating: false,
         status: 'idle',
@@ -344,10 +272,10 @@ document.addEventListener('alpine:init', () => {
                     setTimeout(() => { if (this.status === 'saved') this.status = 'idle'; }, 1800);
                 }
             });
-            const shop = this.shopSettings();
-            if (shop?.openManageBillingClassesOnLoad) {
-                shop.openManageBillingClassesOnLoad = false;
-                this.$nextTick(() => this.openManage());
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('manage-billing-classes')) {
+                url.searchParams.delete('manage-billing-classes');
+                window.history.replaceState({}, '', url);
             }
         },
         shopSettings() {
@@ -374,18 +302,6 @@ document.addEventListener('alpine:init', () => {
                 violet: 'bg-purple-lt',
             };
             return map[row?.pill_color] || 'bg-secondary-lt';
-        },
-        openManage() {
-            this.manageOpen = true;
-            this.refreshCatalog();
-            const url = new URL(window.location.href);
-            if (url.searchParams.get('manage-billing-classes') === '1') {
-                url.searchParams.delete('manage-billing-classes');
-                window.history.replaceState({}, '', url);
-            }
-        },
-        closeManage() {
-            this.manageOpen = false;
         },
         openCreate() {
             this.creating = true;
@@ -414,8 +330,7 @@ document.addEventListener('alpine:init', () => {
         openClassSettings(key) {
             if (!key) {
                 this.status = 'error';
-                this.statusMessage = 'That labor column has no linked customer Billing Class. Use Manage Billing Classes.';
-                this.openManage();
+                this.statusMessage = 'That labor column has no linked customer Billing Class. Use the row actions to archive or delete it.';
                 return;
             }
             const row = (this.catalog.classes || []).find((item) => item.key === key);
@@ -498,7 +413,7 @@ document.addEventListener('alpine:init', () => {
                 if (payload.catalog) this.catalog = payload.catalog;
                 this.status = 'saved';
                 this.statusMessage = payload.status || successMessage;
-                this.$dispatch('labor-matrix-refresh');
+                window.dispatchEvent(new CustomEvent('labor-matrix-refresh'));
                 return true;
             } catch (error) {
                 this.status = 'error';
@@ -547,52 +462,10 @@ document.addEventListener('alpine:init', () => {
                 this.status = 'saved';
                 this.statusMessage = payload.status || 'Deleted';
                 this.closeEditor();
-                this.$dispatch('labor-matrix-refresh');
+                window.dispatchEvent(new CustomEvent('labor-matrix-refresh'));
             } catch (error) {
                 this.status = 'error';
                 this.statusMessage = error.message || 'Delete failed';
-            }
-        },
-        async archiveLaborColumn(key) {
-            if (!window.confirm('Archive this labor-only column? Existing repair orders keep their rates.')) return;
-            await this.postLaborColumnLifecycle(this.catalog.routes?.labor_column_archive, key);
-        },
-        async restoreLaborColumn(key) {
-            await this.postLaborColumnLifecycle(this.catalog.routes?.labor_column_restore, key);
-        },
-        async deleteLaborColumn(key) {
-            if (!window.confirm('Delete this labor-only column only if it was never used on a repair order?')) return;
-            await this.postLaborColumnLifecycle(this.catalog.routes?.labor_column_destroy, key);
-        },
-        async postLaborColumnLifecycle(url, key) {
-            this.status = 'saving';
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': this.csrf(),
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: JSON.stringify({ billing_class: key }),
-                });
-                const payload = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                    this.status = 'error';
-                    this.statusMessage = payload.message || (payload.errors?.billing_class?.[0]) || 'Request failed';
-                    if (Array.isArray(payload.errors?.references)) {
-                        this.statusMessage += ' — ' + payload.errors.references.join('; ');
-                    }
-                    return;
-                }
-                await this.refreshCatalog();
-                this.status = 'saved';
-                this.statusMessage = payload.status || 'Updated';
-                this.$dispatch('labor-matrix-refresh');
-            } catch (error) {
-                this.status = 'error';
-                this.statusMessage = error.message || 'Request failed';
             }
         },
         closeEditor() {
@@ -676,6 +549,7 @@ document.addEventListener('alpine:init', () => {
                 this.status = 'saved';
                 this.statusMessage = payload.status || 'Saved';
                 this.closeEditor();
+                window.dispatchEvent(new CustomEvent('labor-matrix-refresh'));
             } catch (error) {
                 this.status = 'error';
                 this.statusMessage = error.message || 'Not saved';

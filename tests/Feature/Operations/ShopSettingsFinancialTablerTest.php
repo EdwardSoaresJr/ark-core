@@ -137,7 +137,10 @@ test('financial forms keep their routes, field names, and parts matrix autosave 
         ->and($xpath->query($section.'//*[@id="financial-tab-labor-policies" or @id="financial-panel-labor-policies"]')->length)->toBe(0)
         ->and($html)->toContain('arkLaborMatrix')
         ->and($html)->toContain('arkBillingClasses')
-        ->and($html)->toContain('Manage Billing Classes')
+        ->and($html)->toContain('+ Add Billing Class')
+        ->and($html)->not->toContain('Manage Billing Classes')
+        ->and($html)->toContain('is_shop_default')
+        ->and($html)->toContain('data-labor-class-settings')
         ->and(preg_match('/labor-matrix\\\\+\/rate/', $html))->toBe(1)
         ->and(preg_match('/labor-matrix\\\\+\/minimum/', $html))->toBe(1)
         ->and(substr_count($html, 'data-matrix-name-input'))->toBe(1);

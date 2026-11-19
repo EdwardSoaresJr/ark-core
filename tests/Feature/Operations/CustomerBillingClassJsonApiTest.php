@@ -123,14 +123,16 @@ test('labor settings page uses shared billing classes editor and renamed labor c
         ->assertOk()
         ->assertSee('data-billing-classes-shared', false)
         ->assertSee('+ Add Billing Class')
-        ->assertSee('Manage Billing Classes')
+        ->assertDontSee('Manage Billing Classes')
         ->assertSee('data-labor-class-settings', false)
         ->assertSee('aria-label="Class Settings"', false)
         ->assertSee('Linked labor pricing:', false)
-        ->assertSee('Creates one billing class', false);
+        ->assertSee('Creates one billing class', false)
+        ->assertSee('is_shop_default', false)
+        ->assertSee('Shop Default (new customers)', false);
 });
 
-test('legacy billing-classes deep link lands on Labor with Manage Billing Classes', function () {
+test('legacy billing-classes deep link lands on Labor without Manage Billing Classes', function () {
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', [
             'section' => 'financial',
@@ -139,8 +141,9 @@ test('legacy billing-classes deep link lands on Labor with Manage Billing Classe
         ->assertOk()
         ->assertSee('data-billing-classes-shared', false)
         ->assertSee('data-labor-matrix', false)
-        ->assertSee('Manage Billing Classes')
-        ->assertSee('openManageBillingClassesOnLoad', false)
+        ->assertDontSee('Manage Billing Classes')
+        ->assertDontSee('openManageBillingClassesOnLoad', false)
+        ->assertSee('+ Add Billing Class')
         ->assertDontSee('id="financial-tab-billing-classes"', false)
         ->assertDontSee('id="financial-panel-billing-classes"', false);
 });

@@ -84,13 +84,20 @@ final class LaborWorkTypeMatrixProjection
         $minimumRows = [];
         $columns = [];
 
+        $customerTypeByKey = collect($settings->customerTypeRows())
+            ->keyBy(fn (array $row): string => (string) ($row['key'] ?? ''));
+
         foreach (LaborWorkTypeMatrix::matrixBillingColumns($settings) as $column) {
             $customerClassKey = CustomerBillingClassIdentity::classKeyForLaborColumn($column['value'], $settings);
+            $customerRow = $customerClassKey !== null
+                ? ($customerTypeByKey->get($customerClassKey) ?? null)
+                : null;
             $columns[] = [
                 'value' => $column['value'],
                 'label' => $column['label'],
                 'is_system' => $column['is_system'],
                 'is_default' => $column['is_default'],
+                'is_shop_default' => (bool) ($customerRow['is_default'] ?? false),
                 'customer_class_key' => $customerClassKey,
                 'has_customer_class' => $customerClassKey !== null,
             ];
@@ -108,8 +115,10 @@ final class LaborWorkTypeMatrixProjection
                 'key' => $row['key'],
                 'name' => $row['name'],
                 'labor_column_key' => $row['labor_column_key'] ?? null,
-                'customer_only' => CustomerBillingClassIdentity::isCustomerOnlyClassKey($row['key'] ?? null),
+                'customer_only' => CustomerBillingClassIdentity::isCustomerOnlyClassKey($row['key'] ?? null)
+                    || blank($row['labor_column_key'] ?? null),
                 'is_active' => (bool) ($row['is_active'] ?? true),
+                'is_default' => (bool) ($row['is_default'] ?? false),
             ])
             ->values()
             ->all();

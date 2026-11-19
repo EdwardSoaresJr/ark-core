@@ -128,7 +128,9 @@ test('a legacy unlinked class that names its concern billing applies to inheriti
     $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor']))
         ->assertOk()
         ->assertSee('data-billing-classes-shared', false)
-        ->assertSee('Manage Billing Classes')
+        ->assertDontSee('Manage Billing Classes')
+        ->assertSee('+ Add Billing Class')
+        ->assertSee('aria-label="Class Settings"', false)
         ->assertSee('New concerns bill as', false)
         ->assertSee('concern_billing_posture', false);
 

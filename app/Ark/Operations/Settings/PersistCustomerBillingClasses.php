@@ -209,7 +209,7 @@ final class PersistCustomerBillingClasses
 
         return [
             'classes' => $classes,
-            // Manage modal: every billing class (active + archived). One registry for Class Settings.
+            // Full registry (active + archived) for Class Settings / compatibility consumers.
             'manage_classes' => collect($classes)->values()->all(),
             'labor_only_columns' => $laborOnlyColumns,
             'default_billing_class_key' => $settings->defaultBillingClassKey(),

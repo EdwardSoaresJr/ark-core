@@ -32,15 +32,6 @@
 
                 return stored;
             })(),
-            openManageBillingClassesOnLoad: (() => {
-                const fromUrl = new URLSearchParams(window.location.search).get('financial-tab');
-                const explicit = new URLSearchParams(window.location.search).get('manage-billing-classes');
-
-                return explicit === '1'
-                    || fromUrl === 'billing-classes'
-                    || fromUrl === 'customer-types'
-                    || fromUrl === 'customer-tags';
-            })(),
             printingTab: localStorage.getItem('ark:shop-settings:printing-tab') || 'printers',
             communicationsTab: (() => {
                 const fromUrl = new URLSearchParams(window.location.search).get('communications-tab');
@@ -74,7 +65,7 @@
                     const url = new URL(window.location.href);
                     url.searchParams.set('section', 'financial');
                     url.searchParams.set('financial-tab', 'labor');
-                    url.searchParams.set('manage-billing-classes', '1');
+                    url.searchParams.delete('manage-billing-classes');
                     window.history.replaceState({}, '', url);
                     localStorage.setItem('ark:shop-settings:financial-tab', 'labor');
                 }
@@ -82,13 +73,11 @@
             setFinancialTab(tab) {
                 if (tab === 'billing-classes' || tab === 'customer-types' || tab === 'customer-tags') {
                     this.financialTab = 'labor';
-                    this.openManageBillingClassesOnLoad = true;
                     localStorage.setItem('ark:shop-settings:financial-tab', 'labor');
                     const url = new URL(window.location.href);
                     url.searchParams.set('financial-tab', 'labor');
-                    url.searchParams.set('manage-billing-classes', '1');
+                    url.searchParams.delete('manage-billing-classes');
                     window.history.replaceState({}, '', url);
-                    window.dispatchEvent(new CustomEvent('labor-open-manage-billing-classes'));
                     return;
                 }
                 this.financialTab = tab;
