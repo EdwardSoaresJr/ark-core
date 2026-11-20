@@ -51,8 +51,12 @@ final class RepairOrderCloseoutAuthority
             return 'Generate the final invoice before closing this repair order.';
         }
 
-        if ($balance->balanceDueCents > 0) {
-            return 'Collect the full balance due before closing this repair order.';
+        if ($balance->balanceDueCents > 0 && $closeVariantKey !== 'on_account') {
+            return 'Collect the full balance due before closing paid, or choose Closed - On account to leave the balance in Accounts Receivable.';
+        }
+
+        if ($balance->balanceDueCents <= 0 && $closeVariantKey === 'on_account') {
+            return 'This repair order is already paid in full. Close it as Paid instead of On account.';
         }
 
         return null;

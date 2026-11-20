@@ -789,6 +789,33 @@ class RepairOrder extends Model
         abort_if($this->isTerminal(), 423, 'Terminal repair orders cannot be changed.');
     }
 
+    /**
+     * Closed repair orders with an unpaid finalized invoice remain collectible in Accounts Receivable.
+     */
+    public function allowsAccountsReceivableCollection(): bool
+    {
+        if (! $this->isTerminal()) {
+            return true;
+        }
+
+        if ($this->close_variant_key === 'lost') {
+            return false;
+        }
+
+        $balance = app(\App\Ark\Operations\Financial\BalanceDueCalculator::class)->forRepairOrder($this);
+
+        return $balance->hasIssuedInvoice && $balance->balanceDueCents > 0;
+    }
+
+    public function ensureOpenForSettlement(): void
+    {
+        if ($this->allowsAccountsReceivableCollection()) {
+            return;
+        }
+
+        $this->ensureOpenForEditing();
+    }
+
     public function hasUnresolvedApprovedParts(): bool
     {
         return $this->approvedPartLines()

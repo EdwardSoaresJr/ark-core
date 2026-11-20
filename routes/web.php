@@ -795,6 +795,14 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
             ->name('operations.repair-orders.index');
 
+        Route::get('/app/financials/accounts-receivable', \App\Ark\Operations\Financial\AccountsReceivableIndexController::class)
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.index');
+
+        Route::get('/app/financials/accounts-receivable/customers/{customer}', \App\Ark\Operations\Financial\AccountsReceivableCustomerController::class)
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.customer');
+
         Route::get('/app/reports', ReportsIndexController::class)
             ->middleware('permission:'.ArkCapability::FinancialView->value)
             ->name('operations.reports.index');

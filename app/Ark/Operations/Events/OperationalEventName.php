@@ -44,6 +44,7 @@ enum OperationalEventName: string
     case InvoiceEmailedToCustomer = 'invoice_emailed_to_customer';
     case InvoiceRevised = 'invoice_revised';
     case InvoiceCreditDueResolved = 'invoice_credit_due_resolved';
+    case InvoicePostedToReceivables = 'invoice_posted_to_receivables';
     case CustomerBillingClassChanged = 'customer_billing_class_changed';
     case PartSourcingStarted = 'part_sourcing_started';
     case PartOrdered = 'part_ordered';

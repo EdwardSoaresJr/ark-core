@@ -164,12 +164,21 @@ final class RepairOrderStatusCatalogDefaults
             ],
             [
                 'status_slug' => 'closed',
+                'variant_key' => 'on_account',
+                'name' => 'On account',
+                'affects_metrics' => true,
+                'bypass_standard_close_rules' => false,
+                'is_default' => false,
+                'sort_order' => 1,
+            ],
+            [
+                'status_slug' => 'closed',
                 'variant_key' => 'lost',
                 'name' => 'Lost',
                 'affects_metrics' => false,
                 'bypass_standard_close_rules' => true,
                 'is_default' => false,
-                'sort_order' => 1,
+                'sort_order' => 2,
             ],
         ];
     }

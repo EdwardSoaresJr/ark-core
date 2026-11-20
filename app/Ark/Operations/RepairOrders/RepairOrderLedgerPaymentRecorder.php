@@ -28,7 +28,7 @@ class RepairOrderLedgerPaymentRecorder
         ?Carbon $paidAt = null,
     ): RepairOrderLedgerEntry {
         $repairOrder = $repairOrder->fresh();
-        $repairOrder->ensureOpenForEditing();
+        $repairOrder->ensureOpenForSettlement();
 
         $balance = $this->balanceDue->forRepairOrder($repairOrder);
 
@@ -36,6 +36,12 @@ class RepairOrderLedgerPaymentRecorder
             $balance->hasIssuedInvoice,
             422,
             'Generate the final invoice before recording payment.',
+        );
+
+        abort_unless(
+            $balance->balanceDueCents > 0,
+            422,
+            'This invoice is already paid in full.',
         );
 
         $entries = $this->ledger->recordPayment($repairOrder, $amountCents, $method, $actor, $reference, $paidAt);
