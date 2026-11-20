@@ -68,6 +68,12 @@
             <path d="M3.5 17c.85-2.7 3.1-4.25 6.5-4.25S15.65 14.3 16.5 17" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
         </svg>
         @break
+    @case('accounts-receivable')
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+            <path d="M5 2.5h10v15l-2-1.25-2 1.25-2-1.25-2 1.25-2-1.25V2.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+            <path d="M7.5 7h5M7.5 10h5M7.5 13h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+        </svg>
+        @break
     @case('cockpit')
         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-4 w-4">
             <path d="M3 4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4Zm8 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V4ZM3 12a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4Zm8-1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-4Z" />

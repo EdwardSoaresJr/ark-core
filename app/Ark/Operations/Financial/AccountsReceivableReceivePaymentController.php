@@ -26,6 +26,11 @@ final class AccountsReceivableReceivePaymentController extends Controller
         $dashboard = $query->customerAccount($customer);
         $cardConfig = $cardPresent->publicConfig();
 
+        $defaultDisposition = $customer->overpayment_disposition_default instanceof OverpaymentDisposition
+            ? $customer->overpayment_disposition_default
+            : OverpaymentDisposition::tryFrom((string) $customer->overpayment_disposition_default)
+                ?? OverpaymentDisposition::Ask;
+
         return view('operations.financials.accounts-receivable.receive-payment', [
             'customer' => $customer,
             'invoices' => $dashboard['invoices'],
@@ -33,6 +38,7 @@ final class AccountsReceivableReceivePaymentController extends Controller
                 [['key' => PaymentMethod::Cash->value, 'label' => PaymentMethod::Cash->label()]],
                 ManualPaymentMethods::current(),
             ),
+            'dispositionDefault' => $defaultDisposition,
             'cardCapture' => [
                 'keyedEnabled' => (bool) ($cardConfig['keyedEnabled'] ?? false),
                 'terminalEnabled' => (bool) ($cardConfig['terminalEnabled'] ?? false),
@@ -67,6 +73,10 @@ final class AccountsReceivableReceivePaymentController extends Controller
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
             'payment_method' => ['required', Rule::in($methodKeys)],
+            'disposition' => ['nullable', Rule::in(array_map(
+                fn (OverpaymentDisposition $disposition): string => $disposition->value,
+                OverpaymentDisposition::cases(),
+            ))],
             'reference' => ['nullable', 'string', 'max:128'],
             'paid_at' => ['nullable', 'date', 'before_or_equal:today'],
             WorksheetMutationIdempotency::FIELD => ['required', 'uuid'],
@@ -102,6 +112,7 @@ final class AccountsReceivableReceivePaymentController extends Controller
             $request->user(),
             filled($data['reference'] ?? null) ? trim((string) $data['reference']) : null,
             RepairOrderPaymentPaidAt::fromDateInput($data['paid_at'] ?? null),
+            OverpaymentDisposition::tryFrom((string) ($data['disposition'] ?? '')),
         );
 
         $message = 'Payment recorded: $'.number_format($receipt->amount_cents / 100, 2)

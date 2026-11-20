@@ -96,6 +96,7 @@ test('each role sees its destinations in order', function (callable $makeUser, a
         '' => ['dashboard', 'time-clock'],
         'Operations' => ['job-board', 'work-queues', 'schedule', 'communications'],
         'Records' => ['repair-orders', 'vehicles', 'customers'],
+        'Financials' => ['accounts-receivable'],
         'Business' => ['cockpit', 'reports', 'day-review', 'tech-production'],
         'System' => ['stations', 'settings'],
     ]],
@@ -103,6 +104,7 @@ test('each role sees its destinations in order', function (callable $makeUser, a
         '' => ['dashboard', 'time-clock'],
         'Operations' => ['job-board', 'work-queues', 'schedule', 'communications'],
         'Records' => ['repair-orders', 'vehicles', 'customers'],
+        'Financials' => ['accounts-receivable'],
         'Business' => ['cockpit', 'reports'],
     ]],
     'technician' => [fn () => User::factory()->create()->assignRole(ArkRole::Technician->value), [
@@ -242,7 +244,7 @@ test('every destination has a legacy rail icon', function (): void {
         ->flatMap(fn (ArkRole $role): array => array_merge(...array_values(navigationKeys(User::factory()->create()->assignRole($role->value)))))
         ->unique();
 
-    expect($keys)->toHaveCount(17);
+    expect($keys)->toHaveCount(18);
 
     foreach ($keys as $key) {
         expect(Blade::render('<x-operations.rail-icon :name="$name" />', ['name' => $key]))->toContain('<svg');

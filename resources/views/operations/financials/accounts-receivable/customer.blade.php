@@ -13,6 +13,30 @@
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
 
+        @if (($pendingCaptures ?? collect())->isNotEmpty())
+            <div class="alert alert-warning">
+                <div class="fw-bold mb-2">Card charges awaiting invoice allocation</div>
+                <p class="mb-2">These VizyPay charges succeeded. Do not charge the customer again — retry allocation only.</p>
+                <ul class="mb-0 list-unstyled">
+                    @foreach ($pendingCaptures as $capture)
+                        <li class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                            <span>
+                                Capture <code>{{ $capture->public_id }}</code>
+                                · {{ $money((int) $capture->amount_cents) }}
+                                · processor {{ $capture->provider_payment_id ?: '—' }}
+                            </span>
+                            @if ($canReceivePayment)
+                                <form method="POST" action="{{ route('operations.financials.accounts-receivable.captures.reconcile', [$customer, $capture]) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-warning">Retry allocation</button>
+                                </form>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="row row-cards mb-3">
             <div class="col-sm-4">
                 <div class="card card-sm">

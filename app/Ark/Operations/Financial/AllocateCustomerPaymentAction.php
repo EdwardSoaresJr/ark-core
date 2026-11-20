@@ -18,8 +18,8 @@ use RuntimeException;
  * Accounting invariant on every receipt:
  * amount_cents = allocated_cents + unapplied_cents + change_cents
  *
- * Cash remainder is change returned at the counter (never store credit).
- * Non-cash remainder becomes customer store credit (unapplied).
+ * Excess disposition is selectable (keep credit / return change / refund),
+ * with a per-customer default when none is supplied.
  */
 final class AllocateCustomerPaymentAction
 {
@@ -41,6 +41,7 @@ final class AllocateCustomerPaymentAction
         ?User $actor = null,
         ?string $reference = null,
         ?Carbon $recordedAt = null,
+        ?OverpaymentDisposition $disposition = null,
     ): CustomerPaymentReceipt {
         $intentKey = trim($intentKey);
         if ($intentKey === '' || preg_match('/^[0-9a-fA-F-]{36}$/', $intentKey) !== 1) {
@@ -70,12 +71,14 @@ final class AllocateCustomerPaymentAction
         }
 
         $methodValue = PaymentMethod::stored($method);
+        $disposition = $this->resolveDisposition($customer, $methodValue, $amountCents, $allocatedTotal, $disposition);
         $fingerprint = $this->fingerprint(
             $customer,
             $amountCents,
             $methodValue,
             $normalized,
             $reference,
+            $disposition,
         );
 
         $existing = CustomerPaymentReceipt::query()->where('intent_key', $intentKey)->first();
@@ -96,6 +99,7 @@ final class AllocateCustomerPaymentAction
                 $actor,
                 $reference,
                 $recordedAt,
+                $disposition,
             ): CustomerPaymentReceipt {
                 $locked = CustomerPaymentReceipt::query()
                     ->where('intent_key', $intentKey)
@@ -183,12 +187,9 @@ final class AllocateCustomerPaymentAction
                 $change = 0;
 
                 if ($remainder > 0) {
-                    if (PaymentMethod::isCash($methodValue)) {
-                        // Cash tender above allocated invoices is change returned — never store credit.
-                        $change = $remainder;
-                    } else {
+                    if ($disposition === OverpaymentDisposition::KeepCredit) {
                         if ($anchorRepairOrder === null) {
-                            throw new RuntimeException('Cannot post unapplied funds without an allocated invoice.');
+                            throw new RuntimeException('Cannot post account credit without an allocated invoice.');
                         }
 
                         $this->ledger->issueUnappliedStoreCredit(
@@ -201,6 +202,24 @@ final class AllocateCustomerPaymentAction
                             (int) $receipt->id,
                         );
                         $unapplied = $remainder;
+                    } elseif ($disposition === OverpaymentDisposition::ReturnChange) {
+                        if (! PaymentMethod::isCash($methodValue)) {
+                            throw ValidationException::withMessages([
+                                'disposition' => 'Return change is only available for cash tenders. Keep as credit or refund instead.',
+                            ]);
+                        }
+                        $change = $remainder;
+                    } elseif ($disposition === OverpaymentDisposition::Refund) {
+                        // Excess is not kept as account credit. change_cents records funds returned
+                        // outside the invoice allocation (check returned, card refund, etc.).
+                        $change = $remainder;
+                        $receipt->forceFill([
+                            'notes' => trim(($receipt->notes ? $receipt->notes.' ' : '').'Excess returned/refunded; not retained as account credit.'),
+                        ]);
+                    } else {
+                        throw ValidationException::withMessages([
+                            'disposition' => 'Choose how to handle the $'.number_format($remainder / 100, 2).' excess payment.',
+                        ]);
                     }
                 }
 
@@ -232,6 +251,7 @@ final class AllocateCustomerPaymentAction
         PaymentMethod|string $method,
         array $allocations,
         ?string $reference,
+        ?OverpaymentDisposition $disposition = null,
     ): string {
         $normalized = $allocations;
         usort($normalized, fn (array $a, array $b): int => $a['invoice_id'] <=> $b['invoice_id']);
@@ -240,11 +260,49 @@ final class AllocateCustomerPaymentAction
             'amount_cents' => $amountCents,
             'allocations' => $normalized,
             'customer_id' => (int) $customer->id,
+            'disposition' => $disposition?->value,
             'payment_method' => PaymentMethod::stored($method),
             'reference' => $reference,
         ];
 
         return hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR));
+    }
+
+    private function resolveDisposition(
+        Customer $customer,
+        string $methodValue,
+        int $amountCents,
+        int $allocatedTotal,
+        ?OverpaymentDisposition $requested,
+    ): OverpaymentDisposition {
+        $remainder = $amountCents - $allocatedTotal;
+        if ($remainder <= 0) {
+            return OverpaymentDisposition::KeepCredit;
+        }
+
+        $default = $customer->overpayment_disposition_default instanceof OverpaymentDisposition
+            ? $customer->overpayment_disposition_default
+            : OverpaymentDisposition::tryFrom((string) $customer->overpayment_disposition_default)
+                ?? OverpaymentDisposition::Ask;
+
+        $disposition = $requested ?? ($default === OverpaymentDisposition::Ask ? null : $default);
+
+        if ($disposition === null || $disposition === OverpaymentDisposition::Ask) {
+            throw ValidationException::withMessages([
+                'disposition' => 'This payment has a $'.number_format($remainder / 100, 2)
+                    .' excess. Choose Keep as account credit'
+                    .(PaymentMethod::isCash($methodValue) ? ', Return change' : ', or Refund').'.',
+            ]);
+        }
+
+        $allowed = OverpaymentDisposition::paymentChoices($methodValue);
+        if (! in_array($disposition, $allowed, true)) {
+            throw ValidationException::withMessages([
+                'disposition' => 'That excess disposition is not available for this payment method.',
+            ]);
+        }
+
+        return $disposition;
     }
 
     private function replayOrReject(

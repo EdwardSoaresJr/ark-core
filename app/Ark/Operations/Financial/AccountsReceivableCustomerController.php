@@ -3,6 +3,9 @@
 namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
+use App\Ark\Operations\Payments\Capture\PaymentCaptureAttemptStatus;
+use App\Ark\Operations\Payments\Capture\PaymentCaptureContextKind;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -26,10 +29,19 @@ final class AccountsReceivableCustomerController extends Controller
             ->limit(25)
             ->get();
 
+        $pendingCaptures = PaymentCaptureAttempt::query()
+            ->where('customer_id', $customer->id)
+            ->where('context_kind', PaymentCaptureContextKind::AccountsReceivable->value)
+            ->where('status', PaymentCaptureAttemptStatus::ReconciliationRequired->value)
+            ->whereNull('customer_payment_receipt_id')
+            ->orderByDesc('id')
+            ->get();
+
         return view('operations.financials.accounts-receivable.customer', [
             'customer' => $customer,
             'dashboard' => $dashboard,
             'receipts' => $receipts,
+            'pendingCaptures' => $pendingCaptures,
             'canReceivePayment' => $request->user()?->can(ArkCapability::RepairOrdersCloseout->value)
                 || $request->user()?->can(ArkCapability::FinancialManage->value),
             'canVoidPayment' => (bool) $request->user()?->can(ArkCapability::FinancialManage->value),

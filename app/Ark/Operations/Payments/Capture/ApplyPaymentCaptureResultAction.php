@@ -6,6 +6,8 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Financial\AllocateCustomerPaymentAction;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\CustomerPaymentReceipt;
+use App\Ark\Operations\Financial\LedgerEntryType;
+use App\Ark\Operations\Financial\OverpaymentDisposition;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -14,9 +16,14 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 /**
  * Applies a verified Cloud capture result to Core financial authority - once.
+ *
+ * For Accounts Receivable captures: processor settlement is persisted even when
+ * invoice allocation fails, leaving ReconciliationRequired so staff can retry
+ * allocation without charging the card again.
  */
 final class ApplyPaymentCaptureResultAction
 {
@@ -77,16 +84,10 @@ final class ApplyPaymentCaptureResultAction
 
             if ($status === PaymentCaptureAttemptStatus::Succeeded) {
                 if ($locked->context_kind === PaymentCaptureContextKind::AccountsReceivable) {
-                    $receipt = $this->recordAccountsReceivableAllocation($locked);
-                    $locked->customer_payment_receipt_id = $receipt->id;
-                    $locked->ledger_entry_id = $receipt->ledgerEntries()
-                        ->where('entry_type', \App\Ark\Operations\Financial\LedgerEntryType::Payment)
-                        ->orderBy('id')
-                        ->value('id');
-                } else {
-                    $locked->ledger_entry_id = $this->recordMoney($locked);
+                    return $this->completeAccountsReceivableCapture($locked);
                 }
 
+                $locked->ledger_entry_id = $this->recordMoney($locked);
                 $locked->status = PaymentCaptureAttemptStatus::Succeeded;
                 $locked->completed_at = now();
                 $locked->failure_reason = null;
@@ -106,6 +107,38 @@ final class ApplyPaymentCaptureResultAction
 
             return $locked->fresh();
         });
+    }
+
+    private function completeAccountsReceivableCapture(PaymentCaptureAttempt $locked): PaymentCaptureAttempt
+    {
+        // Persist processor success before allocation so a ledger failure cannot erase the charge.
+        $locked->status = PaymentCaptureAttemptStatus::ReconciliationRequired;
+        $locked->failure_reason = 'allocation_pending';
+        $locked->completed_at = null;
+        $locked->save();
+
+        try {
+            $receipt = $this->recordAccountsReceivableAllocation($locked);
+        } catch (Throwable $exception) {
+            $locked->status = PaymentCaptureAttemptStatus::ReconciliationRequired;
+            $locked->failure_reason = 'allocation_failed';
+            $locked->completed_at = null;
+            $locked->save();
+
+            return $locked->fresh();
+        }
+
+        $locked->customer_payment_receipt_id = $receipt->id;
+        $locked->ledger_entry_id = $receipt->ledgerEntries()
+            ->where('entry_type', LedgerEntryType::Payment)
+            ->orderBy('id')
+            ->value('id');
+        $locked->status = PaymentCaptureAttemptStatus::Succeeded;
+        $locked->completed_at = now();
+        $locked->failure_reason = null;
+        $locked->save();
+
+        return $locked->fresh(['ledgerEntry']);
     }
 
     /**
@@ -194,6 +227,8 @@ final class ApplyPaymentCaptureResultAction
         $reference = filled($plan['reference'] ?? null)
             ? (string) $plan['reference']
             : 'capture:'.$attempt->public_id;
+        $disposition = OverpaymentDisposition::tryFrom((string) ($plan['disposition'] ?? ''))
+            ?? OverpaymentDisposition::KeepCredit;
         $recordedAt = RepairOrderPaymentPaidAt::fromDateInput(
             is_string($attempt->paid_on) ? $attempt->paid_on : null,
         );
@@ -207,6 +242,7 @@ final class ApplyPaymentCaptureResultAction
             $actor,
             $reference,
             $recordedAt,
+            $disposition,
         );
     }
 

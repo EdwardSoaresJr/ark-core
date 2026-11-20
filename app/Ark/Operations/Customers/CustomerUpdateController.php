@@ -8,6 +8,7 @@ use App\Ark\Operations\Conversations\ConversationLinker;
 use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Encounters\EncounterSource;
+use App\Ark\Operations\Financial\OverpaymentDisposition;
 use App\Ark\Operations\Intake\IntakeWorkspaceSession;
 use App\Ark\Operations\Leads\LeadContactNameParser;
 use App\Ark\Operations\Leads\LeadContactPreference;
@@ -58,6 +59,10 @@ class CustomerUpdateController
             // The class key is identity; the display name is accepted for older forms and API callers.
             'billing_class_key' => ['nullable', 'string', Rule::in($classKeys)],
             'customer_type' => ['required_without:billing_class_key', 'nullable', Rule::in($customerTypes)],
+            'overpayment_disposition_default' => ['nullable', Rule::in(array_map(
+                fn (OverpaymentDisposition $disposition): string => $disposition->value,
+                OverpaymentDisposition::customerDefaults(),
+            ))],
             'notes' => ['nullable', 'string'],
             'messenger_psid' => ['nullable', 'string', 'max:64', Rule::unique('customers', 'messenger_psid')->ignore($customer->id)],
             'repair_order_id' => ['nullable', 'integer'],

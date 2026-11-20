@@ -5,6 +5,7 @@ use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\CustomerPaymentReceipt;
 use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\Financial\LedgerEntryType;
+use App\Ark\Operations\Financial\OverpaymentDisposition;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\VoidCustomerPaymentReceiptAction;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition;
@@ -76,7 +77,7 @@ test('one check payment allocates across multiple invoices and leaves the remain
         ->and(app(BalanceDueCalculator::class)->forRepairOrder($roC->fresh())->balanceDueCents)->toBe(15000);
 });
 
-test('partial allocation and check remainder become store credit', function () {
+test('partial allocation and check remainder become store credit when disposition keeps credit', function () {
     [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
 
     $receipt = app(AllocateCustomerPaymentAction::class)->execute(
@@ -87,6 +88,8 @@ test('partial allocation and check remainder become store credit', function () {
         (string) Str::uuid(),
         $this->advisor,
         'CHK-PARTIAL',
+        null,
+        OverpaymentDisposition::KeepCredit,
     );
 
     expect($receipt->allocated_cents)->toBe(10000)
@@ -97,7 +100,7 @@ test('partial allocation and check remainder become store credit', function () {
         ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(10000);
 });
 
-test('cash overpayment records explicit change and never creates store credit', function () {
+test('cash overpayment records explicit change when disposition returns change', function () {
     [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
 
     $receipt = app(AllocateCustomerPaymentAction::class)->execute(
@@ -108,6 +111,8 @@ test('cash overpayment records explicit change and never creates store credit', 
         (string) Str::uuid(),
         $this->advisor,
         'CASH-CHANGE',
+        null,
+        OverpaymentDisposition::ReturnChange,
     );
 
     expect($receipt->amount_cents)->toBe(20000)
@@ -117,6 +122,61 @@ test('cash overpayment records explicit change and never creates store credit', 
         ->and($receipt->amount_cents)->toBe($receipt->allocated_cents + $receipt->unapplied_cents + $receipt->change_cents)
         ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(0)
         ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe(0);
+});
+
+test('cash overpayment can keep account credit when staff chooses keep credit', function () {
+    [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
+
+    $receipt = app(AllocateCustomerPaymentAction::class)->execute(
+        $repairOrder->customer,
+        20000,
+        PaymentMethod::Cash,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CASH-CREDIT',
+        null,
+        OverpaymentDisposition::KeepCredit,
+    );
+
+    expect($receipt->change_cents)->toBe(0)
+        ->and($receipt->unapplied_cents)->toBe(5000)
+        ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(5000);
+});
+
+test('check excess refund disposition does not create store credit', function () {
+    [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
+
+    $receipt = app(AllocateCustomerPaymentAction::class)->execute(
+        $repairOrder->customer,
+        20000,
+        PaymentMethod::Check,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CHK-REFUND',
+        null,
+        OverpaymentDisposition::Refund,
+    );
+
+    expect($receipt->allocated_cents)->toBe(15000)
+        ->and($receipt->unapplied_cents)->toBe(0)
+        ->and($receipt->change_cents)->toBe(5000)
+        ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(0);
+});
+
+test('overpayment without disposition is rejected when customer default is ask', function () {
+    [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
+
+    expect(fn () => app(AllocateCustomerPaymentAction::class)->execute(
+        $repairOrder->customer,
+        20000,
+        PaymentMethod::Check,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CHK-ASK',
+    ))->toThrow(\Illuminate\Validation\ValidationException::class);
 });
 
 test('reusing an intent key with different payment details is rejected', function () {

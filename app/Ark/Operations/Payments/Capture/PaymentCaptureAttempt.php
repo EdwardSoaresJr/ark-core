@@ -21,6 +21,7 @@ class PaymentCaptureAttempt extends Model
         'capture_method',
         'status',
         'idempotency_key',
+        'submission_intent_key',
         'device_ref',
         'cloud_capture_id',
         'provider',

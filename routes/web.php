@@ -815,6 +815,10 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
             ->name('operations.financials.accounts-receivable.receive-payment.card');
 
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/captures/{attempt}/reconcile', \App\Ark\Operations\Financial\AccountsReceivableReconcileCaptureController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.financials.accounts-receivable.captures.reconcile');
+
         Route::post('/app/financials/accounts-receivable/customers/{customer}/payments/{receipt}/void', \App\Ark\Operations\Financial\AccountsReceivableVoidPaymentController::class)
             ->middleware('permission:'.ArkCapability::FinancialManage->value)
             ->name('operations.financials.accounts-receivable.payments.void');

@@ -3,7 +3,7 @@
         layout="fluid"
         title="Receive Payment"
         pretitle="{{ $customer->name }}"
-        subtitle="Apply one payment across one or more outstanding invoices. Cash remainder is change returned. Check or external remainder becomes store credit."
+        subtitle="Apply one payment across one or more outstanding invoices. When tender exceeds the selected invoices, choose whether to keep account credit, return change, or refund."
         :breadcrumbs="[
             ['label' => 'Accounts Receivable', 'url' => route('operations.financials.accounts-receivable.index')],
             ['label' => $customer->name, 'url' => route('operations.financials.accounts-receivable.customer', $customer)],
@@ -16,11 +16,22 @@
         @error('capture')
             <div class="alert alert-danger">{{ $message }}</div>
         @enderror
+        @error('disposition')
+            <div class="alert alert-warning">{{ $message }}</div>
+        @enderror
 
         @if (count($invoices) === 0)
             <div class="alert alert-info">No outstanding invoices on this account.</div>
             <a href="{{ route('operations.financials.accounts-receivable.customer', $customer) }}" class="btn btn-ghost-secondary">Back to account</a>
         @else
+            @php
+                $initialDisposition = old(
+                    'disposition',
+                    $dispositionDefault === \App\Ark\Operations\Financial\OverpaymentDisposition::Ask
+                        ? ''
+                        : $dispositionDefault->value,
+                );
+            @endphp
             <form
                 method="POST"
                 :action="isCardMethod()
@@ -34,6 +45,8 @@
                     ])->values()),
                     keyedEnabled: @js((bool) ($cardCapture['keyedEnabled'] ?? false)),
                     terminalEnabled: @js((bool) ($cardCapture['terminalEnabled'] ?? false)),
+                    dispositionDefault: @js($dispositionDefault->value),
+                    initialDisposition: @js($initialDisposition),
                 })"
             >
                 @csrf
@@ -180,18 +193,72 @@
                     </table>
                 </div>
 
+                <div class="card-body border-top" x-show="showsExcess()" x-cloak>
+                    <div class="row g-3 align-items-start">
+                        <div class="col-12 col-lg-4">
+                            <div class="subheader">Customer tendered</div>
+                            <div class="h3 mb-0" x-text="'$' + paymentDollars()"></div>
+                        </div>
+                        <div class="col-12 col-lg-4">
+                            <div class="subheader">Invoices selected</div>
+                            <div class="h3 mb-0" x-text="'$' + allocatedDollars()"></div>
+                        </div>
+                        <div class="col-12 col-lg-4">
+                            <div class="subheader text-warning">Excess payment</div>
+                            <div class="h3 mb-0 text-warning" x-text="'$' + remainingDollars()"></div>
+                        </div>
+                        <div class="col-12">
+                            <fieldset>
+                                <legend class="form-label mb-2">How should we handle the excess?</legend>
+                                <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column flex-md-row">
+                                    <label class="form-selectgroup-item flex-fill" x-show="allowsKeepCredit()">
+                                        <input type="radio" name="disposition" value="keep_credit" class="form-selectgroup-input" x-model="disposition">
+                                        <span class="form-selectgroup-label d-flex align-items-start gap-2">
+                                            <span class="form-selectgroup-check mt-1"></span>
+                                            <span>
+                                                <span class="fw-bold d-block">Keep as account credit</span>
+                                                <span class="text-secondary small">Available toward future services on this account.</span>
+                                            </span>
+                                        </span>
+                                    </label>
+                                    <label class="form-selectgroup-item flex-fill" x-show="allowsReturnChange()">
+                                        <input type="radio" name="disposition" value="return_change" class="form-selectgroup-input" x-model="disposition">
+                                        <span class="form-selectgroup-label d-flex align-items-start gap-2">
+                                            <span class="form-selectgroup-check mt-1"></span>
+                                            <span>
+                                                <span class="fw-bold d-block">Return change (cash)</span>
+                                                <span class="text-secondary small">Record the excess as change returned to the customer.</span>
+                                            </span>
+                                        </span>
+                                    </label>
+                                    <label class="form-selectgroup-item flex-fill" x-show="allowsRefund()">
+                                        <input type="radio" name="disposition" value="refund" class="form-selectgroup-input" x-model="disposition">
+                                        <span class="form-selectgroup-label d-flex align-items-start gap-2">
+                                            <span class="form-selectgroup-check mt-1"></span>
+                                            <span>
+                                                <span class="fw-bold d-block">Return / refund excess</span>
+                                                <span class="text-secondary small">Do not keep a credit balance for this overpayment.</span>
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </fieldset>
+                            <p class="form-hint mb-0 mt-2" x-text="previewCopy()"></p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card-footer sticky-bottom bg-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
                     <div class="small text-secondary">
                         Allocated <span class="fw-bold" x-text="'$' + allocatedDollars()"></span>
-                        <span x-show="!isCardMethod()">
-                            · Remaining <span class="fw-bold" x-text="'$' + remainingDollars()"></span>
-                            <span x-show="isCash()"> (cash change)</span>
-                            <span x-show="!isCash() && remainingCents() > 0"> (store credit)</span>
+                        <span x-show="!isCardMethod() && remainingCents() > 0">
+                            · Excess <span class="fw-bold" x-text="'$' + remainingDollars()"></span>
+                            <span x-text="excessLabel()"></span>
                         </span>
                     </div>
                     <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-content-end">
                         <a href="{{ route('operations.financials.accounts-receivable.customer', $customer) }}" class="btn btn-ghost-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary" :disabled="allocatedCents() <= 0">
+                        <button type="submit" class="btn btn-primary" :disabled="allocatedCents() <= 0 || (showsExcess() && !disposition)">
                             <span x-show="!isCardMethod()">Record payment</span>
                             <span x-show="isCardMethod()" x-text="'Charge $' + allocatedDollars()">Charge card</span>
                         </button>
@@ -209,6 +276,8 @@
                 method: @js(old('payment_method', 'check')),
                 keyedEnabled: !!config.keyedEnabled,
                 terminalEnabled: !!config.terminalEnabled,
+                dispositionDefault: config.dispositionDefault || 'ask',
+                disposition: config.initialDisposition || '',
                 sourceToken: '',
                 cardError: '',
                 rows: invoices.map((invoice) => ({
@@ -226,6 +295,18 @@
                 cardCaptureMethod() {
                     return this.method === 'ark_card_terminal' ? 'terminal' : 'keyed';
                 },
+                allowsKeepCredit() {
+                    return ! this.isCardMethod();
+                },
+                allowsReturnChange() {
+                    return this.isCash();
+                },
+                allowsRefund() {
+                    return ! this.isCash() && ! this.isCardMethod();
+                },
+                showsExcess() {
+                    return ! this.isCardMethod() && this.remainingCents() > 0;
+                },
                 init() {
                     this.$watch('method', (value) => {
                         if (value === 'ark_card_keyed' && ! this.sourceToken) {
@@ -235,7 +316,24 @@
                                 this.sourceToken = 'tok_stub_ar';
                             @endif
                         }
+                        this.syncDispositionForMethod();
                     });
+                    this.syncDispositionForMethod();
+                },
+                syncDispositionForMethod() {
+                    if (this.isCardMethod()) {
+                        this.disposition = 'keep_credit';
+                        return;
+                    }
+                    const allowed = this.isCash()
+                        ? ['keep_credit', 'return_change']
+                        : ['keep_credit', 'refund'];
+                    if (this.disposition && ! allowed.includes(this.disposition)) {
+                        this.disposition = '';
+                    }
+                    if (! this.disposition && this.dispositionDefault !== 'ask' && allowed.includes(this.dispositionDefault)) {
+                        this.disposition = this.dispositionDefault;
+                    }
                 },
                 remainingCents() {
                     if (this.isCardMethod()) {
@@ -287,8 +385,32 @@
                 allocatedDollars() {
                     return (this.allocatedCents() / 100).toFixed(2);
                 },
+                paymentDollars() {
+                    const payment = Math.round(parseFloat(this.paymentAmount || '0') * 100);
+                    return ((Number.isFinite(payment) ? payment : 0) / 100).toFixed(2);
+                },
                 remainingDollars() {
-                    return (this.remainingCents() / 100).toFixed(2);
+                    return (Math.max(0, this.remainingCents()) / 100).toFixed(2);
+                },
+                excessLabel() {
+                    if (this.disposition === 'keep_credit') return ' (account credit)';
+                    if (this.disposition === 'return_change') return ' (cash change)';
+                    if (this.disposition === 'refund') return ' (refund / return)';
+                    return '';
+                },
+                previewCopy() {
+                    const allocated = this.allocatedDollars();
+                    const excess = this.remainingDollars();
+                    if (this.disposition === 'keep_credit') {
+                        return '$' + allocated + ' pays the invoice. $' + excess + ' remains available toward future services.';
+                    }
+                    if (this.disposition === 'return_change') {
+                        return '$' + allocated + ' pays the invoice. $' + excess + ' is returned as cash change.';
+                    }
+                    if (this.disposition === 'refund') {
+                        return '$' + allocated + ' pays the invoice. $' + excess + ' should be returned or refunded — no account credit is kept.';
+                    }
+                    return 'Choose how to handle the $' + excess + ' excess before recording the payment.';
                 },
             };
         }

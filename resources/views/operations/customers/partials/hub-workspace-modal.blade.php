@@ -61,6 +61,11 @@
                         if ($hubCurrentClass !== null && ! $hubClassOptions->contains('key', $hubCurrentClass['key'])) {
                             $hubClassOptions->prepend($hubCurrentClass);
                         }
+                        $hubOverpaymentDefault = old(
+                            'overpayment_disposition_default',
+                            $customer->overpayment_disposition_default?->value
+                                ?? \App\Ark\Operations\Financial\OverpaymentDisposition::Ask->value,
+                        );
                     @endphp
                     <select id="hub-customer-type" name="billing_class_key" @class(['form-select', 'is-invalid' => $customerFieldInvalid('billing_class_key') || $customerFieldInvalid('customer_type')])>
                         @foreach ($hubClassOptions as $type)
@@ -69,6 +74,22 @@
                     </select>
                     @error('billing_class_key')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     @error('customer_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="hub-overpayment-disposition">Overpayment default</label>
+                    <select
+                        id="hub-overpayment-disposition"
+                        name="overpayment_disposition_default"
+                        @class(['form-select', 'is-invalid' => $customerFieldInvalid('overpayment_disposition_default')])
+                    >
+                        @foreach (\App\Ark\Operations\Financial\OverpaymentDisposition::customerDefaults() as $disposition)
+                            <option value="{{ $disposition->value }}" @selected($hubOverpaymentDefault === $disposition->value)>
+                                {{ $disposition->label() }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="form-hint">When a payment exceeds selected invoices, ask staff, keep account credit, or return excess when possible. Staff can override on each payment.</div>
+                    @error('overpayment_disposition_default')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-12">
                     <label class="form-label" for="hub-customer-notes">Notes</label>

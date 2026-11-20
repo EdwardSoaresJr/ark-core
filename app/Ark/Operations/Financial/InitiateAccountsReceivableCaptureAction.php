@@ -41,14 +41,45 @@ final class InitiateAccountsReceivableCaptureAction
      *     paid_on?: ?string,
      *     intent_key: string,
      *     reference?: ?string,
+     *     disposition?: ?OverpaymentDisposition,
      * }  $input
      * @return array{attempt: PaymentCaptureAttempt, cloud: array<string, mixed>}
      */
     public function execute(Customer $customer, array $allocations, ?User $actor, array $input): array
     {
+        $intentKey = trim((string) ($input['intent_key'] ?? ''));
+        if ($intentKey === '' || preg_match('/^[0-9a-fA-F-]{36}$/', $intentKey) !== 1) {
+            throw ValidationException::withMessages([
+                'intent_key' => 'A payment submission key is required.',
+            ]);
+        }
+
+        $existingByIntent = PaymentCaptureAttempt::query()
+            ->where('submission_intent_key', $intentKey)
+            ->where('context_kind', PaymentCaptureContextKind::AccountsReceivable->value)
+            ->latest('id')
+            ->first();
+
+        if ($existingByIntent !== null) {
+            if ($existingByIntent->customer_payment_receipt_id !== null
+                || $existingByIntent->status === PaymentCaptureAttemptStatus::Succeeded) {
+                return ['attempt' => $existingByIntent, 'cloud' => []];
+            }
+
+            if ($existingByIntent->status->blocksSameAmountCapture()
+                || $existingByIntent->status === PaymentCaptureAttemptStatus::ReconciliationRequired) {
+                throw ValidationException::withMessages([
+                    'capture' => 'This card payment already charged or is awaiting allocation reconciliation. '
+                        .'Do not charge again. Capture '.$existingByIntent->public_id
+                        .' — retry allocation only.',
+                ]);
+            }
+        }
+
         $normalized = $this->normalizeAndValidate($customer, $allocations);
         $amountCents = array_sum(array_column($normalized, 'amount_cents'));
         $method = $input['capture_method'];
+        $disposition = $input['disposition'] ?? OverpaymentDisposition::KeepCredit;
 
         if ($method === PaymentCaptureMethod::Terminal) {
             $this->assertAvailableReader((string) ($input['device_ref'] ?? ''));
@@ -81,11 +112,13 @@ final class InitiateAccountsReceivableCaptureAction
 
         if ($blocking !== null) {
             throw ValidationException::withMessages([
-                'capture' => 'A card capture for this amount needs reconciliation before another charge. '.$blocking->public_id,
+                'capture' => 'A card capture for this amount needs reconciliation before another charge. '
+                    .$blocking->public_id
+                    .' — retry allocation only, do not charge again.',
             ]);
         }
 
-        $attempt = DB::transaction(function () use ($customer, $anchorRo, $actor, $amountCents, $method, $input, $normalized) {
+        $attempt = DB::transaction(function () use ($customer, $anchorRo, $actor, $amountCents, $method, $input, $normalized, $intentKey, $disposition) {
             $publicId = (string) Str::uuid();
 
             return PaymentCaptureAttempt::query()->create([
@@ -98,13 +131,17 @@ final class InitiateAccountsReceivableCaptureAction
                 'capture_method' => $method,
                 'status' => PaymentCaptureAttemptStatus::Pending,
                 'idempotency_key' => 'core-'.$publicId,
+                'submission_intent_key' => $intentKey,
                 'device_ref' => $input['device_ref'] ?? null,
                 'initiated_by' => $actor?->id,
                 'initiated_at' => now(),
                 'paid_on' => filled($input['paid_on'] ?? null) ? (string) $input['paid_on'] : null,
                 'allocation_plan' => [
-                    'intent_key' => $input['intent_key'],
+                    'intent_key' => $intentKey,
                     'reference' => $input['reference'] ?? null,
+                    'disposition' => $disposition instanceof OverpaymentDisposition
+                        ? $disposition->value
+                        : (string) $disposition,
                     'allocations' => $normalized,
                 ],
             ]);
