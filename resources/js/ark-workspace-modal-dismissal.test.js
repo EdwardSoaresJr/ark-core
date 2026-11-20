@@ -30,6 +30,32 @@ test('requestClose confirms dirty drafts and onBackdrop is a no-op', () => {
     assert.match(modalSource, /data-workspace-modal-open/);
 });
 
+test('declining discard confirmation does not emit review-request dismissal', () => {
+    const requestCloseStart = modalSource.indexOf('requestClose()');
+    const requestCloseEnd = modalSource.indexOf('async submitWorksheetForm', requestCloseStart);
+    const requestClose = modalSource.slice(requestCloseStart, requestCloseEnd);
+
+    assert.match(requestClose, /hasUnsavedModalChanges/);
+    assert.match(requestClose, /window\.confirm\('Discard unsaved changes in this form\?'\)/);
+    assert.match(requestClose, /return;/);
+
+    const confirmIndex = requestClose.indexOf("window.confirm('Discard unsaved changes in this form?')");
+    const dismissIndex = requestClose.indexOf('ark-review-request-dismissed');
+    const closeIndex = requestClose.indexOf('this.close({ force: true })');
+
+    assert.ok(confirmIndex !== -1, 'dirty confirm must exist');
+    assert.ok(dismissIndex !== -1, 'review-request dismissal must still exist after accept');
+    assert.ok(closeIndex !== -1, 'forced close must still exist after accept');
+    assert.ok(
+        confirmIndex < dismissIndex,
+        'confirm/decline path must run before ark-review-request-dismissed',
+    );
+    assert.ok(
+        dismissIndex < closeIndex,
+        'accepted dismissal event must fire before close',
+    );
+});
+
 test('closed modal drafts are ignored by workspace dirty tracking', () => {
     assert.match(formUnsavedSource, /#workspace-modal-host\[data-workspace-modal-open="0"\]/);
     assert.match(dirtyBindingsSource, /#workspace-modal-host\[data-workspace-modal-open="0"\]/);

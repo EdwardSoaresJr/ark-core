@@ -820,20 +820,22 @@ export function arkWorkspaceModal(config = {}) {
                 return;
             }
 
+            if (this.hasUnsavedModalChanges()) {
+                if (! window.confirm('Discard unsaved changes in this form?')) {
+                    // Declining discard must leave modal, draft, and workflow state intact.
+                    return;
+                }
+
+                this.discardModalDrafts();
+            }
+
+            // Emit only after close is accepted - never while the user is still editing.
             if (this.task === 'review-request' && this.context.closePaid) {
                 window.dispatchEvent(new CustomEvent('ark-review-request-dismissed', {
                     detail: {
                         lifecycleFormId: this.context.lifecycleFormId || null,
                     },
                 }));
-            }
-
-            if (this.hasUnsavedModalChanges()) {
-                if (! window.confirm('Discard unsaved changes in this form?')) {
-                    return;
-                }
-
-                this.discardModalDrafts();
             }
 
             this.close({ force: true });
