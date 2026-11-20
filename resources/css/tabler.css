@@ -1169,6 +1169,64 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
     outline-offset: 2px;
 }
 
+/*
+ * RO header Mileage In / Out (#216): the whole "In 12,345" / "Out -" area is one button, not just the digits.
+ * Padding (offset by negative margin) keeps the row compact while the target is >= 44px tall on touch/narrow screens.
+ */
+.ark-mileage-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 1.75rem;
+    margin: 0 -0.375rem;
+    padding: 0 0.375rem;
+    border: 0;
+    border-radius: var(--tblr-border-radius, 4px);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    touch-action: manipulation;
+}
+
+.ark-mileage-trigger:hover {
+    background: var(--tblr-active-bg, rgba(0, 0, 0, 0.05));
+}
+
+.ark-mileage-trigger:focus-visible {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 1px;
+}
+
+.ark-mileage-trigger__label {
+    color: var(--tblr-secondary, #667382);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.ark-mileage-trigger__value {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.18em;
+}
+
+.ark-mileage-input {
+    width: 6.5rem;
+}
+
+@media (pointer: coarse), (max-width: 767.98px) {
+    .ark-mileage-trigger {
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+    }
+
+    .ark-mileage-input {
+        min-height: 2.75rem;
+    }
+}
+
 .ops-tax-jurisdiction-label,
 .ops-visit-inline-value {
     text-decoration-line: underline;

@@ -87,3 +87,39 @@ test('advisor can set mileage out on a closed repair order', function () {
 
     expect($repairOrder->fresh()->mileage_out)->toBe(78405);
 });
+
+test('RO header mileage In and Out are single whole-area buttons with no nested controls (#216)', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    [$repairOrder] = identityHeaderRepairOrderFixture();
+
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+
+    $dom = new DOMDocument;
+    @$dom->loadHTML($html);
+    $xpath = new DOMXPath($dom);
+
+    foreach (['in' => 'In', 'out' => 'Out'] as $key => $label) {
+        $triggers = $xpath->query('//*[@data-mileage-inline]//button[@data-mileage-trigger="'.$key.'"]');
+
+        expect($triggers->length)->toBe(1);
+
+        $button = $triggers->item(0);
+
+        // The label is inside the button, so the label text, the value and the empty "-" all open the editor.
+        expect(trim($button->getElementsByTagName('span')->item(0)->textContent))->toBe($label)
+            ->and($button->getElementsByTagName('span')->length)->toBe(2)
+            ->and($button->getAttribute('aria-label'))->toBe('Edit mileage '.$key)
+            ->and($button->getAttribute('@click'))->toBe('open'.ucfirst($key).'()')
+            // No nested interactive controls.
+            ->and($xpath->query('.//button|.//input|.//a|.//select', $button)->length)->toBe(0)
+            ->and($button->getAttribute('class'))->toContain('ark-mileage-trigger');
+    }
+
+    // Opening the editor never saves: save only runs on blur with a changed value.
+    expect(file_get_contents(base_path('resources/css/tabler.css')))
+        ->toContain('.ark-mileage-trigger')
+        ->toContain('min-height: 2.75rem')
+        ->toContain('.ark-mileage-trigger:focus-visible');
+});

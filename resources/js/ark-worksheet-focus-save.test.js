@@ -145,3 +145,22 @@ test('hydration adopts the rendered value so an unchanged control is clean', () 
     assert.equal(field.defaultValue, 'Brake noise');
     assert.equal(plainControlChanged(field), false);
 });
+
+test('mileage header editor opens without saving and keeps blur-only autosave (#216)', () => {
+    const open = (name) => mileageSource.slice(mileageSource.indexOf(`${name}() {`), mileageSource.indexOf('},', mileageSource.indexOf(`${name}() {`)));
+
+    for (const name of ['openIn', 'openOut']) {
+        assert.doesNotMatch(open(name), /save\(|fetch\(/);
+        assert.match(open(name), /focus\(\)/);
+    }
+
+    const blade = readFileSync(
+        new URL('../views/operations/repair-orders/partials/repair-order-mileage-inline.blade.php', import.meta.url),
+        'utf8',
+    );
+
+    assert.match(blade, /@blur\.debounce\.350ms="finish\{\{ \$studly \}\}\(\)"/);
+    assert.match(blade, /@click="open\{\{ \$studly \}\}\(\)"/);
+    // Label and value live inside the single trigger button.
+    assert.match(blade, /<button[\s\S]*?data-mileage-trigger[\s\S]*?\{\{ \$field\['label'\] \}\}[\s\S]*?x-text="display[\s\S]*?<\/button>/);
+});
