@@ -150,8 +150,12 @@ test('the repair order workspace modal is a Tabler modal with every authoring pa
     $host = panelsTablerOne($xpath, '//*[@id="workspace-modal-host"]');
 
     expect($host->getAttribute('x-data'))->toContain('arkWorkspaceModal(')
+        ->and($host->getAttribute('data-workspace-modal-open'))->toBe('0')
         ->and($html)->toContain('@keydown.escape.window="onEscape()"')
         ->and($html)->toContain('@keydown.tab="trapFocus($event)"')
+        ->and($html)->toContain('data-workspace-modal-static-backdrop')
+        ->and($html)->toContain('data-bs-backdrop="static"')
+        ->and($html)->not->toContain('@click.self="if (! saving && ! saved) onBackdrop()"')
         ->and(panelsTablerLegacyClasses($host))->toBe([])
         ->and($xpath->query('.//*[contains(@class, "modal-dialog")][@x-ref="dialog"]', $host)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="workspace-modal-body"][contains(@class, "modal-body")]', $host)->length)->toBe(1)

@@ -1,9 +1,24 @@
 /**
  * Honest unsaved-change detection for worksheet / workspace forms.
  * Compare live values to the browser's default* baseline - not a sticky flag.
+ *
+ * Closed workspace-modal drafts are ignored for page-leave / tab dirty tracking.
+ * Open modal drafts still count - those are real unsubmitted authoring.
  */
 
-const IGNORE_SELECTOR = '[data-ark-workspace-dirty="off"], [type="search"], .ops-workspace-tabs';
+const IGNORE_SELECTOR = [
+    '[data-ark-workspace-dirty="off"]',
+    '[type="search"]',
+    '.ops-workspace-tabs',
+    '#workspace-modal-host[data-workspace-modal-open="0"]',
+].join(', ');
+
+export function isWorkspaceModalOpen(root = document) {
+    const host = root?.getElementById?.('workspace-modal-host')
+        ?? root?.querySelector?.('#workspace-modal-host');
+
+    return host?.getAttribute?.('data-workspace-modal-open') === '1';
+}
 
 export function plainControlChanged(field) {
     if (! field || field.disabled || field.readOnly) {

@@ -1,7 +1,7 @@
 import { focusWorksheetConcernRepairAction } from './ark-scope-entry-intake';
 import { dirtyAfterSaveAttempt, refreshPresentsAsSaving } from './ark-worksheet-autosave';
 import { adoptRenderedBaselines, blockedPanelIds, cancelWouldReplace, draftNodesIn, versionToSubmit } from './ark-worksheet-draft';
-import { formHasChanges } from './ark-form-unsaved';
+import { formHasChanges, isWorkspaceModalOpen } from './ark-form-unsaved';
 import { applyContinuityScopes, applyEditorPresentation, CONTINUITY_REFRESH_FAILED_MESSAGE, replaceSubmittedRegion } from './ark-worksheet-continuity-scope';
 
 const WORKSHEET_FETCH_INIT = {
@@ -624,6 +624,12 @@ export const arkWorksheetContinuity = (config = {}) => {
             const blocked = this.forceRefreshDrafts
                 ? new Set()
                 : blockedPanelIds(document, ids, ignoreDraft ?? this.discardingDraft ?? null);
+
+            // Never remount an open authoring modal - even during forced draft refresh.
+            if (isWorkspaceModalOpen() && ids.includes('workspace-modal-host')) {
+                blocked.add('workspace-modal-host');
+            }
+
             const missing = [];
             let replaced = 0;
 
