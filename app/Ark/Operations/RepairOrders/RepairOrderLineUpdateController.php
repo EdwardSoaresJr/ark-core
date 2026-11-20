@@ -118,7 +118,10 @@ class RepairOrderLineUpdateController
                 )
                 : ['has_core' => false, 'save_old_part' => false],
             ...NoteAudience::fromRequest($request, $lineType)->persistenceAttributes(),
-            'subtotal_cents' => $calculator->lineTotalCents($quantity, $pricingAttributes['unit_price_cents']),
+            'subtotal_cents' => $calculator->laborOrLineSubtotalCents([
+                ...$pricingAttributes,
+                'type' => $data['type'] ?? $line->type,
+            ], $quantity),
             'is_overridden' => $pricingAttributes['is_overridden'],
             ...RepairOrderLineLaborInput::persistenceAttributes($pricingAttributes),
             ...($procurementState instanceof PartProcurementState ? ['procurement_state' => $procurementState] : []),

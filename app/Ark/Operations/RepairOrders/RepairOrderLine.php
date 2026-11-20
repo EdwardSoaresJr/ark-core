@@ -159,13 +159,21 @@ class RepairOrderLine extends Model
         if ($posture === null
             || ! ($posture->isWarranty() || $posture->isProgramBilling())
             || ! $this->type->isLabor()
-            || $this->policy_resolved_labor_rate_cents === null
-            || (int) $this->unit_price_cents === (int) $this->policy_resolved_labor_rate_cents) {
+            || $this->pricing_mode === 'manual'
+            || $this->policy_resolved_labor_rate_cents === null) {
+            return null;
+        }
+
+        $quotedRateCents = $this->labor_rate_cents !== null
+            ? (int) $this->labor_rate_cents
+            : (int) $this->unit_price_cents;
+
+        if ($quotedRateCents === (int) $this->policy_resolved_labor_rate_cents) {
             return null;
         }
 
         return [
-            'quoted_cents' => (int) $this->unit_price_cents,
+            'quoted_cents' => $quotedRateCents,
             'program_cents' => (int) $this->policy_resolved_labor_rate_cents,
             'billing' => $posture->label(),
         ];

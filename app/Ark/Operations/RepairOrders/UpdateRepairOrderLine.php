@@ -114,7 +114,10 @@ final class UpdateRepairOrderLine
             ...NoteAudience::none()->persistenceAttributes(),
             'is_overridden' => $pricingAttributes['is_overridden'],
             ...RepairOrderLineLaborInput::persistenceAttributes($pricingAttributes),
-            'subtotal_cents' => $this->calculator->lineTotalCents($quantity, $pricingAttributes['unit_price_cents']),
+            'subtotal_cents' => $this->calculator->laborOrLineSubtotalCents([
+                ...$pricingAttributes,
+                'type' => $lineType,
+            ], $quantity),
             ...($procurementState instanceof PartProcurementState ? ['procurement_state' => $procurementState] : []),
         ]);
 

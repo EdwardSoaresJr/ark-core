@@ -26,8 +26,17 @@
     $policyResolvedRateCents = $line->policy_resolved_labor_rate_cents !== null
         ? (int) $line->policy_resolved_labor_rate_cents
         : null;
-    $laborRateOverridden = filled($line->labor_rate_override_reason)
-        || ($policyResolvedRateCents !== null && (int) $line->unit_price_cents !== $policyResolvedRateCents);
+    $laborChargeManual = $line->pricing_mode === 'manual';
+    $savedLaborRateCents = $line->labor_rate_cents !== null
+        ? (int) $line->labor_rate_cents
+        : (int) $line->unit_price_cents;
+    $laborRateOverridden = ! $laborChargeManual && (
+        filled($line->labor_rate_override_reason)
+        || ($policyResolvedRateCents !== null && $savedLaborRateCents !== $policyResolvedRateCents)
+    );
+    $laborChargeCents = $laborChargeManual
+        ? (int) $line->unit_price_cents
+        : app(\App\Ark\Operations\Financial\EstimateTotalsCalculator::class)->lineSellSubtotalCents($line);
     $compactSummary = \App\Ark\Operations\RepairOrders\LaborDescriptionPresentation::compactLaborSummary($line);
     $laborMemoryConfig = [
         'suggestUrl' => route('operations.repair-orders.labor-memory-suggest', $repairOrder),
@@ -63,8 +72,10 @@
         x-data="arkPartPricing({
             type: 'labor',
             concernSummary: @js($concern->summary),
-            sell: '{{ $totals->decimal($line->unit_price_cents) }}',
+            sell: '{{ $totals->decimal($savedLaborRateCents) }}',
             sellEdited: @js($laborRateOverridden),
+            laborCharge: '{{ $totals->decimal($laborChargeCents) }}',
+            laborChargeEdited: @js($laborChargeManual),
             laborRatePinned: true,
             defaultLaborRate: '{{ $defaultLaborRate }}',
             laborCategories: @js($laborCategories),
@@ -78,7 +89,7 @@
             laborHoursOverridden: @js((bool) $line->labor_hours_overridden),
             laborFinalHours: @js((string) $line->quantity),
             laborOverrideReason: @js($line->labor_override_reason ?? ''),
-            laborRateOverrideReason: @js($line->labor_rate_override_reason ?? ''),
+            laborRateOverrideReason: @js($laborChargeManual ? '' : ($line->labor_rate_override_reason ?? '')),
             laborAdjustExpanded: @js($laborNeedsAdvanced),
             laborDescriptionExpanded: false,
         }, partsMatrices, defaultPartsMatrixKey, '{{ route('operations.repair-orders.lines.pricing-preview', $repairOrder) }}')"
