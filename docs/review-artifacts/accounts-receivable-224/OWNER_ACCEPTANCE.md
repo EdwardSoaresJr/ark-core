@@ -8,8 +8,10 @@
 | Core PR | https://github.com/EdwardSoaresJr/ark-core/pull/226 |
 | Issue | https://github.com/EdwardSoaresJr/ark-core/issues/224 (keep open) |
 | Shop statement catalog | https://github.com/EdwardSoaresJr/ark-saas/pull/29 (open; required for live email) |
-| Local app | `https://ark-core.test` |
+| Local app (this worktree) | `https://ark-ar-224.test` |
 | Molly / #227 | Independent — do not mix into this acceptance |
+
+Herd: link this worktree as `ark-ar-224` (`herd link ark-ar-224` from `ark-core-ar-224`). Do **not** use `https://ark-core.test` for #226 — that host still serves main and returns 404 for AR routes.
 
 ## Environment prep (local Herd only)
 
@@ -20,9 +22,11 @@ git checkout feature/accounts-receivable-224
 git rev-parse HEAD   # expect ddc95027… or later acceptance-only commits
 php artisan migrate --force
 php scripts/seed-ar-224-acceptance.php
+# optional money-path smoke (no browser):
+php scripts/run-ar-224-acceptance-scenarios.php
 ```
 
-The seed refuses non-local hosts and production-like database names. Re-running is safe for the named synthetic emails; it refreshes on-account invoices.
+The seed refuses non-local hosts and production-like database names. Re-running resets prior `AR224-ACCEPT` ROs/receipts for the five synthetic customers, then recreates them.
 
 Staff: sign in as an advisor/admin that can open Financials. Seed actor email is printed by the script (`ar-accept-advisor@example.test` when created).
 

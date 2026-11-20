@@ -73,7 +73,36 @@ $baseUrl = rtrim((string) config('app.url'), '/');
 
 $money = static fn (int $cents): string => '$'.number_format($cents / 100, 2);
 
-$makeCustomer = static function (string $first, string $last, string $email, string $phone, OverpaymentDisposition $default): Customer {
+$resetCustomerAccount = static function (Customer $customer) use ($marker): void {
+    // Fresh acceptance session: drop prior synthetic ROs/invoices/receipts for this customer only.
+    $roIds = RepairOrder::query()
+        ->where('customer_id', $customer->id)
+        ->where('concern_summary', 'like', $marker.'%')
+        ->pluck('id');
+
+    if ($roIds->isNotEmpty()) {
+        \App\Ark\Operations\Financial\RepairOrderLedgerEntry::query()
+            ->whereIn('repair_order_id', $roIds)
+            ->delete();
+        \App\Ark\Operations\Documents\EstimateDocument::query()
+            ->whereIn('repair_order_id', $roIds)
+            ->delete();
+        \App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt::query()
+            ->whereIn('repair_order_id', $roIds)
+            ->delete();
+        RepairOrderLine::query()->whereIn('repair_order_id', $roIds)->delete();
+        RepairOrderConcern::query()->whereIn('repair_order_id', $roIds)->delete();
+        RepairOrder::query()->whereIn('id', $roIds)->delete();
+    }
+
+    \App\Ark\Operations\Financial\CustomerPaymentReceipt::query()
+        ->where('customer_id', $customer->id)
+        ->delete();
+
+    $customer->forceFill(['store_credit_balance_cents' => 0])->save();
+};
+
+$makeCustomer = static function (string $first, string $last, string $email, string $phone, OverpaymentDisposition $default) use ($resetCustomerAccount): Customer {
     $existing = Customer::query()->where('email', $email)->first();
     if ($existing !== null) {
         $existing->forceFill([
@@ -81,7 +110,9 @@ $makeCustomer = static function (string $first, string $last, string $email, str
             'last_name' => $last,
             'phone' => $phone,
             'overpayment_disposition_default' => $default,
+            'store_credit_balance_cents' => 0,
         ])->save();
+        $resetCustomerAccount($existing->fresh());
 
         return $existing->fresh();
     }
