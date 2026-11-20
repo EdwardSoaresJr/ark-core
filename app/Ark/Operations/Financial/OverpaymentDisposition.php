@@ -15,7 +15,7 @@ enum OverpaymentDisposition: string
             self::Ask => 'Ask every time',
             self::KeepCredit => 'Keep as account credit',
             self::ReturnChange => 'Return excess when possible',
-            self::Refund => 'Refund / return funds',
+            self::Refund => 'Pending refund / return',
         };
     }
 

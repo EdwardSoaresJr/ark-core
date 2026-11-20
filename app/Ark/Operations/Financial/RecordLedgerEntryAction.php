@@ -190,6 +190,64 @@ final class RecordLedgerEntryAction
         });
     }
 
+    /**
+     * Spends existing customer account credit against an invoice balance. No new tender.
+     */
+    public function applyStoreCredit(
+        RepairOrder $repairOrder,
+        int $amountCents,
+        ?User $actor = null,
+        ?string $reference = null,
+        ?Carbon $recordedAt = null,
+        ?int $paymentReceiptId = null,
+    ): RepairOrderLedgerEntry {
+        $repairOrder->loadMissing('customer');
+
+        if ($amountCents <= 0) {
+            throw new RuntimeException('Store credit application amount must be greater than zero.');
+        }
+
+        $invoice = $this->balanceDue->issuedInvoice($repairOrder);
+        if ($invoice === null) {
+            throw new RuntimeException('Issue the final invoice before applying account credit.');
+        }
+
+        $balance = $this->balanceDue->forRepairOrder($repairOrder);
+        if ($amountCents > $balance->balanceDueCents) {
+            throw new RuntimeException(
+                'Cannot apply more credit than the $'.number_format($balance->balanceDueCents / 100, 2).' balance due.',
+            );
+        }
+
+        return DB::transaction(function () use ($repairOrder, $amountCents, $actor, $reference, $recordedAt, $paymentReceiptId, $invoice): RepairOrderLedgerEntry {
+            $customer = Customer::query()->whereKey($repairOrder->customer_id)->lockForUpdate()->firstOrFail();
+            $available = (int) $customer->store_credit_balance_cents;
+            if ($amountCents > $available) {
+                throw new RuntimeException(
+                    'Account credit available is $'.number_format($available / 100, 2).'.',
+                );
+            }
+
+            $entry = $this->persistEntry(
+                $repairOrder,
+                $invoice->id,
+                LedgerEntryType::StoreCreditApplication,
+                $amountCents,
+                PaymentMethod::StoreCredit,
+                $actor,
+                $reference,
+                notes: 'Applied account credit',
+                recordedAt: $recordedAt,
+                paymentReceiptId: $paymentReceiptId,
+            );
+            $this->decreaseStoreCredit($customer, $amountCents);
+            $this->invoicePdfRefresh->markDirtyForRepairOrder($repairOrder);
+            $this->paymentPostureSync->sync($repairOrder->fresh());
+
+            return $entry;
+        });
+    }
+
     public function recordAdjustment(
         RepairOrder $repairOrder,
         int $amountCents,
@@ -419,6 +477,18 @@ final class RecordLedgerEntryAction
     {
         $customer->forceFill([
             'store_credit_balance_cents' => (int) $customer->store_credit_balance_cents + $amountCents,
+        ])->save();
+    }
+
+    private function decreaseStoreCredit(Customer $customer, int $amountCents): void
+    {
+        $next = (int) $customer->store_credit_balance_cents - $amountCents;
+        if ($next < 0) {
+            throw new RuntimeException('Insufficient account credit.');
+        }
+
+        $customer->forceFill([
+            'store_credit_balance_cents' => $next,
         ])->save();
     }
 }

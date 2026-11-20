@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'allocated_cents',
     'unapplied_cents',
     'change_cents',
+    'refund_pending_cents',
     'payment_method',
     'reference',
     'notes',
@@ -35,9 +36,18 @@ class CustomerPaymentReceipt extends Model
             'allocated_cents' => 'integer',
             'unapplied_cents' => 'integer',
             'change_cents' => 'integer',
+            'refund_pending_cents' => 'integer',
             'recorded_at' => 'datetime',
             'voided_at' => 'datetime',
         ];
+    }
+
+    public function balancedAmountCents(): int
+    {
+        return (int) $this->allocated_cents
+            + (int) $this->unapplied_cents
+            + (int) $this->change_cents
+            + (int) $this->refund_pending_cents;
     }
 
     public function customer(): BelongsTo

@@ -44,7 +44,11 @@ final class VoidLedgerEntryAction
             $this->assertNotProcessorSettledCapture($locked);
 
             if ($locked->entry_type === LedgerEntryType::StoreCreditIssuance) {
-                $this->reverseStoreCredit($locked);
+                $this->reverseStoreCreditIssuance($locked);
+            }
+
+            if ($locked->entry_type === LedgerEntryType::StoreCreditApplication) {
+                $this->reverseStoreCreditApplication($locked);
             }
 
             $locked->forceFill([
@@ -165,7 +169,7 @@ final class VoidLedgerEntryAction
         return 'This payment is linked to a card processor attempt. Voiding it in ARK could misstate whether the customer was charged. Record a processor-confirmed refund or wait until the processor outcome is certain.';
     }
 
-    private function reverseStoreCredit(RepairOrderLedgerEntry $entry): void
+    private function reverseStoreCreditIssuance(RepairOrderLedgerEntry $entry): void
     {
         $customer = $entry->customer()->firstOrFail();
         $nextBalance = (int) $customer->store_credit_balance_cents - (int) $entry->amount_cents;
@@ -175,5 +179,13 @@ final class VoidLedgerEntryAction
         }
 
         $customer->forceFill(['store_credit_balance_cents' => $nextBalance])->save();
+    }
+
+    private function reverseStoreCreditApplication(RepairOrderLedgerEntry $entry): void
+    {
+        $customer = $entry->customer()->firstOrFail();
+        $customer->forceFill([
+            'store_credit_balance_cents' => (int) $customer->store_credit_balance_cents + (int) $entry->amount_cents,
+        ])->save();
     }
 }

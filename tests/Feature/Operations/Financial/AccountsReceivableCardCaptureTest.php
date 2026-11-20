@@ -348,3 +348,114 @@ test('processor success survives allocation failure and blocks a duplicate charg
     expect(CustomerPaymentReceipt::query()->count())->toBe(1)
         ->and(PaymentCaptureAttempt::query()->where('customer_id', $customer->id)->count())->toBe(1);
 });
+
+test('failed allocation reconciliation persists reconciliation_required after the rolled-back transaction', function () {
+    [$roA, $invoiceA] = arCardOnAccountInvoice();
+    $customer = $roA->customer;
+
+    $publicId = (string) Str::uuid();
+    $intent = (string) Str::uuid();
+    $attempt = PaymentCaptureAttempt::query()->create([
+        'public_id' => $publicId,
+        'repair_order_id' => $roA->id,
+        'customer_id' => $customer->id,
+        'amount_cents' => 15000,
+        'currency' => 'USD',
+        'context_kind' => PaymentCaptureContextKind::AccountsReceivable,
+        'capture_method' => PaymentCaptureMethod::Keyed,
+        'status' => PaymentCaptureAttemptStatus::ReconciliationRequired,
+        'idempotency_key' => 'core-'.$publicId,
+        'submission_intent_key' => $intent,
+        'provider' => 'vizypay',
+        'provider_payment_id' => 'vizy_pay_recon_fail',
+        'initiated_by' => $this->advisor->id,
+        'initiated_at' => now(),
+        'failure_reason' => 'allocation_pending',
+        'allocation_plan' => [
+            'intent_key' => $intent,
+            'disposition' => 'keep_credit',
+            'allocations' => [],
+        ],
+    ]);
+
+    expect(fn () => app(ReconcileAccountsReceivableCaptureAction::class)->execute($attempt->fresh(), $this->advisor))
+        ->toThrow(RuntimeException::class);
+
+    $after = $attempt->fresh();
+
+    expect($after->status)->toBe(PaymentCaptureAttemptStatus::ReconciliationRequired)
+        ->and($after->failure_reason)->toBe('allocation_failed')
+        ->and($after->provider_payment_id)->toBe('vizy_pay_recon_fail')
+        ->and($after->customer_payment_receipt_id)->toBeNull()
+        ->and(CustomerPaymentReceipt::query()->count())->toBe(0);
+});
+
+test('succeeded capture intent key rejects a different payload instead of replaying', function () {
+    [$roA, $invoiceA] = arCardOnAccountInvoice();
+    $customer = $roA->customer;
+    [$roB, $invoiceB] = arCardOnAccountInvoice($customer);
+
+    Http::fake(function (Request $request) {
+        if ($request->method() === 'GET' && str_contains($request->url(), '/payments/readiness')) {
+            return Http::response([
+                'ok' => true,
+                'provider' => 'stub',
+                'status' => 'connected',
+                'supports_terminal' => false,
+                'supports_keyed' => true,
+                'supports_portal' => false,
+                'available_devices' => [],
+                'public_config' => null,
+            ], 200);
+        }
+
+        if ($request->method() === 'POST' && str_contains($request->url(), '/payments/captures')) {
+            $body = json_decode($request->body(), true) ?: [];
+
+            return Http::response([
+                'ok' => true,
+                'status' => 'succeeded',
+                'capture_id' => (string) Str::uuid(),
+                'capture_attempt_public_id' => $body['capture_attempt_public_id'] ?? '',
+                'idempotency_key' => $body['idempotency_key'] ?? '',
+                'amount_cents' => $body['amount_cents'] ?? 15000,
+                'currency' => 'USD',
+                'context_kind' => PaymentCaptureContextKind::AccountsReceivable->value,
+                'provider' => 'stub',
+                'provider_payment_id' => 'stub_pay_intent_fp',
+            ], 200);
+        }
+
+        return Http::response(['ok' => false], 404);
+    });
+
+    $intent = (string) Str::uuid();
+    $first = app(InitiateAccountsReceivableCaptureAction::class)->execute(
+        $customer->fresh(),
+        [['invoice_id' => $invoiceA->id, 'amount_cents' => 15000]],
+        $this->advisor,
+        [
+            'capture_method' => PaymentCaptureMethod::Keyed,
+            'source_token' => 'tok_fp',
+            'intent_key' => $intent,
+            'stub_scenario' => 'immediate_success',
+        ],
+    );
+
+    expect($first['attempt']->status)->toBe(PaymentCaptureAttemptStatus::Succeeded);
+
+    expect(fn () => app(InitiateAccountsReceivableCaptureAction::class)->execute(
+        $customer->fresh(),
+        [['invoice_id' => $invoiceB->id, 'amount_cents' => 15000]],
+        $this->advisor,
+        [
+            'capture_method' => PaymentCaptureMethod::Keyed,
+            'source_token' => 'tok_fp_other',
+            'intent_key' => $intent,
+            'stub_scenario' => 'immediate_success',
+        ],
+    ))->toThrow(\Illuminate\Validation\ValidationException::class);
+
+    expect(PaymentCaptureAttempt::query()->where('customer_id', $customer->id)->count())->toBe(1)
+        ->and(CustomerPaymentReceipt::query()->where('customer_id', $customer->id)->count())->toBe(1);
+});

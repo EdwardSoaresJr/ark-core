@@ -31,58 +31,75 @@ final class ReconcileAccountsReceivableCaptureAction
             ]);
         }
 
-        return DB::transaction(function () use ($attempt, $actor): PaymentCaptureAttempt {
-            /** @var PaymentCaptureAttempt $locked */
-            $locked = PaymentCaptureAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+        try {
+            return DB::transaction(function () use ($attempt, $actor): PaymentCaptureAttempt {
+                /** @var PaymentCaptureAttempt $locked */
+                $locked = PaymentCaptureAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
 
-            if ($locked->customer_payment_receipt_id !== null) {
+                if ($locked->customer_payment_receipt_id !== null) {
+                    $locked->status = PaymentCaptureAttemptStatus::Succeeded;
+                    $locked->completed_at ??= now();
+                    $locked->failure_reason = null;
+                    $locked->save();
+
+                    return $locked->fresh();
+                }
+
+                if ($locked->status !== PaymentCaptureAttemptStatus::ReconciliationRequired
+                    && trim((string) $locked->provider_payment_id) === '') {
+                    throw ValidationException::withMessages([
+                        'capture' => 'This capture is not waiting for allocation reconciliation.',
+                    ]);
+                }
+
+                if (trim((string) $locked->provider_payment_id) === '') {
+                    throw ValidationException::withMessages([
+                        'capture' => 'Cannot allocate without a confirmed processor payment id.',
+                    ]);
+                }
+
+                // Allocation failures must abort this transaction so partial ledger writes roll back.
+                // Failure status is persisted outside this transaction (see catch below).
+                $receipt = $this->allocate($locked, $actor);
+
+                $locked->customer_payment_receipt_id = $receipt->id;
+                $locked->ledger_entry_id = $receipt->ledgerEntries()
+                    ->where('entry_type', LedgerEntryType::Payment)
+                    ->orderBy('id')
+                    ->value('id');
                 $locked->status = PaymentCaptureAttemptStatus::Succeeded;
-                $locked->completed_at ??= now();
+                $locked->completed_at = now();
                 $locked->failure_reason = null;
                 $locked->save();
 
                 return $locked->fresh();
-            }
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            $this->persistAllocationFailure($attempt);
 
-            if ($locked->status !== PaymentCaptureAttemptStatus::ReconciliationRequired
-                && trim((string) $locked->provider_payment_id) === '') {
-                throw ValidationException::withMessages([
-                    'capture' => 'This capture is not waiting for allocation reconciliation.',
-                ]);
-            }
+            throw new RuntimeException(
+                'Allocation still failed after the card was charged. Capture '.$attempt->public_id
+                .' remains in reconciliation. '.$exception->getMessage(),
+                previous: $exception,
+            );
+        }
+    }
 
-            if (trim((string) $locked->provider_payment_id) === '') {
-                throw ValidationException::withMessages([
-                    'capture' => 'Cannot allocate without a confirmed processor payment id.',
-                ]);
-            }
-
-            try {
-                $receipt = $this->allocate($locked, $actor);
-            } catch (Throwable $exception) {
-                $locked->status = PaymentCaptureAttemptStatus::ReconciliationRequired;
-                $locked->failure_reason = 'allocation_failed';
-                $locked->completed_at = null;
-                $locked->save();
-
-                throw new RuntimeException(
-                    'Allocation still failed after the card was charged. Capture '.$locked->public_id.' remains in reconciliation. '.$exception->getMessage(),
-                    previous: $exception,
-                );
-            }
-
-            $locked->customer_payment_receipt_id = $receipt->id;
-            $locked->ledger_entry_id = $receipt->ledgerEntries()
-                ->where('entry_type', LedgerEntryType::Payment)
-                ->orderBy('id')
-                ->value('id');
-            $locked->status = PaymentCaptureAttemptStatus::Succeeded;
-            $locked->completed_at = now();
-            $locked->failure_reason = null;
-            $locked->save();
-
-            return $locked->fresh();
-        });
+    private function persistAllocationFailure(PaymentCaptureAttempt $attempt): void
+    {
+        // Independent of the rolled-back allocation transaction so staff still see
+        // reconciliation_required + provider lockout after a failed retry.
+        PaymentCaptureAttempt::query()
+            ->whereKey($attempt->id)
+            ->whereNull('customer_payment_receipt_id')
+            ->update([
+                'status' => PaymentCaptureAttemptStatus::ReconciliationRequired->value,
+                'failure_reason' => 'allocation_failed',
+                'completed_at' => null,
+                'updated_at' => now(),
+            ]);
     }
 
     private function allocate(PaymentCaptureAttempt $attempt, ?User $actor): CustomerPaymentReceipt

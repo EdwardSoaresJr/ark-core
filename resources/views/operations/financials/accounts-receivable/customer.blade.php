@@ -154,20 +154,29 @@
                                 <td>{{ \App\Ark\Operations\Financial\ManualPaymentMethods::label($receipt->payment_method) ?? $receipt->payment_method }}</td>
                                 <td>{{ $receipt->reference ?: '—' }}</td>
                                 <td>
-                                    @foreach ($receipt->ledgerEntries->where('entry_type', \App\Ark\Operations\Financial\LedgerEntryType::Payment) as $entry)
+                                    @foreach ($receipt->ledgerEntries->whereIn('entry_type', [
+                                        \App\Ark\Operations\Financial\LedgerEntryType::Payment,
+                                        \App\Ark\Operations\Financial\LedgerEntryType::StoreCreditApplication,
+                                    ]) as $entry)
                                         <div class="small">
                                             INV #{{ $entry->financialDocument?->document_number ?? '—' }}
                                             · {{ $money((int) $entry->amount_cents) }}
+                                            @if ($entry->entry_type === \App\Ark\Operations\Financial\LedgerEntryType::StoreCreditApplication)
+                                                <span class="text-secondary">(account credit)</span>
+                                            @endif
                                             @if ($entry->isVoided())
                                                 <span class="text-secondary">(voided)</span>
                                             @endif
                                         </div>
                                     @endforeach
                                     @if ($receipt->unapplied_cents > 0)
-                                        <div class="small text-secondary">Unapplied / store credit {{ $money((int) $receipt->unapplied_cents) }}</div>
+                                        <div class="small text-secondary">Unapplied / account credit {{ $money((int) $receipt->unapplied_cents) }}</div>
                                     @endif
                                     @if ($receipt->change_cents > 0)
                                         <div class="small text-secondary">Change returned {{ $money((int) $receipt->change_cents) }}</div>
+                                    @endif
+                                    @if (($receipt->refund_pending_cents ?? 0) > 0)
+                                        <div class="small text-warning">Pending refund/return {{ $money((int) $receipt->refund_pending_cents) }}</div>
                                     @endif
                                     @if ($receipt->isVoided())
                                         <div class="small text-danger">Receipt voided</div>

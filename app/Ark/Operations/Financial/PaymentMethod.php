@@ -9,6 +9,7 @@ enum PaymentMethod: string
     case Check = 'check';
     case Eft = 'eft';
     case Financing = 'financing';
+    case StoreCredit = 'store_credit';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum PaymentMethod: string
             self::Check => 'Check',
             self::Eft => 'EFT',
             self::Financing => 'Financing',
+            self::StoreCredit => 'Account credit',
         };
     }
 

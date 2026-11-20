@@ -144,7 +144,7 @@ test('cash overpayment can keep account credit when staff chooses keep credit', 
         ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(5000);
 });
 
-test('check excess refund disposition does not create store credit', function () {
+test('check excess refund disposition records pending refund liability not change or credit', function () {
     [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
 
     $receipt = app(AllocateCustomerPaymentAction::class)->execute(
@@ -161,8 +161,11 @@ test('check excess refund disposition does not create store credit', function ()
 
     expect($receipt->allocated_cents)->toBe(15000)
         ->and($receipt->unapplied_cents)->toBe(0)
-        ->and($receipt->change_cents)->toBe(5000)
-        ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(0);
+        ->and($receipt->change_cents)->toBe(0)
+        ->and($receipt->refund_pending_cents)->toBe(5000)
+        ->and($receipt->amount_cents)->toBe($receipt->balancedAmountCents())
+        ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(0)
+        ->and($receipt->notes)->toContain('pending refund');
 });
 
 test('overpayment without disposition is rejected when customer default is ask', function () {
@@ -177,6 +180,63 @@ test('overpayment without disposition is rejected when customer default is ask',
         $this->advisor,
         'CHK-ASK',
     ))->toThrow(\Illuminate\Validation\ValidationException::class);
+});
+
+test('return-when-possible customer default forces an explicit choice on noncash tender', function () {
+    [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
+    $repairOrder->customer->forceFill([
+        'overpayment_disposition_default' => OverpaymentDisposition::ReturnChange,
+    ])->save();
+
+    expect(fn () => app(AllocateCustomerPaymentAction::class)->execute(
+        $repairOrder->customer->fresh(),
+        20000,
+        PaymentMethod::Check,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CHK-RETURN-DEFAULT',
+    ))->toThrow(\Illuminate\Validation\ValidationException::class);
+});
+
+test('retained account credit applies to a later invoice without a new charge', function () {
+    [$roA, $invoiceA] = arOnAccountInvoiceForCustomer();
+    $customer = $roA->customer;
+
+    app(AllocateCustomerPaymentAction::class)->execute(
+        $customer,
+        20000,
+        PaymentMethod::Check,
+        [['invoice_id' => $invoiceA->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CHK-CREDIT-SEED',
+        null,
+        OverpaymentDisposition::KeepCredit,
+    );
+
+    expect((int) $customer->fresh()->store_credit_balance_cents)->toBe(5000)
+        ->and(app(BalanceDueCalculator::class)->forRepairOrder($roA->fresh())->balanceDueCents)->toBe(0);
+
+    [$roB, $invoiceB] = arOnAccountInvoiceForCustomer($customer);
+
+    $applied = app(\App\Ark\Operations\Financial\ApplyCustomerStoreCreditAction::class)->execute(
+        $customer->fresh(),
+        [['invoice_id' => $invoiceB->id, 'amount_cents' => 5000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CREDIT-APPLY',
+    );
+
+    expect($applied->payment_method)->toBe(PaymentMethod::StoreCredit)
+        ->and($applied->amount_cents)->toBe(5000)
+        ->and($applied->allocated_cents)->toBe(5000)
+        ->and($applied->change_cents)->toBe(0)
+        ->and($applied->refund_pending_cents)->toBe(0)
+        ->and((int) $customer->fresh()->store_credit_balance_cents)->toBe(0)
+        ->and(app(BalanceDueCalculator::class)->forRepairOrder($roB->fresh())->balanceDueCents)->toBe(10000)
+        ->and($roB->fresh()->ledgerEntries()->where('entry_type', LedgerEntryType::StoreCreditApplication)->count())->toBe(1)
+        ->and($roB->fresh()->ledgerEntries()->where('entry_type', LedgerEntryType::Payment)->count())->toBe(0);
 });
 
 test('reusing an intent key with different payment details is rejected', function () {

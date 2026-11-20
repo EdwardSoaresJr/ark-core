@@ -31,13 +31,23 @@ final class AccountsReceivableReceivePaymentController extends Controller
             : OverpaymentDisposition::tryFrom((string) $customer->overpayment_disposition_default)
                 ?? OverpaymentDisposition::Ask;
 
+        $methods = array_merge(
+            [['key' => PaymentMethod::Cash->value, 'label' => PaymentMethod::Cash->label()]],
+            ManualPaymentMethods::current(),
+        );
+        $creditCents = (int) ($customer->store_credit_balance_cents ?? 0);
+        if ($creditCents > 0) {
+            array_unshift($methods, [
+                'key' => PaymentMethod::StoreCredit->value,
+                'label' => PaymentMethod::StoreCredit->label().' ($'.number_format($creditCents / 100, 2).' available)',
+            ]);
+        }
+
         return view('operations.financials.accounts-receivable.receive-payment', [
             'customer' => $customer,
             'invoices' => $dashboard['invoices'],
-            'methods' => array_merge(
-                [['key' => PaymentMethod::Cash->value, 'label' => PaymentMethod::Cash->label()]],
-                ManualPaymentMethods::current(),
-            ),
+            'methods' => $methods,
+            'storeCreditCents' => $creditCents,
             'dispositionDefault' => $defaultDisposition,
             'cardCapture' => [
                 'keyedEnabled' => (bool) ($cardConfig['keyedEnabled'] ?? false),
@@ -57,6 +67,7 @@ final class AccountsReceivableReceivePaymentController extends Controller
         Request $request,
         Customer $customer,
         AllocateCustomerPaymentAction $allocate,
+        ApplyCustomerStoreCreditAction $applyCredit,
         EstimateTotalsCalculator $totals,
     ): RedirectResponse {
         abort_unless(
@@ -66,7 +77,7 @@ final class AccountsReceivableReceivePaymentController extends Controller
         );
 
         $methodKeys = array_merge(
-            [PaymentMethod::Cash->value],
+            [PaymentMethod::Cash->value, PaymentMethod::StoreCredit->value],
             ManualPaymentMethods::keys(),
         );
 
@@ -103,6 +114,25 @@ final class AccountsReceivableReceivePaymentController extends Controller
             ];
         }
 
+        if ($data['payment_method'] === PaymentMethod::StoreCredit->value) {
+            $receipt = $applyCredit->execute(
+                $customer,
+                $allocations,
+                $data[WorksheetMutationIdempotency::FIELD],
+                $request->user(),
+                filled($data['reference'] ?? null) ? trim((string) $data['reference']) : null,
+                RepairOrderPaymentPaidAt::fromDateInput($data['paid_at'] ?? null),
+            );
+
+            return redirect()
+                ->route('operations.financials.accounts-receivable.customer', $customer)
+                ->with(
+                    'status',
+                    'Applied $'.number_format($receipt->allocated_cents / 100, 2)
+                    .' account credit across '.count($allocations).' invoice(s) with no new charge.',
+                );
+        }
+
         $receipt = $allocate->execute(
             $customer,
             $totals->unitPriceCents($data['amount']),
@@ -122,8 +152,13 @@ final class AccountsReceivableReceivePaymentController extends Controller
             $message .= ' Change returned: $'.number_format($receipt->change_cents / 100, 2).'.';
         }
 
+        if ($receipt->refund_pending_cents > 0) {
+            $message .= ' $'.number_format($receipt->refund_pending_cents / 100, 2)
+                .' held as pending refund/return (not yet confirmed returned).';
+        }
+
         if ($receipt->unapplied_cents > 0) {
-            $message .= ' $'.number_format($receipt->unapplied_cents / 100, 2).' posted as store credit.';
+            $message .= ' $'.number_format($receipt->unapplied_cents / 100, 2).' posted as account credit.';
         }
 
         return redirect()

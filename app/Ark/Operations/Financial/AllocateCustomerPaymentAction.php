@@ -16,10 +16,11 @@ use RuntimeException;
  * Posts one customer payment across one or more outstanding invoices atomically.
  *
  * Accounting invariant on every receipt:
- * amount_cents = allocated_cents + unapplied_cents + change_cents
+ * amount_cents = allocated_cents + unapplied_cents + change_cents + refund_pending_cents
  *
- * Excess disposition is selectable (keep credit / return change / refund),
- * with a per-customer default when none is supplied.
+ * Excess disposition is selectable (keep credit / return change / pending refund),
+ * with a per-customer default when none is supplied. Refund does not mean funds
+ * were returned — it records a pending-refund liability until confirmed.
  */
 final class AllocateCustomerPaymentAction
 {
@@ -118,6 +119,7 @@ final class AllocateCustomerPaymentAction
                     'allocated_cents' => 0,
                     'unapplied_cents' => 0,
                     'change_cents' => 0,
+                    'refund_pending_cents' => 0,
                     'payment_method' => $methodValue,
                     'reference' => $reference,
                     'recorded_at' => $recordedAt,
@@ -185,6 +187,7 @@ final class AllocateCustomerPaymentAction
                 $remainder = $amountCents - $applied;
                 $unapplied = 0;
                 $change = 0;
+                $refundPending = 0;
 
                 if ($remainder > 0) {
                     if ($disposition === OverpaymentDisposition::KeepCredit) {
@@ -205,16 +208,16 @@ final class AllocateCustomerPaymentAction
                     } elseif ($disposition === OverpaymentDisposition::ReturnChange) {
                         if (! PaymentMethod::isCash($methodValue)) {
                             throw ValidationException::withMessages([
-                                'disposition' => 'Return change is only available for cash tenders. Keep as credit or refund instead.',
+                                'disposition' => 'Return change is only available for cash tenders. Keep as credit or mark a pending refund instead.',
                             ]);
                         }
                         $change = $remainder;
                     } elseif ($disposition === OverpaymentDisposition::Refund) {
-                        // Excess is not kept as account credit. change_cents records funds returned
-                        // outside the invoice allocation (check returned, card refund, etc.).
-                        $change = $remainder;
+                        // Liability only — funds are not treated as returned until a confirmed refund posts.
+                        $refundPending = $remainder;
                         $receipt->forceFill([
-                            'notes' => trim(($receipt->notes ? $receipt->notes.' ' : '').'Excess returned/refunded; not retained as account credit.'),
+                            'notes' => trim(($receipt->notes ? $receipt->notes.' ' : '')
+                                .'Excess held as pending refund/return; not confirmed returned and not account credit.'),
                         ]);
                     } else {
                         throw ValidationException::withMessages([
@@ -227,9 +230,10 @@ final class AllocateCustomerPaymentAction
                     'allocated_cents' => $applied,
                     'unapplied_cents' => $unapplied,
                     'change_cents' => $change,
+                    'refund_pending_cents' => $refundPending,
                 ])->save();
 
-                if ($receipt->amount_cents !== ($receipt->allocated_cents + $receipt->unapplied_cents + $receipt->change_cents)) {
+                if ($receipt->amount_cents !== $receipt->balancedAmountCents()) {
                     throw new RuntimeException('Payment receipt amounts do not balance.');
                 }
 
@@ -286,19 +290,23 @@ final class AllocateCustomerPaymentAction
                 ?? OverpaymentDisposition::Ask;
 
         $disposition = $requested ?? ($default === OverpaymentDisposition::Ask ? null : $default);
+        $allowed = OverpaymentDisposition::paymentChoices($methodValue);
+
+        // Customer "return when possible" is cash-only. On noncash, force an explicit choice —
+        // never silently map to refund or credit.
+        if ($disposition !== null
+            && $disposition !== OverpaymentDisposition::Ask
+            && ! in_array($disposition, $allowed, true)) {
+            throw ValidationException::withMessages([
+                'disposition' => 'This account prefers returning excess when possible, but that is not available for this payment method. Choose Keep as account credit or Pending refund / return.',
+            ]);
+        }
 
         if ($disposition === null || $disposition === OverpaymentDisposition::Ask) {
             throw ValidationException::withMessages([
                 'disposition' => 'This payment has a $'.number_format($remainder / 100, 2)
                     .' excess. Choose Keep as account credit'
-                    .(PaymentMethod::isCash($methodValue) ? ', Return change' : ', or Refund').'.',
-            ]);
-        }
-
-        $allowed = OverpaymentDisposition::paymentChoices($methodValue);
-        if (! in_array($disposition, $allowed, true)) {
-            throw ValidationException::withMessages([
-                'disposition' => 'That excess disposition is not available for this payment method.',
+                    .(PaymentMethod::isCash($methodValue) ? ', Return change' : ', or Pending refund / return').'.',
             ]);
         }
 

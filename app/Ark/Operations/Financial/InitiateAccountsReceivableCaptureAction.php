@@ -54,6 +54,19 @@ final class InitiateAccountsReceivableCaptureAction
             ]);
         }
 
+        $normalized = $this->normalizeAndValidate($customer, $allocations);
+        $amountCents = array_sum(array_column($normalized, 'amount_cents'));
+        $method = $input['capture_method'];
+        $disposition = $input['disposition'] ?? OverpaymentDisposition::KeepCredit;
+        $reference = filled($input['reference'] ?? null) ? trim((string) $input['reference']) : null;
+        $requestFingerprint = $this->submissionFingerprint(
+            $customer,
+            $amountCents,
+            $normalized,
+            $disposition,
+            $reference,
+        );
+
         $existingByIntent = PaymentCaptureAttempt::query()
             ->where('submission_intent_key', $intentKey)
             ->where('context_kind', PaymentCaptureContextKind::AccountsReceivable->value)
@@ -61,6 +74,13 @@ final class InitiateAccountsReceivableCaptureAction
             ->first();
 
         if ($existingByIntent !== null) {
+            $existingFingerprint = $this->attemptFingerprint($existingByIntent);
+            if ($existingFingerprint !== null && ! hash_equals($existingFingerprint, $requestFingerprint)) {
+                throw ValidationException::withMessages([
+                    'intent_key' => 'This payment submission key was already used with different card payment details.',
+                ]);
+            }
+
             if ($existingByIntent->customer_payment_receipt_id !== null
                 || $existingByIntent->status === PaymentCaptureAttemptStatus::Succeeded) {
                 return ['attempt' => $existingByIntent, 'cloud' => []];
@@ -75,11 +95,6 @@ final class InitiateAccountsReceivableCaptureAction
                 ]);
             }
         }
-
-        $normalized = $this->normalizeAndValidate($customer, $allocations);
-        $amountCents = array_sum(array_column($normalized, 'amount_cents'));
-        $method = $input['capture_method'];
-        $disposition = $input['disposition'] ?? OverpaymentDisposition::KeepCredit;
 
         if ($method === PaymentCaptureMethod::Terminal) {
             $this->assertAvailableReader((string) ($input['device_ref'] ?? ''));
@@ -118,7 +133,7 @@ final class InitiateAccountsReceivableCaptureAction
             ]);
         }
 
-        $attempt = DB::transaction(function () use ($customer, $anchorRo, $actor, $amountCents, $method, $input, $normalized, $intentKey, $disposition) {
+        $attempt = DB::transaction(function () use ($customer, $anchorRo, $actor, $amountCents, $method, $input, $normalized, $intentKey, $disposition, $reference, $requestFingerprint) {
             $publicId = (string) Str::uuid();
 
             return PaymentCaptureAttempt::query()->create([
@@ -138,11 +153,12 @@ final class InitiateAccountsReceivableCaptureAction
                 'paid_on' => filled($input['paid_on'] ?? null) ? (string) $input['paid_on'] : null,
                 'allocation_plan' => [
                     'intent_key' => $intentKey,
-                    'reference' => $input['reference'] ?? null,
+                    'reference' => $reference,
                     'disposition' => $disposition instanceof OverpaymentDisposition
                         ? $disposition->value
                         : (string) $disposition,
                     'allocations' => $normalized,
+                    'payload_fingerprint' => $requestFingerprint,
                 ],
             ]);
         });
@@ -296,5 +312,50 @@ final class InitiateAccountsReceivableCaptureAction
                 'device_ref' => 'Choose an available card reader.',
             ]);
         }
+    }
+
+    /**
+     * @param  list<array{invoice_id: int, amount_cents: int}>  $allocations
+     */
+    private function submissionFingerprint(
+        Customer $customer,
+        int $amountCents,
+        array $allocations,
+        OverpaymentDisposition|string $disposition,
+        ?string $reference,
+    ): string {
+        $normalized = $allocations;
+        usort($normalized, fn (array $a, array $b): int => $a['invoice_id'] <=> $b['invoice_id']);
+
+        return hash('sha256', json_encode([
+            'amount_cents' => $amountCents,
+            'allocations' => $normalized,
+            'customer_id' => (int) $customer->id,
+            'disposition' => $disposition instanceof OverpaymentDisposition
+                ? $disposition->value
+                : (string) $disposition,
+            'reference' => $reference,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    private function attemptFingerprint(PaymentCaptureAttempt $attempt): ?string
+    {
+        $plan = is_array($attempt->allocation_plan) ? $attempt->allocation_plan : [];
+        if (is_string($plan['payload_fingerprint'] ?? null) && $plan['payload_fingerprint'] !== '') {
+            return (string) $plan['payload_fingerprint'];
+        }
+
+        $allocations = is_array($plan['allocations'] ?? null) ? $plan['allocations'] : [];
+        if ($allocations === [] || $attempt->customer_id === null) {
+            return null;
+        }
+
+        return $this->submissionFingerprint(
+            Customer::query()->findOrFail($attempt->customer_id),
+            (int) $attempt->amount_cents,
+            $allocations,
+            (string) ($plan['disposition'] ?? OverpaymentDisposition::KeepCredit->value),
+            filled($plan['reference'] ?? null) ? (string) $plan['reference'] : null,
+        );
     }
 }
