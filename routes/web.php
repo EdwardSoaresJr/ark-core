@@ -823,6 +823,10 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::FinancialManage->value)
             ->name('operations.financials.accounts-receivable.payments.void');
 
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/payments/{receipt}/confirm-refund', \App\Ark\Operations\Financial\AccountsReceivableConfirmRefundController::class)
+            ->middleware('permission:'.ArkCapability::FinancialManage->value)
+            ->name('operations.financials.accounts-receivable.payments.confirm-refund');
+
         Route::get('/app/financials/accounts-receivable/customers/{customer}/statement', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'show'])
             ->middleware('permission:'.ArkCapability::FinancialView->value)
             ->name('operations.financials.accounts-receivable.statement.show');

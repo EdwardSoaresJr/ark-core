@@ -41,3 +41,17 @@ test('overlapping same-key deposits and payments record one effect and different
         ->and($payload['payment_different_key']['rows'])->toBe(2)
         ->and($payload['payment_different_key']['cents'])->toBe(2000);
 });
+
+test('overlapping store-credit applications cannot double-spend credit or overpay an invoice', function () {
+    $payload = DisposableMySqlIntegration::run(dirname(__DIR__, 2).'/Support/store_credit_application_overlap.php');
+
+    expect($payload['credit_race']['winners'])->toBe(1)
+        ->and($payload['credit_race']['active_application_rows'])->toBe(1)
+        ->and($payload['credit_race']['active_application_cents'])->toBe(10000)
+        ->and($payload['credit_race']['balance_cents'])->toBe(0)
+        ->and($payload['invoice_race']['winners'])->toBe(1)
+        ->and($payload['invoice_race']['active_application_rows'])->toBe(1)
+        ->and($payload['invoice_race']['active_application_cents'])->toBe(15000)
+        ->and($payload['invoice_race']['balance_due_cents'])->toBe(0)
+        ->and($payload['invoice_race']['remaining_credit_cents'])->toBe(5000);
+});

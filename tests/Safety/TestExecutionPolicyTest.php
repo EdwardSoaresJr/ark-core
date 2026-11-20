@@ -96,7 +96,11 @@ test('a helper cannot be executed directly or pointed at a checkout env file', f
 });
 
 test('both standalone helpers fail before Laravel boot without an owned context', function () {
-    foreach (['repair_order_concurrency_overlap.php', 'financial_submission_intent_overlap.php'] as $helper) {
+    foreach ([
+        'repair_order_concurrency_overlap.php',
+        'financial_submission_intent_overlap.php',
+        'store_credit_application_overlap.php',
+    ] as $helper) {
         $environment = array_fill_keys(array_unique(array_merge(array_keys(getenv()), array_keys($_ENV), array_keys($_SERVER))), false);
         $environment['ARK_TEST_MYSQL_CONTEXT'] = '';
         $process = new Symfony\Component\Process\Process([PHP_BINARY, dirname(__DIR__).'/Support/'.$helper, 'parent'], null, $environment);

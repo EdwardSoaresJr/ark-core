@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\InvoicePdfRefresh;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Models\User;
@@ -192,6 +193,8 @@ final class RecordLedgerEntryAction
 
     /**
      * Spends existing customer account credit against an invoice balance. No new tender.
+     *
+     * @param  bool  $customerAlreadyLocked  When true, the caller already holds FOR UPDATE on the customer row.
      */
     public function applyStoreCredit(
         RepairOrder $repairOrder,
@@ -200,6 +203,7 @@ final class RecordLedgerEntryAction
         ?string $reference = null,
         ?Carbon $recordedAt = null,
         ?int $paymentReceiptId = null,
+        bool $customerAlreadyLocked = false,
     ): RepairOrderLedgerEntry {
         $repairOrder->loadMissing('customer');
 
@@ -207,24 +211,44 @@ final class RecordLedgerEntryAction
             throw new RuntimeException('Store credit application amount must be greater than zero.');
         }
 
-        $invoice = $this->balanceDue->issuedInvoice($repairOrder);
-        if ($invoice === null) {
-            throw new RuntimeException('Issue the final invoice before applying account credit.');
-        }
+        return DB::transaction(function () use (
+            $repairOrder,
+            $amountCents,
+            $actor,
+            $reference,
+            $recordedAt,
+            $paymentReceiptId,
+            $customerAlreadyLocked,
+        ): RepairOrderLedgerEntry {
+            $customer = $customerAlreadyLocked
+                ? Customer::query()->findOrFail($repairOrder->customer_id)
+                : Customer::query()->whereKey($repairOrder->customer_id)->lockForUpdate()->firstOrFail();
 
-        $balance = $this->balanceDue->forRepairOrder($repairOrder);
-        if ($amountCents > $balance->balanceDueCents) {
-            throw new RuntimeException(
-                'Cannot apply more credit than the $'.number_format($balance->balanceDueCents / 100, 2).' balance due.',
-            );
-        }
-
-        return DB::transaction(function () use ($repairOrder, $amountCents, $actor, $reference, $recordedAt, $paymentReceiptId, $invoice): RepairOrderLedgerEntry {
-            $customer = Customer::query()->whereKey($repairOrder->customer_id)->lockForUpdate()->firstOrFail();
             $available = (int) $customer->store_credit_balance_cents;
             if ($amountCents > $available) {
                 throw new RuntimeException(
                     'Account credit available is $'.number_format($available / 100, 2).'.',
+                );
+            }
+
+            $invoice = $this->balanceDue->issuedInvoice($repairOrder);
+            if ($invoice === null) {
+                throw new RuntimeException('Issue the final invoice before applying account credit.');
+            }
+
+            EstimateDocument::query()->whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+            RepairOrder::query()->whereKey($repairOrder->id)->lockForUpdate()->firstOrFail();
+            RepairOrderLedgerEntry::query()
+                ->where('repair_order_id', $repairOrder->id)
+                ->whereNull('voided_at')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get(['id']);
+
+            $balance = $this->balanceDue->forRepairOrder($repairOrder->fresh());
+            if ($amountCents > $balance->balanceDueCents) {
+                throw new RuntimeException(
+                    'Cannot apply more credit than the $'.number_format($balance->balanceDueCents / 100, 2).' balance due.',
                 );
             }
 
@@ -240,7 +264,7 @@ final class RecordLedgerEntryAction
                 recordedAt: $recordedAt,
                 paymentReceiptId: $paymentReceiptId,
             );
-            $this->decreaseStoreCredit($customer, $amountCents);
+            $this->decreaseStoreCredit($customer->fresh(), $amountCents);
             $this->invoicePdfRefresh->markDirtyForRepairOrder($repairOrder);
             $this->paymentPostureSync->sync($repairOrder->fresh());
 

@@ -184,16 +184,37 @@
                                 </td>
                                 <td class="text-end fw-bold">{{ $money((int) $receipt->amount_cents) }}</td>
                                 <td class="text-end">
-                                    @if ($canVoidPayment && ! $receipt->isVoided())
-                                        <form
-                                            method="POST"
-                                            action="{{ route('operations.financials.accounts-receivable.payments.void', [$customer, $receipt]) }}"
-                                            onsubmit="return confirm('Void this payment and reverse all allocations?');"
-                                        >
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-ghost-danger">Void</button>
-                                        </form>
-                                    @endif
+                                    <div class="d-flex flex-column align-items-end gap-1">
+                                        @if ($canVoidPayment && ! $receipt->isVoided() && ($receipt->refund_pending_cents ?? 0) > 0)
+                                            <form
+                                                method="POST"
+                                                action="{{ route('operations.financials.accounts-receivable.payments.confirm-refund', [$customer, $receipt]) }}"
+                                                class="d-flex flex-wrap gap-1 justify-content-end"
+                                            >
+                                                @csrf
+                                                <input
+                                                    type="text"
+                                                    name="evidence"
+                                                    class="form-control form-control-sm"
+                                                    style="width: 11rem;"
+                                                    maxlength="191"
+                                                    required
+                                                    placeholder="Refund proof / check #"
+                                                >
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">Confirm return</button>
+                                            </form>
+                                        @endif
+                                        @if ($canVoidPayment && ! $receipt->isVoided())
+                                            <form
+                                                method="POST"
+                                                action="{{ route('operations.financials.accounts-receivable.payments.void', [$customer, $receipt]) }}"
+                                                onsubmit="return confirm('Void this payment and reverse all allocations?');"
+                                            >
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-ghost-danger">Void</button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty

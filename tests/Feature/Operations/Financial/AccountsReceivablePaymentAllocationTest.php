@@ -166,6 +166,17 @@ test('check excess refund disposition records pending refund liability not chang
         ->and($receipt->amount_cents)->toBe($receipt->balancedAmountCents())
         ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(0)
         ->and($receipt->notes)->toContain('pending refund');
+
+    $confirmed = app(\App\Ark\Operations\Financial\ConfirmCustomerPaymentRefundAction::class)->execute(
+        $receipt->fresh(),
+        'CHK-RETURNED-4411',
+        $this->advisor,
+    );
+
+    expect($confirmed->refund_pending_cents)->toBe(0)
+        ->and($confirmed->change_cents)->toBe(5000)
+        ->and($confirmed->amount_cents)->toBe($confirmed->balancedAmountCents())
+        ->and($confirmed->notes)->toContain('CHK-RETURNED-4411');
 });
 
 test('overpayment without disposition is rejected when customer default is ask', function () {
@@ -197,6 +208,63 @@ test('return-when-possible customer default forces an explicit choice on noncash
         $this->advisor,
         'CHK-RETURN-DEFAULT',
     ))->toThrow(\Illuminate\Validation\ValidationException::class);
+});
+
+test('account credit cannot be spent beyond the locked customer balance', function () {
+    [$roA, $invoiceA] = arOnAccountInvoiceForCustomer();
+    $customer = $roA->customer;
+    $customer->forceFill(['store_credit_balance_cents' => 5000])->save();
+    [$roB, $invoiceB] = arOnAccountInvoiceForCustomer($customer);
+
+    app(\App\Ark\Operations\Financial\ApplyCustomerStoreCreditAction::class)->execute(
+        $customer->fresh(),
+        [['invoice_id' => $invoiceA->id, 'amount_cents' => 5000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CREDIT-SPEND-ALL',
+    );
+
+    expect((int) $customer->fresh()->store_credit_balance_cents)->toBe(0);
+
+    expect(fn () => app(\App\Ark\Operations\Financial\ApplyCustomerStoreCreditAction::class)->execute(
+        $customer->fresh(),
+        [['invoice_id' => $invoiceB->id, 'amount_cents' => 5000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CREDIT-OVERSPEND',
+    ))->toThrow(\Illuminate\Validation\ValidationException::class);
+
+    expect(app(BalanceDueCalculator::class)->forRepairOrder($roB->fresh())->balanceDueCents)->toBe(15000)
+        ->and($roB->fresh()->ledgerEntries()->where('entry_type', LedgerEntryType::StoreCreditApplication)->count())->toBe(0);
+});
+
+test('account credit cannot overpay an invoice balance under lock', function () {
+    [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
+    $customer = $repairOrder->customer;
+    $customer->forceFill(['store_credit_balance_cents' => 20000])->save();
+
+    app(\App\Ark\Operations\Financial\ApplyCustomerStoreCreditAction::class)->execute(
+        $customer->fresh(),
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CREDIT-FULL-INVOICE',
+    );
+
+    expect(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe(0)
+        ->and((int) $customer->fresh()->store_credit_balance_cents)->toBe(5000);
+
+    expect(fn () => app(\App\Ark\Operations\Financial\ApplyCustomerStoreCreditAction::class)->execute(
+        $customer->fresh(),
+        [['invoice_id' => $invoice->id, 'amount_cents' => 100]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CREDIT-OVERPAY',
+    ))->toThrow(\Illuminate\Validation\ValidationException::class);
+
+    expect(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe(0)
+        ->and((int) $customer->fresh()->store_credit_balance_cents)->toBe(5000)
+        ->and($repairOrder->fresh()->ledgerEntries()->where('entry_type', LedgerEntryType::StoreCreditApplication)->count())->toBe(1);
 });
 
 test('retained account credit applies to a later invoice without a new charge', function () {

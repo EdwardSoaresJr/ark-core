@@ -115,19 +115,61 @@ final class ApplyCustomerStoreCreditAction
                     'recorded_by' => $actor?->id,
                 ]);
 
-                $applied = 0;
-                foreach ($normalized as $row) {
-                    $invoice = EstimateDocument::query()->findOrFail($row['invoice_id']);
-                    $repairOrder = RepairOrder::query()->findOrFail($invoice->repair_order_id);
-                    $repairOrder->ensureOpenForSettlement();
+                // Lock invoices/ROs in stable id order after the customer lock to avoid
+                // deadlocks and to re-check balances under concurrency.
+                $ordered = $normalized;
+                usort($ordered, fn (array $a, array $b): int => $a['invoice_id'] <=> $b['invoice_id']);
 
-                    $balance = $this->balanceDue->forRepairOrder($repairOrder);
+                $applied = 0;
+                foreach ($ordered as $row) {
+                    /** @var EstimateDocument $invoice */
+                    $invoice = EstimateDocument::query()
+                        ->whereKey($row['invoice_id'])
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+                    if ($invoice->document_type !== FinancialDocumentType::Invoice) {
+                        throw ValidationException::withMessages([
+                            'allocations' => 'Only finalized invoices can receive account credit.',
+                        ]);
+                    }
+
+                    /** @var RepairOrder $repairOrder */
+                    $repairOrder = RepairOrder::query()
+                        ->whereKey($invoice->repair_order_id)
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+                    if ((int) $repairOrder->customer_id !== (int) $lockedCustomer->id) {
+                        throw ValidationException::withMessages([
+                            'allocations' => 'All invoices must belong to this customer.',
+                        ]);
+                    }
+
+                    // Serialize ledger readers/writers for this RO before balance math.
+                    RepairOrderLedgerEntry::query()
+                        ->where('repair_order_id', $repairOrder->id)
+                        ->whereNull('voided_at')
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->get(['id']);
+
+                    $balance = $this->balanceDue->forRepairOrder($repairOrder->fresh());
+                    if ($balance->balanceDueCents <= 0) {
+                        throw ValidationException::withMessages([
+                            'allocations' => 'Invoice #'.($invoice->document_number ?? $invoice->id)
+                                .' has no outstanding balance.',
+                        ]);
+                    }
+
                     if ($row['amount_cents'] > $balance->balanceDueCents) {
                         throw ValidationException::withMessages([
                             'allocations' => 'Credit exceeds the outstanding balance on invoice #'
                                 .($invoice->document_number ?? $invoice->id).'.',
                         ]);
                     }
+
+                    $repairOrder->ensureOpenForSettlement();
 
                     $this->ledger->applyStoreCredit(
                         $repairOrder->fresh(),
@@ -136,6 +178,7 @@ final class ApplyCustomerStoreCreditAction
                         $reference,
                         $recordedAt,
                         (int) $receipt->id,
+                        customerAlreadyLocked: true,
                     );
                     $applied += $row['amount_cents'];
                 }
