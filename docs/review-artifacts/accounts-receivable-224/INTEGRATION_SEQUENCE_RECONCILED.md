@@ -6,7 +6,7 @@
 
 | PR | Tip | Base | Status |
 | --- | --- | --- | --- |
-| Core [#226](https://github.com/EdwardSoaresJr/ark-core/pull/226) | `b6aee836da8654c30e5182c7639b576c16cd71fd` | `main` (`1b63d6d0` included) | OPEN, mergeable — ready for **integration-owner** merge review |
+| Core [#226](https://github.com/EdwardSoaresJr/ark-core/pull/226) | `88692e647d2661b50a68085f3b7096073950a91d` (includes merge `b6aee836` of `main` `1b63d6d0`) | `main` | OPEN, mergeable — ready for **integration-owner** merge review |
 | Stancl [#310](https://github.com/EdwardSoaresJr/ark-stancl/pull/310) | `1703725960e1b0d6831444df3d14345010a0543b` | `pin/core-2ea00e27-exact-manual-labor-prod` @ **`83cb9793`** | OPEN — production-descended; diff = mail only |
 | Shop [#29](https://github.com/EdwardSoaresJr/ark-shop/pull/29) | `942cc63bbd3bca0cf85f8b34df429428d494cc3e` | `main` | OPEN — **overlay lineage only**; not LugsNPlugs Stancl package |
 
