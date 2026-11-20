@@ -14,6 +14,12 @@ use RuntimeException;
 
 /**
  * Posts one customer payment across one or more outstanding invoices atomically.
+ *
+ * Accounting invariant on every receipt:
+ * amount_cents = allocated_cents + unapplied_cents + change_cents
+ *
+ * Cash remainder is change returned at the counter (never store credit).
+ * Non-cash remainder becomes customer store credit (unapplied).
  */
 final class AllocateCustomerPaymentAction
 {
@@ -43,11 +49,6 @@ final class AllocateCustomerPaymentAction
             ]);
         }
 
-        $existing = CustomerPaymentReceipt::query()->where('intent_key', $intentKey)->first();
-        if ($existing !== null) {
-            return $existing;
-        }
-
         if ($amountCents <= 0) {
             throw ValidationException::withMessages([
                 'amount' => 'Payment amount must be greater than zero.',
@@ -68,8 +69,21 @@ final class AllocateCustomerPaymentAction
             ]);
         }
 
-        $recordedAt ??= now();
         $methodValue = PaymentMethod::stored($method);
+        $fingerprint = $this->fingerprint(
+            $customer,
+            $amountCents,
+            $methodValue,
+            $normalized,
+            $reference,
+        );
+
+        $existing = CustomerPaymentReceipt::query()->where('intent_key', $intentKey)->first();
+        if ($existing !== null) {
+            return $this->replayOrReject($existing, $customer, $fingerprint);
+        }
+
+        $recordedAt ??= now();
 
         try {
             return DB::transaction(function () use (
@@ -78,17 +92,28 @@ final class AllocateCustomerPaymentAction
                 $methodValue,
                 $normalized,
                 $intentKey,
+                $fingerprint,
                 $actor,
                 $reference,
                 $recordedAt,
-                $allocatedTotal,
             ): CustomerPaymentReceipt {
+                $locked = CustomerPaymentReceipt::query()
+                    ->where('intent_key', $intentKey)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($locked !== null) {
+                    return $this->replayOrReject($locked, $customer, $fingerprint);
+                }
+
                 $receipt = CustomerPaymentReceipt::query()->create([
                     'customer_id' => $customer->id,
                     'intent_key' => $intentKey,
+                    'payload_fingerprint' => $fingerprint,
                     'amount_cents' => $amountCents,
                     'allocated_cents' => 0,
                     'unapplied_cents' => 0,
+                    'change_cents' => 0,
                     'payment_method' => $methodValue,
                     'reference' => $reference,
                     'recorded_at' => $recordedAt,
@@ -155,34 +180,91 @@ final class AllocateCustomerPaymentAction
 
                 $remainder = $amountCents - $applied;
                 $unapplied = 0;
+                $change = 0;
 
-                if ($remainder > 0 && ! PaymentMethod::isCash($methodValue)) {
-                    if ($anchorRepairOrder === null) {
-                        throw new RuntimeException('Cannot post unapplied funds without an allocated invoice.');
+                if ($remainder > 0) {
+                    if (PaymentMethod::isCash($methodValue)) {
+                        // Cash tender above allocated invoices is change returned — never store credit.
+                        $change = $remainder;
+                    } else {
+                        if ($anchorRepairOrder === null) {
+                            throw new RuntimeException('Cannot post unapplied funds without an allocated invoice.');
+                        }
+
+                        $this->ledger->issueUnappliedStoreCredit(
+                            $anchorRepairOrder->fresh(),
+                            $remainder,
+                            $methodValue,
+                            $actor,
+                            $reference,
+                            $recordedAt,
+                            (int) $receipt->id,
+                        );
+                        $unapplied = $remainder;
                     }
-
-                    $this->ledger->issueUnappliedStoreCredit(
-                        $anchorRepairOrder->fresh(),
-                        $remainder,
-                        $methodValue,
-                        $actor,
-                        $reference,
-                        $recordedAt,
-                        (int) $receipt->id,
-                    );
-                    $unapplied = $remainder;
                 }
 
                 $receipt->forceFill([
                     'allocated_cents' => $applied,
                     'unapplied_cents' => $unapplied,
+                    'change_cents' => $change,
                 ])->save();
+
+                if ($receipt->amount_cents !== ($receipt->allocated_cents + $receipt->unapplied_cents + $receipt->change_cents)) {
+                    throw new RuntimeException('Payment receipt amounts do not balance.');
+                }
 
                 return $receipt->fresh(['ledgerEntries']);
             });
         } catch (UniqueConstraintViolationException) {
-            return CustomerPaymentReceipt::query()->where('intent_key', $intentKey)->firstOrFail();
+            $existing = CustomerPaymentReceipt::query()->where('intent_key', $intentKey)->firstOrFail();
+
+            return $this->replayOrReject($existing, $customer, $fingerprint);
         }
+    }
+
+    /**
+     * @param  list<array{invoice_id: int, amount_cents: int}>  $allocations
+     */
+    public function fingerprint(
+        Customer $customer,
+        int $amountCents,
+        PaymentMethod|string $method,
+        array $allocations,
+        ?string $reference,
+    ): string {
+        $normalized = $allocations;
+        usort($normalized, fn (array $a, array $b): int => $a['invoice_id'] <=> $b['invoice_id']);
+
+        $payload = [
+            'amount_cents' => $amountCents,
+            'allocations' => $normalized,
+            'customer_id' => (int) $customer->id,
+            'payment_method' => PaymentMethod::stored($method),
+            'reference' => $reference,
+        ];
+
+        return hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR));
+    }
+
+    private function replayOrReject(
+        CustomerPaymentReceipt $existing,
+        Customer $customer,
+        string $fingerprint,
+    ): CustomerPaymentReceipt {
+        if ((int) $existing->customer_id !== (int) $customer->id) {
+            throw ValidationException::withMessages([
+                'intent_key' => 'This submission does not belong to this customer.',
+            ]);
+        }
+
+        if (! hash_equals((string) $existing->payload_fingerprint, $fingerprint)) {
+            throw ValidationException::withMessages([
+                'intent_key' => 'This submission was already recorded with different payment details.',
+            ]);
+        }
+
+        return $existing;
     }
 
     /**

@@ -335,8 +335,14 @@ class RepairOrderLifecycleTransition
             }
 
             if ($toStatusSlug === RepairOrderStatus::Closed->value && $closeVariantKey === 'on_account') {
-                app(\App\Ark\Operations\Financial\PostRepairOrderToReceivablesAction::class)
+                // Must stay inside this transaction: a posting failure rolls back the close
+                // so we never leave a closed RO with an unposted collectible invoice.
+                $posted = app(\App\Ark\Operations\Financial\PostRepairOrderToReceivablesAction::class)
                     ->execute($repairOrder->fresh(), $actor);
+
+                if ($posted->posted_to_receivables_at === null) {
+                    throw new \RuntimeException('On-account close requires the invoice to be posted to Accounts Receivable.');
+                }
             }
 
             $this->events->record(

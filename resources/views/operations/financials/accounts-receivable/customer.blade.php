@@ -142,6 +142,9 @@
                                     @if ($receipt->unapplied_cents > 0)
                                         <div class="small text-secondary">Unapplied / store credit {{ $money((int) $receipt->unapplied_cents) }}</div>
                                     @endif
+                                    @if ($receipt->change_cents > 0)
+                                        <div class="small text-secondary">Change returned {{ $money((int) $receipt->change_cents) }}</div>
+                                    @endif
                                     @if ($receipt->isVoided())
                                         <div class="small text-danger">Receipt voided</div>
                                     @endif

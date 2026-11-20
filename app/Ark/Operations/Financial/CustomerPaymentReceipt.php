@@ -12,9 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'customer_id',
     'intent_key',
+    'payload_fingerprint',
     'amount_cents',
     'allocated_cents',
     'unapplied_cents',
+    'change_cents',
     'payment_method',
     'reference',
     'notes',
@@ -32,6 +34,7 @@ class CustomerPaymentReceipt extends Model
             'amount_cents' => 'integer',
             'allocated_cents' => 'integer',
             'unapplied_cents' => 'integer',
+            'change_cents' => 'integer',
             'recorded_at' => 'datetime',
             'voided_at' => 'datetime',
         ];

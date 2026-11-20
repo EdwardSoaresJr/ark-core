@@ -12,9 +12,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
             $table->uuid('intent_key')->unique('customer_payment_receipt_intent_unique');
+            $table->char('payload_fingerprint', 64);
             $table->unsignedBigInteger('amount_cents');
             $table->unsignedBigInteger('allocated_cents')->default(0);
             $table->unsignedBigInteger('unapplied_cents')->default(0);
+            $table->unsignedBigInteger('change_cents')->default(0);
             $table->string('payment_method', 32);
             $table->string('reference', 128)->nullable();
             $table->text('notes')->nullable();

@@ -93,7 +93,11 @@ final class AccountsReceivableReceivePaymentController extends Controller
         );
 
         $message = 'Payment recorded: $'.number_format($receipt->amount_cents / 100, 2)
-            .' applied across '.count($allocations).' invoice(s).';
+            .' · $'.number_format($receipt->allocated_cents / 100, 2).' applied across '.count($allocations).' invoice(s).';
+
+        if ($receipt->change_cents > 0) {
+            $message .= ' Change returned: $'.number_format($receipt->change_cents / 100, 2).'.';
+        }
 
         if ($receipt->unapplied_cents > 0) {
             $message .= ' $'.number_format($receipt->unapplied_cents / 100, 2).' posted as store credit.';

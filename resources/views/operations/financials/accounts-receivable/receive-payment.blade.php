@@ -3,7 +3,7 @@
         layout="fluid"
         title="Receive Payment"
         pretitle="{{ $customer->name }}"
-        subtitle="Apply one payment across one or more outstanding invoices. Unallocated check or external payment remainder becomes store credit."
+        subtitle="Apply one payment across one or more outstanding invoices. Cash remainder is change returned. Check or external remainder becomes store credit."
         :breadcrumbs="[
             ['label' => 'Accounts Receivable', 'url' => route('operations.financials.accounts-receivable.index')],
             ['label' => $customer->name, 'url' => route('operations.financials.accounts-receivable.customer', $customer)],
@@ -51,7 +51,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label" for="ar-payment-method">Method</label>
-                            <select id="ar-payment-method" name="payment_method" class="form-select" required>
+                            <select id="ar-payment-method" name="payment_method" class="form-select" x-model="method" required>
                                 @foreach ($methods as $method)
                                     <option value="{{ $method['key'] }}" @selected(old('payment_method', 'check') === $method['key'])>
                                         {{ $method['label'] }}
@@ -134,6 +134,8 @@
                     <div class="small text-secondary">
                         Allocated <span class="fw-bold" x-text="'$' + allocatedDollars()"></span>
                         · Remaining <span class="fw-bold" x-text="'$' + remainingDollars()"></span>
+                        <span x-show="isCash()"> (cash change)</span>
+                        <span x-show="!isCash() && remainingCents() > 0"> (store credit)</span>
                     </div>
                     <div class="d-flex gap-2">
                         <a href="{{ route('operations.financials.accounts-receivable.customer', $customer) }}" class="btn btn-ghost-secondary">Cancel</a>
@@ -148,12 +150,20 @@
         function arReceivePayment(invoices) {
             return {
                 paymentAmount: '',
+                method: @js(old('payment_method', 'check')),
                 rows: invoices.map((invoice) => ({
                     invoice_id: invoice.invoice_id,
                     balance_cents: invoice.balance_cents,
                     selected: false,
                     amount: '',
                 })),
+                isCash() {
+                    return this.method === 'cash';
+                },
+                remainingCents() {
+                    const payment = Math.round(parseFloat(this.paymentAmount || '0') * 100);
+                    return (Number.isFinite(payment) ? payment : 0) - this.allocatedCents();
+                },
                 autoAllocate() {
                     let remaining = Math.round(parseFloat(this.paymentAmount || '0') * 100);
                     if (!Number.isFinite(remaining) || remaining <= 0) {
@@ -195,9 +205,7 @@
                     return (this.allocatedCents() / 100).toFixed(2);
                 },
                 remainingDollars() {
-                    const payment = Math.round(parseFloat(this.paymentAmount || '0') * 100);
-                    const remaining = (Number.isFinite(payment) ? payment : 0) - this.allocatedCents();
-                    return (remaining / 100).toFixed(2);
+                    return (this.remainingCents() / 100).toFixed(2);
                 },
             };
         }

@@ -116,8 +116,60 @@ test('partial allocation and check remainder become store credit', function () {
 
     expect($receipt->allocated_cents)->toBe(10000)
         ->and($receipt->unapplied_cents)->toBe(10000)
+        ->and($receipt->change_cents)->toBe(0)
+        ->and($receipt->amount_cents)->toBe($receipt->allocated_cents + $receipt->unapplied_cents + $receipt->change_cents)
         ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe(5000)
         ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(10000);
+});
+
+test('cash overpayment records explicit change and never creates store credit', function () {
+    [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
+
+    $receipt = app(AllocateCustomerPaymentAction::class)->execute(
+        $repairOrder->customer,
+        20000,
+        PaymentMethod::Cash,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CASH-CHANGE',
+    );
+
+    expect($receipt->amount_cents)->toBe(20000)
+        ->and($receipt->allocated_cents)->toBe(15000)
+        ->and($receipt->unapplied_cents)->toBe(0)
+        ->and($receipt->change_cents)->toBe(5000)
+        ->and($receipt->amount_cents)->toBe($receipt->allocated_cents + $receipt->unapplied_cents + $receipt->change_cents)
+        ->and((int) $repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(0)
+        ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe(0);
+});
+
+test('reusing an intent key with different payment details is rejected', function () {
+    [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
+    $intent = (string) Str::uuid();
+
+    app(AllocateCustomerPaymentAction::class)->execute(
+        $repairOrder->customer,
+        15000,
+        PaymentMethod::Check,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        $intent,
+        $this->advisor,
+        'CHK-ORIG',
+    );
+
+    expect(fn () => app(AllocateCustomerPaymentAction::class)->execute(
+        $repairOrder->customer,
+        10000,
+        PaymentMethod::Check,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 10000]],
+        $intent,
+        $this->advisor,
+        'CHK-DIFF',
+    ))->toThrow(\Illuminate\Validation\ValidationException::class);
+
+    expect(CustomerPaymentReceipt::query()->count())->toBe(1)
+        ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe(0);
 });
 
 test('voiding a receipt reverses allocations and store credit', function () {

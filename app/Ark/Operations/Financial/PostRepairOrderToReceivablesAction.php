@@ -58,6 +58,10 @@ final class PostRepairOrderToReceivablesAction
 
         $invoice = $invoice->fresh();
 
+        if ($invoice === null || $invoice->posted_to_receivables_at === null || $invoice->due_at === null) {
+            throw new RuntimeException('Accounts Receivable posting did not complete for this invoice.');
+        }
+
         $this->events->record(
             OperationalEventName::InvoicePostedToReceivables,
             $repairOrder,

@@ -108,3 +108,45 @@ test('on-account close is refused when the invoice is already paid', function ()
     expect(app(RepairOrderCloseoutAuthority::class)->blockingReason($repairOrder->fresh(), 'on_account'))
         ->toContain('already paid');
 });
+
+test('on-account close rolls back when receivables posting fails', function () {
+    $repairOrder = financialCloseoutRepairOrder();
+    issueFinalInvoiceFor($repairOrder);
+
+    $statusBefore = $repairOrder->fresh()->status->value;
+
+    // Final action class cannot be Mockery-mocked; container instance swap is enough for this path.
+    app()->instance(PostRepairOrderToReceivablesAction::class, new class
+    {
+        public function execute(
+            \App\Ark\Operations\RepairOrders\RepairOrder $repairOrder,
+            ?\App\Models\User $actor = null,
+            ?int $termsDays = null,
+        ): \App\Ark\Operations\Documents\EstimateDocument {
+            throw new RuntimeException('Forced AR posting failure.');
+        }
+    });
+
+    $threw = false;
+
+    try {
+        app(RepairOrderLifecycleTransition::class)->move(
+            $repairOrder->fresh(),
+            RepairOrderStatus::Closed,
+            $this->advisor,
+            'on_account',
+        );
+    } catch (RuntimeException $exception) {
+        $threw = true;
+        expect($exception->getMessage())->toBe('Forced AR posting failure.');
+    }
+
+    expect($threw)->toBeTrue();
+
+    $fresh = $repairOrder->fresh();
+    $invoice = app(\App\Ark\Operations\Financial\BalanceDueCalculator::class)->issuedInvoice($fresh);
+
+    expect($fresh->status->value)->toBe($statusBefore)
+        ->and($fresh->close_variant_key)->toBeNull()
+        ->and($invoice?->posted_to_receivables_at)->toBeNull();
+});
