@@ -224,6 +224,45 @@
                                     <label for="settings-postal-code" class="form-label">Postal code</label>
                                     <input id="settings-postal-code" name="postal_code" value="{{ old('postal_code', $settings->postal_code) }}" class="form-control">
                                 </div>
+                                @php
+                                    $typographyValue = old('document_typography', $settings->documentTypography()->value);
+                                    $previewShopName = $settings->shop_name ?: config('app.name');
+                                @endphp
+                                <div class="col-12" data-document-typography-settings x-data="{ preset: @js($typographyValue), scales: @js(\App\Ark\Operations\Documents\DocumentTypography::scales()) }">
+                                    <div class="border rounded p-3">
+                                        <div class="fw-medium">Document print size</div>
+                                        <div class="text-secondary small mb-2">Type size on estimate and invoice documents (screen print and PDF). It does not change the app. Documents already issued keep the size they were created with.</div>
+                                        <div class="row g-3">
+                                            <div class="col-12 col-md-4">
+                                                @foreach (\App\Ark\Operations\Documents\DocumentTypography::cases() as $typography)
+                                                    <label class="form-check mb-2">
+                                                        <input type="radio" name="document_typography" value="{{ $typography->value }}" x-model="preset" class="form-check-input" @checked($typographyValue === $typography->value)>
+                                                        <span class="form-check-label fw-medium">{{ $typography->label() }}</span>
+                                                        <span class="d-block text-secondary small">{{ $typography->description() }}</span>
+                                                    </label>
+                                                @endforeach
+                                                @error('document_typography')
+                                                    <div class="text-danger small">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="col-12 col-md-8">
+                                                <div class="text-secondary small mb-1">Preview (updates before saving)</div>
+                                                <div class="border rounded bg-white p-2 text-dark overflow-hidden" data-document-typography-preview>
+                                                    <div :style="'zoom: ' + scales[preset]" style="font-size: 11px; line-height: 1.45">
+                                                        <div class="fw-bold" style="font-size: 18px; overflow-wrap: anywhere">{{ $previewShopName }}</div>
+                                                        <div class="text-secondary" style="font-size: 9px">RO #1001 Estimate</div>
+                                                        <hr class="my-1">
+                                                        <div class="d-flex justify-content-between gap-2"><span style="font-weight: 650">Front brake pads and rotors, replace (includes hardware)</span><span class="fw-bold">$412.00</span></div>
+                                                        <div class="d-flex justify-content-between gap-2"><span>Shop supplies</span><span>$18.00</span></div>
+                                                        <div class="d-flex justify-content-between gap-2"><span>Tax</span><span>$34.40</span></div>
+                                                        <div class="d-flex justify-content-between gap-2 fw-bold" style="font-size: 12px"><span>Total</span><span>$464.40</span></div>
+                                                        <div class="text-secondary mt-1" style="font-size: 7.5px">Estimate only. Prices may change if additional work is found.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="card-footer text-end">

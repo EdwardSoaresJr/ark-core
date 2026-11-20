@@ -210,6 +210,42 @@ test('every financial rules tab opens from the financial-tab link that save redi
     }
 });
 
+test('admin can save document typography preset and settings page previews it (#215)', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $this->get(route('operations.settings.shop.edit'))
+        ->assertOk()
+        ->assertSee('data-document-typography-preview', false)
+        ->assertSee('Compact')
+        ->assertSee('Large');
+
+    $payload = ['shop_name' => 'Typo Shop', 'shop_timezone' => 'America/Denver'];
+
+    $this->patch(route('operations.settings.shop.general.update'), $payload + ['document_typography' => 'large'])
+        ->assertRedirect(route('operations.settings.shop.edit'));
+    expect(ShopSettings::current()->fresh()->documentTypography()->value)->toBe('large');
+
+    $this->patch(route('operations.settings.shop.general.update'), $payload + ['document_typography' => 'huge'])
+        ->assertSessionHasErrors('document_typography');
+    expect(ShopSettings::current()->fresh()->documentTypography()->value)->toBe('large');
+
+    // Omitting the field keeps the saved preset.
+    $this->patch(route('operations.settings.shop.general.update'), $payload)->assertRedirect();
+    expect(ShopSettings::current()->fresh()->documentTypography()->value)->toBe('large');
+});
+
+test('advisor cannot change document typography', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    $this->patch(route('operations.settings.shop.general.update'), [
+        'shop_name' => 'Nope', 'shop_timezone' => 'America/Denver', 'document_typography' => 'compact',
+    ])->assertSessionHasErrors();
+
+    expect(ShopSettings::current()->fresh()->documentTypography()->value)->toBe('standard');
+});
+
 test('admin can upload and remove shop estimate logo', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     Storage::fake('public');
