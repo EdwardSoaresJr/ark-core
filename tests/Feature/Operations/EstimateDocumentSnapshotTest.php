@@ -4,7 +4,9 @@ use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\Approvals\ApprovalSource;
 use App\Ark\Operations\Approvals\ApprovalType;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Documents\DocumentTypography;
 use App\Ark\Operations\Documents\EstimateDocument;
+use App\Ark\Operations\Documents\EstimateSnapshotBuilder;
 use App\Ark\Operations\Documents\EstimateDocumentPdfSnapshot;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Documents\PdfRenderer;
@@ -956,6 +958,85 @@ test('customer estimate snapshot presents military standing discount label', fun
     ])->render();
 
     expect($html)->toContain('Military Discount');
+});
+
+test('document header shows logo plus full business name when a logo exists (#214)', function (): void {
+    $name = 'Rocky Mountain Premier Automotive Diagnostics and Collision Repair Specialists of Colorado Springs';
+    $html = view('operations.documents.partials._pdf-shop-header', [
+        'shop' => ['name' => $name, 'logo_data_uri' => 'data:image/png;base64,AAAA', 'phone' => '555-0199'],
+    ])->render();
+
+    expect($html)->toContain('<img src="data:image/png;base64,AAAA"')
+        ->and($html)->toContain($name)
+        ->and($html)->toContain('555-0199')
+        ->and($html)->not->toContain('data-shop-brand-name')
+        ->and(substr_count($html, $name))->toBe(2); // alt text + visible name, never a third copy
+});
+
+test('document header shows the shop name in the logo area without the generic Auto fallback (#214)', function (): void {
+    $html = view('operations.documents.partials._pdf-shop-header', [
+        'shop' => ['name' => 'Zed Motors', 'logo_data_uri' => null, 'phone' => '555-0100'],
+    ])->render();
+
+    expect($html)->toContain('data-shop-brand-name')
+        ->and($html)->toContain('Zed Motors')
+        ->and($html)->not->toContain(' Auto')
+        ->and($html)->not->toContain('<h1')
+        ->and(substr_count($html, 'Zed Motors'))->toBe(1)
+        ->and($html)->toContain('555-0100');
+});
+
+test('document header styles wrap long shop names instead of clipping or nowrap (#214)', function (): void {
+    $css = view('operations.documents.partials._pdf-header-styles')->render();
+
+    expect($css)->toContain('overflow-wrap: anywhere')
+        ->and($css)->not->toContain('white-space: nowrap;'."\n}\n\n.logo-mark--name");
+
+    preg_match('/\.shop-contact h1 \{[^}]*\}/', $css, $rule);
+    expect($rule[0] ?? '')->not->toContain('nowrap');
+});
+
+test('document typography defaults to Standard and Standard emits no override (#215)', function (): void {
+    expect(ShopSettings::current()->documentTypography())->toBe(DocumentTypography::Standard)
+        ->and(ShopSettings::current()->fresh()->document_typography)->toBe('standard')
+        ->and(DocumentTypography::fromStored('bogus'))->toBe(DocumentTypography::Standard)
+        ->and(DocumentTypography::Standard->css('.document', '10.05in'))->toBe('')
+        ->and(DocumentTypography::Compact->css('.document', '10.05in'))->toContain('zoom: 0.9')
+        ->and(DocumentTypography::Large->css('.document', '10.05in'))->toContain('zoom: 1.15')
+        ->and(DocumentTypography::Large->css('.document', '10.05in'))->toContain('min-height: calc(10.05in / 1.15)');
+});
+
+test('typography preset is stamped into the snapshot and frozen documents without it stay Standard (#215)', function (): void {
+    [$repairOrder] = repairOrderForEstimateDocumentSnapshot();
+    ShopSettings::current()->update(['document_typography' => 'large']);
+
+    $built = app(EstimateSnapshotBuilder::class)->build($repairOrder->fresh(['customer', 'concerns', 'lines']));
+
+    expect(data_get($built, 'settings.document_typography'))->toBe('large');
+
+    // A frozen/historical snapshot (no key, or its own preset) ignores the live shop setting.
+    $frozenLegacy = $built;
+    unset($frozenLegacy['settings']['document_typography']);
+    $frozenCompact = $built;
+    $frozenCompact['settings']['document_typography'] = 'compact';
+
+    expect(DocumentTypography::fromSnapshot($frozenLegacy))->toBe(DocumentTypography::Standard)
+        ->and(DocumentTypography::fromSnapshot($frozenCompact))->toBe(DocumentTypography::Compact)
+        ->and(DocumentTypography::fromSnapshot($built))->toBe(DocumentTypography::Large);
+});
+
+test('pdf and browser document apply the snapshot typography to the document body only (#215)', function (): void {
+    [$repairOrder] = repairOrderForEstimateDocumentSnapshot();
+    $built = app(EstimateSnapshotBuilder::class)->build($repairOrder->fresh(['customer', 'concerns', 'lines']));
+
+    $render = fn (string $preset) => view('operations.documents.pdf.document', [
+        'snapshot' => array_replace_recursive($built, ['settings' => ['document_typography' => $preset]]),
+    ])->render();
+
+    expect($render('standard'))->not->toContain('zoom:')
+        ->and($render('compact'))->toContain('.document { zoom: 0.9;')
+        ->and($render('large'))->toContain('.document { zoom: 1.15;')
+        ->and($render('large'))->toContain('ARK Test Shop');
 });
 
 function repairOrderForEstimateDocumentSnapshot(string $customerType = 'Retail'): array

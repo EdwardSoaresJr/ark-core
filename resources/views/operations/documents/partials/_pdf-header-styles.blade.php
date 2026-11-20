@@ -32,6 +32,7 @@
 }
 
 .shop-contact {
+    min-width: 0;
     text-align: right;
 }
 
@@ -41,7 +42,27 @@
     font-weight: 800;
     line-height: 1.1;
     letter-spacing: -0.01em;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.logo-mark--name {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    min-height: 0.82in;
+}
+
+.brand-name {
+    display: block;
+    max-width: 100%;
+    color: #0f172a;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .eyebrow {

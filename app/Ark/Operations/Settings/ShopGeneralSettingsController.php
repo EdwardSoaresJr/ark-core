@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Operations\Documents\DocumentTypography;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
@@ -45,6 +46,7 @@ class ShopGeneralSettingsController
             'city' => ['nullable', 'string', 'max:255'],
             'state' => ['nullable', 'string', 'max:64'],
             'postal_code' => ['nullable', 'string', 'max:32'],
+            'document_typography' => ['nullable', 'string', Rule::in(array_column(DocumentTypography::cases(), 'value'))],
             'shop_timezone' => ['required', 'string', Rule::in(timezone_identifiers_list())],
             'telephony_call_flow' => ['nullable', 'array'],
             'telephony_call_flow.weekly_hours' => ['nullable', 'array'],
@@ -99,6 +101,7 @@ class ShopGeneralSettingsController
         $settings->update([
             'shop_name' => $data['shop_name'] ?? $settings->shop_name,
             'shop_timezone' => $data['shop_timezone'],
+            'document_typography' => DocumentTypography::fromStored($data['document_typography'] ?? $settings->documentTypography()->value)->value,
             'telephony_call_flow' => $existingFlow,
             'phone' => $data['phone'] ?? $settings->phone,
             'email' => $data['email'] ?? $settings->email,

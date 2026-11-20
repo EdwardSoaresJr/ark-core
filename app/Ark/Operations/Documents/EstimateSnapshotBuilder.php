@@ -199,6 +199,7 @@ class EstimateSnapshotBuilder
             'recommendation_disclaimer' => $settings->recommendation_disclaimer,
             'authorization_language' => $settings->authorizationLanguage(),
             'estimate_validity_days' => $settings->estimate_validity_days,
+            'document_typography' => $settings->documentTypography()->value,
             'default_labor_rate_cents' => $settings->defaultLaborRateCents(),
             'default_labor_rate' => $this->formatCents($settings->defaultLaborRateCents()),
             'labor_categories' => $settings->laborCategories(),

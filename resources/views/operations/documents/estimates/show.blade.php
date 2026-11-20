@@ -1,7 +1,8 @@
 <x-operations.app title="RO #{{ $snapshot['repair_order']['repair_order_id'] }} Estimate" ui="tabler">
     @php
         $shopName = $snapshot['shop']['name'] ?: config('app.name');
-        $shopInitial = mb_strtoupper(mb_substr($shopName, 0, 1));
+        $hasLogo = filled($snapshot['shop']['logo_url'] ?? null);
+        $documentTypography = \App\Ark\Operations\Documents\DocumentTypography::fromSnapshot($snapshot);
         $shopCityLine = trim(collect([$snapshot['shop']['city'], $snapshot['shop']['state'], $snapshot['shop']['postal_code']])->filter()->implode(' '));
         $isTerminal = $repairOrder->isTerminal();
         $snapshotConcerns = collect($snapshot['concerns']);
@@ -73,24 +74,29 @@
         </x-slot:actions>
 
         {{-- The printable estimate document body, not staff chrome: it keeps its own markup and print rules. --}}
-        <div class="ark-legacy bg-white text-dark" data-estimate-document-body>
+        @if ($documentTypography->css('[data-estimate-document-body]') !== '')
+            <style>{!! $documentTypography->css('[data-estimate-document-body]') !!}</style>
+        @endif
+        <div class="ark-legacy bg-white text-dark" data-estimate-document-body data-document-typography="{{ $documentTypography->value }}">
         <article class="bg-white px-4 pb-4 pt-2 ring-1 ring-slate-300 print:p-0 print:ring-0">
             <header class="border-b border-slate-300 px-3 pb-2 pt-1">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0">
-                        <div class="inline-flex h-14 w-36 items-center justify-start bg-white text-sm font-semibold leading-tight text-slate-700">
-                            @if ($snapshot['shop']['logo_url'] ?? null)
+                        @if ($hasLogo)
+                            <div class="inline-flex h-14 w-36 items-center justify-start bg-white text-sm font-semibold leading-tight text-slate-700">
                                 <img src="{{ $snapshot['shop']['logo_url'] }}" alt="{{ $shopName }} logo" class="max-h-full max-w-full object-contain">
-                            @else
-                                {{ $shopInitial }}<span class="ml-1 text-[10px] uppercase tracking-wide">Auto</span>
-                            @endif
-                        </div>
+                            </div>
+                        @else
+                            <p class="break-words text-2xl font-black leading-tight tracking-tight text-slate-950" style="overflow-wrap: anywhere" data-shop-brand-name>{{ $shopName }}</p>
+                        @endif
                         <p class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Repair Estimate</p>
                         <h1 class="text-2xl font-black tracking-tight text-slate-950">RO #{{ $snapshot['repair_order']['repair_order_id'] }} Estimate</h1>
                     </div>
 
-                    <div class="text-left sm:text-right">
-                        <h1 class="text-lg font-semibold tracking-tight text-slate-950">{{ $shopName }}</h1>
+                    <div class="min-w-0 text-left sm:max-w-[45%] sm:text-right">
+                        @if ($hasLogo)
+                            <h1 class="break-words text-lg font-semibold leading-tight tracking-tight text-slate-950" style="overflow-wrap: anywhere">{{ $shopName }}</h1>
+                        @endif
                         <div class="mt-1 space-y-0.5 text-xs leading-4 text-slate-600">
                             <p>
                                 @if ($snapshot['shop']['phone'])

@@ -1022,6 +1022,9 @@
         .contact-line {
             margin-top: 0.02in;
         }
+
+        {{-- Shop print typography preset (Standard emits nothing). Document body only. --}}
+        {!! \App\Ark\Operations\Documents\DocumentTypography::fromSnapshot($snapshot)->css('.document', '10.05in') !!}
     </style>
 </head>
 <body>

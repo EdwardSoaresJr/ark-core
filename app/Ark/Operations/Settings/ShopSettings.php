@@ -13,6 +13,7 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Labor\LaborAuthority;
 use App\Ark\Operations\Parts\CustomerPartDescriptionMode;
+use App\Ark\Operations\Documents\DocumentTypography;
 use App\Ark\Operations\Parts\CustomerDocumentPresentation;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
@@ -31,6 +32,7 @@ use InvalidArgumentException;
     'email',
     'website',
     'logo_path',
+    'document_typography',
     'address_line_1',
     'address_line_2',
     'city',
@@ -622,6 +624,7 @@ TEXT;
             'recommendation_disclaimer' => self::DEFAULT_RECOMMENDATION_DISCLAIMER,
             'authorization_language' => self::DEFAULT_AUTHORIZATION_LANGUAGE,
             'portal_signature_required' => false,
+            'document_typography' => DocumentTypography::DEFAULT->value,
             'customer_part_description_mode' => CustomerPartDescriptionMode::Cleaned->value,
             'customer_part_show_manufacturer_number' => false,
             'customer_part_show_supplier' => false,
@@ -1848,6 +1851,11 @@ TEXT;
         }
 
         return $names;
+    }
+
+    public function documentTypography(): DocumentTypography
+    {
+        return DocumentTypography::fromStored($this->attributes['document_typography'] ?? null);
     }
 
     public function customerPartDescriptionMode(): CustomerPartDescriptionMode
