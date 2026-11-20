@@ -71,7 +71,7 @@
                         </div>
                         <div class="col-12 col-md-3">
                             <label class="form-label" for="ar-payment-method">Method</label>
-                            <select id="ar-payment-method" name="payment_method" class="form-select" x-model="method" :disabled="isCardMethod()" :required="!isCardMethod()">
+                            <select id="ar-payment-method" name="payment_method" class="form-select" x-model="method" :required="!isCardMethod()">
                                 @foreach ($methods as $method)
                                     <option value="{{ $method['key'] }}" @selected(old('payment_method', 'check') === $method['key'])>
                                         {{ $method['label'] }}

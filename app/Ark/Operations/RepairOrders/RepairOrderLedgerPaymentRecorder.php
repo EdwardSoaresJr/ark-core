@@ -28,7 +28,9 @@ class RepairOrderLedgerPaymentRecorder
         ?Carbon $paidAt = null,
     ): RepairOrderLedgerEntry {
         $repairOrder = $repairOrder->fresh();
-        $repairOrder->ensureOpenForSettlement();
+        // RO-scoped settlement stays blocked on terminal tickets. Accounts Receivable
+        // collection for closed-on-account invoices goes through AllocateCustomerPaymentAction.
+        $repairOrder->ensureOpenForEditing();
 
         $balance = $this->balanceDue->forRepairOrder($repairOrder);
 
