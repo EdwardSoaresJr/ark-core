@@ -14,22 +14,25 @@ Do not fold these into Accounts Receivable feature work on #226.
 
 Suggested next step when prioritized: reproduce the helper’s child-process JSON under disposable MySQL, confirm whether the loser path throws before emitting status, and open a dedicated Core issue/PR.
 
-## 2. Shop #29 — live statement email catalog
+## 2. Statement email catalog (Shop #29 + Stancl #310)
 
 | Item | Detail |
 | --- | --- |
-| PR | https://github.com/EdwardSoaresJr/ark-saas/pull/29 |
-| Status | Open / mergeable at handoff |
-| Core dependency | `CustomerAccountStatementEmailDelivery` already sends `statement.send` with Shop #29 variables |
-| Gate | Merge Shop #29 and validate Platform mail before calling statement email “live” |
+| ark-shop PR | https://github.com/EdwardSoaresJr/ark-shop/pull/29 (`bf1074e9`) — hosted overlay lineage |
+| Stancl PR | https://github.com/EdwardSoaresJr/ark-stancl/pull/310 — **required for LugsNPlugs** |
+| Core dependency | `CustomerAccountStatementEmailDelivery` already sends `statement.send` with matching variables |
+| Gate | Merge Stancl #310 (and #29 if needed), then prove live mail on staging before production |
 
 ## 3. Platform `/payments/refunds` availability
 
 | Item | Detail |
 | --- | --- |
 | Core support | `ArkPaymentsClient::createRefund` / `refundStatus` + settle action on #226 |
-| Gate | Confirm the live Platform endpoint and provider refund settlement before treating processor refund UI as production-ready |
+| Platform truth (2026-11-20) | **No refund routes** in `ark-cloud`; saved cards never advertised |
+| Gate | Keep processor refunds unsupported until Platform implements verified settlement |
 | Rule | Pending/accepted/initiated must leave AR liability open |
+
+See `INTEGRATION_RELEASE_CANDIDATE.md` for ship-now vs disabled scope and Stancl blast radius.
 
 ## 4. Molly / #227
 
