@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'unapplied_cents',
     'change_cents',
     'refund_pending_cents',
+    'refund_evidence_kind',
+    'refund_evidence_reference',
+    'refund_confirmed_at',
+    'refund_confirmed_by',
     'payment_method',
     'reference',
     'notes',
@@ -37,6 +41,7 @@ class CustomerPaymentReceipt extends Model
             'unapplied_cents' => 'integer',
             'change_cents' => 'integer',
             'refund_pending_cents' => 'integer',
+            'refund_confirmed_at' => 'datetime',
             'recorded_at' => 'datetime',
             'voided_at' => 'datetime',
         ];
@@ -73,5 +78,15 @@ class CustomerPaymentReceipt extends Model
     public function isVoided(): bool
     {
         return $this->voided_at !== null;
+    }
+
+    public function requiresProcessorRefundConfirmation(): bool
+    {
+        return app(ConfirmCustomerPaymentRefundAction::class)->requiresProcessorConfirmation($this);
+    }
+
+    public function allowsManualRefundConfirmation(): bool
+    {
+        return app(ConfirmCustomerPaymentRefundAction::class)->allowsManualReturnConfirmation($this);
     }
 }

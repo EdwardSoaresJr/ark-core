@@ -177,6 +177,17 @@
                                     @endif
                                     @if (($receipt->refund_pending_cents ?? 0) > 0)
                                         <div class="small text-warning">Pending refund/return {{ $money((int) $receipt->refund_pending_cents) }}</div>
+                                        @if ($receipt->requiresProcessorRefundConfirmation())
+                                            <div class="small text-secondary">Card/processor refund — awaits verified processor settlement.</div>
+                                        @endif
+                                    @endif
+                                    @if ($receipt->refund_confirmed_at)
+                                        <div class="small text-secondary">
+                                            Return confirmed {{ $receipt->refund_confirmed_at->timezone(config('app.timezone'))->format('M j, Y g:ia') }}
+                                            @if ($receipt->refund_evidence_reference)
+                                                · {{ $receipt->refund_evidence_reference }}
+                                            @endif
+                                        </div>
                                     @endif
                                     @if ($receipt->isVoided())
                                         <div class="small text-danger">Receipt voided</div>
@@ -185,13 +196,19 @@
                                 <td class="text-end fw-bold">{{ $money((int) $receipt->amount_cents) }}</td>
                                 <td class="text-end">
                                     <div class="d-flex flex-column align-items-end gap-1">
-                                        @if ($canVoidPayment && ! $receipt->isVoided() && ($receipt->refund_pending_cents ?? 0) > 0)
+                                        @if (
+                                            $canVoidPayment
+                                            && ! $receipt->isVoided()
+                                            && ($receipt->refund_pending_cents ?? 0) > 0
+                                            && $receipt->allowsManualRefundConfirmation()
+                                        )
                                             <form
                                                 method="POST"
                                                 action="{{ route('operations.financials.accounts-receivable.payments.confirm-refund', [$customer, $receipt]) }}"
                                                 class="d-flex flex-wrap gap-1 justify-content-end"
                                             >
                                                 @csrf
+                                                <input type="hidden" name="evidence_kind" value="manual_return">
                                                 <input
                                                     type="text"
                                                     name="evidence"
@@ -199,9 +216,9 @@
                                                     style="width: 11rem;"
                                                     maxlength="191"
                                                     required
-                                                    placeholder="Refund proof / check #"
+                                                    placeholder="Check # / cash till proof"
                                                 >
-                                                <button type="submit" class="btn btn-sm btn-outline-warning">Confirm return</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">Confirm manual return</button>
                                             </form>
                                         @endif
                                         @if ($canVoidPayment && ! $receipt->isVoided())

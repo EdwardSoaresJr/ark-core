@@ -171,12 +171,46 @@ test('check excess refund disposition records pending refund liability not chang
         $receipt->fresh(),
         'CHK-RETURNED-4411',
         $this->advisor,
+        \App\Ark\Operations\Financial\ConfirmCustomerPaymentRefundAction::EVIDENCE_MANUAL_RETURN,
     );
 
     expect($confirmed->refund_pending_cents)->toBe(0)
         ->and($confirmed->change_cents)->toBe(5000)
         ->and($confirmed->amount_cents)->toBe($confirmed->balancedAmountCents())
+        ->and($confirmed->refund_evidence_kind)->toBe('manual_return')
+        ->and($confirmed->refund_evidence_reference)->toBe('CHK-RETURNED-4411')
+        ->and($confirmed->refund_confirmed_at)->not->toBeNull()
+        ->and($confirmed->refund_confirmed_by)->toBe($this->advisor->id)
         ->and($confirmed->notes)->toContain('CHK-RETURNED-4411');
+});
+
+test('card pending refunds cannot be cleared by a manually typed reference', function () {
+    [$repairOrder, $invoice] = arOnAccountInvoiceForCustomer();
+
+    $receipt = app(AllocateCustomerPaymentAction::class)->execute(
+        $repairOrder->customer,
+        20000,
+        PaymentMethod::Card,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CARD-PENDING-REFUND',
+        null,
+        OverpaymentDisposition::Refund,
+    );
+
+    expect($receipt->refund_pending_cents)->toBe(5000)
+        ->and($receipt->change_cents)->toBe(0);
+
+    expect(fn () => app(\App\Ark\Operations\Financial\ConfirmCustomerPaymentRefundAction::class)->execute(
+        $receipt->fresh(),
+        'staff says VizyPay refunded it',
+        $this->advisor,
+    ))->toThrow(\Illuminate\Validation\ValidationException::class);
+
+    expect($receipt->fresh()->refund_pending_cents)->toBe(5000)
+        ->and($receipt->fresh()->change_cents)->toBe(0)
+        ->and($receipt->fresh()->refund_confirmed_at)->toBeNull();
 });
 
 test('overpayment without disposition is rejected when customer default is ask', function () {
