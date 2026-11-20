@@ -283,7 +283,8 @@ final class InitiateAccountsReceivableCaptureAction
             $balance = $this->balanceDue->forRepairOrder($repairOrder);
             if ($amountCents > $balance->balanceDueCents) {
                 throw ValidationException::withMessages([
-                    'allocations' => 'Allocation exceeds the outstanding balance on invoice #'.($invoice->document_number ?? $invoice->id).'.',
+                    'allocations' => 'Allocation exceeds the outstanding balance on '
+                        .AccountsReceivableInvoiceLabel::forRepairOrder($repairOrder).'.',
                 ]);
             }
 

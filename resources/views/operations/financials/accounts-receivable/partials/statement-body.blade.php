@@ -56,7 +56,7 @@
                 <thead>
                     <tr>
                         <th>Invoice</th>
-                        <th>RO / Vehicle</th>
+                        <th>Vehicle</th>
                         <th>Issued</th>
                         <th>Due</th>
                         <th class="text-end">Balance</th>
@@ -65,11 +65,8 @@
                 <tbody>
                     @forelse ($statement['outstanding_invoices'] as $invoice)
                         <tr>
-                            <td>INV #{{ $invoice['document_number'] }}</td>
-                            <td>
-                                RO #{{ $invoice['repair_order_number'] }}
-                                <div class="small text-secondary">{{ $invoice['vehicle_label'] ?: '—' }}</div>
-                            </td>
+                            <td>{{ \App\Ark\Operations\Financial\AccountsReceivableInvoiceLabel::forRepairOrderNumber($invoice['repair_order_number']) }}</td>
+                            <td>{{ $invoice['vehicle_label'] ?: '—' }}</td>
                             <td>{{ $invoice['issued_at']?->timezone(config('app.timezone'))->format('M j, Y') ?? '—' }}</td>
                             <td>
                                 {{ $invoice['due_at']?->timezone(config('app.timezone'))->format('M j, Y') ?? '—' }}
@@ -119,7 +116,6 @@
                     <thead>
                         <tr>
                             <th>Invoice</th>
-                            <th>RO</th>
                             <th>Issued</th>
                             <th class="text-end">Total</th>
                         </tr>
@@ -127,8 +123,7 @@
                     <tbody>
                         @foreach ($statement['paid_invoices'] as $invoice)
                             <tr>
-                                <td>INV #{{ $invoice['document_number'] }}</td>
-                                <td>RO #{{ $invoice['repair_order_number'] }}</td>
+                                <td>{{ \App\Ark\Operations\Financial\AccountsReceivableInvoiceLabel::forRepairOrderNumber($invoice['repair_order_number']) }}</td>
                                 <td>{{ $invoice['issued_at']?->timezone(config('app.timezone'))->format('M j, Y') ?? '—' }}</td>
                                 <td class="text-end">{{ $money($invoice['invoice_total_cents']) }}</td>
                             </tr>

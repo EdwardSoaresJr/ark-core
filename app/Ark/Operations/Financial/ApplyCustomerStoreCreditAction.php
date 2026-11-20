@@ -157,15 +157,15 @@ final class ApplyCustomerStoreCreditAction
                     $balance = $this->balanceDue->forRepairOrder($repairOrder->fresh());
                     if ($balance->balanceDueCents <= 0) {
                         throw ValidationException::withMessages([
-                            'allocations' => 'Invoice #'.($invoice->document_number ?? $invoice->id)
+                            'allocations' => AccountsReceivableInvoiceLabel::forRepairOrder($repairOrder)
                                 .' has no outstanding balance.',
                         ]);
                     }
 
                     if ($row['amount_cents'] > $balance->balanceDueCents) {
                         throw ValidationException::withMessages([
-                            'allocations' => 'Credit exceeds the outstanding balance on invoice #'
-                                .($invoice->document_number ?? $invoice->id).'.',
+                            'allocations' => 'Credit exceeds the outstanding balance on '
+                                .AccountsReceivableInvoiceLabel::forRepairOrder($repairOrder).'.',
                         ]);
                     }
 

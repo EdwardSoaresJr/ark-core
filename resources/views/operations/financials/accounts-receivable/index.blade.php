@@ -163,9 +163,8 @@
                                     <tr>
                                         <td>
                                             <a href="{{ route('operations.repair-orders.show', $invoice['repair_order_id']) }}">
-                                                INV #{{ $invoice['document_number'] }}
+                                                {{ \App\Ark\Operations\Financial\AccountsReceivableInvoiceLabel::forRepairOrderNumber($invoice['repair_order_number']) }}
                                             </a>
-                                            <div class="small text-secondary">RO #{{ $invoice['repair_order_number'] }}</div>
                                         </td>
                                         <td>
                                             <div>{{ $invoice['customer_name'] }}</div>

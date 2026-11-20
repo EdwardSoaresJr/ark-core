@@ -159,13 +159,14 @@ final class AllocateCustomerPaymentAction
                     $balance = $this->balanceDue->forRepairOrder($repairOrder);
                     if (! $balance->hasIssuedInvoice || $balance->balanceDueCents <= 0) {
                         throw ValidationException::withMessages([
-                            'allocations' => 'Invoice #'.($invoice->document_number ?? $invoice->id).' has no outstanding balance.',
+                            'allocations' => AccountsReceivableInvoiceLabel::forRepairOrder($repairOrder)
+                                .' has no outstanding balance.',
                         ]);
                     }
 
                     if ($row['amount_cents'] > $balance->balanceDueCents) {
                         throw ValidationException::withMessages([
-                            'allocations' => 'Allocation for invoice #'.($invoice->document_number ?? $invoice->id)
+                            'allocations' => 'Allocation for '.AccountsReceivableInvoiceLabel::forRepairOrder($repairOrder)
                                 .' exceeds the outstanding balance of $'.number_format($balance->balanceDueCents / 100, 2).'.',
                         ]);
                     }

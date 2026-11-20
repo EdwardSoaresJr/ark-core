@@ -62,7 +62,8 @@ test('on-account close posts the unpaid invoice to receivables and keeps it coll
     $this->get(route('operations.financials.accounts-receivable.index'))
         ->assertOk()
         ->assertSee('Accounts Receivable')
-        ->assertSee('INV #');
+        ->assertSee('RO #'.$closed->repair_order_id.' · Invoice')
+        ->assertDontSee('INV #');
 
     $this->get(route('operations.financials.accounts-receivable.customer', $closed->customer_id))
         ->assertOk()

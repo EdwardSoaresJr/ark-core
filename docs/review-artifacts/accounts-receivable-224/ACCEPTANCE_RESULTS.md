@@ -38,9 +38,9 @@ php scripts/run-ar-224-acceptance-scenarios.php
 - Store credit shows on the customer account header (`Store credit $50.00`).
 - Payment receipts section exists so staff can see what happened after the fact (once recorded).
 
-**Friction to fix before calling UX “done” (not blocking money-math)**
-- Every synthetic invoice labels as **INV #1**. Advisors must use RO # to tell them apart. Real shops may already sequence document numbers; acceptance seed exposed the ambiguity.
-- Auto-allocate happens when payment amount is entered (good), but empty checkboxes look idle until that amount is typed — a one-line hint would help first-time use.
+**Friction addressed (presentation-only follow-up)**
+- AR screens now label invoices as **RO #{number} · Invoice** instead of `INV #1`. Underlying `document_number` is unchanged.
+- Receive Payment includes the allocate hint: enter amount to auto-distribute; adjust below.
 
 ## Platform-dependent items
 

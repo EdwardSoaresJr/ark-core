@@ -57,7 +57,8 @@ test('statement preview isolates the customer account and shows outstanding bala
     $this->get(route('operations.financials.accounts-receivable.statement.show', $repairOrder->customer_id))
         ->assertOk()
         ->assertSee('Account Statement')
-        ->assertSee('INV #')
+        ->assertSee('RO #'.$repairOrder->repair_order_id.' · Invoice')
+        ->assertDontSee('INV #')
         ->assertDontSee('other@example.test');
 
     $this->get(route('operations.financials.accounts-receivable.statement.label', $repairOrder->customer_id))

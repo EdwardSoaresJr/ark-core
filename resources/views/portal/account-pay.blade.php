@@ -62,8 +62,7 @@
                                         <input type="hidden" name="allocations[{{ $index }}][invoice_id]" value="{{ $invoice['invoice_id'] }}">
                                     </td>
                                     <td>
-                                        INV #{{ $invoice['document_number'] }}
-                                        <div class="small text-secondary">RO #{{ $invoice['repair_order_number'] }}</div>
+                                        {{ \App\Ark\Operations\Financial\AccountsReceivableInvoiceLabel::forRepairOrderNumber($invoice['repair_order_number']) }}
                                     </td>
                                     <td class="text-end">{{ $money($invoice['balance_due_cents']) }}</td>
                                     <td class="text-end">

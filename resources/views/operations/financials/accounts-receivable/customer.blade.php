@@ -98,9 +98,9 @@
                             <tr>
                                 <td>
                                     <a href="{{ route('operations.repair-orders.show', $invoice['repair_order_id']) }}">
-                                        INV #{{ $invoice['document_number'] }}
+                                        {{ \App\Ark\Operations\Financial\AccountsReceivableInvoiceLabel::forRepairOrderNumber($invoice['repair_order_number']) }}
                                     </a>
-                                    <div class="small text-secondary">RO #{{ $invoice['repair_order_number'] }} · {{ \App\Ark\Operations\Financial\InvoiceStatus::tryFrom($invoice['status'])?->label() ?? $invoice['status'] }}</div>
+                                    <div class="small text-secondary">{{ \App\Ark\Operations\Financial\InvoiceStatus::tryFrom($invoice['status'])?->label() ?? $invoice['status'] }}</div>
                                 </td>
                                 <td>{{ $invoice['vehicle_label'] ?: '—' }}</td>
                                 <td>{{ $invoice['issued_at']?->timezone(config('app.timezone'))->format('M j, Y') ?? '—' }}</td>
@@ -159,7 +159,7 @@
                                         \App\Ark\Operations\Financial\LedgerEntryType::StoreCreditApplication,
                                     ]) as $entry)
                                         <div class="small">
-                                            INV #{{ $entry->financialDocument?->document_number ?? '—' }}
+                                            {{ \App\Ark\Operations\Financial\AccountsReceivableInvoiceLabel::forRepairOrder($entry->repairOrder) }}
                                             · {{ $money((int) $entry->amount_cents) }}
                                             @if ($entry->entry_type === \App\Ark\Operations\Financial\LedgerEntryType::StoreCreditApplication)
                                                 <span class="text-secondary">(account credit)</span>

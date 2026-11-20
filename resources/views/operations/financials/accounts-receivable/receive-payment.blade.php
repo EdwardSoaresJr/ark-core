@@ -143,12 +143,16 @@
                     @enderror
                 </div>
 
+                <p class="text-secondary mb-2">
+                    Enter the payment amount to automatically distribute it across outstanding invoices. You can adjust the amounts below.
+                </p>
+
                 <div class="table-responsive">
                     <table class="table table-vcenter card-table">
                         <thead>
                             <tr>
                                 <th style="width: 2.5rem;"></th>
-                                <th>Invoice / RO</th>
+                                <th>Invoice</th>
                                 <th>Due</th>
                                 <th class="text-end">Balance</th>
                                 <th class="text-end" style="width: 10rem;">Allocate</th>
@@ -169,8 +173,8 @@
                                         <input type="hidden" name="allocations[{{ $index }}][invoice_id]" value="{{ $invoice['invoice_id'] }}">
                                     </td>
                                     <td>
-                                        INV #{{ $invoice['document_number'] }}
-                                        <div class="small text-secondary">RO #{{ $invoice['repair_order_number'] }} · {{ $invoice['vehicle_label'] ?: '—' }}</div>
+                                        {{ \App\Ark\Operations\Financial\AccountsReceivableInvoiceLabel::forRepairOrderNumber($invoice['repair_order_number']) }}
+                                        <div class="small text-secondary">{{ $invoice['vehicle_label'] ?: '—' }}</div>
                                     </td>
                                     <td>
                                         {{ $invoice['due_at']?->timezone(config('app.timezone'))->format('M j, Y') ?? '—' }}
