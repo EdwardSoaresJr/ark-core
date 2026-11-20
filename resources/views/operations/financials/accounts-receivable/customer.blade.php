@@ -47,6 +47,8 @@
             @if ($canReceivePayment && count($dashboard['invoices']) > 0)
                 <a href="{{ route('operations.financials.accounts-receivable.receive-payment.create', $customer) }}" class="btn btn-primary">Receive payment</a>
             @endif
+            <a href="{{ route('operations.financials.accounts-receivable.statement.show', $customer) }}" class="btn btn-ghost-secondary">Statement</a>
+            <a href="{{ route('operations.financials.accounts-receivable.statement.label', $customer) }}" class="btn btn-ghost-secondary" target="_blank">Address label</a>
             <a href="{{ route('operations.customers.show', $customer) }}" class="btn btn-ghost-secondary">Customer profile</a>
         </div>
 

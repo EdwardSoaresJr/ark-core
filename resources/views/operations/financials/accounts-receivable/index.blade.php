@@ -84,16 +84,33 @@
             </div>
         </div>
 
-        <div class="row g-3">
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
+        <form method="POST" action="{{ route('operations.financials.accounts-receivable.batch') }}" class="row g-3">
+            @csrf
             <div class="col-lg-5">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Customer accounts</h3>
                     </div>
+                    <div class="card-body border-bottom py-2">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <select name="action" class="form-select form-select-sm" style="max-width: 14rem;" required>
+                                <option value="statements_print">Print statements</option>
+                                <option value="statements_pdf">Download combined PDF</option>
+                                <option value="labels">Address labels</option>
+                                <option value="email">Email statements</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">Run for selected</button>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-vcenter card-table">
                             <thead>
                                 <tr>
+                                    <th style="width: 2rem;"></th>
                                     <th>Customer</th>
                                     <th class="text-end">Invoices</th>
                                     <th class="text-end">Balance</th>
@@ -102,6 +119,9 @@
                             <tbody>
                                 @forelse ($dashboard['accounts'] as $account)
                                     <tr>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" name="customer_ids[]" value="{{ $account['customer_id'] }}">
+                                        </td>
                                         <td>
                                             <a href="{{ route('operations.financials.accounts-receivable.customer', $account['customer_id']) }}">
                                                 {{ $account['customer_name'] }}
@@ -115,7 +135,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-secondary">No outstanding receivables.</td>
+                                        <td colspan="4" class="text-secondary">No outstanding receivables.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -173,6 +193,6 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
     </x-tabler.page>
 </x-operations.app>

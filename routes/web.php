@@ -815,6 +815,26 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::FinancialManage->value)
             ->name('operations.financials.accounts-receivable.payments.void');
 
+        Route::get('/app/financials/accounts-receivable/customers/{customer}/statement', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'show'])
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.statement.show');
+
+        Route::get('/app/financials/accounts-receivable/customers/{customer}/statement.pdf', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'pdf'])
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.statement.pdf');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/statement/email', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'email'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.financials.accounts-receivable.statement.email');
+
+        Route::get('/app/financials/accounts-receivable/customers/{customer}/address-label', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'label'])
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.statement.label');
+
+        Route::post('/app/financials/accounts-receivable/batch', \App\Ark\Operations\Financial\AccountsReceivableBatchDocumentsController::class)
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.batch');
+
         Route::get('/app/reports', ReportsIndexController::class)
             ->middleware('permission:'.ArkCapability::FinancialView->value)
             ->name('operations.reports.index');

@@ -71,6 +71,10 @@ SurfaceRouting::portalRoutes(function (): void {
             Route::get('/portal/home', PortalHomeController::class)->name('portal.home');
             Route::get('/home', PortalHomeController::class);
 
+            Route::get('/portal/account/statement', \App\Ark\Operations\Portal\PortalAccountStatementController::class)
+                ->name('portal.account.statement');
+            Route::get('/account/statement', \App\Ark\Operations\Portal\PortalAccountStatementController::class);
+
             Route::get('/portal/vehicles/{vehicle}', PortalVehicleShowController::class)->name('portal.vehicles.show');
             Route::get('/vehicles/{vehicle}', PortalVehicleShowController::class);
 
