@@ -409,12 +409,12 @@ final class RepairOrderFinancialPresenter
     {
         return $balance->hasIssuedInvoice
             && $balance->balanceDueCents > 0
-            && ! $repairOrder->isTerminal();
+            && $repairOrder->allowsAccountsReceivableCollection();
     }
 
     private function canManageLedgerEntries(RepairOrder $repairOrder): bool
     {
-        return ! $repairOrder->isTerminal();
+        return $repairOrder->allowsAccountsReceivableCollection();
     }
 
     private function canRecordRefund(RepairOrder $repairOrder, BalanceDueResult $balance): bool

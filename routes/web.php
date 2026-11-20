@@ -795,6 +795,62 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
             ->name('operations.repair-orders.index');
 
+        Route::get('/app/financials/accounts-receivable', \App\Ark\Operations\Financial\AccountsReceivableIndexController::class)
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.index');
+
+        Route::get('/app/financials/accounts-receivable/customers/{customer}', \App\Ark\Operations\Financial\AccountsReceivableCustomerController::class)
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.customer');
+
+        Route::get('/app/financials/accounts-receivable/customers/{customer}/receive-payment', [\App\Ark\Operations\Financial\AccountsReceivableReceivePaymentController::class, 'create'])
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.receive-payment.create');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/receive-payment', [\App\Ark\Operations\Financial\AccountsReceivableReceivePaymentController::class, 'store'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.financials.accounts-receivable.receive-payment.store');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/receive-payment/card', \App\Ark\Operations\Financial\AccountsReceivableCardCaptureController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.financials.accounts-receivable.receive-payment.card');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/captures/{attempt}/reconcile', \App\Ark\Operations\Financial\AccountsReceivableReconcileCaptureController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.financials.accounts-receivable.captures.reconcile');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/payments/{receipt}/void', \App\Ark\Operations\Financial\AccountsReceivableVoidPaymentController::class)
+            ->middleware('permission:'.ArkCapability::FinancialManage->value)
+            ->name('operations.financials.accounts-receivable.payments.void');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/payments/{receipt}/confirm-refund', \App\Ark\Operations\Financial\AccountsReceivableConfirmRefundController::class)
+            ->middleware('permission:'.ArkCapability::FinancialManage->value)
+            ->name('operations.financials.accounts-receivable.payments.confirm-refund');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/payments/{receipt}/settle-processor-refund', \App\Ark\Operations\Financial\AccountsReceivableSettleProcessorRefundController::class)
+            ->middleware('permission:'.ArkCapability::FinancialManage->value)
+            ->name('operations.financials.accounts-receivable.payments.settle-processor-refund');
+
+        Route::get('/app/financials/accounts-receivable/customers/{customer}/statement', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'show'])
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.statement.show');
+
+        Route::get('/app/financials/accounts-receivable/customers/{customer}/statement.pdf', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'pdf'])
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.statement.pdf');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/statement/email', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'email'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.financials.accounts-receivable.statement.email');
+
+        Route::get('/app/financials/accounts-receivable/customers/{customer}/address-label', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'label'])
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.statement.label');
+
+        Route::post('/app/financials/accounts-receivable/batch', \App\Ark\Operations\Financial\AccountsReceivableBatchDocumentsController::class)
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.batch');
+
         Route::get('/app/reports', ReportsIndexController::class)
             ->middleware('permission:'.ArkCapability::FinancialView->value)
             ->name('operations.reports.index');

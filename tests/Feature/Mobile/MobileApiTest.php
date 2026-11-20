@@ -1866,7 +1866,10 @@ test('advisor mobile schedule returns day appointments', function (): void {
 });
 
 test('advisor can create appointment from mobile', function (): void {
-    ShopSettings::current()->update(['appointments_enabled' => true]);
+    ShopSettings::current()->update([
+        'appointments_enabled' => true,
+        'scheduling_hours' => \App\Ark\Operations\Appointments\SchedulingHours::defaultWeekly(),
+    ]);
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $token = $advisor->createToken('test')->plainTextToken;
@@ -1877,7 +1880,8 @@ test('advisor can create appointment from mobile', function (): void {
         'phone' => '7195558282',
     ]);
 
-    $startsAt = now()->addDay()->setTime(9, 0);
+    // Pin to a weekday morning so weekend/holiday wall-clock CI does not miss shop hours.
+    $startsAt = now()->next(\Carbon\Carbon::MONDAY)->setTime(10, 0);
 
     $this->withToken($token)
         ->postJson('/api/mobile/appointments', [

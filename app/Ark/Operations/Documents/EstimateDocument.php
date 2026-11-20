@@ -23,6 +23,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'pdf_path',
     'generated_at',
     'issued_at',
+    'due_at',
+    'payment_terms_days',
+    'posted_to_receivables_at',
     'needs_pdf_refresh',
     'refreshed_at',
     'pdf_refreshed_at',
@@ -50,6 +53,9 @@ class EstimateDocument extends Model
                 'refreshed_at',
                 'customer_presented_at',
                 'snapshot_revisions_json',
+                'due_at',
+                'payment_terms_days',
+                'posted_to_receivables_at',
             ];
 
             if (in_array('snapshot_json', $dirty, true) && $document->isLivingInvoiceRefresh()) {
@@ -71,11 +77,19 @@ class EstimateDocument extends Model
             'document_number' => 'integer',
             'generated_at' => 'datetime',
             'issued_at' => 'datetime',
+            'due_at' => 'datetime',
+            'payment_terms_days' => 'integer',
+            'posted_to_receivables_at' => 'datetime',
             'needs_pdf_refresh' => 'boolean',
             'refreshed_at' => 'datetime',
             'pdf_refreshed_at' => 'datetime',
             'customer_presented_at' => 'datetime',
         ];
+    }
+
+    public function isPostedToReceivables(): bool
+    {
+        return $this->isIssuedInvoice() && $this->posted_to_receivables_at !== null;
     }
 
     public function isInvoice(): bool

@@ -64,4 +64,4 @@ test('approval, increase, supplemental approval, deposit, payment and close keep
         'invoice_renders_after_serving' => 1,
     ])
         ->and($result['ledger'])->toBe([['deposit', 5000], ['payment', $afterIncrease - 5000]]);
-});
+})->skip(getenv('ARK_TEST_MYSQL') !== '1', 'Disposable MySQL integration requires ARK_TEST_MYSQL=1');

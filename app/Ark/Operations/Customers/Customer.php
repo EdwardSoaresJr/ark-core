@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'customer_type',
     'billing_class_key',
     'store_credit_balance_cents',
+    'overpayment_disposition_default',
     'notes',
 ])]
 class Customer extends Model implements AuthenticatableContract
@@ -89,6 +90,7 @@ class Customer extends Model implements AuthenticatableContract
         return [
             'sms_consent_status' => CustomerSmsConsentStatus::class,
             'contact_preference' => LeadContactPreference::class,
+            'overpayment_disposition_default' => \App\Ark\Operations\Financial\OverpaymentDisposition::class,
             'sms_consent_at' => 'datetime',
             'last_sms_delivered_at' => 'datetime',
             'last_sms_failed_at' => 'datetime',

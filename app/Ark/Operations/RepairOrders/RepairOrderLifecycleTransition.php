@@ -75,9 +75,9 @@ class RepairOrderLifecycleTransition
                 return $closeReason;
             }
 
-            // Paid close still enforces unauthorized-work hard blocks, then documented
+            // Paid and on-account close still enforce unauthorized-work hard blocks, then documented
             // operational unfinished-work acknowledgment (not a hard completion gate).
-            if ($closeVariantKey === 'paid') {
+            if ($closeVariantKey === 'paid' || $closeVariantKey === 'on_account') {
                 $authorizationReason = $this->workAuthorization->lifecycleBlockedReason($repairOrder, $toStatusSlug);
 
                 if ($authorizationReason !== null) {
@@ -332,6 +332,17 @@ class RepairOrderLifecycleTransition
 
             if ($toStatusSlug === RepairOrderStatus::Closed->value && $closeVariantKey === 'paid') {
                 app(RepairOrderPosting::class)->postWhenReady($repairOrder->fresh(), $actor);
+            }
+
+            if ($toStatusSlug === RepairOrderStatus::Closed->value && $closeVariantKey === 'on_account') {
+                // Must stay inside this transaction: a posting failure rolls back the close
+                // so we never leave a closed RO with an unposted collectible invoice.
+                $posted = app(\App\Ark\Operations\Financial\PostRepairOrderToReceivablesAction::class)
+                    ->execute($repairOrder->fresh(), $actor);
+
+                if ($posted->posted_to_receivables_at === null) {
+                    throw new \RuntimeException('On-account close requires the invoice to be posted to Accounts Receivable.');
+                }
             }
 
             $this->events->record(

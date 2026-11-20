@@ -28,6 +28,8 @@ class RepairOrderLedgerPaymentRecorder
         ?Carbon $paidAt = null,
     ): RepairOrderLedgerEntry {
         $repairOrder = $repairOrder->fresh();
+        // RO-scoped settlement stays blocked on terminal tickets. Accounts Receivable
+        // collection for closed-on-account invoices goes through AllocateCustomerPaymentAction.
         $repairOrder->ensureOpenForEditing();
 
         $balance = $this->balanceDue->forRepairOrder($repairOrder);
@@ -36,6 +38,12 @@ class RepairOrderLedgerPaymentRecorder
             $balance->hasIssuedInvoice,
             422,
             'Generate the final invoice before recording payment.',
+        );
+
+        abort_unless(
+            $balance->balanceDueCents > 0,
+            422,
+            'This invoice is already paid in full.',
         );
 
         $entries = $this->ledger->recordPayment($repairOrder, $amountCents, $method, $actor, $reference, $paidAt);

@@ -21,6 +21,7 @@ class PaymentCaptureAttempt extends Model
         'capture_method',
         'status',
         'idempotency_key',
+        'submission_intent_key',
         'device_ref',
         'cloud_capture_id',
         'provider',
@@ -28,6 +29,8 @@ class PaymentCaptureAttempt extends Model
         'provider_refs',
         'failure_reason',
         'ledger_entry_id',
+        'customer_payment_receipt_id',
+        'allocation_plan',
         'initiated_by',
         'initiated_at',
         'completed_at',
@@ -42,6 +45,7 @@ class PaymentCaptureAttempt extends Model
             'capture_method' => PaymentCaptureMethod::class,
             'status' => PaymentCaptureAttemptStatus::class,
             'provider_refs' => 'array',
+            'allocation_plan' => 'array',
             'initiated_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
@@ -74,6 +78,6 @@ class PaymentCaptureAttempt extends Model
 
     public function hasLedgerEntry(): bool
     {
-        return $this->ledger_entry_id !== null;
+        return $this->ledger_entry_id !== null || $this->customer_payment_receipt_id !== null;
     }
 }

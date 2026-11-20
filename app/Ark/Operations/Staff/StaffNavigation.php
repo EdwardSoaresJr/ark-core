@@ -71,6 +71,13 @@ final class StaffNavigation
                 ],
             ],
             [
+                'label' => 'Financials',
+                'visible' => $can(ArkCapability::FinancialView),
+                'items' => [
+                    self::item('accounts-receivable', 'Accounts Receivable', 'receipt', route('operations.financials.accounts-receivable.index'), ['operations.financials.accounts-receivable.*'], $can(ArkCapability::FinancialView)),
+                ],
+            ],
+            [
                 'label' => 'Business',
                 'visible' => $usesBusinessWorkspace || $managesSettings,
                 'items' => [
