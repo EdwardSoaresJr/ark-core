@@ -811,6 +811,10 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
             ->name('operations.financials.accounts-receivable.receive-payment.store');
 
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/receive-payment/card', \App\Ark\Operations\Financial\AccountsReceivableCardCaptureController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.financials.accounts-receivable.receive-payment.card');
+
         Route::post('/app/financials/accounts-receivable/customers/{customer}/payments/{receipt}/void', \App\Ark\Operations\Financial\AccountsReceivableVoidPaymentController::class)
             ->middleware('permission:'.ArkCapability::FinancialManage->value)
             ->name('operations.financials.accounts-receivable.payments.void');

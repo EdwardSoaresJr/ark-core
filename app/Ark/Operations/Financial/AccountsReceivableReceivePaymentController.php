@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentPaidAt;
 use App\Ark\Operations\RepairOrders\WorksheetMutationIdempotency;
 use App\Ark\Runtime\Authorization\ArkCapability;
@@ -18,10 +19,12 @@ final class AccountsReceivableReceivePaymentController extends Controller
         Request $request,
         Customer $customer,
         AccountsReceivableOutstandingQuery $query,
+        CardPresentCaptureProjection $cardPresent,
     ): View {
         abort_unless($request->user()?->can(ArkCapability::FinancialView->value), 403);
 
         $dashboard = $query->customerAccount($customer);
+        $cardConfig = $cardPresent->publicConfig();
 
         return view('operations.financials.accounts-receivable.receive-payment', [
             'customer' => $customer,
@@ -30,6 +33,15 @@ final class AccountsReceivableReceivePaymentController extends Controller
                 [['key' => PaymentMethod::Cash->value, 'label' => PaymentMethod::Cash->label()]],
                 ManualPaymentMethods::current(),
             ),
+            'cardCapture' => [
+                'keyedEnabled' => (bool) ($cardConfig['keyedEnabled'] ?? false),
+                'terminalEnabled' => (bool) ($cardConfig['terminalEnabled'] ?? false),
+                'publicConfig' => $cardConfig,
+                'readers' => $cardPresent->readyDevices(),
+                // Saved/tokenized cards on file are not exposed by Platform readiness yet.
+                'savedCardsEnabled' => false,
+                'savedCardsBlocker' => 'Platform readiness does not currently advertise authorized cards on file for staff AR capture.',
+            ],
             'intentKey' => (string) str()->uuid(),
             'money' => fn (int $cents): string => '$'.number_format($cents / 100, 2),
         ]);

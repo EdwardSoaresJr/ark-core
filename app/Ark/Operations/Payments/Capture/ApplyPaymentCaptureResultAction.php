@@ -2,13 +2,18 @@
 
 namespace App\Ark\Operations\Payments\Capture;
 
+use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Financial\AllocateCustomerPaymentAction;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
+use App\Ark\Operations\Financial\CustomerPaymentReceipt;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentPaidAt;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * Applies a verified Cloud capture result to Core financial authority - once.
@@ -18,6 +23,7 @@ final class ApplyPaymentCaptureResultAction
     public function __construct(
         private readonly RecordLedgerEntryAction $ledger,
         private readonly BalanceDueCalculator $balanceDue,
+        private readonly AllocateCustomerPaymentAction $allocateCustomerPayment,
     ) {}
 
     /**
@@ -32,7 +38,7 @@ final class ApplyPaymentCaptureResultAction
             $status = PaymentCaptureAttemptStatus::tryFrom((string) ($result['status'] ?? ''))
                 ?? $locked->status;
 
-            if ($locked->hasLedgerEntry()) {
+            if ($locked->hasLedgerEntry() || $locked->customer_payment_receipt_id !== null) {
                 $locked->status = PaymentCaptureAttemptStatus::Succeeded;
                 $locked->completed_at ??= now();
                 $locked->save();
@@ -70,8 +76,17 @@ final class ApplyPaymentCaptureResultAction
             }
 
             if ($status === PaymentCaptureAttemptStatus::Succeeded) {
-                $entryId = $this->recordMoney($locked);
-                $locked->ledger_entry_id = $entryId;
+                if ($locked->context_kind === PaymentCaptureContextKind::AccountsReceivable) {
+                    $receipt = $this->recordAccountsReceivableAllocation($locked);
+                    $locked->customer_payment_receipt_id = $receipt->id;
+                    $locked->ledger_entry_id = $receipt->ledgerEntries()
+                        ->where('entry_type', \App\Ark\Operations\Financial\LedgerEntryType::Payment)
+                        ->orderBy('id')
+                        ->value('id');
+                } else {
+                    $locked->ledger_entry_id = $this->recordMoney($locked);
+                }
+
                 $locked->status = PaymentCaptureAttemptStatus::Succeeded;
                 $locked->completed_at = now();
                 $locked->failure_reason = null;
@@ -159,6 +174,40 @@ final class ApplyPaymentCaptureResultAction
         );
 
         return $entries[0]->id;
+    }
+
+    private function recordAccountsReceivableAllocation(PaymentCaptureAttempt $attempt): CustomerPaymentReceipt
+    {
+        $plan = is_array($attempt->allocation_plan) ? $attempt->allocation_plan : [];
+        $allocations = is_array($plan['allocations'] ?? null) ? $plan['allocations'] : [];
+        if ($allocations === []) {
+            throw new RuntimeException('Accounts receivable card capture is missing an allocation plan.');
+        }
+
+        $customer = Customer::query()->findOrFail($attempt->customer_id);
+        $actor = $attempt->initiated_by
+            ? User::query()->find($attempt->initiated_by)
+            : null;
+        $intentKey = is_string($plan['intent_key'] ?? null) && $plan['intent_key'] !== ''
+            ? (string) $plan['intent_key']
+            : (string) Str::uuid();
+        $reference = filled($plan['reference'] ?? null)
+            ? (string) $plan['reference']
+            : 'capture:'.$attempt->public_id;
+        $recordedAt = RepairOrderPaymentPaidAt::fromDateInput(
+            is_string($attempt->paid_on) ? $attempt->paid_on : null,
+        );
+
+        return $this->allocateCustomerPayment->execute(
+            $customer,
+            (int) $attempt->amount_cents,
+            PaymentMethod::Card,
+            $allocations,
+            $intentKey,
+            $actor,
+            $reference,
+            $recordedAt,
+        );
     }
 
     public function balanceAfter(RepairOrder $repairOrder): int

@@ -75,6 +75,13 @@ SurfaceRouting::portalRoutes(function (): void {
                 ->name('portal.account.statement');
             Route::get('/account/statement', \App\Ark\Operations\Portal\PortalAccountStatementController::class);
 
+            Route::get('/portal/account/pay', [\App\Ark\Operations\Portal\PortalAccountPayController::class, 'create'])
+                ->name('portal.account.pay');
+            Route::get('/account/pay', [\App\Ark\Operations\Portal\PortalAccountPayController::class, 'create']);
+            Route::post('/portal/account/pay', [\App\Ark\Operations\Portal\PortalAccountPayController::class, 'store'])
+                ->name('portal.account.pay.store');
+            Route::post('/account/pay', [\App\Ark\Operations\Portal\PortalAccountPayController::class, 'store']);
+
             Route::get('/portal/vehicles/{vehicle}', PortalVehicleShowController::class)->name('portal.vehicles.show');
             Route::get('/vehicles/{vehicle}', PortalVehicleShowController::class);
 

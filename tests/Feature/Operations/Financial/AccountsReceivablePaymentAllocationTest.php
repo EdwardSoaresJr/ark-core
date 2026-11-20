@@ -24,31 +24,6 @@ beforeEach(function () {
     $this->actingAs($this->advisor);
 });
 
-function arOnAccountInvoiceForCustomer(?\App\Ark\Operations\Customers\Customer $customer = null): array
-{
-    $repairOrder = financialCloseoutRepairOrder();
-
-    if ($customer !== null) {
-        $repairOrder->forceFill([
-            'customer_id' => $customer->id,
-            'vehicle_id' => $customer->vehicles()->first()?->id ?? $repairOrder->vehicle_id,
-        ])->save();
-    }
-
-    issueFinalInvoiceFor($repairOrder->fresh());
-
-    $closed = app(RepairOrderLifecycleTransition::class)->move(
-        $repairOrder->fresh(),
-        RepairOrderStatus::Closed,
-        auth()->user(),
-        'on_account',
-    );
-
-    $invoice = app(BalanceDueCalculator::class)->issuedInvoice($closed);
-
-    return [$closed->fresh(), $invoice];
-}
-
 test('one check payment allocates across multiple invoices and leaves the remainder unpaid', function () {
     [$roA, $invoiceA] = arOnAccountInvoiceForCustomer();
     $customer = $roA->customer;

@@ -118,6 +118,34 @@ function payRepairOrderInFull(RepairOrder $repairOrder): void
     );
 }
 
+/**
+ * @return array{0: RepairOrder, 1: \App\Ark\Operations\Documents\EstimateDocument|null}
+ */
+function arOnAccountInvoiceForCustomer(?Customer $customer = null): array
+{
+    $repairOrder = financialCloseoutRepairOrder();
+
+    if ($customer !== null) {
+        $repairOrder->forceFill([
+            'customer_id' => $customer->id,
+            'vehicle_id' => $customer->vehicles()->first()?->id ?? $repairOrder->vehicle_id,
+        ])->save();
+    }
+
+    issueFinalInvoiceFor($repairOrder->fresh());
+
+    $closed = app(\App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition::class)->move(
+        $repairOrder->fresh(),
+        RepairOrderStatus::Closed,
+        auth()->user(),
+        'on_account',
+    );
+
+    $invoice = app(\App\Ark\Operations\Financial\BalanceDueCalculator::class)->issuedInvoice($closed);
+
+    return [$closed->fresh(), $invoice];
+}
+
 function zeroBalanceCourtesyRepairOrder(
     RepairOrderStatus $status = RepairOrderStatus::ReadyPickup,
 ): RepairOrder {

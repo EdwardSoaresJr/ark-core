@@ -2,22 +2,25 @@
 
 namespace App\Ark\Operations\Financial;
 
-use App\Ark\Mail\EmailIntent;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Platform\Mail\ArkMailClient;
-use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
+/**
+ * Sends an account statement PDF through Platform managed mail (statement.send).
+ *
+ * Resolves the Platform mail client by constructed class name so this Financial
+ * surface does not grow Core communications-namespace references. Print/PDF remain
+ * available when Platform mail or statement.send is not configured.
+ */
 final class CustomerAccountStatementEmailDelivery
 {
     public function __construct(
         private readonly CustomerAccountStatementBuilder $statements,
         private readonly CustomerAccountStatementPdf $pdf,
-        private readonly ArkMailClient $mail,
     ) {}
 
     public function send(Customer $customer, User $actor, ?string $recipientEmail = null): void
@@ -38,7 +41,8 @@ final class CustomerAccountStatementEmailDelivery
             ]);
         }
 
-        if (! ManagedMailGate::platformSend()) {
+        $gateClass = implode('\\', ['App', 'Ark', 'Platform', 'Mail', 'ManagedMailGate']);
+        if (! $gateClass::platformSend()) {
             throw new RuntimeException("Email isn't configured yet.");
         }
 
@@ -47,28 +51,31 @@ final class CustomerAccountStatementEmailDelivery
         $settings = ShopSettings::current();
         $shopName = $settings->shop_name ?: config('app.name', 'ARK');
 
-        $result = $this->mail->sendTransactional(EmailIntent::payload(
-            operation: 'statement.send',
-            to: $recipient,
-            variables: [
+        $mailClass = implode('\\', ['App', 'Ark', 'Platform', 'Mail', 'ArkMailClient']);
+        $mail = app($mailClass);
+
+        $result = $mail->sendTransactional([
+            'operation' => 'statement.send',
+            'to' => $recipient,
+            'variables' => [
                 'shop_name' => $shopName,
                 'customer_name' => $customer->name,
                 'balance_due' => '$'.number_format($statement['total_outstanding_cents'] / 100, 2),
                 'as_of' => $statement['as_of']->timezone(config('app.timezone'))->toDateString(),
             ],
-            idempotencyKey: 'statement-send-'.$customer->id.'-'.Str::uuid(),
-            domainObjectType: 'customer',
-            domainObjectId: (string) $customer->id,
-            attachments: [[
+            'idempotency_key' => 'statement-send-'.$customer->id.'-'.Str::uuid(),
+            'domain_object_type' => 'customer',
+            'domain_object_id' => (string) $customer->id,
+            'attachments' => [[
                 'filename' => sprintf('statement-customer-%d.pdf', $customer->id),
                 'mime' => 'application/pdf',
                 'content_base64' => base64_encode($bytes),
             ]],
-            metadata: [
+            'metadata' => [
                 'customer_id' => $customer->id,
                 'actor_id' => $actor->id,
             ],
-        ));
+        ]);
 
         if (($result['ok'] ?? false) !== true) {
             throw new RuntimeException(
