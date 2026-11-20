@@ -62,23 +62,29 @@ for record in records:
     digest = meta.split(b" ")[2].decode()
     blobs[path.decode()] = digest
 
-attr_in = b"\0".join(path.encode() for path in blobs)
-if blobs:
-    attr_in += b"\0"
-listed = git(
-    "check-attr", "--stdin", "-z", "--source", sha, "export-ignore",
-    input_bytes=attr_in,
-).split(b"\0")
-
-skipped = set()
-index = 0
-while index + 2 < len(listed):
-    path, _attr, value = listed[index], listed[index + 1], listed[index + 2]
-    if value == b"set":
-        skipped.add(path.decode())
-    index += 3
-
-expected = [path for path in blobs if path not in skipped]
+# git archive is the publishable tree (honors directory export-ignore).
+archive = subprocess.run(
+    ["git", "-C", repo, "archive", sha],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    check=True,
+).stdout
+listed = subprocess.run(
+    ["tar", "-t"],
+    input=archive,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    check=True,
+).stdout.decode().splitlines()
+expected = []
+for path in listed:
+    path = str(path).replace(chr(92), "/")
+    if not path or path.endswith("/"):
+        continue
+    if path not in blobs:
+        print(f"REFUSING: archived path missing from commit tree: {path}", file=sys.stderr)
+        sys.exit(1)
+    expected.append(path)
 found = []
 for dirpath, _dirnames, filenames in os.walk(dest):
     for name in filenames:
