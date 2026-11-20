@@ -11,9 +11,14 @@
     Tabler markup for arkWorkspaceModal (resources/js/ark-workspace-modal.js), used by the customer hub and the repair
     order workspace. Panels carry data-workspace-modal-panel.
 --}}
+{{--
+    Static backdrop: outside clicks and text-selection mouseups must never dismiss authoring.
+    Escape / Cancel / X go through requestClose(), which confirms when the draft is dirty.
+--}}
 <div
     {{ $attributes }}
     id="workspace-modal-host"
+    data-workspace-modal-open="0"
     x-data="arkWorkspaceModal({
         initialTask: @js($initialTask),
         initialContext: @js($initialContext),
@@ -22,19 +27,19 @@
     @keydown.tab="trapFocus($event)"
 >
     <div x-show="open" x-cloak data-workspace-modal-overlay>
-        <div class="modal-backdrop show"></div>
+        <div class="modal-backdrop show" data-workspace-modal-static-backdrop></div>
         <div
             class="modal d-block"
             role="dialog"
             aria-modal="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
             :aria-labelledby="open ? 'ops-workspace-modal-title' : null"
             @keydown.escape.stop="onEscape()"
-            @click.self="if (! saving && ! saved) onBackdrop()"
         >
             <div
                 x-ref="dialog"
                 class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down"
-                @click.self="if (! saving && ! saved) onBackdrop()"
             >
                 <div class="modal-content">
                     <div class="modal-header">

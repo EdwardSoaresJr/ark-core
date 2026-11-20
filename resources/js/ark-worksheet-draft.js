@@ -1,4 +1,4 @@
-import { fieldHasChanges, formHasChanges } from './ark-form-unsaved.js';
+import { fieldHasChanges, formHasChanges, isWorkspaceModalOpen } from './ark-form-unsaved.js';
 
 export function dirtyFormsIn(root) {
     if (! root?.querySelectorAll) {
@@ -130,8 +130,14 @@ export function draftNodesIn(root) {
 
 export function blockedPanelIds(root, panelIds, ignore = null) {
     const nodes = draftNodesIn(root).filter((node) => ! nodeHolds(ignore, node));
+    const blocked = blockedPanelIdsFromNodes(nodes, panelIds);
 
-    return blockedPanelIdsFromNodes(nodes, panelIds);
+    // An open authoring modal must survive worksheet morphs / collaboration refresh.
+    if (isWorkspaceModalOpen(root) && panelIds.includes('workspace-modal-host')) {
+        blocked.add('workspace-modal-host');
+    }
+
+    return blocked;
 }
 
 export function cancelWouldReplace(boundary, draftNodes, discarded) {

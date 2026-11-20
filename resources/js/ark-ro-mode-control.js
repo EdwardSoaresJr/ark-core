@@ -44,6 +44,7 @@ async function saveDirtyWorksheetForms(worksheet) {
 
     const forms = [...root.querySelectorAll('form[method="post"]')]
         .filter((form) => !form.closest('[data-ark-workspace-dirty="off"]'))
+        .filter((form) => !form.closest('#workspace-modal-host[data-workspace-modal-open="0"]'))
         .filter((form) => !form.matches('[data-lifecycle-form]'))
         .filter(formHasChanges);
 
