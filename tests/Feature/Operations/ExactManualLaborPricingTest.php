@@ -144,6 +144,42 @@ test('exact labor charge of $90 saves, reopens, and survives hour edits', functi
         ->and($repairOrder->fresh()->lines->sum('subtotal_cents'))->toBe(9000);
 });
 
+test('description and hour edits keep a stored manual charge without resubmitting the override', function () {
+    $repairOrder = exactLaborRepairOrder();
+    $line = exactLaborStore($repairOrder, exactLaborConcern($repairOrder), [
+        'labor_entered_hours' => '2.00',
+        'labor_charge' => '90.00',
+        'labor_charge_overridden' => '1',
+        'pricing_mode' => 'manual',
+        'unit_price' => '165.00',
+    ]);
+
+    test()->patch(route('operations.repair-orders.lines.update', [$repairOrder, $line]), [
+        'repair_order_concern_id' => $line->repair_order_concern_id,
+        'type' => 'labor',
+        'description' => 'Renamed manual labor',
+        'labor_category_key' => $line->labor_category_key,
+        'labor_entered_hours' => '3.50',
+        'labor_adjustment' => 'normal',
+        'unit_price' => '165.00',
+        'labor_rate_overridden' => '0',
+        'labor_charge_overridden' => '0',
+        'use_calculated_labor_charge' => '0',
+    ])->assertSessionHasNoErrors();
+
+    $line = $line->fresh();
+    expect($line->description)->toBe('Renamed manual labor')
+        ->and($line->quantity)->toBe('3.50')
+        ->and($line->pricing_mode)->toBe('manual')
+        ->and($line->unit_price_cents)->toBe(9000)
+        ->and($line->labor_rate_cents)->toBe(16500)
+        ->and($line->subtotal_cents)->toBe(9000);
+
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
+
+    expect($line->fresh()->subtotal_cents)->toBe(9000);
+});
+
 test('use calculated labor charge clears the manual override', function () {
     $repairOrder = exactLaborRepairOrder();
     $line = exactLaborStore($repairOrder, exactLaborConcern($repairOrder), [
