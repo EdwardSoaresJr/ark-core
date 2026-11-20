@@ -25,6 +25,7 @@ final class AccountsReceivableReceivePaymentController extends Controller
 
         $dashboard = $query->customerAccount($customer);
         $cardConfig = $cardPresent->publicConfig();
+        $webPayments = $cardPresent->webPaymentsPublicConfig();
 
         $defaultDisposition = $customer->overpayment_disposition_default instanceof OverpaymentDisposition
             ? $customer->overpayment_disposition_default
@@ -53,10 +54,10 @@ final class AccountsReceivableReceivePaymentController extends Controller
                 'keyedEnabled' => (bool) ($cardConfig['keyedEnabled'] ?? false),
                 'terminalEnabled' => (bool) ($cardConfig['terminalEnabled'] ?? false),
                 'publicConfig' => $cardConfig,
+                'webPaymentsPublicConfig' => $webPayments,
                 'readers' => $cardPresent->readyDevices(),
-                // Saved/tokenized cards on file are not exposed by Platform readiness yet.
-                'savedCardsEnabled' => false,
-                'savedCardsBlocker' => 'Platform readiness does not currently advertise authorized cards on file for staff AR capture.',
+                'savedCardsEnabled' => $cardPresent->savedCardsEnabled(),
+                'savedCardsBlocker' => $cardPresent->savedCardsBlocker(),
             ],
             'intentKey' => (string) str()->uuid(),
             'money' => fn (int $cents): string => '$'.number_format($cents / 100, 2),

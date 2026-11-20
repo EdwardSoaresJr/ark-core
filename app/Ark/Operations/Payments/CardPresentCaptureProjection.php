@@ -34,6 +34,8 @@ final class CardPresentCaptureProjection
                 'portalPayEnabled' => false,
                 'emailPayEnabled' => false,
                 'webPaymentsSdkUrl' => '',
+                'savedCardsEnabled' => false,
+                'supports_saved_cards' => null,
             ];
         }
 
@@ -55,7 +57,59 @@ final class CardPresentCaptureProjection
                 && filled($public['location_id'] ?? null),
             'emailPayEnabled' => false,
             'webPaymentsSdkUrl' => (string) ($public['web_payments_sdk_url'] ?? ''),
+            // Only when Platform readiness explicitly advertises cards-on-file support.
+            'savedCardsEnabled' => $connected && (bool) ($ready['supports_saved_cards'] ?? false),
+            'supports_saved_cards' => array_key_exists('supports_saved_cards', $ready)
+                ? (bool) $ready['supports_saved_cards']
+                : null,
         ];
+    }
+
+    /**
+     * Snake-case Web Payments SDK public config for Square.js mounts.
+     * Null when keyed capture is not ready — callers must not invent tokens.
+     *
+     * @return array{application_id: string, location_id: string, environment: string, web_payments_sdk_url: string}|null
+     */
+    public function webPaymentsPublicConfig(): ?array
+    {
+        if (! $this->keyedEnabled()) {
+            return null;
+        }
+
+        $ready = $this->readiness();
+        $public = is_array($ready['public_config'] ?? null) ? $ready['public_config'] : [];
+        $applicationId = (string) ($public['application_id'] ?? '');
+        $locationId = (string) ($public['location_id'] ?? '');
+        if ($applicationId === '' || $locationId === '') {
+            return null;
+        }
+
+        return [
+            'application_id' => $applicationId,
+            'location_id' => $locationId,
+            'environment' => (string) ($public['environment'] ?? 'sandbox'),
+            'web_payments_sdk_url' => (string) ($public['web_payments_sdk_url'] ?? ''),
+        ];
+    }
+
+    public function savedCardsEnabled(): bool
+    {
+        return (bool) ($this->publicConfig()['savedCardsEnabled'] ?? false);
+    }
+
+    public function savedCardsBlocker(): string
+    {
+        if ($this->savedCardsEnabled()) {
+            return '';
+        }
+
+        $advertised = $this->publicConfig()['supports_saved_cards'] ?? null;
+        if ($advertised === false) {
+            return 'Platform reports saved cards are not available for this shop.';
+        }
+
+        return 'Platform readiness does not currently advertise authorized cards on file for staff AR capture.';
     }
 
     public function terminalEnabled(): bool

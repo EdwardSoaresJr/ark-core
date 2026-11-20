@@ -55,6 +55,25 @@ class ArkPaymentsClient
     }
 
     /**
+     * Request a provider-verified refund against a prior capture.
+     *
+     * @param  array<string, mixed>  $body
+     * @return array{ok: bool, status: int, body: array<string, mixed>, unavailable?: bool, reason_code?: string}
+     */
+    public function createRefund(array $body): array
+    {
+        return $this->request('POST', '/api/v1/services/payments/refunds', $body);
+    }
+
+    /**
+     * @return array{ok: bool, status: int, body: array<string, mixed>, unavailable?: bool, reason_code?: string}
+     */
+    public function refundStatus(string $idempotencyKey): array
+    {
+        return $this->request('GET', '/api/v1/services/payments/refunds/'.$idempotencyKey, []);
+    }
+
+    /**
      * @param  array<string, mixed>  $body
      * @return array{ok: bool, status: int, body: array<string, mixed>, unavailable?: bool, reason_code?: string}
      */

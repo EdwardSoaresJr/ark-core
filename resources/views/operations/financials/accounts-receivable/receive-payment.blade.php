@@ -38,6 +38,7 @@
                     ? @js(route('operations.financials.accounts-receivable.receive-payment.card', $customer))
                     : @js(route('operations.financials.accounts-receivable.receive-payment.store', $customer))"
                 class="card"
+                @submit="onSubmit($event)"
                 x-data="arReceivePayment({
                     invoices: @js(collect($invoices)->map(fn ($i) => [
                         'invoice_id' => $i['invoice_id'],
@@ -45,9 +46,14 @@
                     ])->values()),
                     keyedEnabled: @js((bool) ($cardCapture['keyedEnabled'] ?? false)),
                     terminalEnabled: @js((bool) ($cardCapture['terminalEnabled'] ?? false)),
+                    publicConfig: @js($cardCapture['webPaymentsPublicConfig'] ?? null),
+                    cardContainerId: 'ar-receive-payment-card',
+                    allowStubToken: @js(app()->environment('local', 'testing')),
+                    stubToken: @js(app()->environment('local', 'testing') ? 'tok_stub_ar' : ''),
                     storeCreditCents: @js((int) ($storeCreditCents ?? 0)),
                     dispositionDefault: @js($dispositionDefault->value),
                     initialDisposition: @js($initialDisposition),
+                    initialMethod: @js(old('payment_method', ($storeCreditCents ?? 0) > 0 ? 'store_credit' : 'check')),
                 })"
             >
                 @csrf
@@ -259,7 +265,7 @@
                     </div>
                     <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-content-end">
                         <a href="{{ route('operations.financials.accounts-receivable.customer', $customer) }}" class="btn btn-ghost-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary" :disabled="allocatedCents() <= 0 || (showsExcess() && !disposition)">
+                        <button type="submit" class="btn btn-primary" :disabled="busy || allocatedCents() <= 0 || (showsExcess() && !disposition)">
                             <span x-show="!isCardMethod() && !isStoreCredit()">Record payment</span>
                             <span x-show="isStoreCredit()">Apply account credit</span>
                             <span x-show="isCardMethod()" x-text="'Charge $' + allocatedDollars()">Charge card</span>
@@ -270,164 +276,4 @@
         @endif
     </x-tabler.page>
 
-    <script>
-        function arReceivePayment(config) {
-            const invoices = config.invoices || [];
-            return {
-                paymentAmount: '',
-                method: @js(old('payment_method', ($storeCreditCents ?? 0) > 0 ? 'store_credit' : 'check')),
-                keyedEnabled: !!config.keyedEnabled,
-                terminalEnabled: !!config.terminalEnabled,
-                storeCreditCents: Number(config.storeCreditCents || 0),
-                dispositionDefault: config.dispositionDefault || 'ask',
-                disposition: config.initialDisposition || '',
-                sourceToken: '',
-                cardError: '',
-                rows: invoices.map((invoice) => ({
-                    invoice_id: invoice.invoice_id,
-                    balance_cents: invoice.balance_cents,
-                    selected: false,
-                    amount: '',
-                })),
-                isCash() {
-                    return this.method === 'cash';
-                },
-                isStoreCredit() {
-                    return this.method === 'store_credit';
-                },
-                isCardMethod() {
-                    return this.method === 'ark_card_keyed' || this.method === 'ark_card_terminal';
-                },
-                cardCaptureMethod() {
-                    return this.method === 'ark_card_terminal' ? 'terminal' : 'keyed';
-                },
-                allowsKeepCredit() {
-                    return ! this.isCardMethod() && ! this.isStoreCredit();
-                },
-                allowsReturnChange() {
-                    return this.isCash();
-                },
-                allowsRefund() {
-                    return ! this.isCash() && ! this.isCardMethod() && ! this.isStoreCredit();
-                },
-                showsExcess() {
-                    return ! this.isCardMethod() && ! this.isStoreCredit() && this.remainingCents() > 0;
-                },
-                init() {
-                    this.$watch('method', (value) => {
-                        if (value === 'ark_card_keyed' && ! this.sourceToken) {
-                            // Local/testing stub only. Production uses ARK Pay hosted tokenization on the RO payment rail today;
-                            // AR keyed capture still requires a Platform source_token — never a raw card number.
-                            @if (app()->environment('local', 'testing'))
-                                this.sourceToken = 'tok_stub_ar';
-                            @endif
-                        }
-                        if (value === 'store_credit' && this.storeCreditCents > 0) {
-                            this.paymentAmount = (this.storeCreditCents / 100).toFixed(2);
-                            this.autoAllocate();
-                        }
-                        this.syncDispositionForMethod();
-                    });
-                    this.syncDispositionForMethod();
-                    if (this.isStoreCredit() && this.storeCreditCents > 0 && ! this.paymentAmount) {
-                        this.paymentAmount = (this.storeCreditCents / 100).toFixed(2);
-                        this.autoAllocate();
-                    }
-                },
-                syncDispositionForMethod() {
-                    if (this.isCardMethod() || this.isStoreCredit()) {
-                        this.disposition = '';
-                        return;
-                    }
-                    const allowed = this.isCash()
-                        ? ['keep_credit', 'return_change']
-                        : ['keep_credit', 'refund'];
-                    if (this.disposition && ! allowed.includes(this.disposition)) {
-                        this.disposition = '';
-                    }
-                    // Prefer an allowed default only; unsupported "return when possible" on noncash stays blank.
-                    if (! this.disposition && this.dispositionDefault !== 'ask' && allowed.includes(this.dispositionDefault)) {
-                        this.disposition = this.dispositionDefault;
-                    }
-                },
-                remainingCents() {
-                    if (this.isCardMethod()) {
-                        return 0;
-                    }
-                    const payment = Math.round(parseFloat(this.paymentAmount || '0') * 100);
-                    return (Number.isFinite(payment) ? payment : 0) - this.allocatedCents();
-                },
-                autoAllocate() {
-                    if (this.isCardMethod()) {
-                        return;
-                    }
-                    let remaining = Math.round(parseFloat(this.paymentAmount || '0') * 100);
-                    if (!Number.isFinite(remaining) || remaining <= 0) {
-                        this.rows.forEach((row) => { row.selected = false; row.amount = ''; });
-                        return;
-                    }
-
-                    this.rows.forEach((row) => {
-                        if (remaining <= 0) {
-                            row.selected = false;
-                            row.amount = '';
-                            return;
-                        }
-
-                        const apply = Math.min(row.balance_cents, remaining);
-                        row.selected = apply > 0;
-                        row.amount = apply > 0 ? (apply / 100).toFixed(2) : '';
-                        remaining -= apply;
-                    });
-                },
-                syncSelected(index) {
-                    const row = this.rows[index];
-                    if (!row.selected) {
-                        row.amount = '';
-                        return;
-                    }
-                    if (!row.amount) {
-                        row.amount = (row.balance_cents / 100).toFixed(2);
-                    }
-                },
-                allocatedCents() {
-                    return this.rows.reduce((sum, row) => {
-                        if (!row.selected) return sum;
-                        const cents = Math.round(parseFloat(row.amount || '0') * 100);
-                        return sum + (Number.isFinite(cents) && cents > 0 ? cents : 0);
-                    }, 0);
-                },
-                allocatedDollars() {
-                    return (this.allocatedCents() / 100).toFixed(2);
-                },
-                paymentDollars() {
-                    const payment = Math.round(parseFloat(this.paymentAmount || '0') * 100);
-                    return ((Number.isFinite(payment) ? payment : 0) / 100).toFixed(2);
-                },
-                remainingDollars() {
-                    return (Math.max(0, this.remainingCents()) / 100).toFixed(2);
-                },
-                excessLabel() {
-                    if (this.disposition === 'keep_credit') return ' (account credit)';
-                    if (this.disposition === 'return_change') return ' (cash change)';
-                    if (this.disposition === 'refund') return ' (pending refund)';
-                    return '';
-                },
-                previewCopy() {
-                    const allocated = this.allocatedDollars();
-                    const excess = this.remainingDollars();
-                    if (this.disposition === 'keep_credit') {
-                        return '$' + allocated + ' pays the invoice. $' + excess + ' remains available toward future services.';
-                    }
-                    if (this.disposition === 'return_change') {
-                        return '$' + allocated + ' pays the invoice. $' + excess + ' is returned as cash change.';
-                    }
-                    if (this.disposition === 'refund') {
-                        return '$' + allocated + ' pays the invoice. $' + excess + ' is held as a pending refund/return until confirmed — not treated as returned yet.';
-                    }
-                    return 'Choose how to handle the $' + excess + ' excess before recording the payment.';
-                },
-            };
-        }
-    </script>
 </x-operations.app>

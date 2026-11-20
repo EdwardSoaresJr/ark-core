@@ -1,4 +1,4 @@
-function loadSquareSdk(url) {
+export function loadSquareSdk(url) {
     return new Promise((resolve, reject) => {
         if (window.Square) {
             resolve(window.Square);

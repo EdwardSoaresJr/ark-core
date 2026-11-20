@@ -20,14 +20,23 @@
             <p class="text-secondary">No outstanding invoices.</p>
             <a href="{{ route('portal.account.statement') }}" class="btn btn-outline-secondary">View statement</a>
         @else
-            <form method="POST" action="{{ route('portal.account.pay.store') }}" class="space-y-4" x-data="{
-                sourceToken: @js(app()->environment('local', 'testing') ? 'tok_stub_portal_ar' : ''),
-                rows: @js(collect($invoices)->map(fn ($i) => [
-                    'invoice_id' => $i['invoice_id'],
-                    'balance' => number_format($i['balance_due_cents'] / 100, 2, '.', ''),
-                    'selected' => true,
-                ])->values()),
-            }">
+            <form
+                method="POST"
+                action="{{ route('portal.account.pay.store') }}"
+                class="space-y-4"
+                @submit="onSubmit($event)"
+                x-data="portalAccountPay({
+                    publicConfig: @js($webPaymentsPublicConfig ?? null),
+                    cardContainerId: 'portal-ar-card',
+                    allowStubToken: @js(app()->environment('local', 'testing')),
+                    stubToken: @js(app()->environment('local', 'testing') ? 'tok_stub_portal_ar' : ''),
+                    rows: @js(collect($invoices)->map(fn ($i) => [
+                        'invoice_id' => $i['invoice_id'],
+                        'balance' => number_format($i['balance_due_cents'] / 100, 2, '.', ''),
+                        'selected' => true,
+                    ])->values()),
+                })"
+            >
                 @csrf
                 <input type="hidden" name="intent_key" value="{{ $intentKey }}">
                 <input type="hidden" name="source_token" x-model="sourceToken">
@@ -70,10 +79,11 @@
                     <label class="form-label">Card</label>
                     <div id="portal-ar-card" class="form-control" style="min-height: 48px"></div>
                     <div class="form-hint">Raw card numbers are never stored in ARK.</div>
+                    <p class="small text-danger mb-0" x-show="cardError" x-text="cardError"></p>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary">Pay selected invoices</button>
+                    <button type="submit" class="btn btn-primary" :disabled="busy">Pay selected invoices</button>
                     <a href="{{ route('portal.account.statement') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>

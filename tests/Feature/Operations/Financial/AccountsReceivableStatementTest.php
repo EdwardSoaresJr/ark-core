@@ -11,6 +11,7 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
@@ -87,6 +88,52 @@ test('statement email refuses a recipient that is not the customer email on file
         $this->advisor,
         'attacker@example.test',
     ))->toThrow(ValidationException::class);
+});
+
+test('statement email delivers through Platform statement.send with the Shop #29 catalog variables', function () {
+    enableHostedPlatformMail();
+
+    $pdf = Mockery::mock(\App\Ark\Operations\Documents\HtmlPdfBuilder::class);
+    $pdf->shouldReceive('toPdfBytes')->andReturn('%PDF-1.4 statement');
+    app()->instance(\App\Ark\Operations\Documents\HtmlPdfBuilder::class, $pdf);
+
+    Http::fake(function (\Illuminate\Http\Client\Request $request) {
+        if (str_contains($request->url(), '/api/v1/services/mail/messages/transactional')) {
+            $body = platformMailBody($request);
+
+            expect($body['operation'] ?? null)->toBe('statement.send')
+                ->and($body['to'] ?? null)->toBe('fleet@example.test')
+                ->and($body['variables']['customer_name'] ?? null)->not->toBe('')
+                ->and($body['variables']['balance_due'] ?? null)->toBe('$150.00')
+                ->and($body['variables']['as_of'] ?? null)->not->toBeNull()
+                ->and($body['attachments'][0]['filename'] ?? null)->toContain('statement-customer-')
+                ->and($body['attachments'][0]['mime'] ?? null)->toBe('application/pdf');
+
+            return Http::response([
+                'ok' => true,
+                'reference' => 'mail-statement-1',
+            ], 200);
+        }
+
+        return Http::response(['ok' => true], 200);
+    });
+
+    $repairOrder = financialCloseoutRepairOrder();
+    $repairOrder->customer->forceFill(['email' => 'fleet@example.test'])->save();
+    issueFinalInvoiceFor($repairOrder);
+    app(RepairOrderLifecycleTransition::class)->move(
+        $repairOrder->fresh(),
+        RepairOrderStatus::Closed,
+        $this->advisor,
+        'on_account',
+    );
+
+    app(CustomerAccountStatementEmailDelivery::class)->send(
+        $repairOrder->customer->fresh(),
+        $this->advisor,
+    );
+
+    assertPlatformTransactionalMail('statement.send', 'fleet@example.test', '$150.00');
 });
 
 test('portal statement only exposes the authenticated customer account', function () {

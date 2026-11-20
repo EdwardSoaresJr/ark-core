@@ -38,6 +38,7 @@ final class PortalAccountPayController extends Controller
             'statement' => $statements->forCustomer($customer),
             'invoices' => $query->customerAccount($customer)['invoices'],
             'publicConfig' => $config,
+            'webPaymentsPublicConfig' => $cardPresent->webPaymentsPublicConfig(),
             'intentKey' => (string) Str::uuid(),
             'money' => fn (int $cents): string => '$'.number_format($cents / 100, 2),
         ]);
@@ -84,6 +85,15 @@ final class PortalAccountPayController extends Controller
             throw ValidationException::withMessages([
                 'allocations' => 'Select at least one invoice to pay.',
             ]);
+        }
+
+        if (! app()->environment('local', 'testing')) {
+            $token = strtolower(trim((string) $data['source_token']));
+            if (str_starts_with($token, 'tok_stub') || filled($data['stub_scenario'] ?? null)) {
+                throw ValidationException::withMessages([
+                    'source_token' => 'Live portal payments require a Platform Web Payments source token. Test stubs are not accepted.',
+                ]);
+            }
         }
 
         $result = $capture->execute(

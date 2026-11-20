@@ -459,3 +459,307 @@ test('succeeded capture intent key rejects a different payload instead of replay
     expect(PaymentCaptureAttempt::query()->where('customer_id', $customer->id)->count())->toBe(1)
         ->and(CustomerPaymentReceipt::query()->where('customer_id', $customer->id)->count())->toBe(1);
 });
+
+test('receive payment mounts Web Payments public config when Platform advertises keyed capture', function () {
+    Http::fake(function (Request $request) {
+        if ($request->method() === 'GET' && str_contains($request->url(), '/payments/readiness')) {
+            return Http::response(platformPaymentReadinessPayload([
+                'supports_saved_cards' => false,
+            ]), 200);
+        }
+
+        return Http::response(['ok' => false], 404);
+    });
+
+    [$roA] = arCardOnAccountInvoice();
+    $customer = $roA->customer;
+
+    $this->get(route('operations.financials.accounts-receivable.receive-payment.create', $customer))
+        ->assertOk()
+        ->assertSee('arReceivePayment(')
+        ->assertSee('sandbox-sq0idb-public')
+        ->assertSee('LOC_PUBLIC')
+        ->assertSee('Platform reports saved cards are not available for this shop.');
+});
+
+test('verified processor refund settlement clears pending card refund only with provider refund id', function () {
+    [$repairOrder, $invoice] = arCardOnAccountInvoice();
+    $customer = $repairOrder->customer;
+
+    $receipt = app(\App\Ark\Operations\Financial\AllocateCustomerPaymentAction::class)->execute(
+        $customer,
+        20000,
+        \App\Ark\Operations\Financial\PaymentMethod::Card,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CARD-PROC-REFUND',
+        null,
+        \App\Ark\Operations\Financial\OverpaymentDisposition::Refund,
+    );
+
+    expect($receipt->refund_pending_cents)->toBe(5000);
+
+    $publicId = (string) Str::uuid();
+    PaymentCaptureAttempt::query()->create([
+        'public_id' => $publicId,
+        'repair_order_id' => $repairOrder->id,
+        'customer_id' => $customer->id,
+        'amount_cents' => 20000,
+        'currency' => 'USD',
+        'context_kind' => PaymentCaptureContextKind::AccountsReceivable,
+        'capture_method' => PaymentCaptureMethod::Keyed,
+        'status' => PaymentCaptureAttemptStatus::Succeeded,
+        'idempotency_key' => 'core-'.$publicId,
+        'submission_intent_key' => (string) Str::uuid(),
+        'provider' => 'stub',
+        'provider_payment_id' => 'stub_pay_refund_source',
+        'cloud_capture_id' => (string) Str::uuid(),
+        'customer_payment_receipt_id' => $receipt->id,
+        'initiated_by' => $this->advisor->id,
+        'initiated_at' => now(),
+        'completed_at' => now(),
+    ]);
+
+    $refundPosts = [];
+    Http::fake(function (Request $request) use (&$refundPosts) {
+        if ($request->method() === 'GET' && str_contains($request->url(), '/payments/refunds/')) {
+            return Http::response(['ok' => false], 404);
+        }
+        if ($request->method() === 'POST' && str_contains($request->url(), '/payments/refunds')) {
+            $body = json_decode($request->body(), true) ?: [];
+            $refundPosts[] = $body;
+
+            return Http::response([
+                'ok' => true,
+                'status' => 'succeeded',
+                'provider_refund_id' => 'ref_verified_991',
+                'idempotency_key' => $body['idempotency_key'] ?? null,
+            ], 200);
+        }
+
+        return Http::response(['ok' => false], 404);
+    });
+
+    $settled = app(\App\Ark\Operations\Financial\SettleCustomerPaymentProcessorRefundAction::class)
+        ->execute($receipt->fresh(), $this->advisor);
+
+    expect($refundPosts)->toHaveCount(1)
+        ->and($refundPosts[0]['amount_cents'] ?? null)->toBe(5000)
+        ->and($refundPosts[0]['provider_payment_id'] ?? null)->toBe('stub_pay_refund_source')
+        ->and($refundPosts[0]['idempotency_key'] ?? null)->toBe('ar-refund-'.$receipt->id)
+        ->and($settled['provider_refund_id'])->toBe('ref_verified_991')
+        ->and($settled['replayed'])->toBeFalse()
+        ->and($settled['receipt']->refund_pending_cents)->toBe(0)
+        ->and($settled['receipt']->change_cents)->toBe(5000)
+        ->and($settled['receipt']->refund_evidence_kind)->toBe('processor_settlement')
+        ->and($settled['receipt']->refund_evidence_reference)->toBe('ref_verified_991')
+        ->and($settled['receipt']->refund_confirmed_by)->toBe($this->advisor->id);
+});
+
+test('processor refund remains pending when Platform has not shipped verified refunds', function () {
+    [$repairOrder, $invoice] = arCardOnAccountInvoice();
+    $customer = $repairOrder->customer;
+
+    $receipt = app(\App\Ark\Operations\Financial\AllocateCustomerPaymentAction::class)->execute(
+        $customer,
+        20000,
+        \App\Ark\Operations\Financial\PaymentMethod::Card,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CARD-PROC-UNSUPPORTED',
+        null,
+        \App\Ark\Operations\Financial\OverpaymentDisposition::Refund,
+    );
+
+    $publicId = (string) Str::uuid();
+    PaymentCaptureAttempt::query()->create([
+        'public_id' => $publicId,
+        'repair_order_id' => $repairOrder->id,
+        'customer_id' => $customer->id,
+        'amount_cents' => 20000,
+        'currency' => 'USD',
+        'context_kind' => PaymentCaptureContextKind::AccountsReceivable,
+        'capture_method' => PaymentCaptureMethod::Keyed,
+        'status' => PaymentCaptureAttemptStatus::Succeeded,
+        'idempotency_key' => 'core-'.$publicId,
+        'submission_intent_key' => (string) Str::uuid(),
+        'provider' => 'stub',
+        'provider_payment_id' => 'stub_pay_unsupported',
+        'customer_payment_receipt_id' => $receipt->id,
+        'initiated_by' => $this->advisor->id,
+        'initiated_at' => now(),
+        'completed_at' => now(),
+    ]);
+
+    Http::fake(fn () => Http::response([
+        'ok' => false,
+        'reason_code' => 'not_supported',
+        'message' => 'Refunds are not enabled.',
+    ], 404));
+
+    expect(fn () => app(\App\Ark\Operations\Financial\SettleCustomerPaymentProcessorRefundAction::class)
+        ->execute($receipt->fresh(), $this->advisor))
+        ->toThrow(\Illuminate\Validation\ValidationException::class);
+
+    expect($receipt->fresh()->refund_pending_cents)->toBe(5000)
+        ->and($receipt->fresh()->refund_confirmed_at)->toBeNull();
+});
+
+test('accepted or pending processor refund responses leave the liability outstanding', function () {
+    [$repairOrder, $invoice] = arCardOnAccountInvoice();
+    $customer = $repairOrder->customer;
+
+    $receipt = app(\App\Ark\Operations\Financial\AllocateCustomerPaymentAction::class)->execute(
+        $customer,
+        20000,
+        \App\Ark\Operations\Financial\PaymentMethod::Card,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CARD-PROC-PENDING',
+        null,
+        \App\Ark\Operations\Financial\OverpaymentDisposition::Refund,
+    );
+
+    $publicId = (string) Str::uuid();
+    PaymentCaptureAttempt::query()->create([
+        'public_id' => $publicId,
+        'repair_order_id' => $repairOrder->id,
+        'customer_id' => $customer->id,
+        'amount_cents' => 20000,
+        'currency' => 'USD',
+        'context_kind' => PaymentCaptureContextKind::AccountsReceivable,
+        'capture_method' => PaymentCaptureMethod::Keyed,
+        'status' => PaymentCaptureAttemptStatus::Succeeded,
+        'idempotency_key' => 'core-'.$publicId,
+        'submission_intent_key' => (string) Str::uuid(),
+        'provider' => 'stub',
+        'provider_payment_id' => 'stub_pay_pending_refund',
+        'customer_payment_receipt_id' => $receipt->id,
+        'initiated_by' => $this->advisor->id,
+        'initiated_at' => now(),
+        'completed_at' => now(),
+    ]);
+
+    foreach (['accepted', 'pending', 'initiated'] as $status) {
+        Http::fake(function (Request $request) use ($status) {
+            if ($request->method() === 'GET' && str_contains($request->url(), '/payments/refunds/')) {
+                return Http::response(['ok' => false], 404);
+            }
+            if ($request->method() === 'POST' && str_contains($request->url(), '/payments/refunds')) {
+                return Http::response([
+                    'ok' => true,
+                    'status' => $status,
+                    'provider_refund_id' => null,
+                ], 200);
+            }
+
+            return Http::response(['ok' => false], 404);
+        });
+
+        expect(fn () => app(\App\Ark\Operations\Financial\SettleCustomerPaymentProcessorRefundAction::class)
+            ->execute($receipt->fresh(), $this->advisor))
+            ->toThrow(\Illuminate\Validation\ValidationException::class);
+
+        expect($receipt->fresh()->refund_pending_cents)->toBe(5000)
+            ->and($receipt->fresh()->refund_confirmed_at)->toBeNull();
+    }
+});
+
+test('successful processor refund settlement is idempotent and retries do not create a second refund', function () {
+    [$repairOrder, $invoice] = arCardOnAccountInvoice();
+    $customer = $repairOrder->customer;
+
+    $receipt = app(\App\Ark\Operations\Financial\AllocateCustomerPaymentAction::class)->execute(
+        $customer,
+        20000,
+        \App\Ark\Operations\Financial\PaymentMethod::Card,
+        [['invoice_id' => $invoice->id, 'amount_cents' => 15000]],
+        (string) Str::uuid(),
+        $this->advisor,
+        'CARD-PROC-IDEMP',
+        null,
+        \App\Ark\Operations\Financial\OverpaymentDisposition::Refund,
+    );
+
+    $publicId = (string) Str::uuid();
+    PaymentCaptureAttempt::query()->create([
+        'public_id' => $publicId,
+        'repair_order_id' => $repairOrder->id,
+        'customer_id' => $customer->id,
+        'amount_cents' => 20000,
+        'currency' => 'USD',
+        'context_kind' => PaymentCaptureContextKind::AccountsReceivable,
+        'capture_method' => PaymentCaptureMethod::Keyed,
+        'status' => PaymentCaptureAttemptStatus::Succeeded,
+        'idempotency_key' => 'core-'.$publicId,
+        'submission_intent_key' => (string) Str::uuid(),
+        'provider' => 'stub',
+        'provider_payment_id' => 'stub_pay_refund_idem',
+        'cloud_capture_id' => (string) Str::uuid(),
+        'customer_payment_receipt_id' => $receipt->id,
+        'initiated_by' => $this->advisor->id,
+        'initiated_at' => now(),
+        'completed_at' => now(),
+    ]);
+
+    $createPosts = [];
+    Http::fake(function (Request $request) use (&$createPosts) {
+        if ($request->method() === 'GET' && str_contains($request->url(), '/payments/refunds/')) {
+            return Http::response(['ok' => false], 404);
+        }
+        if ($request->method() === 'POST' && str_contains($request->url(), '/payments/refunds')) {
+            $body = json_decode($request->body(), true) ?: [];
+            $createPosts[] = $body;
+
+            return Http::response([
+                'ok' => true,
+                'status' => 'succeeded',
+                'provider_refund_id' => 'ref_idem_1',
+                'idempotency_key' => $body['idempotency_key'] ?? null,
+            ], 200);
+        }
+
+        return Http::response(['ok' => false], 404);
+    });
+
+    $first = app(\App\Ark\Operations\Financial\SettleCustomerPaymentProcessorRefundAction::class)
+        ->execute($receipt->fresh(), $this->advisor);
+    $second = app(\App\Ark\Operations\Financial\SettleCustomerPaymentProcessorRefundAction::class)
+        ->execute($receipt->fresh(), $this->advisor);
+
+    expect($createPosts)->toHaveCount(1)
+        ->and($createPosts[0]['idempotency_key'] ?? null)->toBe('ar-refund-'.$receipt->id)
+        ->and($first['replayed'])->toBeFalse()
+        ->and($second['replayed'])->toBeTrue()
+        ->and($second['provider_refund_id'])->toBe('ref_idem_1')
+        ->and($receipt->fresh()->refund_pending_cents)->toBe(0)
+        ->and($receipt->fresh()->change_cents)->toBe(5000);
+});
+
+test('live AR keyed capture rejects stub source tokens outside local testing', function () {
+    $previous = app()->environment();
+    app()['env'] = 'production';
+
+    try {
+        [$roA, $invoiceA] = arCardOnAccountInvoice();
+
+        expect(fn () => app(InitiateAccountsReceivableCaptureAction::class)->execute(
+            $roA->customer->fresh(),
+            [['invoice_id' => $invoiceA->id, 'amount_cents' => 15000]],
+            $this->advisor,
+            [
+                'capture_method' => PaymentCaptureMethod::Keyed,
+                'source_token' => 'tok_stub_ar',
+                'intent_key' => (string) Str::uuid(),
+                'stub_scenario' => 'immediate_success',
+            ],
+        ))->toThrow(\Illuminate\Validation\ValidationException::class);
+
+        expect(PaymentCaptureAttempt::query()->where('customer_id', $roA->customer_id)->count())->toBe(0);
+    } finally {
+        app()['env'] = $previous;
+    }
+});

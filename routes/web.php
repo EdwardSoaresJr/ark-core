@@ -827,6 +827,10 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::FinancialManage->value)
             ->name('operations.financials.accounts-receivable.payments.confirm-refund');
 
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/payments/{receipt}/settle-processor-refund', \App\Ark\Operations\Financial\AccountsReceivableSettleProcessorRefundController::class)
+            ->middleware('permission:'.ArkCapability::FinancialManage->value)
+            ->name('operations.financials.accounts-receivable.payments.settle-processor-refund');
+
         Route::get('/app/financials/accounts-receivable/customers/{customer}/statement', [\App\Ark\Operations\Financial\AccountsReceivableStatementController::class, 'show'])
             ->middleware('permission:'.ArkCapability::FinancialView->value)
             ->name('operations.financials.accounts-receivable.statement.show');

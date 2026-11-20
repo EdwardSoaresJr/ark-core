@@ -106,6 +106,8 @@ final class InitiateAccountsReceivableCaptureAction
             ]);
         }
 
+        $this->assertLiveCaptureInputs($method, $input);
+
         $anchorInvoice = EstimateDocument::query()->findOrFail($normalized[0]['invoice_id']);
         /** @var RepairOrder $anchorRo */
         $anchorRo = RepairOrder::query()->findOrFail($anchorInvoice->repair_order_id);
@@ -299,6 +301,33 @@ final class InitiateAccountsReceivableCaptureAction
         }
 
         return $normalized;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function assertLiveCaptureInputs(PaymentCaptureMethod $method, array $input): void
+    {
+        if (app()->environment('local', 'testing')) {
+            return;
+        }
+
+        if (filled($input['stub_scenario'] ?? null)) {
+            throw ValidationException::withMessages([
+                'capture' => 'Stub card scenarios cannot be used for live payments.',
+            ]);
+        }
+
+        if ($method !== PaymentCaptureMethod::Keyed) {
+            return;
+        }
+
+        $token = strtolower(trim((string) ($input['source_token'] ?? '')));
+        if ($token === '' || str_starts_with($token, 'tok_stub')) {
+            throw ValidationException::withMessages([
+                'source_token' => 'Live keyed payments require a Platform Web Payments source token. Test stubs are not accepted.',
+            ]);
+        }
     }
 
     private function assertAvailableReader(string $deviceRef): void

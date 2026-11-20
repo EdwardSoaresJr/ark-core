@@ -19,6 +19,8 @@ final class ConfirmCustomerPaymentRefundAction
 {
     public const EVIDENCE_MANUAL_RETURN = 'manual_return';
 
+    public const EVIDENCE_PROCESSOR_SETTLEMENT = 'processor_settlement';
+
     public function execute(
         CustomerPaymentReceipt $receipt,
         string $evidenceReference,
@@ -36,7 +38,7 @@ final class ConfirmCustomerPaymentRefundAction
 
         if ($evidenceKind !== self::EVIDENCE_MANUAL_RETURN) {
             throw ValidationException::withMessages([
-                'evidence_kind' => 'Only a manual return confirmation is available here. Card refunds require processor confirmation.',
+                'evidence_kind' => 'Only a manual return confirmation is available here. Card refunds require verified processor settlement.',
             ]);
         }
 

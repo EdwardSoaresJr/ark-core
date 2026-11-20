@@ -18,6 +18,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\ScopeProductionStatus;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalogDefaults;
+use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
@@ -98,6 +99,7 @@ if ($kernel->call('migrate', ['--force' => true, '--quiet' => true]) !== 0) {
 
 $app->make(ArkAuthorizationSeeder::class)->run();
 RepairOrderStatusCatalogDefaults::sync(app(RepairOrderStatusCatalog::class));
+ShopDisplayTimezone::apply();
 
 ShopSettings::current()->update([
     'shop_fee_enabled' => false,

@@ -221,6 +221,21 @@
                                                 <button type="submit" class="btn btn-sm btn-outline-warning">Confirm manual return</button>
                                             </form>
                                         @endif
+                                        @if (
+                                            $canVoidPayment
+                                            && ! $receipt->isVoided()
+                                            && ($receipt->refund_pending_cents ?? 0) > 0
+                                            && $receipt->requiresProcessorRefundConfirmation()
+                                        )
+                                            <form
+                                                method="POST"
+                                                action="{{ route('operations.financials.accounts-receivable.payments.settle-processor-refund', [$customer, $receipt]) }}"
+                                                onsubmit="return confirm('Request a verified processor refund for this pending amount?');"
+                                            >
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">Settle processor refund</button>
+                                            </form>
+                                        @endif
                                         @if ($canVoidPayment && ! $receipt->isVoided())
                                             <form
                                                 method="POST"
