@@ -803,6 +803,18 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::FinancialView->value)
             ->name('operations.financials.accounts-receivable.customer');
 
+        Route::get('/app/financials/accounts-receivable/customers/{customer}/receive-payment', [\App\Ark\Operations\Financial\AccountsReceivableReceivePaymentController::class, 'create'])
+            ->middleware('permission:'.ArkCapability::FinancialView->value)
+            ->name('operations.financials.accounts-receivable.receive-payment.create');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/receive-payment', [\App\Ark\Operations\Financial\AccountsReceivableReceivePaymentController::class, 'store'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.financials.accounts-receivable.receive-payment.store');
+
+        Route::post('/app/financials/accounts-receivable/customers/{customer}/payments/{receipt}/void', \App\Ark\Operations\Financial\AccountsReceivableVoidPaymentController::class)
+            ->middleware('permission:'.ArkCapability::FinancialManage->value)
+            ->name('operations.financials.accounts-receivable.payments.void');
+
         Route::get('/app/reports', ReportsIndexController::class)
             ->middleware('permission:'.ArkCapability::FinancialView->value)
             ->name('operations.reports.index');

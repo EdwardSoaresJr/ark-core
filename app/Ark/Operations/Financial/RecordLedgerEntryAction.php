@@ -38,6 +38,7 @@ final class RecordLedgerEntryAction
         ?string $reference = null,
         ?Carbon $recordedAt = null,
         array $contractPayload = [],
+        ?int $paymentReceiptId = null,
     ): array {
         $repairOrder->loadMissing('customer');
         $invoice = $this->balanceDue->issuedInvoice($repairOrder);
@@ -53,11 +54,32 @@ final class RecordLedgerEntryAction
         $balance = $this->balanceDue->forRepairOrder($repairOrder);
 
         if ($amountCents > $balance->balanceDueCents) {
-            return $this->recordOverpayment($repairOrder, $amountCents, $method, $balance->balanceDueCents, $invoice->id, $actor, $reference, $recordedAt, $contractPayload);
+            return $this->recordOverpayment(
+                $repairOrder,
+                $amountCents,
+                $method,
+                $balance->balanceDueCents,
+                $invoice->id,
+                $actor,
+                $reference,
+                $recordedAt,
+                $contractPayload,
+                $paymentReceiptId,
+            );
         }
 
         $entries = [
-            $this->persistEntry($repairOrder, $invoice->id, LedgerEntryType::Payment, $amountCents, $method, $actor, $reference, recordedAt: $recordedAt),
+            $this->persistEntry(
+                $repairOrder,
+                $invoice->id,
+                LedgerEntryType::Payment,
+                $amountCents,
+                $method,
+                $actor,
+                $reference,
+                recordedAt: $recordedAt,
+                paymentReceiptId: $paymentReceiptId,
+            ),
         ];
 
         $this->paymentPostureSync->sync($repairOrder->fresh());
@@ -130,6 +152,44 @@ final class RecordLedgerEntryAction
         });
     }
 
+    /**
+     * Unapplied remainder from a multi-invoice receipt becomes customer store credit.
+     * Anchored to a repair order for ledger lineage; does not change that invoice's balance.
+     */
+    public function issueUnappliedStoreCredit(
+        RepairOrder $repairOrder,
+        int $amountCents,
+        PaymentMethod|string $method,
+        ?User $actor = null,
+        ?string $reference = null,
+        ?Carbon $recordedAt = null,
+        ?int $paymentReceiptId = null,
+    ): RepairOrderLedgerEntry {
+        $repairOrder->loadMissing('customer');
+
+        if ($amountCents <= 0) {
+            throw new RuntimeException('Store credit amount must be greater than zero.');
+        }
+
+        return DB::transaction(function () use ($repairOrder, $amountCents, $method, $actor, $reference, $recordedAt, $paymentReceiptId): RepairOrderLedgerEntry {
+            $entry = $this->persistEntry(
+                $repairOrder,
+                $this->balanceDue->issuedInvoice($repairOrder)?->id,
+                LedgerEntryType::StoreCreditIssuance,
+                $amountCents,
+                $method,
+                $actor,
+                $reference,
+                notes: 'Unapplied payment remainder',
+                recordedAt: $recordedAt,
+                paymentReceiptId: $paymentReceiptId,
+            );
+            $this->increaseStoreCredit($repairOrder->customer, $amountCents);
+
+            return $entry;
+        });
+    }
+
     public function recordAdjustment(
         RepairOrder $repairOrder,
         int $amountCents,
@@ -193,6 +253,7 @@ final class RecordLedgerEntryAction
         ?string $reference,
         ?Carbon $recordedAt = null,
         array $contractPayload = [],
+        ?int $paymentReceiptId = null,
     ): array {
         // Cash tender above balance is change at the counter - never store credit.
         if (PaymentMethod::isCash($method)) {
@@ -210,6 +271,7 @@ final class RecordLedgerEntryAction
                     $actor,
                     $reference,
                     recordedAt: $recordedAt,
+                    paymentReceiptId: $paymentReceiptId,
                 ),
             ];
 
@@ -231,13 +293,33 @@ final class RecordLedgerEntryAction
         $entries = [];
 
         if ($balanceDueCents > 0) {
-            $entries[] = $this->persistEntry($repairOrder, $invoiceId, LedgerEntryType::Payment, $balanceDueCents, $method, $actor, $reference, recordedAt: $recordedAt);
+            $entries[] = $this->persistEntry(
+                $repairOrder,
+                $invoiceId,
+                LedgerEntryType::Payment,
+                $balanceDueCents,
+                $method,
+                $actor,
+                $reference,
+                recordedAt: $recordedAt,
+                paymentReceiptId: $paymentReceiptId,
+            );
         }
 
         $excess = $amountCents - $balanceDueCents;
 
         if ($excess > 0) {
-            $entries[] = $this->persistEntry($repairOrder, $invoiceId, LedgerEntryType::StoreCreditIssuance, $excess, $method, $actor, $reference, recordedAt: $recordedAt);
+            $entries[] = $this->persistEntry(
+                $repairOrder,
+                $invoiceId,
+                LedgerEntryType::StoreCreditIssuance,
+                $excess,
+                $method,
+                $actor,
+                $reference,
+                recordedAt: $recordedAt,
+                paymentReceiptId: $paymentReceiptId,
+            );
             $this->increaseStoreCredit($repairOrder->customer, $excess);
         }
 
@@ -299,14 +381,16 @@ final class RecordLedgerEntryAction
         ?string $reference = null,
         ?string $notes = null,
         ?Carbon $recordedAt = null,
+        ?int $paymentReceiptId = null,
     ): RepairOrderLedgerEntry {
         $repairOrder->loadMissing('customer');
 
-        return DB::transaction(function () use ($repairOrder, $invoiceId, $type, $amountCents, $method, $actor, $reference, $notes, $recordedAt): RepairOrderLedgerEntry {
+        return DB::transaction(function () use ($repairOrder, $invoiceId, $type, $amountCents, $method, $actor, $reference, $notes, $recordedAt, $paymentReceiptId): RepairOrderLedgerEntry {
             $entry = RepairOrderLedgerEntry::query()->create([
                 'repair_order_id' => $repairOrder->id,
                 'customer_id' => $repairOrder->customer_id,
                 'financial_document_id' => $invoiceId,
+                'customer_payment_receipt_id' => $paymentReceiptId,
                 'entry_type' => $type,
                 'payment_method' => $method,
                 'amount_cents' => $amountCents,

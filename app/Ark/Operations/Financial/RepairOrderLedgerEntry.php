@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'repair_order_id',
     'customer_id',
     'financial_document_id',
+    'customer_payment_receipt_id',
     'entry_type',
     'payment_method',
     'amount_cents',
@@ -83,6 +84,11 @@ class RepairOrderLedgerEntry extends Model
     public function financialDocument(): BelongsTo
     {
         return $this->belongsTo(EstimateDocument::class, 'financial_document_id');
+    }
+
+    public function paymentReceipt(): BelongsTo
+    {
+        return $this->belongsTo(CustomerPaymentReceipt::class, 'customer_payment_receipt_id');
     }
 
     public function recordedBy(): BelongsTo

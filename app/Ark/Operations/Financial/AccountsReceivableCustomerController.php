@@ -18,10 +18,21 @@ final class AccountsReceivableCustomerController extends Controller
         abort_unless($request->user()?->can(ArkCapability::FinancialView->value), 403);
 
         $dashboard = $query->customerAccount($customer);
+        $receipts = CustomerPaymentReceipt::query()
+            ->where('customer_id', $customer->id)
+            ->with(['ledgerEntries.financialDocument', 'ledgerEntries.repairOrder'])
+            ->orderByDesc('recorded_at')
+            ->orderByDesc('id')
+            ->limit(25)
+            ->get();
 
         return view('operations.financials.accounts-receivable.customer', [
             'customer' => $customer,
             'dashboard' => $dashboard,
+            'receipts' => $receipts,
+            'canReceivePayment' => $request->user()?->can(ArkCapability::RepairOrdersCloseout->value)
+                || $request->user()?->can(ArkCapability::FinancialManage->value),
+            'canVoidPayment' => (bool) $request->user()?->can(ArkCapability::FinancialManage->value),
             'money' => fn (int $cents): string => '$'.number_format($cents / 100, 2),
         ]);
     }

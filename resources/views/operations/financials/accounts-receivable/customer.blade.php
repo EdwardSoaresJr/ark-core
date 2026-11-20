@@ -3,12 +3,16 @@
         layout="fluid"
         :title="$customer->name"
         pretitle="Accounts Receivable"
-        subtitle="Outstanding invoices on this account. Payment allocation across invoices comes in the next slice."
+        subtitle="Outstanding invoices, account balance, and payment receipts for this customer."
         :breadcrumbs="[
             ['label' => 'Accounts Receivable', 'url' => route('operations.financials.accounts-receivable.index')],
             ['label' => $customer->name],
         ]"
     >
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
         <div class="row row-cards mb-3">
             <div class="col-sm-4">
                 <div class="card card-sm">
@@ -31,12 +35,18 @@
                     <div class="card-body">
                         <div class="subheader">Open invoices</div>
                         <div class="h2 mb-0">{{ count($dashboard['invoices']) }}</div>
+                        @if ((int) ($customer->store_credit_balance_cents ?? 0) > 0)
+                            <div class="small text-secondary mt-1">Store credit {{ $money((int) $customer->store_credit_balance_cents) }}</div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="d-flex flex-wrap gap-2 mb-3">
+            @if ($canReceivePayment && count($dashboard['invoices']) > 0)
+                <a href="{{ route('operations.financials.accounts-receivable.receive-payment.create', $customer) }}" class="btn btn-primary">Receive payment</a>
+            @endif
             <a href="{{ route('operations.customers.show', $customer) }}" class="btn btn-ghost-secondary">Customer profile</a>
         </div>
 
@@ -88,6 +98,69 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="text-secondary">No outstanding invoices on this account.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">Payment receipts</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Method</th>
+                            <th>Reference</th>
+                            <th>Allocations</th>
+                            <th class="text-end">Amount</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($receipts as $receipt)
+                            <tr class="{{ $receipt->isVoided() ? 'text-secondary' : '' }}">
+                                <td>{{ $receipt->recorded_at?->timezone(config('app.timezone'))->format('M j, Y') }}</td>
+                                <td>{{ \App\Ark\Operations\Financial\ManualPaymentMethods::label($receipt->payment_method) ?? $receipt->payment_method }}</td>
+                                <td>{{ $receipt->reference ?: '—' }}</td>
+                                <td>
+                                    @foreach ($receipt->ledgerEntries->where('entry_type', \App\Ark\Operations\Financial\LedgerEntryType::Payment) as $entry)
+                                        <div class="small">
+                                            INV #{{ $entry->financialDocument?->document_number ?? '—' }}
+                                            · {{ $money((int) $entry->amount_cents) }}
+                                            @if ($entry->isVoided())
+                                                <span class="text-secondary">(voided)</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                    @if ($receipt->unapplied_cents > 0)
+                                        <div class="small text-secondary">Unapplied / store credit {{ $money((int) $receipt->unapplied_cents) }}</div>
+                                    @endif
+                                    @if ($receipt->isVoided())
+                                        <div class="small text-danger">Receipt voided</div>
+                                    @endif
+                                </td>
+                                <td class="text-end fw-bold">{{ $money((int) $receipt->amount_cents) }}</td>
+                                <td class="text-end">
+                                    @if ($canVoidPayment && ! $receipt->isVoided())
+                                        <form
+                                            method="POST"
+                                            action="{{ route('operations.financials.accounts-receivable.payments.void', [$customer, $receipt]) }}"
+                                            onsubmit="return confirm('Void this payment and reverse all allocations?');"
+                                        >
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-ghost-danger">Void</button>
+                                        </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-secondary">No AR payment receipts yet.</td>
                             </tr>
                         @endforelse
                     </tbody>
