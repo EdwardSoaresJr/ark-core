@@ -19,7 +19,12 @@ export function initWorkspaceDirtyBindings() {
     const root = document.querySelector('[data-worksheet-root]')
         || document.querySelector('.ops-main')
         || document.body;
-    const ignoreSelector = '[data-ark-workspace-dirty="off"], [type="search"], .ops-workspace-tabs';
+    const ignoreSelector = [
+        '[data-ark-workspace-dirty="off"]',
+        '[type="search"]',
+        '.ops-workspace-tabs',
+        '#workspace-modal-host[data-workspace-modal-open="0"]',
+    ].join(', ');
 
     function syncDirty() {
         const dirty = rootHasUnsavedFormChanges(root);

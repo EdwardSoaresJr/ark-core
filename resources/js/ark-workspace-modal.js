@@ -163,7 +163,10 @@ export function arkWorkspaceModal(config = {}) {
         initialContext: config.initialContext || {},
 
         init() {
+            this.syncOpenAttr(false);
+
             this.$watch('open', (value) => {
+                this.syncOpenAttr(value);
                 document.body.classList.toggle('overflow-y-hidden', Boolean(value));
 
                 if (value) {
@@ -216,11 +219,18 @@ export function arkWorkspaceModal(config = {}) {
                 window.removeEventListener('ark-workspace-modal-save-succeeded', this._onSaved);
                 window.removeEventListener('ark-workspace-modal-save-failed', this._onFailed);
                 window.removeEventListener('ark-workspace-modal-close', this._onClose);
+                this.syncOpenAttr(false);
                 document.body.classList.remove('overflow-y-hidden');
             });
 
             if (this.initialTask) {
                 this.openTask(this.initialTask, this.initialContext, null);
+            }
+        },
+
+        syncOpenAttr(open) {
+            if (this.$el instanceof HTMLElement) {
+                this.$el.setAttribute('data-workspace-modal-open', open ? '1' : '0');
             }
         },
 
@@ -777,11 +787,49 @@ export function arkWorkspaceModal(config = {}) {
             return formHasChanges(form);
         },
 
+        authoringForms() {
+            const dialog = this.$refs.dialog;
+
+            if (! dialog) {
+                return [];
+            }
+
+            return [...dialog.querySelectorAll('form[data-workspace-modal-form]')]
+                .filter((form) => this.panelIsVisible(form.closest('[data-workspace-modal-panel]')));
+        },
+
+        hasUnsavedModalChanges() {
+            return this.authoringForms().some((form) => this.formIsDirty(form));
+        },
+
+        discardModalDrafts() {
+            for (const form of this.authoringForms()) {
+                if (! this.formIsDirty(form)) {
+                    continue;
+                }
+
+                form.reset();
+                adoptRenderedBaseline(form);
+            }
+
+            window.ARK?.workspace?.syncDirty?.();
+        },
+
         requestClose() {
             if (this.saving) {
                 return;
             }
 
+            if (this.hasUnsavedModalChanges()) {
+                if (! window.confirm('Discard unsaved changes in this form?')) {
+                    // Declining discard must leave modal, draft, and workflow state intact.
+                    return;
+                }
+
+                this.discardModalDrafts();
+            }
+
+            // Emit only after close is accepted - never while the user is still editing.
             if (this.task === 'review-request' && this.context.closePaid) {
                 window.dispatchEvent(new CustomEvent('ark-review-request-dismissed', {
                     detail: {
@@ -790,7 +838,6 @@ export function arkWorkspaceModal(config = {}) {
                 }));
             }
 
-            // Live authoring: close discards drafts. Save is an explicit primary action.
             this.close({ force: true });
         },
 
@@ -879,8 +926,9 @@ export function arkWorkspaceModal(config = {}) {
             this.requestClose();
         },
 
+        // Static backdrop: outside clicks and text-selection releases must not dismiss.
         onBackdrop() {
-            this.requestClose();
+            return;
         },
 
         chooseAddWork(option) {
