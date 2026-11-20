@@ -402,6 +402,40 @@ class EstimateTotalsCalculator
             ->toInt();
     }
 
+    /**
+     * Selling subtotal for a line. Manual labor stores an exact charge in unit_price_cents
+     * (pricing_mode=manual); hours stay on quantity and must not rescale that charge.
+     */
+    public function lineSellSubtotalCents(RepairOrderLine $line): int
+    {
+        if ($line->type->isNote()) {
+            return 0;
+        }
+
+        if ($line->type->isLabor() && $line->pricing_mode === 'manual') {
+            return max(0, (int) $line->unit_price_cents);
+        }
+
+        return $this->lineTotalCents($line->quantity ?? 0, (int) $line->unit_price_cents);
+    }
+
+    /**
+     * @param  array{quantity?: string|float|int|null, unit_price_cents: int, pricing_mode?: string|null, type?: mixed}  $attributes
+     */
+    public function laborOrLineSubtotalCents(array $attributes, string|float|int $quantity): int
+    {
+        $type = $attributes['type'] ?? null;
+        $isLabor = $type === RepairOrderLineType::Labor
+            || $type === RepairOrderLineType::Labor->value
+            || (is_string($type) && $type === 'labor');
+
+        if ($isLabor && ($attributes['pricing_mode'] ?? null) === 'manual') {
+            return max(0, (int) $attributes['unit_price_cents']);
+        }
+
+        return $this->lineTotalCents($quantity, (int) $attributes['unit_price_cents']);
+    }
+
     public function unitPriceCents(string|float|int $unitPrice): int
     {
         return Money::of((string) $unitPrice, 'USD', roundingMode: RoundingMode::HALF_UP)
@@ -705,11 +739,7 @@ class EstimateTotalsCalculator
 
     private function subtotalForLine(RepairOrderLine $line): int
     {
-        if ($line->type->isNote()) {
-            return 0;
-        }
-
-        return $this->lineTotalCents($line->quantity, $line->unit_price_cents);
+        return $this->lineSellSubtotalCents($line);
     }
 
     private function taxCents(

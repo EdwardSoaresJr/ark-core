@@ -381,7 +381,7 @@ final class WorkCompletionAuthorization
 
     public function approvalSubtotalCents(RepairOrderLine $line): int
     {
-        return app(EstimateTotalsCalculator::class)->lineTotalCents($line->quantity ?? 0, (int) $line->unit_price_cents);
+        return app(EstimateTotalsCalculator::class)->lineSellSubtotalCents($line);
     }
 
     /**

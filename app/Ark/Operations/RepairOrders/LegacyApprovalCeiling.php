@@ -23,8 +23,14 @@ final class LegacyApprovalCeiling
         }
 
         $calculator = app(EstimateTotalsCalculator::class);
-        $before = $calculator->lineTotalCents($line->getOriginal('quantity') ?? 0, (int) $line->getOriginal('unit_price_cents'));
-        $after = $calculator->lineTotalCents($line->quantity ?? 0, (int) $line->unit_price_cents);
+        $beforeLine = $line->newInstance(array_merge($line->getOriginal(), [
+            'quantity' => $line->getOriginal('quantity'),
+            'unit_price_cents' => (int) $line->getOriginal('unit_price_cents'),
+            'pricing_mode' => $line->getOriginal('pricing_mode'),
+            'type' => $line->getOriginal('type'),
+        ]));
+        $before = $calculator->lineSellSubtotalCents($beforeLine);
+        $after = $calculator->lineSellSubtotalCents($line);
 
         if ($after <= $before) {
             return;

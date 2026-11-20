@@ -40,17 +40,17 @@
 
     <div class="row g-2">
         <label class="col-6">
-            <span class="form-label">Rate</span>
+            <span class="form-label">Rate ($/hr)</span>
             <input
                 name="unit_price"
                 x-model="sell"
-                @input="onSellInput(); onLaborAuthorityInput()"
+                @input="onSellInput(); onLaborAuthorityInput(); syncLaborChargeFromRate()"
                 required
                 inputmode="decimal"
                 placeholder="165.00"
-                :readonly="! laborCategoryAllowsModifiers()"
+                :readonly="! laborCategoryAllowsModifiers() || laborChargeEdited"
                 class="form-control text-end ark-money"
-                :class="! laborCategoryAllowsModifiers() ? 'bg-secondary-lt' : ''"
+                :class="(! laborCategoryAllowsModifiers() || laborChargeEdited) ? 'bg-secondary-lt' : ''"
             >
         </label>
         <label class="col-6">
@@ -71,6 +71,41 @@
             </select>
         </label>
     </div>
+
+    <div class="row g-2">
+        <label class="col-6">
+            <span class="form-label">Labor charge ($)</span>
+            <input
+                name="labor_charge"
+                x-model="laborCharge"
+                @input="onLaborChargeInput()"
+                required
+                inputmode="decimal"
+                placeholder="90.00"
+                :readonly="! laborCategoryAllowsModifiers()"
+                class="form-control text-end ark-money"
+                data-labor-charge
+                :class="! laborCategoryAllowsModifiers() ? 'bg-secondary-lt' : ''"
+            >
+        </label>
+        <div class="col-6 d-flex flex-column justify-content-end gap-1 pb-1">
+            <span class="small" x-show="laborChargeEdited" x-cloak>
+                <span class="badge bg-azure-lt text-azure">Manual amount</span>
+            </span>
+            <span class="small text-secondary" x-show="! laborChargeEdited" x-cloak>Calculated from hours × rate</span>
+            <button
+                type="button"
+                x-show="laborCategoryAllowsModifiers() && laborChargeEdited"
+                x-cloak
+                class="btn btn-link btn-sm p-0 align-self-start"
+                data-use-calculated-labor-charge
+                @click="useCalculatedLaborCharge()"
+            >Use calculated price</button>
+        </div>
+    </div>
+    <input type="hidden" name="labor_charge_overridden" :value="laborChargeEdited && laborCategoryAllowsModifiers() ? '1' : '0'">
+    <input type="hidden" name="use_calculated_labor_charge" :value="useCalculatedLaborChargeFlag ? '1' : '0'">
+    <input type="hidden" name="pricing_mode" :value="laborChargeEdited ? 'manual' : ''">
 
     <p
         x-show="! laborCategoryAllowsModifiers()"
@@ -99,7 +134,7 @@
         >Use calculated hours</button>
         <button
             type="button"
-            x-show="laborRateDiffersFromPolicy()"
+            x-show="! laborChargeEdited && laborRateDiffersFromPolicy()"
             x-cloak
             class="btn btn-link btn-sm p-0"
             data-use-policy-labor-rate
@@ -139,7 +174,7 @@
         >
     </label>
 
-    <div x-show="sellEdited && laborCategoryAllowsModifiers()" x-cloak>
+    <div x-show="sellEdited && ! laborChargeEdited && laborCategoryAllowsModifiers()" x-cloak>
         <p class="small text-warning fw-medium mb-1">
             Custom rate - choose a reason before saving (e.g. Menu / package price for a $199 PPI).
         </p>
@@ -148,7 +183,7 @@
             <select
                 name="labor_rate_override_reason"
                 x-model="laborRateOverrideReason"
-                :required="sellEdited && laborCategoryAllowsModifiers()"
+                :required="sellEdited && ! laborChargeEdited && laborCategoryAllowsModifiers()"
                 @class(['form-select', 'is-invalid' => $errors->has('labor_rate_override_reason')])
             >
                 <option value="">Select reason</option>

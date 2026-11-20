@@ -45,6 +45,7 @@ final class LaborAuthority
      *     labor_override_reason: string|null,
      *     labor_minimum_applied: bool,
      *     labor_rate_cents: int,
+     *     pricing_mode: string|null,
      *     resolved_from_posture: string|null,
      *     resolved_from_operation_class: string|null,
      *     labor_policy_id: int|null,
@@ -122,7 +123,10 @@ final class LaborAuthority
             $data['labor_rate_overridden'] ?? $data['unit_price_override'] ?? false,
             FILTER_VALIDATE_BOOLEAN,
         );
-        $rateOverridden = $allowsModifiers && $overrideRequested;
+        $chargeOverridden = filter_var($data['labor_charge_overridden'] ?? false, FILTER_VALIDATE_BOOLEAN)
+            || (($data['pricing_mode'] ?? null) === 'manual' && filled($data['labor_charge'] ?? null));
+        $useCalculatedCharge = filter_var($data['use_calculated_labor_charge'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $rateOverridden = $allowsModifiers && $overrideRequested && ! $chargeOverridden;
         $explicitReprice = filter_var($data['reprice_labor'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         // Category change is an intentional pricing context change (e.g. mechanical → courtesy → $0).
@@ -130,11 +134,20 @@ final class LaborAuthority
         $categoryUnchanged = $existingLine !== null
             && (string) $existingLine->labor_category_key === $category['key'];
 
+        $preserveManualCharge = $existingLine !== null
+            && $existingLine->pricing_mode === 'manual'
+            && $categoryUnchanged
+            && ! $useCalculatedCharge
+            && ! $explicitReprice
+            && ! $chargeOverridden;
+
         $preserveSnapshot = $existingLine !== null
             && $existingLine->labor_rate_cents !== null
             && $categoryUnchanged
             && ! $explicitReprice
-            && ! $rateOverridden;
+            && ! $rateOverridden
+            && ! $chargeOverridden
+            && ! $useCalculatedCharge;
 
         $rateOverrideReason = null;
         $rateOverriddenAt = null;
@@ -181,6 +194,7 @@ final class LaborAuthority
         }
 
         if ($overrideRequested
+            && ! $chargeOverridden
             && ! $allowsModifiers
             && filled($data['unit_price'] ?? null)
             && $this->calculator->unitPriceCents($data['unit_price']) !== $rateCents) {
@@ -193,9 +207,36 @@ final class LaborAuthority
             ]);
         }
 
+        $pricingMode = null;
+        $unitPriceCents = $rateCents;
+
+        if ($preserveManualCharge) {
+            $pricingMode = 'manual';
+            $unitPriceCents = (int) $existingLine->unit_price_cents;
+            $rateCents = (int) ($existingLine->labor_rate_cents ?? $rateCents);
+        } elseif ($allowsModifiers && $chargeOverridden) {
+            if (! filled($data['labor_charge'] ?? null)) {
+                throw ValidationException::withMessages([
+                    'labor_charge' => 'Enter the exact labor charge.',
+                ]);
+            }
+
+            if (! PricingAuthority::allows(Auth::user())) {
+                throw ValidationException::withMessages([
+                    'labor_charge' => 'Manual pricing overrides require pricing authority.',
+                ]);
+            }
+
+            $pricingMode = 'manual';
+            $unitPriceCents = max(0, $this->calculator->unitPriceCents($data['labor_charge']));
+            $rateOverrideReason = LaborRateOverrideReason::MenuOrPackage->value;
+            $rateOverriddenAt = now();
+            $rateOverriddenByUserId = Auth::id();
+        }
+
         return [
             'quantity' => $this->formatHours($billedHours),
-            'unit_price_cents' => $rateCents,
+            'unit_price_cents' => $unitPriceCents,
             'labor_category_key' => $category['key'],
             'labor_category_name' => $category['name'],
             'labor_entered_hours' => $this->formatHours($enteredHours),
@@ -207,6 +248,7 @@ final class LaborAuthority
             'labor_override_reason' => $overrideReason,
             'labor_minimum_applied' => $minimumApplied,
             'labor_rate_cents' => $rateCents,
+            'pricing_mode' => $pricingMode,
             'policy_resolved_labor_rate_cents' => $policyRateCents,
             'resolved_from_posture' => $snapshot['resolved_from_posture'],
             'resolved_from_operation_class' => $snapshot['resolved_from_operation_class'],

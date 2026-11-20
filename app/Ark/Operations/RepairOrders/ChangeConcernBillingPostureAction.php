@@ -241,7 +241,12 @@ final class ChangeConcernBillingPostureAction
             $entry['line']->update([
                 'quantity' => $quantity,
                 'unit_price_cents' => $lineAttributes['unit_price_cents'],
-                'subtotal_cents' => $this->calculator->lineTotalCents($quantity, $lineAttributes['unit_price_cents']),
+                'pricing_mode' => $lineAttributes['pricing_mode'] ?? $entry['line']->pricing_mode,
+                'subtotal_cents' => $this->calculator->laborOrLineSubtotalCents([
+                    ...$lineAttributes,
+                    'type' => RepairOrderLineType::Labor,
+                    'pricing_mode' => $lineAttributes['pricing_mode'] ?? $entry['line']->pricing_mode,
+                ], $quantity),
                 ...array_intersect_key(
                     RepairOrderLineLaborInput::persistenceAttributes($lineAttributes),
                     $lineAttributes,
@@ -310,6 +315,10 @@ final class ChangeConcernBillingPostureAction
 
     private function keepReason(RepairOrderLine $line): ?string
     {
+        if ($line->pricing_mode === 'manual') {
+            return self::SKIP_MANUAL_RATE;
+        }
+
         if (filled($line->labor_rate_override_reason) || $line->labor_rate_overridden_at !== null) {
             return self::SKIP_MANUAL_RATE;
         }

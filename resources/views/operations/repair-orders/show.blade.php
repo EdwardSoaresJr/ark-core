@@ -97,6 +97,9 @@
             sell: config.sell || '',
             markup: config.markup || '',
             sellEdited: Boolean(config.sellEdited),
+            laborCharge: config.laborCharge || '',
+            laborChargeEdited: Boolean(config.laborChargeEdited),
+            useCalculatedLaborChargeFlag: false,
             guidance: '',
             marginPercentage: null,
             matrixMarginPercentage: null,
@@ -134,6 +137,12 @@
 
                 if (sellInput && this.sell != null && String(this.sell).trim() !== '') {
                     sellInput.value = String(this.sell);
+                }
+
+                const laborChargeInput = form.querySelector('input[name="labor_charge"]');
+
+                if (laborChargeInput && this.laborCharge != null && String(this.laborCharge).trim() !== '') {
+                    laborChargeInput.value = String(this.laborCharge);
                 }
 
                 const costInput = form.querySelector('input[name="part_cost"]');
@@ -376,17 +385,59 @@
                     this.sellEdited = false;
                     this.laborRateOverrideReason = '';
                     this.sell = this.laborRatePinned ? this.laborSavedRate : this.laborPolicyRate();
+                    this.syncLaborChargeFromRate();
 
                     return;
                 }
 
                 this.sellEdited = true;
 
+                if (this.type === 'labor') {
+                    this.laborChargeEdited = false;
+                    this.useCalculatedLaborChargeFlag = false;
+                    this.syncLaborChargeFromRate();
+                }
+
                 if (this.type === 'sublet') {
                     this.syncSubletMarkupFromCostAndSell();
                 }
 
                 this.queuePreview();
+            },
+            calculatedLaborCharge() {
+                const hours = Number.parseFloat(this.laborFinalHours) || 0;
+                const rate = Number.parseFloat(this.sell) || 0;
+
+                return (hours * rate).toFixed(2);
+            },
+            syncLaborChargeFromRate() {
+                if (this.type !== 'labor' || this.laborChargeEdited) {
+                    return;
+                }
+
+                this.laborCharge = this.calculatedLaborCharge();
+            },
+            onLaborChargeInput() {
+                if (this.type !== 'labor' || ! this.laborCategoryAllowsModifiers()) {
+                    this.laborChargeEdited = false;
+                    this.syncLaborChargeFromRate();
+
+                    return;
+                }
+
+                this.laborChargeEdited = true;
+                this.useCalculatedLaborChargeFlag = false;
+                this.sellEdited = false;
+                this.laborRateOverrideReason = '';
+            },
+            useCalculatedLaborCharge() {
+                if (this.type !== 'labor') {
+                    return;
+                }
+
+                this.laborChargeEdited = false;
+                this.useCalculatedLaborChargeFlag = true;
+                this.laborCharge = this.calculatedLaborCharge();
             },
             usePolicyLaborRate() {
                 if (this.type !== 'labor') {
@@ -397,6 +448,8 @@
                 this.repriceLabor = true;
                 this.sellEdited = false;
                 this.laborRateOverrideReason = '';
+                this.laborChargeEdited = false;
+                this.useCalculatedLaborChargeFlag = true;
                 this.onLaborCategoryChange(false);
             },
             laborPolicyRate() {
@@ -408,6 +461,7 @@
                 const policyRate = this.laborPolicyRate();
 
                 return this.type === 'labor'
+                    && ! this.laborChargeEdited
                     && policyRate !== ''
                     && (Number.parseFloat(this.sell) || 0).toFixed(2) !== policyRate;
             },
@@ -512,6 +566,8 @@
                 this.laborRateOverrideReason = '';
                 this.laborAdjustExpanded = false;
                 this.sellEdited = false;
+                this.laborChargeEdited = false;
+                this.useCalculatedLaborChargeFlag = false;
                 this.sell = this.laborRatePinned ? this.laborSavedRate : this.laborPolicyRate();
 
                 this.onLaborAuthorityInput();
@@ -696,16 +752,25 @@
                     this.laborRateOverrideReason = '';
                 }
 
+                if (recalculate) {
+                    this.laborChargeEdited = false;
+                    this.useCalculatedLaborChargeFlag = true;
+                }
+
                 this.clearLaborModifiersIfLocked();
 
                 if (recalculate) {
                     this.onLaborAuthorityInput();
+                } else {
+                    this.syncLaborChargeFromRate();
                 }
             },
             onLaborAuthorityInput() {
                 if (! this.laborHoursOverridden) {
                     this.laborFinalHours = this.laborCalculatedHours().toFixed(2);
                 }
+
+                this.syncLaborChargeFromRate();
             },
             onLaborFinalHoursInput() {
                 const calculated = this.laborCalculatedHours().toFixed(2);
@@ -736,10 +801,14 @@
                     preview += ` · Advisor override ${this.laborFinalHours} hr`;
                 }
 
-                if (this.sellEdited) {
-                    preview += ` · Custom rate $${this.sell}/hr`;
+                if (this.laborChargeEdited) {
+                    preview += ` · Manual charge $${this.laborCharge}`;
+                } else if (this.sellEdited) {
+                    preview += ` · Custom rate $${this.sell}/hr · Charge $${this.laborCharge || this.calculatedLaborCharge()}`;
                 } else if (this.laborRatePinned && this.laborRateDiffersFromPolicy()) {
-                    preview += ` · Saved rate $${this.sell}/hr (policy now $${this.laborPolicyRate()}/hr)`;
+                    preview += ` · Saved rate $${this.sell}/hr (policy now $${this.laborPolicyRate()}/hr) · Charge $${this.laborCharge || this.calculatedLaborCharge()}`;
+                } else {
+                    preview += ` · Charge $${this.laborCharge || this.calculatedLaborCharge()}`;
                 }
 
                 return preview;
@@ -872,7 +941,7 @@
 
                 this.syncFormLineType(form);
 
-                if (this.type === 'labor' && this.laborCategoryAllowsModifiers() && this.sellEdited) {
+                if (this.type === 'labor' && this.laborCategoryAllowsModifiers() && this.sellEdited && ! this.laborChargeEdited) {
                     const reason = String(this.laborRateOverrideReason ?? '').trim();
 
                     if (reason === '') {
