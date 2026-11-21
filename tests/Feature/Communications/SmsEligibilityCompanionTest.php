@@ -79,7 +79,7 @@ test('presenter never invites retry for STOP or landline delivery failures', fun
         ->and($landline['detail'])->not->toContain('send it again')
         ->and($landline['detail'])->toContain('landline')
         ->and($temporary['allows_retry'])->toBeTrue()
-        ->and($temporary['detail'])->toContain('try again later');
+        ->and($temporary['detail'])->toContain('sending it again later');
 });
 
 test('presenter shows Texting unavailable for landline and service-disabled permissions', function () {
