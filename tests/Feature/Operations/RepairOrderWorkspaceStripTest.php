@@ -152,3 +152,85 @@ test('print dropdown still renders on the canonical repair order', function () {
         ->assertSee('Check In sheet', false)
         ->assertSee('Estimate PDF', false);
 });
+
+/**
+ * @return array{0: \DOMXPath, 1: \DOMElement}
+ */
+function roDockSummary(string $html): array
+{
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $summary = $xpath->query('//*[@id="ro-orientation-header"]//*[@data-ro-dock-summary]')->item(0);
+
+    expect($summary)->toBeInstanceOf(DOMElement::class);
+
+    return [$xpath, $summary];
+}
+
+test('the dock summary reads RO number, VIN, customer, vehicle with the VIN as the only copy control', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = repairOrderForEstimateWorkspace();
+    $repairOrder->vehicle->forceFill(['vin' => '1hgcm82633a004352', 'normalized_vin' => '1HGCM82633A004352'])->save();
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->getContent();
+
+    [$xpath, $summary] = roDockSummary($html);
+    $text = preg_replace('/\s+/', ' ', $summary->textContent);
+
+    $ro = strpos($text, 'RO');
+    $vin = strpos($text, '1HGCM82633A004352');
+    $customer = strpos($text, 'Rosa');
+    $vehicle = strpos($text, 'Honda');
+
+    expect($ro)->not->toBeFalse()
+        ->and($vin)->toBeGreaterThan($ro)
+        ->and($customer)->toBeGreaterThan($vin)
+        ->and($vehicle)->toBeGreaterThan($customer);
+
+    $buttons = $xpath->query('.//button[@data-vin-copy]', $summary);
+    expect($buttons->length)->toBe(1)
+        ->and(trim($buttons->item(0)->textContent))->toBe('1HGCM82633A004352')
+        ->and($xpath->query('.//button[not(ancestor::template)]', $summary)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-ro-dock-vin-missing]', $summary)->length)->toBe(0)
+        ->and($summary->getElementsByTagName('a')->length)->toBe(0);
+
+    // Phonetic readback: one entry per character, served without hover, from the vehicle's own VIN.
+    $items = $xpath->query('//*[@data-vin-phonetic-list]/li');
+    $spelled = collect($items)->map(fn (DOMElement $li): string => preg_replace('/\s+/', ' ', trim($li->textContent)))->all();
+
+    expect($items->length)->toBe(17)
+        ->and($spelled[0])->toBe('1 — One')
+        ->and($spelled[1])->toBe('H — Hotel')
+        ->and($spelled[2])->toBe('G — Golf')
+        ->and($spelled[9])->toBe('3 — Three')
+        ->and($spelled[10])->toBe('A — Alpha')
+        ->and($spelled[16])->toBe('2 — Two');
+});
+
+test('the dock summary shows a non-clickable VIN unavailable state when the vehicle has no VIN', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = repairOrderForEstimateWorkspace();
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->getContent();
+
+    [$xpath, $summary] = roDockSummary($html);
+    $missing = $xpath->query('.//*[@data-ro-dock-vin-missing]', $summary);
+
+    expect($missing->length)->toBe(1)
+        ->and(trim($missing->item(0)->textContent))->toBe('VIN unavailable')
+        ->and($missing->item(0)->nodeName)->toBe('span')
+        ->and($xpath->query('.//button[not(ancestor::template)]', $summary)->length)->toBe(0)
+        ->and($xpath->query('//*[@data-vin-copy]')->length)->toBe(0)
+        ->and($xpath->query('//*[@data-vin-phonetic-list]')->length)->toBe(0);
+});

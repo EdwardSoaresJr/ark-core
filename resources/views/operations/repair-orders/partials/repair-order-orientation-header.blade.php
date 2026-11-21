@@ -35,6 +35,12 @@
                 <div class="d-flex gap-1 gap-sm-2 min-w-0 text-truncate fw-bold" title="{{ $identityTitle }}">
                     <span class="flex-shrink-0">{{ $strip->roLabel }}</span>
                     <span class="text-secondary" aria-hidden="true">·</span>
+                    @if (filled($strip->vin))
+                        <x-tabler.vin-copy-chip :vin="$strip->vin" class="flex-shrink-0" />
+                    @else
+                        <span class="flex-shrink-0 fw-normal text-secondary" data-ro-dock-vin-missing title="This vehicle has no VIN on file">VIN unavailable</span>
+                    @endif
+                    <span class="text-secondary" aria-hidden="true">·</span>
                     <span class="text-truncate">{{ $strip->customerLabel }}</span>
                     <span class="text-secondary" aria-hidden="true">·</span>
                     <span class="text-truncate">{{ $strip->vehicleLabel }}</span>
