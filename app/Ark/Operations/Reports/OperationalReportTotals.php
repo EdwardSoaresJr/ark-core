@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Reports;
 
 use App\Ark\Operations\Documents\EstimateDocument;
+use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\Financial\LedgerEntryType;
@@ -11,6 +12,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
+use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
 use App\Ark\Operations\Reports\Standards\ReportingStandardsV1;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -19,6 +21,19 @@ use Illuminate\Support\Facades\Schema;
 
 class OperationalReportTotals
 {
+    /**
+     * Request-scoped memo of authorized totals. Cleared with {@see flushApprovedTotalsMemo()}
+     * from RepairOrderReadCache boundaries so RefreshDatabase id reuse cannot leak cents.
+     *
+     * @var array<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>
+     */
+    private static array $approvedTotalsMemo = [];
+
+    public static function flushApprovedTotalsMemo(): void
+    {
+        self::$approvedTotalsMemo = [];
+    }
+
     /**
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
@@ -104,6 +119,10 @@ class OperationalReportTotals
     }
 
     /**
+     * Sold total per repair order. Prefers a frozen invoice snapshot when one exists;
+     * otherwise uses authorized amounts ({@see EstimateTotalsCalculator::approvedTotalsForRead()}),
+     * never raw living line totals that include unapproved increases or uncovered adds.
+     *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
      */
@@ -115,26 +134,22 @@ class OperationalReportTotals
             return collect();
         }
 
-        $invoiceTotalsByRepairOrder = self::legacyInvoiceTotalCentsByRepairOrderId($ids);
+        $invoiceTotalsByRepairOrder = self::frozenInvoiceAmountsByRepairOrderId($ids);
+        $withoutInvoice = $ids->reject(fn (int $repairOrderId): bool => $invoiceTotalsByRepairOrder->has($repairOrderId))->values();
+        $approved = self::approvedTotalsByRepairOrderId($withoutInvoice);
 
-        $lineTotals = self::soldLineQuery()
-            ->whereIn('repair_order_lines.repair_order_id', $ids)
-            ->groupBy('repair_order_lines.repair_order_id')
-            ->select('repair_order_lines.repair_order_id')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.total_cents), 0) as total_cents')
-            ->pluck('total_cents', 'repair_order_id')
-            ->map(fn (mixed $cents): int => (int) $cents);
-
-        return $ids->mapWithKeys(function (int $repairOrderId) use ($invoiceTotalsByRepairOrder, $lineTotals): array {
+        return $ids->mapWithKeys(function (int $repairOrderId) use ($invoiceTotalsByRepairOrder, $approved): array {
             if ($invoiceTotalsByRepairOrder->has($repairOrderId)) {
-                return [$repairOrderId => (int) $invoiceTotalsByRepairOrder[$repairOrderId]];
+                return [$repairOrderId => (int) $invoiceTotalsByRepairOrder[$repairOrderId]['total_cents']];
             }
 
-            return [$repairOrderId => (int) ($lineTotals[$repairOrderId] ?? 0)];
+            return [$repairOrderId => (int) ($approved[$repairOrderId]['total_cents'] ?? 0)];
         });
     }
 
     /**
+     * Authorized labor sell (pre-tax) per repair order — not raw living line subtotals.
+     *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
      */
@@ -146,14 +161,11 @@ class OperationalReportTotals
             return collect();
         }
 
-        return self::soldLineQuery()
-            ->whereIn('repair_order_lines.repair_order_id', $ids)
-            ->where('repair_order_lines.type', RepairOrderLineType::Labor)
-            ->groupBy('repair_order_lines.repair_order_id')
-            ->select('repair_order_lines.repair_order_id')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.subtotal_cents), 0) as labor_cents')
-            ->pluck('labor_cents', 'repair_order_id')
-            ->map(fn (mixed $cents): int => (int) $cents);
+        $approved = self::approvedTotalsByRepairOrderId($ids);
+
+        return $ids->mapWithKeys(function (int $repairOrderId) use ($approved): array {
+            return [$repairOrderId => (int) ($approved[$repairOrderId]['labor_cents'] ?? 0)];
+        });
     }
 
     public static function sumTotalCents(Collection|array $repairOrderIds): int
@@ -330,11 +342,25 @@ class OperationalReportTotals
      */
     public static function closedLaborSalesCentsByTechnicianId(Carbon $from, Carbon $to): Collection
     {
-        return self::closedLaborGroupedByTechnicianQuery($from, $to)
-            ->selectRaw('repair_orders.assigned_technician_id')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.subtotal_cents), 0) as sales_cents')
-            ->pluck('sales_cents', 'assigned_technician_id')
-            ->map(fn (mixed $cents): int => (int) $cents);
+        $repairOrders = OperationalReportDateScope::salesClosedBetween(
+            RepairOrder::query()->with(['lines.concern', 'concerns'])->whereNotNull('assigned_technician_id'),
+            $from,
+            $to,
+        )->get();
+
+        if ($repairOrders->isEmpty()) {
+            return collect();
+        }
+
+        $approved = self::rememberApprovedTotalsFromOrders($repairOrders);
+
+        return $repairOrders
+            ->groupBy(fn (RepairOrder $repairOrder): int => (int) $repairOrder->assigned_technician_id)
+            ->map(function (Collection $group) use ($approved): int {
+                return (int) $group->sum(
+                    fn (RepairOrder $repairOrder): int => (int) ($approved[$repairOrder->id]['labor_cents'] ?? 0),
+                );
+            });
     }
 
     /**
@@ -373,7 +399,8 @@ class OperationalReportTotals
     }
 
     /**
-     * Approved labor, parts, sublet, and fees, including shop fees and standing discounts.
+     * Authorized pre-tax sell per repair order (labor, parts, sublet, fees, shop fees,
+     * standing discounts) via {@see EstimateTotalsCalculator::approvedTotalsForRead()}.
      *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
@@ -386,26 +413,86 @@ class OperationalReportTotals
             return collect();
         }
 
-        return self::postedSoldLineQuery()
-            ->whereIn('repair_order_lines.repair_order_id', $ids)
-            ->groupBy('repair_order_lines.repair_order_id')
-            ->select('repair_order_lines.repair_order_id')
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
-                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
-                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
-                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
-                + COALESCE(SUM(repair_order_lines.shop_fee_cents), 0)
-                - COALESCE(SUM(repair_order_lines.standing_discount_cents), 0) as pre_tax_cents',
-                [
-                    RepairOrderLineType::Labor->value,
-                    RepairOrderLineType::Part->value,
-                    RepairOrderLineType::Sublet->value,
-                    RepairOrderLineType::Fee->value,
-                ],
-            )
-            ->pluck('pre_tax_cents', 'repair_order_id')
-            ->map(fn (mixed $cents): int => (int) $cents);
+        $approved = self::approvedTotalsByRepairOrderId($ids);
+
+        return $ids->mapWithKeys(function (int $repairOrderId) use ($approved): array {
+            return [$repairOrderId => (int) ($approved[$repairOrderId]['pre_tax_cents'] ?? 0)];
+        });
+    }
+
+    /**
+     * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
+     * @return Collection<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>
+     */
+    /**
+     * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
+     * @return Collection<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>
+     */
+    private static function approvedTotalsByRepairOrderId(Collection|array $repairOrderIds): Collection
+    {
+        $ids = collect($repairOrderIds)->filter()->map(fn (mixed $id): int => (int) $id)->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $missing = $ids->reject(fn (int $repairOrderId): bool => array_key_exists($repairOrderId, self::$approvedTotalsMemo))->values();
+
+        if ($missing->isNotEmpty()) {
+            $orders = RepairOrder::query()
+                ->with(['lines.concern', 'concerns'])
+                ->whereIn('id', $missing)
+                ->get();
+
+            self::rememberApprovedTotalsFromOrders($orders);
+
+            foreach ($missing as $repairOrderId) {
+                if (! array_key_exists($repairOrderId, self::$approvedTotalsMemo)) {
+                    self::$approvedTotalsMemo[$repairOrderId] = [
+                        'total_cents' => 0,
+                        'labor_cents' => 0,
+                        'pre_tax_cents' => 0,
+                    ];
+                }
+            }
+        }
+
+        return $ids->mapWithKeys(fn (int $repairOrderId): array => [
+            $repairOrderId => self::$approvedTotalsMemo[$repairOrderId],
+        ]);
+    }
+
+    /**
+     * @param  Collection<int, RepairOrder>  $repairOrders
+     * @return Collection<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>
+     */
+    private static function rememberApprovedTotalsFromOrders(Collection $repairOrders): Collection
+    {
+        $pending = $repairOrders
+            ->filter(fn (mixed $repairOrder): bool => $repairOrder instanceof RepairOrder
+                && ! array_key_exists((int) $repairOrder->id, self::$approvedTotalsMemo))
+            ->values();
+
+        if ($pending->isNotEmpty()) {
+            app(WorkCompletionAuthorization::class)->warmAuthorizedTotalsCaches($pending);
+            $calculator = app(EstimateTotalsCalculator::class);
+
+            foreach ($pending as $repairOrder) {
+                $repairOrderId = (int) $repairOrder->id;
+                $repairOrder->loadMissing(['lines.concern', 'concerns']);
+                $totals = $calculator->approvedTotalsForRead($repairOrder);
+
+                self::$approvedTotalsMemo[$repairOrderId] = [
+                    'total_cents' => $totals->totalCents(),
+                    'labor_cents' => $totals->laborCents(),
+                    'pre_tax_cents' => $totals->subtotalBeforeTaxCents(),
+                ];
+            }
+        }
+
+        return collect(self::$approvedTotalsMemo)->only(
+            $repairOrders->map(fn (RepairOrder $repairOrder): int => (int) $repairOrder->id)->all(),
+        );
     }
 
     /**
@@ -479,24 +566,6 @@ class OperationalReportTotals
             'tax_cents' => $taxCents,
             'total_cents' => $totalCents,
         ];
-    }
-
-    /**
-     * Approved labor, parts, fees, and sublet.
-     *
-     * @return Builder<RepairOrderLine>
-     */
-    private static function postedSoldLineQuery(): Builder
-    {
-        return RepairOrderLine::query()
-            ->join('repair_order_concerns', 'repair_order_concerns.id', '=', 'repair_order_lines.repair_order_concern_id')
-            ->where('repair_order_concerns.disposition', RepairOrderConcernDisposition::Approved)
-            ->whereIn('repair_order_lines.type', [
-                RepairOrderLineType::Labor,
-                RepairOrderLineType::Part,
-                RepairOrderLineType::Fee,
-                RepairOrderLineType::Sublet,
-            ]);
     }
 
     /**
