@@ -28,7 +28,7 @@ final class CommunicationsWorkspaceSignalPresenter
 
     /**
      * @param  array{status: string, error_code?: string|null, at?: \DateTimeInterface|null}  $delivery
-     * @return array{status: string, label: string, tone: string, failed: bool, detail: ?string, at_label: ?string, allows_retry: bool}
+     * @return array{status: string, label: string, tone: string, failed: bool, detail: ?string, guidance: ?string, error_code: ?string, at_label: ?string, allows_retry: bool}
      */
     public static function delivery(array $delivery): array
     {
@@ -57,6 +57,8 @@ final class CommunicationsWorkspaceSignalPresenter
             },
             'failed' => $failed,
             'detail' => $failed ? self::failureDetail($kind ?? 'unknown', $error !== '' ? $error : null) : null,
+            'guidance' => $failed ? self::failureGuidance($kind ?? 'unknown') : null,
+            'error_code' => $failed && $error !== '' ? $error : null,
             'allows_retry' => $kind === null || self::failureAllowsRetry($kind),
             'at_label' => $at instanceof \DateTimeInterface
                 ? Carbon::instance($at)->timezone(config('app.display_timezone'))->format('M j, g:i A')
@@ -210,12 +212,21 @@ final class CommunicationsWorkspaceSignalPresenter
         $code = trim((string) $errorCode);
         $carrier = $code !== '' ? 'Carrier error '.$code.'. ' : '';
 
+        return $carrier.ucfirst(self::failureGuidance($kind));
+    }
+
+    /**
+     * The next step, worded to follow "Not delivered — " beside the failed message. The raw carrier code is
+     * not part of it; the message's Details carry that.
+     */
+    private static function failureGuidance(string $kind): string
+    {
         return match ($kind) {
-            'opt_out' => $carrier.'This number opted out of texts (STOP). Do not text it again until the customer replies START. Call or use email instead.',
-            'landline_unsupported' => $carrier.'This number cannot receive texts (landline or unsupported line type). Call or use another contact.',
-            'invalid' => $carrier.'The destination number is invalid or unreachable for SMS. Correct the number, call, or use email.',
-            'temporary' => $carrier.'The carrier could not deliver this text yet. You may try again later, or call if urgent.',
-            default => $carrier.'The customer did not get this message. Verify the number before trying again, or call.',
+            'opt_out' => 'this number opted out of texts (STOP). Do not text it again until the customer replies START. Call or use email instead.',
+            'landline_unsupported' => 'this number may not support SMS. Check the number or call the customer.',
+            'invalid' => 'the destination number is invalid or unreachable for SMS. Correct the number, call, or use email.',
+            'temporary' => 'the carrier could not deliver this text yet. You may try again later, or call if urgent.',
+            default => 'the customer did not get this message. Verify the number before trying again, or call.',
         };
     }
 }

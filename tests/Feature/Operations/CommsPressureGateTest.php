@@ -82,8 +82,10 @@ test('advisors with unresolved comms keep working on every page and see the remi
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Pilot', false)
-        ->assertSee('ops-comms-pressure-bar', false)
-        ->assertSee('customer needs you', false);
+        // The header Inbox and the sidebar carry ordinary attention; the page-level bar is for a live call.
+        ->assertDontSee('data-ops-comms-pressure-bar', false)
+        ->assertDontSee('customer needs you', false)
+        ->assertSee('data-ops-comms-nav-count', false);
 
     $this->actingAs($advisor)->withSession($session)
         ->get(route('operations.customers.show', $customer))
