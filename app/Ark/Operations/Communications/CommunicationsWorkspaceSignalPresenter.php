@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Communications;
 
+use App\Ark\Operations\Messaging\SmsDeliveryFailureClass;
+use App\Ark\Operations\Messaging\SmsDeliveryFailureClassifier;
 use Illuminate\Support\Carbon;
 
 /**
@@ -21,6 +23,7 @@ final class CommunicationsWorkspaceSignalPresenter
         $failed = in_array($status, self::FAILED, true);
         $error = trim((string) ($delivery['error_code'] ?? ''));
         $at = $delivery['at'] ?? null;
+        $failures = app(SmsDeliveryFailureClassifier::class);
 
         return [
             'status' => $status,
@@ -41,7 +44,10 @@ final class CommunicationsWorkspaceSignalPresenter
             },
             'failed' => $failed,
             'detail' => $failed
-                ? trim(($error !== '' ? 'Carrier error '.$error.'. ' : '').'The customer did not get this message; call or send it again.')
+                ? 'The customer did not get this message. '.$failures->staffGuidance(
+                    $failures->classify($error !== '' ? $error : null),
+                    $error !== '' ? $error : null,
+                )
                 : null,
             'at_label' => $at instanceof \DateTimeInterface
                 ? Carbon::instance($at)->timezone(config('app.display_timezone'))->format('M j, g:i A')
@@ -74,20 +80,26 @@ final class CommunicationsWorkspaceSignalPresenter
             ? 'Quiet hours: automated texts wait until '.Carbon::instance($quietUntil)->timezone(config('app.display_timezone'))->format('g:i A').'.'
             : null;
 
+        $failures = app(SmsDeliveryFailureClassifier::class);
+
         return [
             'texting' => $texting,
             'label' => match ($texting) {
                 'opted_out' => 'Texting off',
                 'allowed' => 'Texting allowed',
+                'landline', 'unsupported', 'disabled', 'temporary_failure' => 'Texting unavailable',
                 default => 'Texting not confirmed',
             },
             'tone' => match ($texting) {
-                'opted_out' => 'danger',
+                'opted_out', 'landline', 'unsupported', 'disabled' => 'danger',
+                'temporary_failure' => 'warning',
                 'allowed' => 'success',
                 default => 'secondary',
             },
             'detail' => trim(implode(' ', array_filter([
                 $texting === 'opted_out' ? trim(($permission['source'] ?? 'The customer opted out').'. Texts are not sent until they reply START.') : null,
+                in_array($texting, ['landline', 'unsupported'], true) ? $failures->staffGuidance(SmsDeliveryFailureClass::UnsupportedNumber, null) : null,
+                $texting === 'temporary_failure' ? $failures->staffGuidance(SmsDeliveryFailureClass::TemporaryFailure, null) : null,
                 $quiet,
             ]))) ?: null,
             'notes' => array_values(array_filter(array_map('strval', $permission['notes'] ?? []), fn (string $note): bool => trim($note) !== '')),

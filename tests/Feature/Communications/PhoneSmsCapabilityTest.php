@@ -291,11 +291,17 @@ test('sending checks the number the text goes to, not the main phone', function 
     expect(fn () => app(SendOutboundMessageAction::class)->execute(customer: $mobileMain, actor: $advisor, body: 'To the landline', toPhone: '7195552054'))
         ->toThrow(RuntimeException::class, 'cannot receive SMS');
 
+    // Opt-out belongs to the number: STOP on the main phone does not silence a different number.
     $optedOut = capabilityCustomer('7195552055', CustomerSmsConsentStatus::OptedOut);
 
-    expect(fn () => app(SendOutboundMessageAction::class)->execute(customer: $optedOut, actor: $advisor, body: 'Opted out', toPhone: '7195552056'))
+    expect(fn () => app(SendOutboundMessageAction::class)->execute(customer: $optedOut, actor: $advisor, body: 'Opted out'))
         ->toThrow(RuntimeException::class, 'opted out')
         ->and($transport->sent)->toHaveCount(1);
+
+    app(SendOutboundMessageAction::class)->execute(customer: $optedOut, actor: $advisor, body: 'Other number', toPhone: '7195552056');
+
+    expect($transport->sent)->toHaveCount(2)
+        ->and($transport->sent[1]['to'])->toBe('7195552056');
 });
 
 test('a reply in a conversation with no customer refuses a number known to be unable to text', function () {

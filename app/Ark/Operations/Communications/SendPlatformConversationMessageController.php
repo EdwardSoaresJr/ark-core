@@ -6,6 +6,7 @@ use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Messaging\OutboundAttachmentStore;
 use App\Ark\Operations\Messaging\OutboundComposerFiles;
+use App\Ark\Operations\Messaging\PhoneSmsOptOut;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Communications\ArkCommunicationsClient;
@@ -94,10 +95,13 @@ final class SendPlatformConversationMessageController
             $block = CustomerSmsSendEligibility::for(
                 $customer,
                 app(ShopIntegrationCredentials::class),
+                $normalized,
             )->consentBlockReason();
             if ($block !== null) {
                 return response()->json(['message' => $block], 422);
             }
+        } elseif (PhoneSmsOptOut::isActive($normalized)) {
+            return response()->json(['message' => 'This number has opted out of text messages. Call the customer or use email.'], 422);
         }
 
         try {

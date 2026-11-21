@@ -14,6 +14,7 @@ class ResolvePhoneSmsCapabilityAction
         private readonly PhoneSmsCapabilityClassifier $classifier,
         private readonly ShopIntegrationCredentials $credentials,
         private readonly OutboundSmsTransport $transport,
+        private readonly SmsDeliveryFailureClassifier $failures,
     ) {}
 
     public function execute(string $phone, bool $forceRefresh = false): ?PhoneSmsCapability
@@ -74,19 +75,19 @@ class ResolvePhoneSmsCapabilityAction
             return null;
         }
 
-        if (! $this->isLikelyNonSmsDeliveryError($errorCode, $detail)) {
+        if ($this->failures->classify($errorCode, $detail) !== SmsDeliveryFailureClass::UnsupportedNumber) {
             return PhoneSmsCapability::findByNormalizedPhone($normalized);
         }
 
         $reason = 'Delivery failed'
             .($errorCode !== null && $errorCode !== '' ? " ({$errorCode})" : '')
-            .' - number cannot receive SMS.';
+            .' - this number may not support SMS.';
 
         return PhoneSmsCapability::query()->updateOrCreate(
             ['normalized_phone' => $normalized],
             [
                 'valid' => true,
-                'line_type' => 'landline',
+                'line_type' => 'unsupported',
                 'carrier_name' => null,
                 'sms_capable' => false,
                 'reason' => $reason,
@@ -130,20 +131,5 @@ class ResolvePhoneSmsCapabilityAction
         }
 
         return $checkedAt->gte(now()->subDays(self::FRESH_DAYS));
-    }
-
-    private function isLikelyNonSmsDeliveryError(?string $errorCode, ?string $detail): bool
-    {
-        $code = trim((string) $errorCode);
-        // 21614: not a mobile number; 30006: landline or unreachable
-        if (in_array($code, ['21614', '30006', '21612'], true)) {
-            return true;
-        }
-
-        $haystack = strtolower(trim((string) $detail));
-
-        return str_contains($haystack, 'landline')
-            || str_contains($haystack, 'not a mobile')
-            || str_contains($haystack, 'cannot be a landline');
     }
 }

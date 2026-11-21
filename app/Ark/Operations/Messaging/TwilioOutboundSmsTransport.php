@@ -38,7 +38,12 @@ final class TwilioOutboundSmsTransport implements OutboundSmsTransport
             ->post('https://api.twilio.com/2010-04-01/Accounts/'.$sid.'/Messages.json', $payload);
 
         if (! $response->successful()) {
-            throw new RuntimeException('Twilio rejected the outbound message.');
+            $code = $response->json('code');
+            $detail = trim((string) $response->json('message'));
+
+            throw new RuntimeException('Twilio rejected the outbound message'
+                .($code !== null && $code !== '' ? ' ('.$code.')' : '')
+                .($detail !== '' ? ': '.$detail : '.'));
         }
 
         return new OutboundSmsResult(

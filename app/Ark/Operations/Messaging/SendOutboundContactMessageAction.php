@@ -9,6 +9,7 @@ use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationMessageAttachment;
 use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Customers\CustomerSmsConsentStatus;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Models\User;
@@ -55,7 +56,19 @@ class SendOutboundContactMessageAction
             throw new RuntimeException('Conversation does not have a phone number.');
         }
 
-        $capability = PhoneSmsCapability::findByNormalizedPhone(PhoneNumber::normalize($phone));
+        $normalizedPhone = PhoneNumber::normalize($phone);
+
+        if ($normalizedPhone !== null && (
+            PhoneSmsOptOut::isActive($normalizedPhone)
+            || Customer::query()
+                ->where('phone', $normalizedPhone)
+                ->where('sms_consent_status', CustomerSmsConsentStatus::OptedOut)
+                ->exists()
+        )) {
+            throw new RuntimeException('This number has opted out of text messages. Call the customer or use email.');
+        }
+
+        $capability = PhoneSmsCapability::findByNormalizedPhone($normalizedPhone);
 
         if ($capability !== null && ! $capability->sms_capable) {
             throw new RuntimeException($capability->blockReason() ?? 'This number cannot receive SMS.');

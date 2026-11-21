@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Customers;
 
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
+use App\Ark\Operations\Messaging\PhoneSmsOptOut;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Communications\ManagedCommunicationsGate;
@@ -48,7 +49,7 @@ final class CustomerSmsSendEligibility
             return 'Shop messaging is disabled.';
         }
 
-        if (! $this->consentStatus()->allowsOutboundSms()) {
+        if ($this->optedOut()) {
             return 'Customer has opted out of text messages. Call the customer or use email.';
         }
 
@@ -59,14 +60,14 @@ final class CustomerSmsSendEligibility
         return null;
     }
 
-    /** Consent / phone checks only - used when Platform owns transport. */
+    /** Consent / phone checks only - used when Platform owns transport. Pass the destination phone to `for()`. */
     public function consentBlockReason(): ?string
     {
-        if (! filled($this->customer->phone)) {
+        if (! filled($this->phone ?? $this->customer->phone)) {
             return 'Customer does not have a phone number on file.';
         }
 
-        if (! $this->consentStatus()->allowsOutboundSms()) {
+        if ($this->optedOut()) {
             return 'Customer has opted out of text messages. Call the customer or use email.';
         }
 
@@ -109,9 +110,27 @@ final class CustomerSmsSendEligibility
         return $this->phone === null || $this->phone === PhoneNumber::normalize($this->customer->phone);
     }
 
+    /**
+     * Opt-out follows the number being texted: the number's own STOP, or any customer who owns it. The primary
+     * customer's consent only speaks for the main phone.
+     */
     public function optedOut(): bool
     {
-        return $this->consentStatus() === CustomerSmsConsentStatus::OptedOut;
+        $destination = $this->phone ?? PhoneNumber::normalize($this->customer->phone);
+
+        if ($this->isMainPhone() && $this->consentStatus() === CustomerSmsConsentStatus::OptedOut) {
+            return true;
+        }
+
+        if ($destination === null) {
+            return false;
+        }
+
+        return PhoneSmsOptOut::isActive($destination)
+            || Customer::query()
+                ->where('phone', $destination)
+                ->where('sms_consent_status', CustomerSmsConsentStatus::OptedOut)
+                ->exists();
     }
 
     public function capability(): ?PhoneSmsCapability
