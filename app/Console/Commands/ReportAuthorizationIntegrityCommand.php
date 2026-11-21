@@ -9,7 +9,7 @@ class ReportAuthorizationIntegrityCommand extends Command
 {
     protected $signature = 'ark:authorization-integrity';
 
-    protected $description = 'List installed parts and completed labor with no approval scope or documented exception.';
+    protected $description = 'List installed parts and completed labor with no approval coverage or an outstanding unapproved increase.';
 
     public function handle(UnresolvedAuthorizationReport $report): int
     {
@@ -22,12 +22,13 @@ class ReportAuthorizationIntegrityCommand extends Command
         }
 
         $this->table(
-            ['RO', 'Concern', 'Line', 'Kind'],
+            ['RO', 'Concern', 'Line', 'Kind', 'Pending'],
             $rows->map(fn (array $row): array => [
                 $row['repair_order_number'],
                 $row['concern_id'],
                 $row['line_id'],
                 $row['kind'],
+                number_format(((int) $row['pending_approval_cents']) / 100, 2, '.', ''),
             ])->all(),
         );
 

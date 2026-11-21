@@ -3,6 +3,8 @@
 namespace App\Ark\Operations\ShopExcellence\PartsMatrixTune;
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Ark\Operations\Reports\OperationalReportTotals;
@@ -25,7 +27,7 @@ final class PartsMatrixHistoricalSampler
         $settings = ShopSettings::current();
         $defaultKey = $settings->defaultPartsMatrix()['key'];
 
-        return OperationalReportTotals::soldLineQuery()
+        $candidateLines = OperationalReportTotals::soldLineQuery()
             ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
             ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $from, $to))
             ->where('repair_order_lines.type', RepairOrderLineType::Part)
@@ -42,6 +44,7 @@ final class PartsMatrixHistoricalSampler
             ->orderBy('repair_order_lines.id')
             ->get([
                 'repair_order_lines.id',
+                'repair_order_lines.repair_order_id',
                 'repair_order_lines.part_cost_cents',
                 'repair_order_lines.subtotal_cents',
                 'repair_order_lines.pricing_matrix_key',
@@ -50,10 +53,26 @@ final class PartsMatrixHistoricalSampler
                 'repair_order_lines.matrix_suggested_price_cents',
                 'repair_order_lines.quantity',
                 'repair_order_lines.unit_price_cents',
-            ])
-            ->map(function ($line) use ($settings, $matrixKey): PartsMatrixLineSample {
+            ]);
+
+        if ($candidateLines->isEmpty()) {
+            return collect();
+        }
+
+        $approvedSellByLineId = $this->approvedPartSellCentsByLineId(
+            $candidateLines->pluck('repair_order_id')->unique()->values(),
+        );
+
+        return $candidateLines
+            ->map(function ($line) use ($settings, $matrixKey, $approvedSellByLineId): ?PartsMatrixLineSample {
+                $lineId = (int) $line->id;
+                $sellCents = $approvedSellByLineId[$lineId] ?? null;
+
+                if ($sellCents === null || $sellCents <= 0) {
+                    return null;
+                }
+
                 $costCents = (int) $line->part_cost_cents;
-                $sellCents = (int) $line->subtotal_cents;
                 $matrixSuggested = $line->matrix_suggested_price_cents
                     ?? $this->calculator->matrixSuggestedPriceCents($costCents, $settings, $matrixKey);
 
@@ -62,13 +81,41 @@ final class PartsMatrixHistoricalSampler
                     || ($matrixSuggested !== null && abs($sellCents - (int) $matrixSuggested) > 1);
 
                 return new PartsMatrixLineSample(
-                    lineId: (int) $line->id,
+                    lineId: $lineId,
                     costCents: $costCents,
                     sellCents: $sellCents,
                     pricingMatrixKey: $line->pricing_matrix_key,
                     pricingMode: (string) ($line->pricing_mode ?: 'matrix'),
                     sellOverridden: $sellOverridden,
                 );
-            });
+            })
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * @param  Collection<int, int>  $repairOrderIds
+     * @return array<int, int> line id => approved part subtotal cents
+     */
+    private function approvedPartSellCentsByLineId(Collection $repairOrderIds): array
+    {
+        $orders = RepairOrder::query()
+            ->with(['lines.concern', 'concerns'])
+            ->whereIn('id', $repairOrderIds)
+            ->get();
+
+        $sellByLineId = [];
+
+        foreach ($orders as $repairOrder) {
+            foreach ($this->calculator->approvedTotalsForRead($repairOrder)->lines as $line) {
+                if (! $line instanceof RepairOrderLine || $line->type !== RepairOrderLineType::Part) {
+                    continue;
+                }
+
+                $sellByLineId[(int) $line->id] = (int) $line->subtotal_cents;
+            }
+        }
+
+        return $sellByLineId;
     }
 }

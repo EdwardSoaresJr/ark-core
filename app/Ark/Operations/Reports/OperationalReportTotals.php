@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Reports;
 
 use App\Ark\Operations\Documents\EstimateDocument;
+use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\Financial\LedgerEntryType;
@@ -104,6 +105,10 @@ class OperationalReportTotals
     }
 
     /**
+     * Sold total per repair order. Prefers a frozen invoice snapshot when one exists;
+     * otherwise uses {@see EstimateTotalsCalculator::approvedTotalsForRead()} so unapproved
+     * added lines and price/quantity increases are not counted as sales (#74).
+     *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
      */
@@ -115,45 +120,29 @@ class OperationalReportTotals
             return collect();
         }
 
-        $invoiceTotalsByRepairOrder = self::legacyInvoiceTotalCentsByRepairOrderId($ids);
+        $frozen = self::frozenInvoiceAmountsByRepairOrderId($ids);
+        $needsApproved = $ids->reject(fn (int $repairOrderId): bool => $frozen->has($repairOrderId))->values();
+        $approved = self::approvedSoldFiguresByRepairOrderId($needsApproved);
 
-        $lineTotals = self::soldLineQuery()
-            ->whereIn('repair_order_lines.repair_order_id', $ids)
-            ->groupBy('repair_order_lines.repair_order_id')
-            ->select('repair_order_lines.repair_order_id')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.total_cents), 0) as total_cents')
-            ->pluck('total_cents', 'repair_order_id')
-            ->map(fn (mixed $cents): int => (int) $cents);
-
-        return $ids->mapWithKeys(function (int $repairOrderId) use ($invoiceTotalsByRepairOrder, $lineTotals): array {
-            if ($invoiceTotalsByRepairOrder->has($repairOrderId)) {
-                return [$repairOrderId => (int) $invoiceTotalsByRepairOrder[$repairOrderId]];
+        return $ids->mapWithKeys(function (int $repairOrderId) use ($frozen, $approved): array {
+            if ($frozen->has($repairOrderId)) {
+                return [$repairOrderId => (int) $frozen[$repairOrderId]['total_cents']];
             }
 
-            return [$repairOrderId => (int) ($lineTotals[$repairOrderId] ?? 0)];
+            return [$repairOrderId => (int) ($approved[$repairOrderId]['total_cents'] ?? 0)];
         });
     }
 
     /**
+     * Approved labor subtotals per repair order (canonical approved-dollar authority).
+     *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
      */
     public static function laborCentsByRepairOrderId(Collection|array $repairOrderIds): Collection
     {
-        $ids = collect($repairOrderIds)->filter()->unique()->values();
-
-        if ($ids->isEmpty()) {
-            return collect();
-        }
-
-        return self::soldLineQuery()
-            ->whereIn('repair_order_lines.repair_order_id', $ids)
-            ->where('repair_order_lines.type', RepairOrderLineType::Labor)
-            ->groupBy('repair_order_lines.repair_order_id')
-            ->select('repair_order_lines.repair_order_id')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.subtotal_cents), 0) as labor_cents')
-            ->pluck('labor_cents', 'repair_order_id')
-            ->map(fn (mixed $cents): int => (int) $cents);
+        return self::approvedSoldFiguresByRepairOrderId($repairOrderIds)
+            ->map(fn (array $figures): int => (int) $figures['labor_cents']);
     }
 
     public static function sumTotalCents(Collection|array $repairOrderIds): int
@@ -210,6 +199,8 @@ class OperationalReportTotals
     }
 
     /**
+     * Posted sales mix from canonical approved dollars (not raw living line totals).
+     *
      * @return array{
      *     labor_cents: int,
      *     parts_cents: int,
@@ -224,51 +215,74 @@ class OperationalReportTotals
      */
     public static function postedSalesComponents(Carbon $from, Carbon $to): array
     {
-        $row = self::postedApprovedLineQuery($from, $to)
-            ->leftJoin('users as assigned_technicians', 'assigned_technicians.id', '=', 'repair_orders.assigned_technician_id')
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as labor_cents',
-                [RepairOrderLineType::Labor->value],
-            )
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as parts_cents',
-                [RepairOrderLineType::Part->value],
-            )
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as sublet_cents',
-                [RepairOrderLineType::Sublet->value],
-            )
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as fee_line_cents',
-                [RepairOrderLineType::Fee->value],
-            )
-            ->selectRaw('COALESCE(SUM(repair_order_lines.shop_fee_cents), 0) as shop_fee_cents')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.standing_discount_cents), 0) as discount_cents')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.tax_cents), 0) as tax_cents')
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? AND repair_order_lines.part_cost_cents IS NULL THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as parts_sales_missing_cost_cents',
-                [RepairOrderLineType::Part->value],
-            )
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? AND repair_order_lines.part_cost_cents IS NOT NULL THEN repair_order_lines.subtotal_cents - ROUND(repair_order_lines.quantity * repair_order_lines.part_cost_cents) ELSE 0 END), 0) as parts_gp_cents',
-                [RepairOrderLineType::Part->value],
-            )
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? AND (repair_orders.assigned_technician_id IS NULL OR assigned_technicians.labor_cost_cents IS NULL) THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as labor_sales_missing_cost_cents',
-                [RepairOrderLineType::Labor->value],
-            )
-            ->first();
+        $ids = OperationalReportDateScope::salesPostedBetween(RepairOrder::query(), $from, $to)->pluck('id');
+        $orders = RepairOrder::query()
+            ->with(['lines.concern', 'concerns', 'assignedTechnician:id,labor_cost_cents'])
+            ->whereIn('id', $ids)
+            ->get();
+
+        $calculator = app(EstimateTotalsCalculator::class);
+        $laborCents = 0;
+        $partsCents = 0;
+        $subletCents = 0;
+        $feeLineCents = 0;
+        $shopFeeCents = 0;
+        $discountCents = 0;
+        $taxCents = 0;
+        $partsGpCents = 0;
+        $partsMissingCostCents = 0;
+        $laborMissingCostCents = 0;
+
+        foreach ($orders as $repairOrder) {
+            $approvedLines = $calculator->approvedTotalsForRead($repairOrder)->lines
+                ->filter(fn (RepairOrderLine $line): bool => in_array($line->type, [
+                    RepairOrderLineType::Labor,
+                    RepairOrderLineType::Part,
+                    RepairOrderLineType::Fee,
+                    RepairOrderLineType::Sublet,
+                ], true));
+
+            $techCostMissing = $repairOrder->assigned_technician_id === null
+                || $repairOrder->assignedTechnician?->labor_cost_cents === null;
+
+            foreach ($approvedLines as $line) {
+                $subtotal = (int) $line->subtotal_cents;
+                $shopFeeCents += (int) $line->shop_fee_cents;
+                $discountCents += (int) $line->standing_discount_cents;
+                $taxCents += (int) $line->tax_cents;
+
+                match ($line->type) {
+                    RepairOrderLineType::Labor => $laborCents += $subtotal,
+                    RepairOrderLineType::Part => $partsCents += $subtotal,
+                    RepairOrderLineType::Sublet => $subletCents += $subtotal,
+                    RepairOrderLineType::Fee => $feeLineCents += $subtotal,
+                    default => null,
+                };
+
+                if ($line->type === RepairOrderLineType::Part) {
+                    if ($line->part_cost_cents === null) {
+                        $partsMissingCostCents += $subtotal;
+                    } else {
+                        $partsGpCents += $subtotal - (int) round(((float) $line->quantity) * (int) $line->part_cost_cents);
+                    }
+                }
+
+                if ($line->type === RepairOrderLineType::Labor && $techCostMissing) {
+                    $laborMissingCostCents += $subtotal;
+                }
+            }
+        }
 
         return [
-            'labor_cents' => (int) ($row->labor_cents ?? 0),
-            'parts_cents' => (int) ($row->parts_cents ?? 0),
-            'sublet_cents' => (int) ($row->sublet_cents ?? 0),
-            'fee_cents' => (int) ($row->fee_line_cents ?? 0) + (int) ($row->shop_fee_cents ?? 0),
-            'discount_cents' => (int) ($row->discount_cents ?? 0),
-            'tax_cents' => (int) ($row->tax_cents ?? 0),
-            'parts_gp_cents' => (int) ($row->parts_gp_cents ?? 0),
-            'parts_sales_missing_cost_cents' => (int) ($row->parts_sales_missing_cost_cents ?? 0),
-            'labor_sales_missing_cost_cents' => (int) ($row->labor_sales_missing_cost_cents ?? 0),
+            'labor_cents' => $laborCents,
+            'parts_cents' => $partsCents,
+            'sublet_cents' => $subletCents,
+            'fee_cents' => $feeLineCents + $shopFeeCents,
+            'discount_cents' => $discountCents,
+            'tax_cents' => $taxCents,
+            'parts_gp_cents' => $partsGpCents,
+            'parts_sales_missing_cost_cents' => $partsMissingCostCents,
+            'labor_sales_missing_cost_cents' => $laborMissingCostCents,
         ];
     }
 
@@ -326,15 +340,29 @@ class OperationalReportTotals
     }
 
     /**
+     * Closed labor sales by assigned technician, using approved labor dollars only (#74).
+     *
      * @return Collection<int, int>
      */
     public static function closedLaborSalesCentsByTechnicianId(Carbon $from, Carbon $to): Collection
     {
-        return self::closedLaborGroupedByTechnicianQuery($from, $to)
-            ->selectRaw('repair_orders.assigned_technician_id')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.subtotal_cents), 0) as sales_cents')
-            ->pluck('sales_cents', 'assigned_technician_id')
-            ->map(fn (mixed $cents): int => (int) $cents);
+        $repairOrders = OperationalReportDateScope::salesClosedBetween(RepairOrder::query(), $from, $to)
+            ->whereNotNull('assigned_technician_id')
+            ->get(['id', 'assigned_technician_id']);
+
+        if ($repairOrders->isEmpty()) {
+            return collect();
+        }
+
+        $approvedLabor = self::approvedSoldFiguresByRepairOrderId($repairOrders->pluck('id'));
+
+        return $repairOrders
+            ->groupBy('assigned_technician_id')
+            ->map(function (Collection $rows) use ($approvedLabor): int {
+                return (int) $rows->sum(
+                    fn (RepairOrder $repairOrder): int => (int) ($approvedLabor[$repairOrder->id]['labor_cents'] ?? 0),
+                );
+            });
     }
 
     /**
@@ -373,12 +401,24 @@ class OperationalReportTotals
     }
 
     /**
-     * Approved labor, parts, sublet, and fees, including shop fees and standing discounts.
+     * Approved pre-tax dollars per repair order (canonical approved-dollar authority).
      *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
      */
     private static function approvedPreTaxCentsByRepairOrderId(Collection|array $repairOrderIds): Collection
+    {
+        return self::approvedSoldFiguresByRepairOrderId($repairOrderIds)
+            ->map(fn (array $figures): int => (int) $figures['pre_tax_cents']);
+    }
+
+    /**
+     * Canonical approved sold figures via {@see EstimateTotalsCalculator::approvedTotalsForRead()}.
+     *
+     * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
+     * @return Collection<int, array{total_cents: int, labor_cents: int, parts_cents: int, pre_tax_cents: int}>
+     */
+    public static function approvedSoldFiguresByRepairOrderId(Collection|array $repairOrderIds): Collection
     {
         $ids = collect($repairOrderIds)->filter()->unique()->values();
 
@@ -386,26 +426,41 @@ class OperationalReportTotals
             return collect();
         }
 
-        return self::postedSoldLineQuery()
-            ->whereIn('repair_order_lines.repair_order_id', $ids)
-            ->groupBy('repair_order_lines.repair_order_id')
-            ->select('repair_order_lines.repair_order_id')
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
-                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
-                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
-                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
-                + COALESCE(SUM(repair_order_lines.shop_fee_cents), 0)
-                - COALESCE(SUM(repair_order_lines.standing_discount_cents), 0) as pre_tax_cents',
-                [
-                    RepairOrderLineType::Labor->value,
-                    RepairOrderLineType::Part->value,
-                    RepairOrderLineType::Sublet->value,
-                    RepairOrderLineType::Fee->value,
-                ],
-            )
-            ->pluck('pre_tax_cents', 'repair_order_id')
-            ->map(fn (mixed $cents): int => (int) $cents);
+        $orders = RepairOrder::query()
+            ->with(['lines.concern', 'concerns'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $calculator = app(EstimateTotalsCalculator::class);
+
+        return $ids->mapWithKeys(function (int $repairOrderId) use ($orders, $calculator): array {
+            $repairOrder = $orders->get($repairOrderId);
+
+            if (! $repairOrder instanceof RepairOrder) {
+                return [$repairOrderId => [
+                    'total_cents' => 0,
+                    'labor_cents' => 0,
+                    'parts_cents' => 0,
+                    'pre_tax_cents' => 0,
+                ]];
+            }
+
+            $totals = $calculator->approvedTotalsForRead($repairOrder);
+            $laborCents = (int) $totals->lines
+                ->filter(fn (RepairOrderLine $line): bool => $line->type === RepairOrderLineType::Labor)
+                ->sum('subtotal_cents');
+            $partsCents = (int) $totals->lines
+                ->filter(fn (RepairOrderLine $line): bool => $line->type === RepairOrderLineType::Part)
+                ->sum('subtotal_cents');
+
+            return [$repairOrderId => [
+                'total_cents' => $totals->totalCents(),
+                'labor_cents' => $laborCents,
+                'parts_cents' => $partsCents,
+                'pre_tax_cents' => $totals->subtotalBeforeTaxCents(),
+            ]];
+        });
     }
 
     /**
@@ -479,24 +534,6 @@ class OperationalReportTotals
             'tax_cents' => $taxCents,
             'total_cents' => $totalCents,
         ];
-    }
-
-    /**
-     * Approved labor, parts, fees, and sublet.
-     *
-     * @return Builder<RepairOrderLine>
-     */
-    private static function postedSoldLineQuery(): Builder
-    {
-        return RepairOrderLine::query()
-            ->join('repair_order_concerns', 'repair_order_concerns.id', '=', 'repair_order_lines.repair_order_concern_id')
-            ->where('repair_order_concerns.disposition', RepairOrderConcernDisposition::Approved)
-            ->whereIn('repair_order_lines.type', [
-                RepairOrderLineType::Labor,
-                RepairOrderLineType::Part,
-                RepairOrderLineType::Fee,
-                RepairOrderLineType::Sublet,
-            ]);
     }
 
     /**
