@@ -32,6 +32,10 @@ beforeEach(function () {
         'telephony_inbound_number' => '7195559999',
     ]);
     ShopSettings::forgetCurrent();
+    config([
+        'services.twilio.account_sid' => 'ACsyntheticcapability',
+        'services.twilio.auth_token' => 'synthetic-capability-token',
+    ]);
 });
 
 test('classifier marks landlines as not sms capable with reason', function () {

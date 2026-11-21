@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Customers;
 
+use App\Ark\Operations\Communications\CommunicationsWorkspaceSignalPresenter;
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
@@ -62,7 +63,7 @@ final class CustomerSmsSendEligibility
     /** Consent / phone checks only - used when Platform owns transport. */
     public function consentBlockReason(): ?string
     {
-        if (! filled($this->customer->phone)) {
+        if (! filled($this->phone ?? $this->customer->phone)) {
             return 'Customer does not have a phone number on file.';
         }
 
@@ -97,8 +98,12 @@ final class CustomerSmsSendEligibility
 
         $errorCode = trim((string) ($this->customer->last_sms_error_code ?? ''));
 
+        if (! CommunicationsWorkspaceSignalPresenter::deliveryFailureAllowsRetry($errorCode !== '' ? $errorCode : null)) {
+            return CommunicationsWorkspaceSignalPresenter::deliveryFailureDetail($errorCode !== '' ? $errorCode : null);
+        }
+
         if ($errorCode !== '') {
-            return "Recent text delivery failed (Twilio {$errorCode}). Verify the customer's phone number before texting again.";
+            return "Recent text delivery failed (error {$errorCode}). Verify the customer's phone number before texting again.";
         }
 
         return 'Recent text delivery failed. Verify the customer\'s phone number before texting again.';

@@ -94,6 +94,7 @@ final class SendPlatformConversationMessageController
             $block = CustomerSmsSendEligibility::for(
                 $customer,
                 app(ShopIntegrationCredentials::class),
+                $normalized,
             )->consentBlockReason();
             if ($block !== null) {
                 return response()->json(['message' => $block], 422);

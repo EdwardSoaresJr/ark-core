@@ -26,9 +26,19 @@ interface CommunicationsWorkspaceSignals
     /**
      * Whether the shop may text this conversation's contact now, or null when nothing is known.
      *
+     * `texting` is provider-neutral: allowed, opted_out, unavailable (landline / unsupported / service
+     * disabled), or unknown. Hosts may still emit unknown with `unavailable_reason` or a clear `source`;
+     * the workspace presenter promotes those to unavailable labels.
+     *
      * Notes are further plain sentences shown with it, such as where an opt-out was recorded or the quiet-hours window.
      *
-     * @return array{texting: 'allowed'|'opted_out'|'unknown', source?: string|null, quiet_hours_until?: \DateTimeInterface|null, notes?: list<string>}|null
+     * @return array{
+     *     texting: 'allowed'|'opted_out'|'unavailable'|'unknown',
+     *     source?: string|null,
+     *     unavailable_reason?: 'landline'|'service_disabled'|'unsupported'|null,
+     *     quiet_hours_until?: \DateTimeInterface|null,
+     *     notes?: list<string>
+     * }|null
      */
     public function contactPermission(Conversation $conversation, ?Customer $customer): ?array;
 

@@ -52,8 +52,6 @@ tests/Feature/Communications/MissedCallRescueTest.php::missed call rescue cooldo
 tests/Feature/Communications/MissedCallRescueTest.php::missed call rescue respects cooldown after a prior rescue
 tests/Feature/Communications/MissedCallRescueTest.php::missed call rescue sends system sms into conversation when enabled
 tests/Feature/Communications/MissedCallRescueTest.php::voicemail without a call recording can still send a rescue
-tests/Feature/Communications/PhoneSmsCapabilityTest.php::eligibility blocks send when stored capability is not sms capable
-tests/Feature/Communications/PhoneSmsCapabilityTest.php::outbound send refuses landline when capability is stored
 tests/Feature/Desk/ArkDeskApiTest.php::desk dragon uses staff hosted chat and stays useful when Dragon is down
 tests/Feature/Import/LegacyArkSmsImportTest.php::legacy imported estimate can render pdf without overwriting imported snapshot
 tests/Feature/Leads/LeadIndexTimelineTest.php::lead-linked inbox context shows check in and disposal actions
