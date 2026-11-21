@@ -34,7 +34,7 @@ final class DocumentDisclaimerComposer
             ? $this->termsResolver->forRepairOrder($repairOrder, $documentType, $settings)
             : [
                 'global_disclaimer' => $settings->globalDocumentDisclaimerFor($documentType),
-                'authorization_language' => $this->authorizationLanguageForSnapshot($settings),
+                'authorization_language' => $this->summaryLanguageForSnapshot($documentType, $settings),
                 'shop_terms_fingerprint' => '',
                 'concern_terms' => [],
             ];
@@ -77,10 +77,19 @@ final class DocumentDisclaimerComposer
             'customer_type' => filled($customerType) ? trim((string) $customerType) : null,
             'customer_type_disclaimer' => filled($customerTypeDisclaimer) ? trim((string) $customerTypeDisclaimer) : null,
             'authorization_language' => $resolved['authorization_language']
-                ?? $this->authorizationLanguageForSnapshot($settings),
+                ?? $this->summaryLanguageForSnapshot($documentType, $settings),
             'concern_terms' => $resolved['concern_terms'],
             'shop_terms_fingerprint' => $resolved['shop_terms_fingerprint'] ?? '',
         ];
+    }
+
+    private function summaryLanguageForSnapshot(FinancialDocumentType $documentType, ShopSettings $settings): ?string
+    {
+        if ($documentType === FinancialDocumentType::Invoice) {
+            return $settings->invoiceSummaryLanguage();
+        }
+
+        return $this->authorizationLanguageForSnapshot($settings);
     }
 
     private function authorizationLanguageForSnapshot(ShopSettings $settings): ?string
