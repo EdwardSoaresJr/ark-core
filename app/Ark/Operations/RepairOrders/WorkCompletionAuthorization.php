@@ -242,38 +242,7 @@ final class WorkCompletionAuthorization
                     ->groupBy('repair_order_concern_id')
                     ->map(fn (Collection $rows): ApprovedWorkScope => $rows->last());
 
-                $recorded = [];
-
-                foreach ($repairOrder->lines as $line) {
-                    $lineId = (int) $line->id;
-
-                    if (! isset($covered[$lineId])) {
-                        continue;
-                    }
-
-                    $concernId = (int) $line->repair_order_concern_id;
-                    $scope = $scopes->get($concernId);
-                    $approved = $scope?->approvedLines()[$lineId] ?? null;
-
-                    if ($approved === null && $scope?->approved_lines === null && is_array($line->legacy_approved_amounts)) {
-                        $ceiling = ApprovedWorkScope::recordedAmounts($line->legacy_approved_amounts);
-                        $approved = $ceiling === null ? null : [
-                            'subtotal_cents' => $ceiling['subtotal_cents'],
-                            'amounts' => $ceiling,
-                        ];
-                    }
-
-                    if ($approved === null) {
-                        continue;
-                    }
-
-                    $recorded[$lineId] = [
-                        'subtotal_cents' => (int) $approved['subtotal_cents'],
-                        'amounts' => $approved['amounts'],
-                    ];
-                }
-
-                return $recorded;
+                return $this->resolveApprovedRecordedAmountsForCoveredLines($repairOrder, $covered, $scopes);
             },
         );
     }
@@ -480,10 +449,79 @@ final class WorkCompletionAuthorization
     }
 
     /**
+     * Prefetch ApprovedWorkScope + legacy approval events for a report-sized set of repair orders
+     * so authorized totals do not issue one query pair per RO.
+     *
+     * @param  Collection<int, RepairOrder>  $repairOrders
+     */
+    public function warmAuthorizedTotalsCaches(Collection $repairOrders): void
+    {
+        $orders = $repairOrders
+            ->filter(fn (mixed $repairOrder): bool => $repairOrder instanceof RepairOrder)
+            ->each(fn (RepairOrder $repairOrder) => $repairOrder->loadMissing(['lines.concern', 'concerns']))
+            ->values();
+
+        if ($orders->isEmpty()) {
+            return;
+        }
+
+        $concernIds = $orders
+            ->flatMap(fn (RepairOrder $repairOrder): Collection => $repairOrder->lines
+                ->map(fn (RepairOrderLine $line): ?int => $line->concern instanceof RepairOrderConcern
+                    && $line->concern->disposition === RepairOrderConcernDisposition::Approved
+                    ? (int) $line->concern->id
+                    : null)
+                ->filter())
+            ->unique()
+            ->values()
+            ->all();
+
+        $scopesByConcernId = $concernIds === []
+            ? collect()
+            : ApprovedWorkScope::query()
+                ->whereIn('repair_order_concern_id', $concernIds)
+                ->orderBy('id')
+                ->get()
+                ->groupBy(fn (ApprovedWorkScope $scope): int => (int) $scope->repair_order_concern_id)
+                ->map(fn (Collection $rows): ApprovedWorkScope => $rows->last());
+
+        $eventsByRepairOrderId = OperationalEvent::query()
+            ->where('aggregate_type', RepairOrder::class)
+            ->whereIn('aggregate_id', $orders->map(fn (RepairOrder $repairOrder): int => (int) $repairOrder->id)->all())
+            ->where('event_name', OperationalEventName::ConcernDispositionChanged->value)
+            ->orderByDesc('id')
+            ->get(['aggregate_id', 'occurred_at', 'payload_json'])
+            ->groupBy(fn (OperationalEvent $event): int => (int) $event->aggregate_id);
+
+        $cache = app(RepairOrderReadCache::class);
+
+        foreach ($orders as $repairOrder) {
+            $repairOrderId = (int) $repairOrder->id;
+            $events = $eventsByRepairOrderId->get($repairOrderId) ?? collect();
+
+            $cache->remember(
+                'approved-lines:'.$repairOrderId,
+                fn (): array => $this->resolveCustomerApprovedLaborAndPartIdSet($repairOrder, $scopesByConcernId, $events),
+            );
+            $cache->remember(
+                'approved-recorded-amounts:'.$repairOrderId,
+                fn (): array => $this->resolveApprovedRecordedAmountsForCoveredLines(
+                    $repairOrder,
+                    $this->customerApprovedLaborAndPartIdSet($repairOrder),
+                    $scopesByConcernId,
+                ),
+            );
+        }
+    }
+
+    /**
      * @return array<int, true>
      */
-    private function resolveCustomerApprovedLaborAndPartIdSet(RepairOrder $repairOrder): array
-    {
+    private function resolveCustomerApprovedLaborAndPartIdSet(
+        RepairOrder $repairOrder,
+        ?Collection $scopesByConcernId = null,
+        ?Collection $events = null,
+    ): array {
         $repairOrder->loadMissing(['lines.concern']);
 
         $concerns = $repairOrder->lines
@@ -497,14 +535,14 @@ final class WorkCompletionAuthorization
             return [];
         }
 
-        $scopes = ApprovedWorkScope::query()
+        $scopes = $scopesByConcernId ?? ApprovedWorkScope::query()
             ->whereIn('repair_order_concern_id', $concerns->pluck('id')->all())
             ->orderBy('id')
             ->get()
             ->groupBy('repair_order_concern_id')
             ->map(fn (Collection $rows): ApprovedWorkScope => $rows->last());
 
-        $events = $this->legacyApprovalEvents((int) $repairOrder->id);
+        $events ??= $this->legacyApprovalEvents((int) $repairOrder->id);
         $covered = [];
 
         foreach ($repairOrder->lines as $line) {
@@ -531,6 +569,54 @@ final class WorkCompletionAuthorization
         }
 
         return $covered;
+    }
+
+    /**
+     * @param  array<int, true>  $covered
+     * @param  Collection<int, ApprovedWorkScope>  $scopesByConcernId
+     * @return array<int, array{subtotal_cents: int, amounts: array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null}>
+     */
+    private function resolveApprovedRecordedAmountsForCoveredLines(
+        RepairOrder $repairOrder,
+        array $covered,
+        Collection $scopesByConcernId,
+    ): array {
+        if ($covered === []) {
+            return [];
+        }
+
+        $recorded = [];
+
+        foreach ($repairOrder->lines as $line) {
+            $lineId = (int) $line->id;
+
+            if (! isset($covered[$lineId])) {
+                continue;
+            }
+
+            $concernId = (int) $line->repair_order_concern_id;
+            $scope = $scopesByConcernId->get($concernId);
+            $approved = $scope instanceof ApprovedWorkScope ? ($scope->approvedLines()[$lineId] ?? null) : null;
+
+            if ($approved === null && $scope?->approved_lines === null && is_array($line->legacy_approved_amounts)) {
+                $ceiling = ApprovedWorkScope::recordedAmounts($line->legacy_approved_amounts);
+                $approved = $ceiling === null ? null : [
+                    'subtotal_cents' => $ceiling['subtotal_cents'],
+                    'amounts' => $ceiling,
+                ];
+            }
+
+            if ($approved === null) {
+                continue;
+            }
+
+            $recorded[$lineId] = [
+                'subtotal_cents' => (int) $approved['subtotal_cents'],
+                'amounts' => $approved['amounts'],
+            ];
+        }
+
+        return $recorded;
     }
 
     public function concernDeletionBlockedReason(RepairOrderConcern $concern): ?string

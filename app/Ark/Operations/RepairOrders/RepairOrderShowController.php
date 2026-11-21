@@ -94,6 +94,12 @@ class RepairOrderShowController
             ->values();
 
         $canAuthor = $request->user()?->can(ArkCapability::RepairOrdersManage->value) ?? false;
+        $linesNeedingAuthorization = $authorization->linesRequiringAuthorization($repairOrder);
+        $pendingApprovalCentsByLineId = $linesNeedingAuthorization
+            ->mapWithKeys(fn ($line): array => [
+                (int) $line->id => $authorization->pendingApprovalCents($repairOrder, $line),
+            ])
+            ->all();
 
         return view('operations.repair-orders.show', [
             'soloOwnerShop' => $soloShop->isSoloOwnerShop(),
@@ -105,7 +111,9 @@ class RepairOrderShowController
             'attachableDocuments' => $documentProjection->attachableForRepairOrder($repairOrder),
             ...RepairOrderPosture::for($repairOrder),
             'totals' => $totals,
-            'linesNeedingAuthorization' => $authorization->linesRequiringAuthorization($repairOrder),
+            'linesNeedingAuthorization' => $linesNeedingAuthorization,
+            'approvedSubtotalsBeforeIncrease' => $authorization->approvedSubtotalsBeforeIncrease($repairOrder),
+            'pendingApprovalCentsByLineId' => $pendingApprovalCentsByLineId,
             'approvalForecast' => $approvalForecast->for($repairOrder),
             'balanceProjection' => $balanceProjection,
             'financial' => $financialPresenter->for($repairOrder, $totals, $balanceProjection),
