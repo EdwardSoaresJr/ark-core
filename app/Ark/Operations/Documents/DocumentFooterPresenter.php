@@ -5,6 +5,7 @@ namespace App\Ark\Operations\Documents;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\Settings\ShopSettings;
 
 final class DocumentFooterPresenter
 {
@@ -113,7 +114,13 @@ final class DocumentFooterPresenter
             }
         }
 
+        $documentType = FinancialDocumentType::tryFrom((string) data_get($snapshot, 'document_type', 'estimate'))
+            ?? FinancialDocumentType::Estimate;
         $authorizationLanguage = trim((string) ($documents['authorization_language'] ?? $settings['authorization_language'] ?? ''));
+        // Display only: issued invoices must not show estimate-approval copy. Frozen snapshot JSON stays unchanged.
+        if ($documentType === FinancialDocumentType::Invoice && $this->isEstimateAuthorizationLanguage($authorizationLanguage)) {
+            $authorizationLanguage = ShopSettings::DEFAULT_INVOICE_SUMMARY_LANGUAGE;
+        }
 
         return [
             'important_information' => $this->uniqueBullets($importantInformation),
@@ -123,6 +130,15 @@ final class DocumentFooterPresenter
             'approval' => $this->approvalStatus($snapshot),
             'total_label' => $this->footerTotalLabel($snapshot),
         ];
+    }
+
+    private function isEstimateAuthorizationLanguage(string $language): bool
+    {
+        if ($language === '') {
+            return false;
+        }
+
+        return (bool) preg_match('/approving this estimate|approve this estimate/i', $language);
     }
 
     /**

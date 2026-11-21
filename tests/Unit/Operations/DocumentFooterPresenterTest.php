@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Operations\Documents\DocumentFooterPresenter;
+use App\Ark\Operations\Settings\ShopSettings;
 
 test('document footer merges global recommendation and retail disclaimers into important information', function () {
     $footer = app(DocumentFooterPresenter::class)->present([
@@ -229,3 +230,34 @@ test('invoice footer status follows the live payment status, not the status at i
     'paid' => ['paid', 'Paid in Full'],
     'partially paid' => ['partially_paid', 'Partially Paid'],
 ]);
+
+test('invoice footer uses invoice summary language from the documents block', function () {
+    $footer = app(DocumentFooterPresenter::class)->present([
+        'document_type' => 'invoice',
+        'documents' => [
+            'authorization_language' => ShopSettings::DEFAULT_INVOICE_SUMMARY_LANGUAGE,
+        ],
+        'settings' => [
+            'authorization_language' => ShopSettings::DEFAULT_AUTHORIZATION_LANGUAGE,
+        ],
+        'concerns' => [['disposition' => 'approved']],
+    ]);
+
+    expect(collect($footer['authorization'])->implode("\n\n"))
+        ->toContain('This invoice reflects')
+        ->not->toContain('By approving this estimate');
+});
+
+test('estimate footer keeps estimate authorization language from the documents block', function () {
+    $footer = app(DocumentFooterPresenter::class)->present([
+        'document_type' => 'estimate',
+        'documents' => [
+            'authorization_language' => ShopSettings::DEFAULT_AUTHORIZATION_LANGUAGE,
+        ],
+        'settings' => [],
+        'concerns' => [['disposition' => 'recommended']],
+    ]);
+
+    expect(collect($footer['authorization'])->implode("\n\n"))
+        ->toContain('By approving this estimate');
+});

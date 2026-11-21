@@ -43,7 +43,7 @@ final class EffectiveDocumentTermsResolver
         $settings ??= ShopSettings::current();
         $context = RepairOrderPricingContext::for($repairOrder, $settings);
         $global = $this->globalDisclaimer($documentType, $context, $settings);
-        $authorization = $this->authorizationLanguage($context, $settings);
+        $authorization = $this->authorizationLanguage($documentType, $context, $settings);
 
         $concernTerms = [];
         foreach ($repairOrder->concerns as $concern) {
@@ -181,8 +181,15 @@ final class EffectiveDocumentTermsResolver
         return $settings->globalDocumentDisclaimerFor($documentType);
     }
 
-    private function authorizationLanguage(RepairOrderPricingContext $context, ShopSettings $settings): ?string
-    {
+    private function authorizationLanguage(
+        FinancialDocumentType $documentType,
+        RepairOrderPricingContext $context,
+        ShopSettings $settings,
+    ): ?string {
+        if ($documentType === FinancialDocumentType::Invoice) {
+            return $settings->invoiceSummaryLanguage();
+        }
+
         $commercial = $context->commercialProfile();
         $roHasStamp = is_array($context->repairOrder->commercial_pricing_profile)
             && $context->repairOrder->commercial_pricing_profile !== [];

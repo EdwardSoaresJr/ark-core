@@ -100,7 +100,7 @@ final class InvoiceSnapshotBuilder
                 'estimate_disclaimer' => $settings->globalDocumentDisclaimerFor(FinancialDocumentType::Estimate),
                 'invoice_disclaimer' => $settings->globalDocumentDisclaimerFor(FinancialDocumentType::Invoice),
                 'recommendation_disclaimer' => $settings->recommendation_disclaimer,
-                'authorization_language' => $settings->authorizationLanguage(),
+                'authorization_language' => $settings->invoiceSummaryLanguage(),
             ],
             'documents' => $this->disclaimerComposer->snapshotFor(
                 FinancialDocumentType::Invoice,

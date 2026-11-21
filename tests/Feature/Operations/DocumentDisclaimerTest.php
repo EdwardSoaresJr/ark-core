@@ -44,23 +44,26 @@ test('estimate snapshot copies global and customer type disclaimers into documen
 test('invoice snapshot keeps disclaimer text after shop settings change', function () {
     ShopSettings::current()->update([
         'invoice_disclaimer' => 'Original invoice disclaimer.',
-        'authorization_language' => 'Original authorization language.',
+        'authorization_language' => 'Original estimate authorization language.',
     ]);
 
     $repairOrder = repairOrderForDocumentDisclaimer('Retail');
     $repairOrder->update(['status' => RepairOrderStatus::ReadyPickup]);
 
     $invoice = app(GenerateInvoiceSnapshotAction::class)->execute($repairOrder->fresh());
+    $frozenInvoiceSummary = data_get($invoice->snapshot_json, 'documents.authorization_language');
 
     ShopSettings::current()->update([
         'invoice_disclaimer' => 'Changed invoice disclaimer.',
-        'authorization_language' => 'Changed authorization language.',
+        'authorization_language' => 'Changed estimate authorization language.',
     ]);
 
     $presented = app(DocumentPdfPresenter::class)->prepare($invoice->snapshot_json);
 
     expect($presented['documents']['global_disclaimer'])->toBe('Original invoice disclaimer.')
-        ->and($presented['documents']['authorization_language'])->toBe('Original authorization language.');
+        ->and($presented['documents']['authorization_language'])->toBe($frozenInvoiceSummary)
+        ->and($presented['documents']['authorization_language'])->toContain('This invoice reflects')
+        ->and($presented['documents']['authorization_language'])->not->toContain('By approving this estimate');
 });
 
 test('document disclaimer composer resolves invoice global disclaimer from stored documents block', function () {

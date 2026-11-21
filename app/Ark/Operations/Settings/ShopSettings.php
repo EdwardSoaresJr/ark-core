@@ -391,6 +391,12 @@ By approving this estimate, I authorize {shop_name} to perform the approved repa
 I acknowledge that additional repairs may require separate authorization and agree to pay for authorized work performed, including diagnostic charges where applicable.
 TEXT;
 
+    public const DEFAULT_INVOICE_SUMMARY_LANGUAGE = <<<'TEXT'
+This invoice reflects the authorized repairs and services described above.
+
+I agree to pay the amount due for work performed, including applicable taxes and fees.
+TEXT;
+
     public const DEFAULT_CUSTOMER_TYPE_DISCLAIMERS = [
         'retail' => 'This estimate reflects repairs recommended based on our inspection. Additional concerns may exist that were not apparent during initial evaluation.',
         'fleet' => 'Repairs will not begin until authorization is received from the fleet management company. Additional repairs requiring authorization may affect completion time.',
@@ -1827,6 +1833,11 @@ TEXT;
         }
 
         return trim((string) $this->authorization_language);
+    }
+
+    public function invoiceSummaryLanguage(): string
+    {
+        return self::DEFAULT_INVOICE_SUMMARY_LANGUAGE;
     }
 
     public function portalSignatureRequired(): bool
