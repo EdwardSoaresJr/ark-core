@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Ark\Install\InstallationState;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Settings\ShopSettingsSchema;
@@ -50,6 +51,7 @@ abstract class TestCase extends BaseTestCase
 
         ShopSettings::forgetCurrent();
         ShopSettingsSchema::flush();
+        RepairOrderReadCache::beginUnitOfWork();
 
         $settings = ShopSettings::current();
         $updates = [

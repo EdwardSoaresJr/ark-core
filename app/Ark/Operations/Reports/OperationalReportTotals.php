@@ -22,12 +22,17 @@ use Illuminate\Support\Facades\Schema;
 class OperationalReportTotals
 {
     /**
-     * Per-request memo of authorized totals keyed by repair-order id so sold / labor / pre-tax
-     * and closed labor-by-tech paths do not reload the same graphs repeatedly.
+     * Request-scoped memo of authorized totals. Cleared with {@see flushApprovedTotalsMemo()}
+     * from RepairOrderReadCache boundaries so RefreshDatabase id reuse cannot leak cents.
      *
      * @var array<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>
      */
     private static array $approvedTotalsMemo = [];
+
+    public static function flushApprovedTotalsMemo(): void
+    {
+        self::$approvedTotalsMemo = [];
+    }
 
     /**
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
@@ -415,6 +420,10 @@ class OperationalReportTotals
         });
     }
 
+    /**
+     * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
+     * @return Collection<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>
+     */
     /**
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>

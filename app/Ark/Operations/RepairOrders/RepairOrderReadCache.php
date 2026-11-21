@@ -13,6 +13,7 @@ use App\Ark\Operations\Inspections\InspectionItem;
 use App\Ark\Operations\Inspections\InspectionItemMeasurement;
 use App\Ark\Operations\Inspections\InspectionItemPhoto;
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
+use App\Ark\Operations\Reports\OperationalReportTotals;
 use App\Ark\Operations\Settings\ShopSettingsSchema;
 use App\Ark\Runtime\DatabaseReadScope;
 use Illuminate\Database\Eloquent\Model;
@@ -51,6 +52,7 @@ final class RepairOrderReadCache
     public static function beginUnitOfWork(): void
     {
         ShopSettingsSchema::revalidate();
+        OperationalReportTotals::flushApprovedTotalsMemo();
 
         if (app()->resolved(self::class)) {
             app(self::class)->flush();
@@ -60,6 +62,8 @@ final class RepairOrderReadCache
     public static function registerFlushListeners(): void
     {
         $flush = function (): void {
+            OperationalReportTotals::flushApprovedTotalsMemo();
+
             if (app()->resolved(self::class)) {
                 app(self::class)->flush();
             }
