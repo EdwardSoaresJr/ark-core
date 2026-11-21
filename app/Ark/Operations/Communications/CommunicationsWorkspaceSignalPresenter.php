@@ -130,7 +130,7 @@ final class CommunicationsWorkspaceSignalPresenter
     {
         // Legacy host values from earlier #233 drafts → canonical unavailable.
         if (in_array($texting, ['landline', 'unsupported', 'disabled', 'temporary_failure'], true)) {
-            return $texting === 'temporary_failure' ? 'unknown' : 'unavailable';
+            return 'unavailable';
         }
 
         if (in_array($texting, ['allowed', 'opted_out', 'unavailable', 'unknown'], true) && $texting !== 'unknown') {

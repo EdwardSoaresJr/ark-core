@@ -74,10 +74,10 @@ test('presenter never invites retry for STOP or landline delivery failures', fun
 
     expect($stop['allows_retry'])->toBeFalse()
         ->and($stop['detail'])->not->toContain('send it again')
-        ->and($stop['detail'])->toContain('STOP')
+        ->and($stop['detail'])->toContain('opted out')
         ->and($landline['allows_retry'])->toBeFalse()
         ->and($landline['detail'])->not->toContain('send it again')
-        ->and($landline['detail'])->toContain('landline')
+        ->and($landline['detail'])->toContain('may not support text')
         ->and($temporary['allows_retry'])->toBeTrue()
         ->and($temporary['detail'])->toContain('sending it again later');
 });
@@ -149,7 +149,7 @@ test('changed primary phone eligibility uses the new number while the old landli
         ->and(CustomerSmsSendEligibility::for($customer->fresh(), ShopIntegrationCredentials::forCurrentShop(), '7195553011')->canSend())->toBeFalse();
 });
 
-test('STOP consent still blocks every destination while temporary failure warnings may invite retry', function () {
+test('customer STOP blocks the primary while secondary numbers stay independent; permanent failures do not invite retry', function () {
     companionBindSmsTransport();
     $optedOut = Customer::query()->create([
         'first_name' => 'Stop',
@@ -178,9 +178,11 @@ test('STOP consent still blocks every destination while temporary failure warnin
         'last_sms_failed_at' => now(),
     ]);
 
-    expect(CustomerSmsSendEligibility::for($optedOut, ShopIntegrationCredentials::forCurrentShop(), '7195553022')->canSend())->toBeFalse()
+    // Number-scoped: primary customer STOP blocks the main phone; an unrelated secondary stays sendable until that number opts out.
+    expect(CustomerSmsSendEligibility::for($optedOut, ShopIntegrationCredentials::forCurrentShop())->canSend())->toBeFalse()
+        ->and(CustomerSmsSendEligibility::for($optedOut, ShopIntegrationCredentials::forCurrentShop(), '7195553022')->canSend())->toBeTrue()
         ->and(CustomerSmsSendEligibility::for($temporary, ShopIntegrationCredentials::forCurrentShop())->deliveryWarning())->toContain('before texting again')
-        ->and(CustomerSmsSendEligibility::for($permanent, ShopIntegrationCredentials::forCurrentShop())->deliveryWarning())->toContain('STOP')
+        ->and(CustomerSmsSendEligibility::for($permanent, ShopIntegrationCredentials::forCurrentShop())->deliveryWarning())->toContain('opted out')
         ->and(CustomerSmsSendEligibility::for($permanent, ShopIntegrationCredentials::forCurrentShop())->deliveryWarning())->not->toContain('before texting again');
 });
 
