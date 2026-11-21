@@ -166,8 +166,6 @@ tests/Feature/Operations/SendShopAddressTest.php::send address creates outbound 
 tests/Feature/Operations/ShopInternalMailerTest.php::broken postmark mailer falls back to log when no core token exists
 tests/Feature/Operations/ShopInternalMailerTest.php::connected shop does not apply leftover postmark tokens to laravel mail
 tests/Feature/Operations/ShopInternalMailerTest.php::disconnected shop keeps postmark when a core token exists
-tests/Feature/Operations/SoftCapacitySchedulingTest.php::unassigned appointments appear on the agenda scheduler
-tests/Feature/Operations/StaffInvitationTest.php::invited staff can use signed link to set password and reach operations
 tests/Feature/Operations/TablerShellComponentsTest.php::an ARKademy page keeps the legacy shell components
 tests/Feature/Operations/TechRoProductionLandingTest.php::advisor and admin keep estimate review on show
 tests/Feature/Operations/TechRoProductionLandingTest.php::multi-role advisor technician keeps estimate review

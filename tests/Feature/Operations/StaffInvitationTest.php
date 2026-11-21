@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\Staff\StaffFrontDoor;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
@@ -81,7 +82,7 @@ test('invited staff can use signed link to set password and reach operations', f
     $this->post(route('account.setup.store'), [
         'password' => 'new-password-9',
         'password_confirmation' => 'new-password-9',
-    ])->assertRedirect(route('operations.index'));
+    ])->assertRedirect(StaffFrontDoor::landingUrl($advisor));
 
     $advisor->refresh();
 
@@ -94,7 +95,7 @@ test('invited staff can use signed link to set password and reach operations', f
             'email' => $advisor->email,
             'password' => 'new-password-9',
         ])
-        ->assertRedirect(route('operations.index', absolute: false));
+        ->assertRedirect(StaffFrontDoor::landingUrl($advisor));
 });
 
 test('invited staff cannot sign in with password until setup is complete', function () {

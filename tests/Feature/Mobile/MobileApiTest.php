@@ -1865,11 +1865,33 @@ test('advisor mobile schedule returns day appointments', function (): void {
         ->assertJsonPath('rows.0.customer_id', $customer->id);
 });
 
-test('advisor can create appointment from mobile', function (): void {
+/**
+ * The booking day is derived from the shop's own scheduling hours (the next open weekday in the shop timezone),
+ * never from the UTC calendar, so the test holds at every clock position, including the evening boundary where
+ * the UTC date is already one day ahead of the shop date.
+ */
+dataset('mobile appointment clocks (UTC)', [
+    'weekday midday' => '2026-11-18 18:00:00',
+    'thursday evening, UTC already Friday' => '2026-11-20 06:30:00',
+    'friday evening, UTC already Saturday' => '2026-11-21 01:30:00',
+    'saturday' => '2026-11-21 22:00:00',
+    'saturday evening, UTC already Sunday' => '2026-11-22 03:00:00',
+    'sunday evening, UTC already Monday' => '2026-11-23 06:30:00',
+    'just before shop midnight' => '2026-11-24 06:59:00',
+    'just after shop midnight' => '2026-11-24 07:01:00',
+    'spring-forward weekend' => '2027-03-13 20:00:00',
+    'fall-back weekend' => '2026-11-01 07:30:00',
+]);
+
+test('advisor can create appointment from mobile', function (string $utcNow): void {
+    \Illuminate\Support\Carbon::setTestNow(\Illuminate\Support\Carbon::parse($utcNow, 'UTC'));
+
+    $weekly = \App\Ark\Operations\Appointments\SchedulingHours::defaultWeekly();
     ShopSettings::current()->update([
         'appointments_enabled' => true,
-        'scheduling_hours' => \App\Ark\Operations\Appointments\SchedulingHours::defaultWeekly(),
+        'scheduling_hours' => $weekly,
     ]);
+    ShopSettings::forgetCurrent();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $token = $advisor->createToken('test')->plainTextToken;
@@ -1880,8 +1902,12 @@ test('advisor can create appointment from mobile', function (): void {
         'phone' => '7195558282',
     ]);
 
-    // Pin to a weekday morning so weekend/holiday wall-clock CI does not miss shop hours.
-    $startsAt = now()->next(\Carbon\Carbon::MONDAY)->setTime(10, 0);
+    // Next open day in the shop's calendar, at 10:00 shop time.
+    $day = \App\Ark\Operations\Settings\ShopDisplayTimezone::now()->startOfDay()->addDay();
+    while (! ($weekly[strtolower($day->englishDayOfWeek)]['enabled'] ?? false)) {
+        $day = $day->addDay();
+    }
+    $startsAt = $day->copy()->setTime(10, 0);
 
     $this->withToken($token)
         ->postJson('/api/mobile/appointments', [
@@ -1893,6 +1919,42 @@ test('advisor can create appointment from mobile', function (): void {
         ->assertCreated()
         ->assertJsonPath('appointment.customer_id', $customer->id)
         ->assertJsonPath('appointment.concern', 'Brake noise');
+
+    \Illuminate\Support\Carbon::setTestNow();
+})->with('mobile appointment clocks (UTC)');
+
+test('mobile appointment on a day closed in shop hours is still refused', function (): void {
+    \Illuminate\Support\Carbon::setTestNow(\Illuminate\Support\Carbon::parse('2026-11-18 18:00:00', 'UTC'));
+
+    ShopSettings::current()->update([
+        'appointments_enabled' => true,
+        'scheduling_hours' => \App\Ark\Operations\Appointments\SchedulingHours::defaultWeekly(),
+    ]);
+    ShopSettings::forgetCurrent();
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $token = $advisor->createToken('test')->plainTextToken;
+
+    $customer = Customer::query()->create([
+        'first_name' => 'Closed',
+        'last_name' => 'Saturday',
+        'phone' => '7195558283',
+    ]);
+
+    // 2026-11-21 is a Saturday, closed in the default weekly hours.
+    $startsAt = \App\Ark\Operations\Settings\ShopDisplayTimezone::parseLocal('2026-11-21 10:00');
+
+    $this->withToken($token)
+        ->postJson('/api/mobile/appointments', [
+            'customer_id' => $customer->id,
+            'starts_at' => $startsAt->toIso8601String(),
+            'ends_at' => $startsAt->copy()->addHour()->toIso8601String(),
+            'concern' => 'Brake noise',
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('starts_at');
+
+    \Illuminate\Support\Carbon::setTestNow();
 });
 
 

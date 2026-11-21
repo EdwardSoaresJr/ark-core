@@ -39,9 +39,15 @@ const VIN_PHONETIC = {
 
 export const vinPhonetic = (char) => VIN_PHONETIC[String(char || '').toUpperCase()] ?? String(char || '').toUpperCase();
 
-export const arkVinDisplay = (vin) => ({
+// `inline: true` keeps the readback a floating popover at every width (never the bottom sheet), for the RO dock where
+// a sheet would cover the footer controls.
+export const arkVinDisplay = (vin, { inline = false } = {}) => ({
     vin: String(vin || '').toUpperCase().trim(),
+    inline,
     copied: false,
+    copyFailed: false,
+    pointerType: '',
+    copyTimer: null,
     readbackOpen: false,
     readbackPinned: false,
     sheetMode: false,
@@ -52,10 +58,10 @@ export const arkVinDisplay = (vin) => ({
     hoverCloseTimer: null,
 
     init() {
-        this.sheetMode = window.matchMedia('(max-width: 767.98px)').matches;
+        this.sheetMode = ! this.inline && window.matchMedia('(max-width: 767.98px)').matches;
         this._mq = window.matchMedia('(max-width: 767.98px)');
         this._mqListener = (event) => {
-            this.sheetMode = event.matches;
+            this.sheetMode = ! this.inline && event.matches;
             if (this.readbackOpen) {
                 this.$nextTick(() => this.positionReadback());
             }
@@ -70,7 +76,7 @@ export const arkVinDisplay = (vin) => ({
     },
 
     isDesktopReadback() {
-        return ! window.matchMedia('(max-width: 767.98px)').matches;
+        return this.inline || ! window.matchMedia('(max-width: 767.98px)').matches;
     },
 
     clearHoverClose() {
@@ -146,7 +152,7 @@ export const arkVinDisplay = (vin) => ({
 
     openReadback({ pinned = true } = {}) {
         this.clearHoverClose();
-        this.sheetMode = window.matchMedia('(max-width: 767.98px)').matches;
+        this.sheetMode = ! this.inline && window.matchMedia('(max-width: 767.98px)').matches;
         this.readbackOpen = true;
         this.readbackPinned = pinned;
         this.$nextTick(() => {
@@ -194,6 +200,21 @@ export const arkVinDisplay = (vin) => ({
         const panel = this.$refs.panel;
         const height = panel?.offsetHeight ?? 280;
         const width = panel?.offsetWidth ?? 320;
+
+        // Inline (RO dock): anchor by the viewport edge nearest the trigger so the popover never needs a size
+        // measurement (the panel is still display:none on the first pass) and always opens away from the footer.
+        if (this.inline) {
+            const maxWidth = Math.min(352, window.innerWidth - 16);
+            const left = Math.max(8, Math.min(rect.left, window.innerWidth - maxWidth - 8));
+            const vertical = rect.top > window.innerHeight / 2
+                ? `bottom:${Math.round(window.innerHeight - rect.top + offset)}px;`
+                : `top:${Math.round(rect.bottom + offset)}px;`;
+
+            this.tooltipStyle = `${vertical}left:${Math.round(left)}px;z-index:1085;`;
+
+            return;
+        }
+
         let top = rect.bottom + offset;
         let left = rect.left;
 
@@ -275,19 +296,59 @@ export const arkVinDisplay = (vin) => ({
         }
     },
 
+    // The VIN itself is the control: a click copies and, where there is no hover (touch), also pins the readback open.
+    activate() {
+        const touch = this.pointerType === 'touch' || this.pointerType === 'pen';
+        this.pointerType = '';
+
+        this.copy();
+
+        if (touch) {
+            this.openReadback({ pinned: true });
+        }
+    },
+
+    async writeClipboard() {
+        if (navigator.clipboard?.writeText) {
+            try {
+                await navigator.clipboard.writeText(this.vin);
+
+                return true;
+            } catch {
+                // Fall through to the legacy path.
+            }
+        }
+
+        const field = document.createElement('textarea');
+        field.value = this.vin;
+        field.setAttribute('readonly', '');
+        field.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+        document.body.appendChild(field);
+        field.select();
+
+        try {
+            return document.execCommand('copy') === true;
+        } catch {
+            return false;
+        } finally {
+            field.remove();
+        }
+    },
+
     async copy() {
         if (! this.vin) {
             return;
         }
 
-        try {
-            await navigator.clipboard.writeText(this.vin);
-            this.copied = true;
-            setTimeout(() => {
-                this.copied = false;
-            }, 1500);
-        } catch {
-            // Clipboard unavailable — VIN remains visible for manual copy.
-        }
+        clearTimeout(this.copyTimer);
+        const ok = await this.writeClipboard();
+
+        // Confirm only after the clipboard accepted the VIN; on failure say so and leave the VIN visible to copy by hand.
+        this.copied = ok;
+        this.copyFailed = ! ok;
+        this.copyTimer = setTimeout(() => {
+            this.copied = false;
+            this.copyFailed = false;
+        }, ok ? 1500 : 4000);
     },
 });

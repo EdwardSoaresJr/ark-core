@@ -396,8 +396,9 @@ test('unassigned appointments appear on the agenda scheduler', function () {
         ->assertDontSee('Technicians', false)
         ->assertDontSee('>Bays<', false)
         ->assertSee('Unassigned plan', false)
-        ->assertSee('ops-cal-card__detail', false)
-        ->assertSee('Open to reschedule', false);
+        ->assertSee('data-schedule-card', false)
+        ->assertSee('data-schedule-popover', false)
+        ->assertSee('Edit appointment', false);
 
     Carbon::setTestNow();
 });
