@@ -90,7 +90,9 @@ test('raising the price of an approved line leaves the increase pending until on
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Needs authorization', false)
+        ->assertSee('Increase needs authorization', false)
+        ->assertSee('data-line-pending-increase="'.$labor->id.'"', false)
+        ->assertSee('data-line-approved-ceiling="'.$labor->id.'"', false)
         ->assertSee('data-approved-line-increase="'.$labor->id.'"', false)
         ->assertSee('Approved sales and the invoice count the approved amount until the customer approves the increase.', false);
 

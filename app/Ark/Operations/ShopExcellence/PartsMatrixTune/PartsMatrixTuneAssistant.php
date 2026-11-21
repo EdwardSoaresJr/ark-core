@@ -3,12 +3,9 @@
 namespace App\Ark\Operations\ShopExcellence\PartsMatrixTune;
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
-use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\Reports\OperationalReportDateScope;
-use App\Ark\Operations\Reports\OperationalReportTotals;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -483,17 +480,24 @@ final class PartsMatrixTuneAssistant
 
     private function mixPartsPercent(Carbon $from, Carbon $to): ?int
     {
-        $parts = (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $from, $to))
-            ->where('repair_order_lines.type', RepairOrderLineType::Part)
-            ->sum('repair_order_lines.subtotal_cents');
+        $orders = OperationalReportDateScope::salesClosedBetween(
+            \App\Ark\Operations\RepairOrders\RepairOrder::query()->with(['lines.concern', 'concerns']),
+            $from,
+            $to,
+        )->get();
 
-        $labor = (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $from, $to))
-            ->where('repair_order_lines.type', RepairOrderLineType::Labor)
-            ->sum('repair_order_lines.subtotal_cents');
+        if ($orders->isEmpty()) {
+            return null;
+        }
+
+        $parts = 0;
+        $labor = 0;
+
+        foreach ($orders as $repairOrder) {
+            $approved = $this->calculator->approvedTotalsForRead($repairOrder);
+            $parts += $approved->partsCents();
+            $labor += $approved->laborCents();
+        }
 
         $total = $parts + $labor;
 

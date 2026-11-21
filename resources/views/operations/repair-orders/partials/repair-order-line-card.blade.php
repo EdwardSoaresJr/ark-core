@@ -32,6 +32,13 @@
         : RepairOrderLineItemPresentation::editContextLines($line);
     $needsAuthorization = isset($linesNeedingAuthorization)
         && collect($linesNeedingAuthorization)->contains(fn ($unauthorizedLine): bool => (int) $unauthorizedLine->id === (int) $line->id);
+    $approvedSubtotalsBeforeIncrease = $approvedSubtotalsBeforeIncrease ?? [];
+    $pendingApprovalCentsByLineId = $pendingApprovalCentsByLineId ?? [];
+    $approvedCeilingCents = $approvedSubtotalsBeforeIncrease[(int) $line->id] ?? null;
+    $pendingIncreaseCents = $approvedCeilingCents !== null
+        ? (int) ($pendingApprovalCentsByLineId[(int) $line->id] ?? 0)
+        : null;
+    $lineHasPendingIncrease = $needsAuthorization && $approvedCeilingCents !== null && $pendingIncreaseCents !== null && $pendingIncreaseCents > 0;
     $lineExceptions = isset($concern) && $concern->relationLoaded('authorizationExceptions')
         ? $concern->authorizationExceptions->filter(
             fn ($exception): bool => in_array((int) $line->id, $exception->lineIds(), true),
@@ -101,7 +108,9 @@
                 <div class="flex-fill" style="min-width: 0">
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <span class="subheader text-{{ $line->type->tablerColor() }}">{{ $line->type->staffLabel() }}</span>
-                        @if ($needsAuthorization)
+                        @if ($lineHasPendingIncrease)
+                            <span class="badge bg-yellow-lt" data-line-pending-increase="{{ $line->id }}">Increase needs authorization</span>
+                        @elseif ($needsAuthorization)
                             <span class="badge bg-yellow-lt">Needs authorization</span>
                         @endif
                         @if ($lineExceptions->isNotEmpty())
@@ -237,6 +246,19 @@
                     </x-operations.inspect-popover>
                 @endif
             </div>
+
+            @if ($lineHasPendingIncrease)
+                <p
+                    class="small text-warning mt-1 mb-0"
+                    data-line-approved-ceiling="{{ $line->id }}"
+                    data-line-approved-amount="{{ $totals->format($approvedCeilingCents) }}"
+                    data-line-pending-amount="{{ $totals->format($pendingIncreaseCents) }}"
+                >
+                    Approved at {{ $totals->format($approvedCeilingCents) }}
+                    <span class="mx-1" aria-hidden="true">·</span>
+                    +{{ $totals->format($pendingIncreaseCents) }} pending authorization
+                </p>
+            @endif
 
             @foreach ($contextLines as $contextLine)
                 <p class="small text-secondary mt-1 mb-0">{{ $contextLine }}</p>

@@ -22,12 +22,13 @@ class ReportAuthorizationIntegrityCommand extends Command
         }
 
         $this->table(
-            ['RO', 'Concern', 'Line', 'Kind'],
+            ['RO', 'Concern', 'Line', 'Kind', 'Pending ¢'],
             $rows->map(fn (array $row): array => [
                 $row['repair_order_number'],
                 $row['concern_id'],
                 $row['line_id'],
                 $row['kind'],
+                $row['pending_approval_cents'] ?? 0,
             ])->all(),
         );
 
