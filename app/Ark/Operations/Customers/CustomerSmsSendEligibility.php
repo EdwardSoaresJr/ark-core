@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Customers;
 
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
 use App\Ark\Operations\Messaging\PhoneSmsOptOut;
+use App\Ark\Operations\Messaging\SmsDeliveryFailureClassifier;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Communications\ManagedCommunicationsGate;
@@ -97,9 +98,15 @@ final class CustomerSmsSendEligibility
         }
 
         $errorCode = trim((string) ($this->customer->last_sms_error_code ?? ''));
+        $failures = app(SmsDeliveryFailureClassifier::class);
+        $class = $failures->classify($errorCode !== '' ? $errorCode : null);
+
+        if (! $failures->allowsRetry($class)) {
+            return $failures->staffGuidance($class, $errorCode !== '' ? $errorCode : null);
+        }
 
         if ($errorCode !== '') {
-            return "Recent text delivery failed (Twilio {$errorCode}). Verify the customer's phone number before texting again.";
+            return "Recent text delivery failed (error {$errorCode}). Verify the customer's phone number before texting again.";
         }
 
         return 'Recent text delivery failed. Verify the customer\'s phone number before texting again.';

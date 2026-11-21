@@ -149,8 +149,12 @@
         <div class="alert alert-danger m-2 mb-0 py-2 small" role="status" data-comms-texting-notice>
             <span class="fw-bold">{{ $permission['label'] }}.</span> {{ $permission['detail'] }}
         </div>
+    @elseif ($showComposer && ($permission['texting'] ?? null) === 'unavailable')
+        <div class="alert alert-warning m-2 mb-0 py-2 small" role="status" data-comms-texting-notice data-comms-texting-unavailable>
+            <span class="fw-bold">{{ $permission['label'] }}.</span> {{ $permission['detail'] }}
+        </div>
     @elseif ($showComposer && $failedDelivery !== null)
-        <div class="alert alert-warning m-2 mb-0 py-2 small" role="status" data-comms-delivery-notice>
+        <div class="alert alert-warning m-2 mb-0 py-2 small" role="status" data-comms-delivery-notice @if (! ($failedDelivery['allows_retry'] ?? true)) data-comms-delivery-no-retry @endif>
             <span class="fw-bold">Last text not delivered.</span> {{ $failedDelivery['detail'] }}
         </div>
     @endif

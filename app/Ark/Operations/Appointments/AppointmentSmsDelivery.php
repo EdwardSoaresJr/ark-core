@@ -99,11 +99,16 @@ final class AppointmentSmsDelivery
     {
         $appointment->loadMissing('customer');
 
+        $phone = AppointmentBookingIdentity::displayPhone($appointment);
+
         if ($appointment->customer !== null) {
-            return CustomerSmsSendEligibility::for($appointment->customer, $this->credentials)->blockReason();
+            return CustomerSmsSendEligibility::for(
+                $appointment->customer,
+                $this->credentials,
+                filled($phone) ? (string) $phone : null,
+            )->blockReason();
         }
 
-        $phone = AppointmentBookingIdentity::displayPhone($appointment);
         if (! filled($phone)) {
             return 'No phone number on this appointment.';
         }

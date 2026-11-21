@@ -15,7 +15,7 @@ final class CommunicationsWorkspaceSignalPresenter
 
     /**
      * @param  array{status: string, error_code?: string|null, at?: \DateTimeInterface|null}  $delivery
-     * @return array{status: string, label: string, tone: string, failed: bool, detail: ?string, at_label: ?string}
+     * @return array{status: string, label: string, tone: string, failed: bool, detail: ?string, at_label: ?string, allows_retry: bool}
      */
     public static function delivery(array $delivery): array
     {
@@ -24,6 +24,7 @@ final class CommunicationsWorkspaceSignalPresenter
         $error = trim((string) ($delivery['error_code'] ?? ''));
         $at = $delivery['at'] ?? null;
         $failures = app(SmsDeliveryFailureClassifier::class);
+        $class = $failed ? $failures->classify($error !== '' ? $error : null) : null;
 
         return [
             'status' => $status,
@@ -44,11 +45,9 @@ final class CommunicationsWorkspaceSignalPresenter
             },
             'failed' => $failed,
             'detail' => $failed
-                ? 'The customer did not get this message. '.$failures->staffGuidance(
-                    $failures->classify($error !== '' ? $error : null),
-                    $error !== '' ? $error : null,
-                )
+                ? $failures->staffGuidance($class ?? SmsDeliveryFailureClass::Unknown, $error !== '' ? $error : null)
                 : null,
+            'allows_retry' => $class !== null ? $failures->allowsRetry($class) : true,
             'at_label' => $at instanceof \DateTimeInterface
                 ? Carbon::instance($at)->timezone(config('app.display_timezone'))->format('M j, g:i A')
                 : null,
@@ -69,40 +68,98 @@ final class CommunicationsWorkspaceSignalPresenter
     }
 
     /**
-     * @param  array{texting: string, source?: string|null, quiet_hours_until?: \DateTimeInterface|null, notes?: list<string>}  $permission
+     * @param  array{
+     *     texting: string,
+     *     source?: string|null,
+     *     unavailable_reason?: 'landline'|'service_disabled'|'unsupported'|null,
+     *     quiet_hours_until?: \DateTimeInterface|null,
+     *     notes?: list<string>
+     * }  $permission
      * @return array{texting: string, label: string, tone: string, detail: ?string, notes: list<string>}
      */
     public static function permission(array $permission): array
     {
-        $texting = $permission['texting'];
+        $texting = self::normalizeTexting((string) ($permission['texting'] ?? 'unknown'), $permission);
         $quietUntil = $permission['quiet_hours_until'] ?? null;
         $quiet = $quietUntil instanceof \DateTimeInterface
             ? 'Quiet hours: automated texts wait until '.Carbon::instance($quietUntil)->timezone(config('app.display_timezone'))->format('g:i A').'.'
             : null;
-
+        $source = trim((string) ($permission['source'] ?? ''));
+        $reason = $permission['unavailable_reason'] ?? null;
         $failures = app(SmsDeliveryFailureClassifier::class);
+
+        $label = match ($texting) {
+            'opted_out' => 'Texting off',
+            'allowed' => 'Texting allowed',
+            'unavailable' => match ($reason) {
+                'landline' => 'Texting unavailable (landline)',
+                'service_disabled' => 'Texting unavailable',
+                default => 'Texting unavailable',
+            },
+            default => 'Texting not confirmed',
+        };
+
+        $detail = match ($texting) {
+            'opted_out' => trim(($source !== '' ? $source : 'The customer opted out').'. Texts are not sent until they reply START.'),
+            'unavailable' => match ($reason) {
+                'landline' => $source !== '' ? $source : $failures->staffGuidance(SmsDeliveryFailureClass::UnsupportedNumber, null),
+                'service_disabled' => $source !== '' ? $source : 'Shop texting is not available for this destination.',
+                default => $source !== '' ? $source : 'Texting is unavailable for this destination. Call or use another contact.',
+            },
+            default => null,
+        };
 
         return [
             'texting' => $texting,
-            'label' => match ($texting) {
-                'opted_out' => 'Texting off',
-                'allowed' => 'Texting allowed',
-                'landline', 'unsupported', 'disabled', 'temporary_failure' => 'Texting unavailable',
-                default => 'Texting not confirmed',
-            },
+            'label' => $label,
             'tone' => match ($texting) {
-                'opted_out', 'landline', 'unsupported', 'disabled' => 'danger',
-                'temporary_failure' => 'warning',
+                'opted_out' => 'danger',
                 'allowed' => 'success',
+                'unavailable' => 'warning',
                 default => 'secondary',
             },
-            'detail' => trim(implode(' ', array_filter([
-                $texting === 'opted_out' ? trim(($permission['source'] ?? 'The customer opted out').'. Texts are not sent until they reply START.') : null,
-                in_array($texting, ['landline', 'unsupported'], true) ? $failures->staffGuidance(SmsDeliveryFailureClass::UnsupportedNumber, null) : null,
-                $texting === 'temporary_failure' ? $failures->staffGuidance(SmsDeliveryFailureClass::TemporaryFailure, null) : null,
-                $quiet,
-            ]))) ?: null,
+            'detail' => trim(implode(' ', array_filter([$detail, $quiet]))) ?: null,
             'notes' => array_values(array_filter(array_map('strval', $permission['notes'] ?? []), fn (string $note): bool => trim($note) !== '')),
         ];
+    }
+
+    /**
+     * @param  array{source?: string|null, unavailable_reason?: string|null, notes?: list<string>}  $permission
+     */
+    private static function normalizeTexting(string $texting, array $permission): string
+    {
+        // Legacy host values from earlier #233 drafts → canonical unavailable.
+        if (in_array($texting, ['landline', 'unsupported', 'disabled', 'temporary_failure'], true)) {
+            return $texting === 'temporary_failure' ? 'unknown' : 'unavailable';
+        }
+
+        if (in_array($texting, ['allowed', 'opted_out', 'unavailable', 'unknown'], true) && $texting !== 'unknown') {
+            return $texting;
+        }
+
+        $reason = $permission['unavailable_reason'] ?? null;
+        if (in_array($reason, ['landline', 'service_disabled', 'unsupported'], true)) {
+            return 'unavailable';
+        }
+
+        $source = strtolower(trim((string) ($permission['source'] ?? '')));
+        if ($source !== '' && (
+            str_contains($source, 'landline')
+            || str_contains($source, 'cannot receive')
+            || str_contains($source, 'texting unavailable')
+            || str_contains($source, 'not available')
+            || str_contains($source, 'shop texting')
+        )) {
+            return 'unavailable';
+        }
+
+        foreach ($permission['notes'] ?? [] as $note) {
+            $n = strtolower((string) $note);
+            if (str_contains($n, 'landline') || str_contains($n, 'hosted messaging is off') || str_contains($n, 'cannot receive texts')) {
+                return 'unavailable';
+            }
+        }
+
+        return in_array($texting, ['allowed', 'opted_out', 'unavailable', 'unknown'], true) ? $texting : 'unknown';
     }
 }
