@@ -9,7 +9,6 @@ use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationMessageAttachment;
 use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\Customers\CustomerSmsConsentStatus;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
@@ -57,30 +56,16 @@ class SendOutboundContactMessageAction
             throw new RuntimeException('Conversation does not have a phone number.');
         }
 
-        $normalizedPhone = PhoneNumber::normalize($phone);
         $linkedCustomerId = $conversation->linkedCustomerId();
         $linkedCustomer = $linkedCustomerId !== null
             ? Customer::query()->find($linkedCustomerId)
-            : ($normalizedPhone !== null
-                ? Customer::query()->where('phone', $normalizedPhone)->first()
-                : null);
-
+            : Customer::query()->where('phone', PhoneNumber::normalize($phone))->first();
         if ($linkedCustomer instanceof Customer) {
             if ($block = CustomerSmsSendEligibility::for($linkedCustomer, $this->credentials, $phone)->blockReason()) {
                 throw new RuntimeException($block);
             }
         } else {
-            if ($normalizedPhone !== null && (
-                PhoneSmsOptOut::isActive($normalizedPhone)
-                || Customer::query()
-                    ->where('phone', $normalizedPhone)
-                    ->where('sms_consent_status', CustomerSmsConsentStatus::OptedOut)
-                    ->exists()
-            )) {
-                throw new RuntimeException('This number has opted out of text messages. Call the customer or use email.');
-            }
-
-            $capability = PhoneSmsCapability::findByNormalizedPhone($normalizedPhone);
+            $capability = PhoneSmsCapability::findByNormalizedPhone(PhoneNumber::normalize($phone));
             if ($capability !== null && ! $capability->sms_capable) {
                 throw new RuntimeException($capability->blockReason() ?? 'This number cannot receive SMS.');
             }

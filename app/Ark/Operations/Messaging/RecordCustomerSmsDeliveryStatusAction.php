@@ -19,8 +19,6 @@ class RecordCustomerSmsDeliveryStatusAction
     public function __construct(
         private readonly CommunicationEventRecorder $communicationEvents,
         private readonly ResolvePhoneSmsCapabilityAction $smsCapability,
-        private readonly SmsDeliveryFailureClassifier $failures,
-        private readonly RecordSmsDeliveryFailureAttentionAction $failureAttention,
     ) {}
 
     /**
@@ -53,11 +51,7 @@ class RecordCustomerSmsDeliveryStatusAction
         }
 
         if ($destination !== null) {
-            $this->recordForNumber($destination, $status, $errorCode, $messageSid);
-        }
-
-        if (in_array($status, ['failed', 'undelivered'], true)) {
-            $this->failureAttention->execute($messageSid, $errorCode, $destination);
+            $this->recordForNumber($destination, $status, $errorCode);
         }
 
         if (! in_array($status, ['delivered', 'failed', 'undelivered'], true)) {
@@ -96,25 +90,14 @@ class RecordCustomerSmsDeliveryStatusAction
     }
 
     /**
-     * A failed text to a number with or without a customer: the recipient blocked us (opt-out), or the number itself
-     * may be unable to receive texts. Temporary and unknown failures change nothing about the number.
+     * A failed text to a number with or without a customer: the number itself may be unable to receive texts.
      */
-    public function recordForNumber(string $toPhone, string $status, ?string $errorCode = null, ?string $messageSid = null): void
+    public function recordForNumber(string $toPhone, string $status, ?string $errorCode = null): void
     {
-        if (! in_array(strtolower(trim($status)), ['failed', 'undelivered'], true)) {
-            return;
+        if (in_array(strtolower(trim($status)), ['failed', 'undelivered'], true)) {
+            $errorCode = trim((string) $errorCode);
+            $this->smsCapability->markNotCapableFromDeliveryFailure($toPhone, $errorCode !== '' ? $errorCode : null);
         }
-
-        $errorCode = trim((string) $errorCode);
-        $errorCode = $errorCode !== '' ? $errorCode : null;
-
-        if ($this->failures->classify($errorCode) === SmsDeliveryFailureClass::OptOut) {
-            PhoneSmsOptOut::record($toPhone, 'provider_error', $messageSid, $errorCode);
-
-            return;
-        }
-
-        $this->smsCapability->markNotCapableFromDeliveryFailure($toPhone, $errorCode);
     }
 
     private function conversationPhone(?ConversationMessage $message): ?string

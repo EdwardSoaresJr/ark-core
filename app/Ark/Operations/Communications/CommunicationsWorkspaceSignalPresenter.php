@@ -2,16 +2,29 @@
 
 namespace App\Ark\Operations\Communications;
 
-use App\Ark\Operations\Messaging\SmsDeliveryFailureClass;
-use App\Ark\Operations\Messaging\SmsDeliveryFailureClassifier;
 use Illuminate\Support\Carbon;
 
 /**
  * Words and badge tones for the workspace's signals, whoever supplied them.
+ *
+ * Delivery recovery copy stays provider-neutral: common carrier error identifiers are grouped so staff are not
+ * invited to retry STOP or landline failures. Hosted provider interpretation and consent ledgers stay in ARK Shop.
  */
 final class CommunicationsWorkspaceSignalPresenter
 {
     private const FAILED = ['undelivered', 'failed', 'canceled'];
+
+    /** @var list<string> */
+    private const OPT_OUT_CODES = ['21610'];
+
+    /** @var list<string> */
+    private const LANDLINE_CODES = ['30006', '21614', '21612'];
+
+    /** @var list<string> */
+    private const INVALID_CODES = ['21211', '21401', '21408', '21601'];
+
+    /** @var list<string> */
+    private const TEMPORARY_CODES = ['30001', '30002', '30003', '30004', '30005', '30007', '30008', '30009'];
 
     /**
      * @param  array{status: string, error_code?: string|null, at?: \DateTimeInterface|null}  $delivery
@@ -23,8 +36,7 @@ final class CommunicationsWorkspaceSignalPresenter
         $failed = in_array($status, self::FAILED, true);
         $error = trim((string) ($delivery['error_code'] ?? ''));
         $at = $delivery['at'] ?? null;
-        $failures = app(SmsDeliveryFailureClassifier::class);
-        $class = $failed ? $failures->classify($error !== '' ? $error : null) : null;
+        $kind = $failed ? self::failureKind($error !== '' ? $error : null) : null;
 
         return [
             'status' => $status,
@@ -44,10 +56,8 @@ final class CommunicationsWorkspaceSignalPresenter
                 default => 'secondary',
             },
             'failed' => $failed,
-            'detail' => $failed
-                ? $failures->staffGuidance($class ?? SmsDeliveryFailureClass::Unknown, $error !== '' ? $error : null)
-                : null,
-            'allows_retry' => $class !== null ? $failures->allowsRetry($class) : true,
+            'detail' => $failed ? self::failureDetail($kind ?? 'unknown', $error !== '' ? $error : null) : null,
+            'allows_retry' => $kind === null || self::failureAllowsRetry($kind),
             'at_label' => $at instanceof \DateTimeInterface
                 ? Carbon::instance($at)->timezone(config('app.display_timezone'))->format('M j, g:i A')
                 : null,
@@ -86,7 +96,6 @@ final class CommunicationsWorkspaceSignalPresenter
             : null;
         $source = trim((string) ($permission['source'] ?? ''));
         $reason = $permission['unavailable_reason'] ?? null;
-        $failures = app(SmsDeliveryFailureClassifier::class);
 
         $label = match ($texting) {
             'opted_out' => 'Texting off',
@@ -102,7 +111,7 @@ final class CommunicationsWorkspaceSignalPresenter
         $detail = match ($texting) {
             'opted_out' => trim(($source !== '' ? $source : 'The customer opted out').'. Texts are not sent until they reply START.'),
             'unavailable' => match ($reason) {
-                'landline' => $source !== '' ? $source : $failures->staffGuidance(SmsDeliveryFailureClass::UnsupportedNumber, null),
+                'landline' => $source !== '' ? $source : 'This number cannot receive texts. Call or use another contact.',
                 'service_disabled' => $source !== '' ? $source : 'Shop texting is not available for this destination.',
                 default => $source !== '' ? $source : 'Texting is unavailable for this destination. Call or use another contact.',
             },
@@ -123,20 +132,26 @@ final class CommunicationsWorkspaceSignalPresenter
         ];
     }
 
+    public static function deliveryFailureAllowsRetry(?string $errorCode): bool
+    {
+        return self::failureAllowsRetry(self::failureKind($errorCode));
+    }
+
+    public static function deliveryFailureDetail(?string $errorCode): string
+    {
+        return self::failureDetail(self::failureKind($errorCode), $errorCode);
+    }
+
     /**
      * @param  array{source?: string|null, unavailable_reason?: string|null, notes?: list<string>}  $permission
      */
     private static function normalizeTexting(string $texting, array $permission): string
     {
-        // Legacy host values from earlier #233 drafts → canonical unavailable.
-        if (in_array($texting, ['landline', 'unsupported', 'disabled', 'temporary_failure'], true)) {
-            return 'unavailable';
-        }
-
         if (in_array($texting, ['allowed', 'opted_out', 'unavailable', 'unknown'], true) && $texting !== 'unknown') {
             return $texting;
         }
 
+        // Hosts that still emit unknown for landline/service-disabled: promote when reason is present.
         $reason = $permission['unavailable_reason'] ?? null;
         if (in_array($reason, ['landline', 'service_disabled', 'unsupported'], true)) {
             return 'unavailable';
@@ -161,5 +176,46 @@ final class CommunicationsWorkspaceSignalPresenter
         }
 
         return in_array($texting, ['allowed', 'opted_out', 'unavailable', 'unknown'], true) ? $texting : 'unknown';
+    }
+
+    private static function failureKind(?string $errorCode): string
+    {
+        $code = trim((string) $errorCode);
+        if ($code === '') {
+            return 'unknown';
+        }
+        if (in_array($code, self::OPT_OUT_CODES, true)) {
+            return 'opt_out';
+        }
+        if (in_array($code, self::LANDLINE_CODES, true)) {
+            return 'landline_unsupported';
+        }
+        if (in_array($code, self::INVALID_CODES, true)) {
+            return 'invalid';
+        }
+        if (in_array($code, self::TEMPORARY_CODES, true)) {
+            return 'temporary';
+        }
+
+        return 'unknown';
+    }
+
+    private static function failureAllowsRetry(string $kind): bool
+    {
+        return $kind === 'temporary' || $kind === 'unknown';
+    }
+
+    private static function failureDetail(string $kind, ?string $errorCode): string
+    {
+        $code = trim((string) $errorCode);
+        $carrier = $code !== '' ? 'Carrier error '.$code.'. ' : '';
+
+        return match ($kind) {
+            'opt_out' => $carrier.'This number opted out of texts (STOP). Do not text it again until the customer replies START. Call or use email instead.',
+            'landline_unsupported' => $carrier.'This number cannot receive texts (landline or unsupported line type). Call or use another contact.',
+            'invalid' => $carrier.'The destination number is invalid or unreachable for SMS. Correct the number, call, or use email.',
+            'temporary' => $carrier.'The carrier could not deliver this text yet. You may try again later, or call if urgent.',
+            default => $carrier.'The customer did not get this message. Verify the number before trying again, or call.',
+        };
     }
 }

@@ -71,26 +71,6 @@ final class OperationalObservationStream
         $this->resolve($this->customerRepliedDedupeKey($conversationId), $actor);
     }
 
-    public function deliveryFailedDedupeKey(int $messageId): string
-    {
-        return 'sms_delivery_failed:message:'.$messageId;
-    }
-
-    /**
-     * Resolving the conversation acknowledges every failed-text entry on it.
-     */
-    public function resolveDeliveryFailuresForConversation(int $conversationId, ?User $actor = null): void
-    {
-        OperationalObservationStreamEntry::query()
-            ->where('conversation_id', $conversationId)
-            ->where('observation_type', OperationalObservationType::CommunicationDeliveryFailed->value)
-            ->whereNull('resolved_at')
-            ->update([
-                'resolved_at' => now(),
-                'resolved_by_user_id' => $actor?->id,
-            ]);
-    }
-
     public function customerRepliedDedupeKey(int $conversationId): string
     {
         return 'customer_replied:conversation:'.$conversationId;

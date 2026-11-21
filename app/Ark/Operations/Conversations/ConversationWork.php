@@ -3,7 +3,6 @@
 namespace App\Ark\Operations\Conversations;
 
 use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\Observations\OperationalObservationStream;
 use App\Models\User;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +18,6 @@ final class ConversationWork
         private readonly ConversationResolver $resolver,
         private readonly ConversationLinker $linker,
         private readonly ConversationPosture $posture,
-        private readonly OperationalObservationStream $observations,
     ) {}
 
     public function ensureForPhone(string $phone, ?Customer $customer = null): Conversation
@@ -50,8 +48,6 @@ final class ConversationWork
 
     public function resolve(Conversation $conversation, User $actor): Conversation
     {
-        $this->observations->resolveDeliveryFailuresForConversation($conversation->id, $actor);
-
         return $this->posture->resolve($conversation, $actor);
     }
 

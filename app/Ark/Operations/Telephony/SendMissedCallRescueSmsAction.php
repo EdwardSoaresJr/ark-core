@@ -8,7 +8,6 @@ use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
-use App\Ark\Operations\Messaging\PhoneSmsOptOut;
 use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
@@ -85,10 +84,6 @@ class SendMissedCallRescueSmsAction
             if ($eligibility->optedOut() || ! $eligibility->canSend()) {
                 return false;
             }
-        }
-
-        if (! $customer instanceof Customer && PhoneSmsOptOut::isActive($normalizedPhone)) {
-            return false;
         }
 
         $capability = $this->smsCapability->execute($normalizedPhone);

@@ -39,8 +39,6 @@ final class ProcessInboundSmsConsentAction
      */
     private function handleOptOut(string $fromPhone, ?string $providerMessageSid): array
     {
-        PhoneSmsOptOut::record($fromPhone, 'stop_keyword', $providerMessageSid);
-
         $customer = $this->resolveCustomer($fromPhone);
 
         if ($customer instanceof Customer) {
@@ -58,22 +56,15 @@ final class ProcessInboundSmsConsentAction
      */
     private function handleOptIn(string $fromPhone, ?string $providerMessageSid): array
     {
-        $normalized = PhoneNumber::normalize($fromPhone);
-        $phoneWasOptedOut = $normalized !== null && PhoneSmsOptOut::isActive($normalized);
-
-        if ($phoneWasOptedOut) {
-            PhoneSmsOptOut::clear($normalized);
-        }
-
         $customer = $this->resolveCustomer($fromPhone);
-        $customerWasOptedOut = $customer instanceof Customer
-            && $customer->sms_consent_status === CustomerSmsConsentStatus::OptedOut;
 
-        if ($customerWasOptedOut) {
-            $this->consentRecorder->optIn($customer, $providerMessageSid);
+        if (! $customer instanceof Customer) {
+            return ['handled' => false, 'confirmation' => null];
         }
 
-        if ($phoneWasOptedOut || $customerWasOptedOut) {
+        if ($customer->sms_consent_status === CustomerSmsConsentStatus::OptedOut) {
+            $this->consentRecorder->optIn($customer, $providerMessageSid);
+
             return [
                 'handled' => true,
                 'confirmation' => $this->consentRecorder->confirmationMessage(CustomerSmsConsentStatus::Subscribed),

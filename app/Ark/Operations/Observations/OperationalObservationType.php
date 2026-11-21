@@ -22,7 +22,6 @@ enum OperationalObservationType: string
     case ConversationUnassigned = 'conversation_unassigned';
     case ConversationReopened = 'conversation_reopened';
     case CustomerSentMultipleMessages = 'customer_sent_multiple_messages';
-    case CommunicationDeliveryFailed = 'communication_delivery_failed';
 
     // Estimate
     case EstimateSent = 'estimate_sent';
@@ -73,7 +72,6 @@ enum OperationalObservationType: string
             self::ConversationUnassigned => 'Conversation unassigned',
             self::ConversationReopened => 'Conversation reopened',
             self::CustomerSentMultipleMessages => 'Customer sent multiple messages',
-            self::CommunicationDeliveryFailed => 'Text not delivered',
             self::EstimateSent => 'Estimate sent',
             self::EstimateViewed => 'Estimate viewed',
             self::EstimateViewedMultipleTimes => 'Estimate viewed multiple times',
@@ -109,7 +107,6 @@ enum OperationalObservationType: string
             self::ConversationUnassigned => 'Unassigned Conversation',
             self::ConversationReopened => 'Conversation Reopened',
             self::CustomerSentMultipleMessages => 'Multiple Customer Messages',
-            self::CommunicationDeliveryFailed => 'Text Not Delivered',
             self::EstimateSent => 'Estimate Sent',
             self::EstimateViewed => 'Estimate Viewed',
             self::EstimateViewedMultipleTimes => 'Estimate Viewed Multiple Times',
@@ -131,8 +128,7 @@ enum OperationalObservationType: string
             self::CustomerWaitingResponse,
             self::ConversationUnassigned,
             self::ConversationReopened,
-            self::CustomerSentMultipleMessages,
-            self::CommunicationDeliveryFailed => 'communication',
+            self::CustomerSentMultipleMessages => 'communication',
 
             self::EstimateSent,
             self::EstimateViewed,
@@ -182,7 +178,6 @@ enum OperationalObservationType: string
             self::AppointmentMissed,
             self::EstimateDeclined,
             self::ConversationUnassigned,
-            self::CommunicationDeliveryFailed,
             self::LeadAging => 'urgent',
 
             self::CustomerReplied,
