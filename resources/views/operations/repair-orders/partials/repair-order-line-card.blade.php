@@ -32,6 +32,19 @@
         : RepairOrderLineItemPresentation::editContextLines($line);
     $needsAuthorization = isset($linesNeedingAuthorization)
         && collect($linesNeedingAuthorization)->contains(fn ($unauthorizedLine): bool => (int) $unauthorizedLine->id === (int) $line->id);
+    $lineAuthorization = $needsAuthorization && isset($repairOrder)
+        ? app(\App\Ark\Operations\RepairOrders\WorkCompletionAuthorization::class)
+        : null;
+    $approvedLineBeforeIncrease = $lineAuthorization
+        ? ($lineAuthorization->approvedLinesBeforeIncrease($repairOrder)[(int) $line->id] ?? null)
+        : null;
+    $isApprovedLineIncrease = $approvedLineBeforeIncrease !== null;
+    $approvedLineCeilingCents = $isApprovedLineIncrease
+        ? (int) (($approvedLineBeforeIncrease['amounts']['total_cents'] ?? null) ?? $approvedLineBeforeIncrease['subtotal_cents'])
+        : null;
+    $pendingLineIncreaseCents = $isApprovedLineIncrease
+        ? $lineAuthorization->pendingApprovalCents($repairOrder, $line)
+        : null;
     $lineExceptions = isset($concern) && $concern->relationLoaded('authorizationExceptions')
         ? $concern->authorizationExceptions->filter(
             fn ($exception): bool => in_array((int) $line->id, $exception->lineIds(), true),
@@ -101,7 +114,9 @@
                 <div class="flex-fill" style="min-width: 0">
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <span class="subheader text-{{ $line->type->tablerColor() }}">{{ $line->type->staffLabel() }}</span>
-                        @if ($needsAuthorization)
+                        @if ($isApprovedLineIncrease)
+                            <span class="badge bg-yellow-lt" data-approved-line-increase="{{ $line->id }}">Increase needs authorization</span>
+                        @elseif ($needsAuthorization)
                             <span class="badge bg-yellow-lt">Needs authorization</span>
                         @endif
                         @if ($lineExceptions->isNotEmpty())
@@ -134,6 +149,12 @@
                 @endif
                 <div class="fw-bold text-nowrap d-md-none">{{ $totals->format($line->total_cents) }}</div>
             </div>
+            @if ($isApprovedLineIncrease && $approvedLineCeilingCents !== null && $pendingLineIncreaseCents !== null)
+                <p class="small text-secondary mt-1 mb-0" data-line-approved-increase="{{ $line->id }}">
+                    Approved at {{ $totals->format($approvedLineCeilingCents) }}
+                    · +{{ $totals->format($pendingLineIncreaseCents) }} pending authorization
+                </p>
+            @endif
 
             @if ($isPartLine)
                 <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
@@ -279,6 +300,12 @@
                     </x-operations.inspect-popover>
                 @else
                     <div class="fw-bold">{{ $totals->format($line->total_cents) }}</div>
+                @endif
+                @if ($isApprovedLineIncrease && $approvedLineCeilingCents !== null && $pendingLineIncreaseCents !== null)
+                    <div class="small text-secondary text-end mt-1 d-none d-md-block" data-line-approved-increase="{{ $line->id }}">
+                        Approved {{ $totals->format($approvedLineCeilingCents) }}
+                        · +{{ $totals->format($pendingLineIncreaseCents) }}
+                    </div>
                 @endif
             </div>
         </div>

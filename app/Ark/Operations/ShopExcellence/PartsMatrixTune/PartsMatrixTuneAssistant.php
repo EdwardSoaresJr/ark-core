@@ -3,12 +3,11 @@
 namespace App\Ark\Operations\ShopExcellence\PartsMatrixTune;
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
-use App\Ark\Operations\RepairOrders\RepairOrderLineType;
+use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Ark\Operations\Reports\OperationalReportTotals;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -483,18 +482,15 @@ final class PartsMatrixTuneAssistant
 
     private function mixPartsPercent(Carbon $from, Carbon $to): ?int
     {
-        $parts = (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $from, $to))
-            ->where('repair_order_lines.type', RepairOrderLineType::Part)
-            ->sum('repair_order_lines.subtotal_cents');
+        $repairOrderIds = OperationalReportDateScope::salesClosedBetween(
+            RepairOrder::query(),
+            $from,
+            $to,
+        )->pluck('id');
 
-        $labor = (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $from, $to))
-            ->where('repair_order_lines.type', RepairOrderLineType::Labor)
-            ->sum('repair_order_lines.subtotal_cents');
-
+        $figures = OperationalReportTotals::approvedSoldFiguresByRepairOrderId($repairOrderIds);
+        $parts = (int) $figures->sum(fn (array $row): int => (int) $row['parts_cents']);
+        $labor = (int) $figures->sum(fn (array $row): int => (int) $row['labor_cents']);
         $total = $parts + $labor;
 
         if ($total <= 0) {
