@@ -318,7 +318,9 @@ test('the work exception dialog is a Tabler modal with the same record form', fu
     $dialog = panelsTablerOne($xpath, '//*[@data-authorization-exception-dialog="'.$concern->id.'"]');
     $form = panelsTablerOne($xpath, './/form[@id="authorization-exception-form-'.$concern->id.'"]', $dialog);
 
-    expect(panelsTablerLegacyClasses($dialog))->toBe([])
+    // Teleported to body it would sit outside .ark-legacy, so it must not be authored inside one either.
+    expect($xpath->query('ancestor::*[contains(concat(" ", normalize-space(@class), " "), " ark-legacy ")]', $dialog)->length)->toBe(0)
+        ->and(panelsTablerLegacyClasses($dialog))->toBe([])
         ->and($dialog->getAttribute('x-show'))->toBe('open')
         ->and($xpath->query('.//*[contains(@class, "modal")][@role="dialog"][@aria-modal="true"]', $dialog)->length)->toBe(1)
         ->and($xpath->query('.//*[contains(@class, "modal-content")][@x-ref="dialog"][@tabindex="-1"]', $dialog)->length)->toBe(1)

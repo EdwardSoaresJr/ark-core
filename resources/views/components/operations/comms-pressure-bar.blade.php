@@ -10,26 +10,23 @@
     $live = (bool) ($pressure['has_live_calls'] ?? false);
 @endphp
 
+{{-- Tabler shell: ordinary attention is already in the header Inbox and the sidebar count; a page-level alert is for a live call. --}}
 @if ($count > 0 && $ui === 'tabler')
-    <div class="container-fluid pt-3">
-        <div
-            @class(['alert mb-0', 'alert-success' => $live, 'alert-danger' => ! $live])
-            role="status"
-            aria-live="polite"
-            data-ops-comms-pressure-bar="{{ $live ? 'live' : 'attention' }}"
-        >
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <div class="flex-fill">
-                    <strong>{{ $count }}</strong>
-                    {{ $count === 1 ? 'customer needs you' : 'customers need you' }}
-                    @if (($summary['breakdown_label'] ?? '') !== '')
-                        <span class="text-secondary">· {{ $summary['breakdown_label'] }}</span>
-                    @endif
+    @if ($live)
+        <div class="container-fluid pt-3">
+            <div class="alert alert-danger mb-0" role="status" aria-live="polite" data-ops-comms-pressure-bar="live">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="flex-fill">
+                        <strong>Live call now</strong>
+                        @if (($summary['breakdown_label'] ?? '') !== '')
+                            <span class="text-secondary">· {{ $summary['breakdown_label'] }}</span>
+                        @endif
+                    </div>
+                    <a href="{{ $url }}" class="btn btn-sm">Open Communications</a>
                 </div>
-                <a href="{{ $url }}" class="btn btn-sm">Open Communications</a>
             </div>
         </div>
-    </div>
+    @endif
 @elseif ($count > 0)
     <div
         class="ops-comms-pressure-bar {{ $live ? 'ops-comms-pressure-bar--live' : 'ops-comms-pressure-bar--attention' }}"

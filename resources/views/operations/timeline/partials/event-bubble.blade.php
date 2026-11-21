@@ -41,6 +41,7 @@
             ? 'About '.$event->metadata['visit_label'].(filled($event->metadata['visit_vehicle_label'] ?? null) ? ' · '.$event->metadata['visit_vehicle_label'] : '')
             : null,
         filled($event->metadata['imported_label'] ?? null) ? 'Imported from earlier records' : null,
+        ($delivery['failed'] ?? false) ? 'Delivery: '.$delivery['label'].(filled($delivery['error_code'] ?? null) ? ' · Carrier error '.$delivery['error_code'] : '') : null,
     ]));
 @endphp
 
@@ -71,7 +72,6 @@
                 'chat-bubble px-3 py-2',
                 'chat-bubble-me' => $direction === 'outbound',
                 'bg-yellow-lt' => $direction === 'internal',
-                'border border-danger' => $delivery['failed'] ?? false,
             ])
             data-comms-bubble="{{ $direction }}"
         >
@@ -131,9 +131,10 @@
         @if ($delivery !== null)
             <div @class(['small mt-1 px-1', 'text-danger' => $delivery['failed'], 'text-secondary' => ! $delivery['failed']]) data-comms-delivery="{{ $delivery['status'] }}">
                 <x-tabler.icon :name="match (true) { $delivery['failed'] => 'circle-x', in_array($delivery['status'], ['delivered', 'read'], true) => 'circle-check', $delivery['status'] === 'sent' => 'check', default => 'clock' }" />
-                {{ $delivery['label'] }}@if (filled($delivery['at_label'] ?? null)) · {{ $delivery['at_label'] }}@endif
-                @if (filled($delivery['detail'] ?? null))
-                    <div>{{ $delivery['detail'] }}</div>
+                @if ($delivery['failed'] && filled($delivery['guidance'] ?? null))
+                    <span class="fw-medium">{{ $delivery['label'] }}</span> — {{ $delivery['guidance'] }}
+                @else
+                    {{ $delivery['label'] }}@if (filled($delivery['at_label'] ?? null)) · {{ $delivery['at_label'] }}@endif
                 @endif
             </div>
         @endif

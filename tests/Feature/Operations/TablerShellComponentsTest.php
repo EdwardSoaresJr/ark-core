@@ -216,7 +216,7 @@ test('an ARKademy page keeps the legacy shell components', function (): void {
         ->and(substr_count($html, 'x-data="arkLearnGuideModal()"'))->toBe(1);
 });
 
-test('the comms pressure bar renders a Tabler alert or the legacy bar', function (bool $live, string $tablerTone): void {
+test('the comms pressure bar is a red Tabler alert for a live call only, and the legacy bar is unchanged', function (bool $live): void {
     $pressure = [
         'count' => 2,
         'summary' => ['breakdown_label' => '2 SMS'],
@@ -227,17 +227,25 @@ test('the comms pressure bar renders a Tabler alert or the legacy bar', function
     $tabler = (string) $this->blade('<x-operations.comms-pressure-bar ui="tabler" :pressure="$pressure" />', ['pressure' => $pressure]);
     $legacy = (string) $this->blade('<x-operations.comms-pressure-bar :pressure="$pressure" />', ['pressure' => $pressure]);
 
-    expect($tabler)->toContain('alert mb-0 '.$tablerTone)
-        ->toContain('data-ops-comms-pressure-bar="'.($live ? 'live' : 'attention').'"')
-        ->toContain('customers need you')
+    expect($legacy)->toContain('ops-comms-pressure-bar '.($live ? 'ops-comms-pressure-bar--live' : 'ops-comms-pressure-bar--attention'))
+        ->not->toContain('alert');
+
+    if (! $live) {
+        // Ordinary attention is already in the header Inbox and the sidebar count.
+        expect(trim($tabler))->toBe('');
+
+        return;
+    }
+
+    expect($tabler)->toContain('alert alert-danger mb-0')
+        ->toContain('data-ops-comms-pressure-bar="live"')
+        ->toContain('Live call now')
         ->toContain('· 2 SMS')
         ->toContain('href="/app/communications/attention" class="btn btn-sm">Open Communications</a>')
-        ->not->toContain('class="ops-comms-pressure-bar')
-        ->and($legacy)->toContain('ops-comms-pressure-bar '.($live ? 'ops-comms-pressure-bar--live' : 'ops-comms-pressure-bar--attention'))
-        ->not->toContain('alert');
+        ->not->toContain('class="ops-comms-pressure-bar');
 })->with([
-    'attention' => [false, 'alert-danger'],
-    'live call' => [true, 'alert-success'],
+    'attention' => [false],
+    'live call' => [true],
 ]);
 
 test('global search finds rows by data hooks in both shells', function (): void {
