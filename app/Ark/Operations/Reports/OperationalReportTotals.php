@@ -12,6 +12,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
+use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
 use App\Ark\Operations\Reports\Standards\ReportingStandardsV1;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -20,6 +21,14 @@ use Illuminate\Support\Facades\Schema;
 
 class OperationalReportTotals
 {
+    /**
+     * Per-request memo of authorized totals keyed by repair-order id so sold / labor / pre-tax
+     * and closed labor-by-tech paths do not reload the same graphs repeatedly.
+     *
+     * @var array<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>
+     */
+    private static array $approvedTotalsMemo = [];
+
     /**
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
@@ -338,7 +347,7 @@ class OperationalReportTotals
             return collect();
         }
 
-        $approved = self::approvedTotalsByRepairOrderId($repairOrders->pluck('id'));
+        $approved = self::rememberApprovedTotalsFromOrders($repairOrders);
 
         return $repairOrders
             ->groupBy(fn (RepairOrder $repairOrder): int => (int) $repairOrder->assigned_technician_id)
@@ -412,39 +421,69 @@ class OperationalReportTotals
      */
     private static function approvedTotalsByRepairOrderId(Collection|array $repairOrderIds): Collection
     {
-        $ids = collect($repairOrderIds)->filter()->unique()->values();
+        $ids = collect($repairOrderIds)->filter()->map(fn (mixed $id): int => (int) $id)->unique()->values();
 
         if ($ids->isEmpty()) {
             return collect();
         }
 
-        $orders = RepairOrder::query()
-            ->with(['lines.concern', 'concerns'])
-            ->whereIn('id', $ids)
-            ->get()
-            ->keyBy('id');
+        $missing = $ids->reject(fn (int $repairOrderId): bool => array_key_exists($repairOrderId, self::$approvedTotalsMemo))->values();
 
-        $calculator = app(EstimateTotalsCalculator::class);
+        if ($missing->isNotEmpty()) {
+            $orders = RepairOrder::query()
+                ->with(['lines.concern', 'concerns'])
+                ->whereIn('id', $missing)
+                ->get();
 
-        return $ids->mapWithKeys(function (int $repairOrderId) use ($orders, $calculator): array {
-            $repairOrder = $orders->get($repairOrderId);
+            self::rememberApprovedTotalsFromOrders($orders);
 
-            if (! $repairOrder instanceof RepairOrder) {
-                return [$repairOrderId => [
-                    'total_cents' => 0,
-                    'labor_cents' => 0,
-                    'pre_tax_cents' => 0,
-                ]];
+            foreach ($missing as $repairOrderId) {
+                if (! array_key_exists($repairOrderId, self::$approvedTotalsMemo)) {
+                    self::$approvedTotalsMemo[$repairOrderId] = [
+                        'total_cents' => 0,
+                        'labor_cents' => 0,
+                        'pre_tax_cents' => 0,
+                    ];
+                }
             }
+        }
 
-            $totals = $calculator->approvedTotalsForRead($repairOrder);
+        return $ids->mapWithKeys(fn (int $repairOrderId): array => [
+            $repairOrderId => self::$approvedTotalsMemo[$repairOrderId],
+        ]);
+    }
 
-            return [$repairOrderId => [
-                'total_cents' => $totals->totalCents(),
-                'labor_cents' => $totals->laborCents(),
-                'pre_tax_cents' => $totals->subtotalBeforeTaxCents(),
-            ]];
-        });
+    /**
+     * @param  Collection<int, RepairOrder>  $repairOrders
+     * @return Collection<int, array{total_cents: int, labor_cents: int, pre_tax_cents: int}>
+     */
+    private static function rememberApprovedTotalsFromOrders(Collection $repairOrders): Collection
+    {
+        $pending = $repairOrders
+            ->filter(fn (mixed $repairOrder): bool => $repairOrder instanceof RepairOrder
+                && ! array_key_exists((int) $repairOrder->id, self::$approvedTotalsMemo))
+            ->values();
+
+        if ($pending->isNotEmpty()) {
+            app(WorkCompletionAuthorization::class)->warmAuthorizedTotalsCaches($pending);
+            $calculator = app(EstimateTotalsCalculator::class);
+
+            foreach ($pending as $repairOrder) {
+                $repairOrderId = (int) $repairOrder->id;
+                $repairOrder->loadMissing(['lines.concern', 'concerns']);
+                $totals = $calculator->approvedTotalsForRead($repairOrder);
+
+                self::$approvedTotalsMemo[$repairOrderId] = [
+                    'total_cents' => $totals->totalCents(),
+                    'labor_cents' => $totals->laborCents(),
+                    'pre_tax_cents' => $totals->subtotalBeforeTaxCents(),
+                ];
+            }
+        }
+
+        return collect(self::$approvedTotalsMemo)->only(
+            $repairOrders->map(fn (RepairOrder $repairOrder): int => (int) $repairOrder->id)->all(),
+        );
     }
 
     /**

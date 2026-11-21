@@ -66,6 +66,8 @@ final class PartsMatrixHistoricalSampler
             ->get()
             ->keyBy('id');
 
+        $this->authorization->warmAuthorizedTotalsCaches($orders);
+
         $authorizedSellByLineId = [];
 
         foreach ($orders as $repairOrder) {
