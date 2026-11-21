@@ -68,7 +68,7 @@ test('historical invoice snapshots keep frozen summary text when shop settings c
         ->and($frozenSummary)->toContain('This invoice reflects');
 });
 
-test('document footer presenter respects frozen historical estimate wording on legacy invoice snapshots', function () {
+test('document footer presents invoice summary for legacy invoice snapshots that froze estimate authorization', function () {
     $legacyEstimateAuth = 'By approving this estimate, I authorize Example Shop to perform repairs.';
 
     $footer = app(DocumentFooterPresenter::class)->present([
@@ -77,11 +77,16 @@ test('document footer presenter respects frozen historical estimate wording on l
             'authorization_language' => $legacyEstimateAuth,
         ],
         'settings' => [
-            'authorization_language' => ShopSettings::DEFAULT_INVOICE_SUMMARY_LANGUAGE,
+            'authorization_language' => ShopSettings::DEFAULT_AUTHORIZATION_LANGUAGE,
         ],
         'concerns' => [['disposition' => 'approved']],
     ]);
 
-    expect($footer['authorization'])->toHaveCount(1)
-        ->and($footer['authorization'][0])->toBe($legacyEstimateAuth);
+    $authorizationText = implode(' ', $footer['authorization']);
+
+    // Snapshot JSON remains estimate-flavored; customer-facing footer does not.
+    expect($authorizationText)
+        ->toContain('This invoice reflects')
+        ->not->toContain('By approving this estimate')
+        ->and($legacyEstimateAuth)->toContain('By approving this estimate');
 });

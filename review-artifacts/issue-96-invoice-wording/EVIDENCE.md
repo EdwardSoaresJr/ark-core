@@ -31,3 +31,9 @@
 ## Migrations
 
 None.
+
+## Legacy issued invoices (display)
+
+Frozen `snapshot_json.documents.authorization_language` is not rewritten in the database.
+
+`DocumentFooterPresenter` substitutes `DEFAULT_INVOICE_SUMMARY_LANGUAGE` when presenting an **invoice** whose frozen text still matches estimate-approval phrasing (`approving this estimate`). Estimates are unchanged.
