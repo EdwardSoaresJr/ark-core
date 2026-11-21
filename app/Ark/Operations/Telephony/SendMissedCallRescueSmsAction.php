@@ -79,7 +79,7 @@ class SendMissedCallRescueSmsAction
             : Customer::query()->where('phone', $normalizedPhone)->first();
 
         if ($customer instanceof Customer) {
-            $eligibility = CustomerSmsSendEligibility::for($customer, $credentials);
+            $eligibility = CustomerSmsSendEligibility::for($customer, $credentials, $normalizedPhone);
 
             if ($eligibility->optedOut() || ! $eligibility->canSend()) {
                 return false;

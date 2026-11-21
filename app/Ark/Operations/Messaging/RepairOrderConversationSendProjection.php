@@ -117,6 +117,7 @@ final class RepairOrderConversationSendProjection
         $smsEligibility = CustomerSmsSendEligibility::for(
             $repairOrder->customer,
             $this->credentials,
+            $repairOrder->customer?->phone,
         );
 
         $smsBlockReason = $smsEligibility->blockReason();
@@ -205,6 +206,7 @@ final class RepairOrderConversationSendProjection
         $smsEligibility = CustomerSmsSendEligibility::for(
             $repairOrder->customer,
             $this->credentials,
+            $repairOrder->customer?->phone,
         );
 
         $smsBlockReason = $smsEligibility->blockReason();
@@ -289,6 +291,7 @@ final class RepairOrderConversationSendProjection
         $smsEligibility = CustomerSmsSendEligibility::for(
             $repairOrder->customer,
             $this->credentials,
+            $repairOrder->customer?->phone,
         );
 
         $smsBlockReason = $smsEligibility->blockReason();
@@ -369,6 +372,7 @@ final class RepairOrderConversationSendProjection
         $smsEligibility = CustomerSmsSendEligibility::for(
             $repairOrder->customer,
             $this->credentials,
+            $repairOrder->customer?->phone,
         );
 
         $smsBlockReason = $smsEligibility->blockReason();

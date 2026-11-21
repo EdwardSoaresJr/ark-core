@@ -44,7 +44,7 @@ final class ReviewRequestProjection
 
         $canText = false;
         if ($customer !== null && filled($customer->phone)) {
-            $canText = CustomerSmsSendEligibility::for($customer, $this->credentials)->canSend();
+            $canText = CustomerSmsSendEligibility::for($customer, $this->credentials, (string) $customer->phone)->canSend();
         }
 
         $canEmail = $customer !== null

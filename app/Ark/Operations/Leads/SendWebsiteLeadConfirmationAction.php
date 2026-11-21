@@ -68,7 +68,7 @@ class SendWebsiteLeadConfirmationAction
             ->first();
 
         if ($customer instanceof Customer) {
-            $eligibility = CustomerSmsSendEligibility::for($customer, $this->credentials);
+            $eligibility = CustomerSmsSendEligibility::for($customer, $this->credentials, (string) $lead->contact_phone);
 
             if (! $eligibility->canSend()) {
                 return;
