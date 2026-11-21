@@ -103,8 +103,42 @@ test('the thread shows where each text got to and why one was not delivered, fro
     expect($page)->toContain('data-comms-delivery="delivered"')
         ->and($page)->toContain('data-comms-delivery="undelivered"')
         ->and($page)->toContain('Carrier error 30007')
-        ->and($page)->toContain('data-comms-delivery-notice')
+        ->and($page)->not->toContain('data-comms-delivery-notice')
+        ->and($page)->not->toContain('Last text not delivered')
         ->and(substr_count($page, 'data-comms-delivery='))->toBe(2);
+});
+
+test('a failed text shows one status beside the message with careful 30006 wording and the raw code under Details', function () {
+    $conversation = signalsConversation($this->advisor, [
+        ['delivery_status' => 'undelivered', 'delivery_error_code' => '30006'],
+    ]);
+
+    $page = signalsPage($this->advisor, $conversation);
+
+    expect($page)->toContain('data-comms-delivery="undelivered"')
+        ->and($page)->toContain('Not delivered</span> — this number may not support SMS. Check the number or call the customer.')
+        ->and($page)->toContain('Delivery: Not delivered · Carrier error 30006')
+        ->and($page)->not->toContain('data-comms-delivery-notice')
+        ->and($page)->not->toContain('border-danger')
+        ->and(substr_count($page, 'may not support SMS'))->toBe(1);
+});
+
+test('several failures keep their own status beside each text and add no thread-level repeat', function () {
+    $conversation = signalsConversation($this->advisor, [
+        ['delivery_status' => 'undelivered', 'delivery_error_code' => '30003'],
+        ['delivery_status' => 'delivered'],
+        ['delivery_status' => 'failed', 'delivery_error_code' => '30006'],
+        ['delivery_status' => 'undelivered'],
+    ]);
+
+    $page = signalsPage($this->advisor, $conversation);
+
+    expect(substr_count($page, 'data-comms-delivery="undelivered"'))->toBe(2)
+        ->and(substr_count($page, 'data-comms-delivery="failed"'))->toBe(1)
+        ->and($page)->toContain('the carrier could not deliver this text yet')
+        ->and($page)->toContain('this number may not support SMS')
+        ->and($page)->toContain('the customer did not get this message')
+        ->and($page)->not->toContain('data-comms-delivery-notice');
 });
 
 test('a customer who replied STOP shows texting off in the header, the context lane, and above the composer', function () {
@@ -245,7 +279,10 @@ test('presenter never invites retry for STOP or landline delivery failures', fun
         ->and($stop['detail'])->toContain('STOP')
         ->and($landline['allows_retry'])->toBeFalse()
         ->and($landline['detail'])->not->toContain('send it again')
-        ->and($landline['detail'])->toContain('landline')
+        ->and($landline['detail'])->toContain('may not support SMS')
+        ->and($landline['detail'])->not->toContain('landline')
+        ->and($landline['guidance'])->toBe('this number may not support SMS. Check the number or call the customer.')
+        ->and($landline['error_code'])->toBe('30006')
         ->and($temporary['allows_retry'])->toBeTrue()
         ->and($temporary['detail'])->toContain('try again later');
 });

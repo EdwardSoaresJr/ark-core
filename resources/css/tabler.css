@@ -1059,8 +1059,8 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
 
 /*
  * Communications workspace: the conversation is the focus. The shop's messages are filled with the accent colour
- * and the customer's are a quiet surface, like a phone's messages; a message the carrier did not deliver keeps a
- * red outline. The selected conversation is marked by an accent edge.
+ * and the customer's are a quiet surface, like a phone's messages; a message the carrier did not deliver is
+ * marked by the status line under it, not by its bubble. The selected conversation is marked by an accent edge.
  */
 .ark-comms-thread .chat-bubble {
     border-radius: 1rem;
@@ -1089,10 +1089,6 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
 .ark-comms-thread .chat-bubble-me .badge {
     background: rgba(255, 255, 255, 0.22) !important;
     color: var(--tblr-primary-fg, #fff) !important;
-}
-
-.ark-comms-thread .chat-bubble.border-danger {
-    border-width: 2px !important;
 }
 
 .ark-comms-row.active {
