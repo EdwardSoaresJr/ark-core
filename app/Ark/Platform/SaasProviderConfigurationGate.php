@@ -9,20 +9,21 @@ use Illuminate\Http\RedirectResponse;
 /**
  * Standalone Core must not expose SaaS provider configuration.
  *
- * Hosted vs standalone is decided by the Landlord/SaaS tenant-catalog
- * contract ({@see HostedRuntime::catalogConfigured()}), not by discontinued
- * ARK Platform / Box pairing state. Per-service capture and delivery stay
- * behind the Managed* gates that ARK Shop replaces with LocalShop entitlements.
+ * Hosted vs standalone is decided by {@see HostedRuntime::isHostedProduct()}:
+ * Landlord pool images (ARK_HOSTED_TENANTS) or an initialized Stancl tenant.
+ * Not by discontinued ARK Platform / Box pairing state. Per-service capture
+ * and delivery stay behind the Managed* gates that ARK Shop replaces with
+ * LocalShop entitlements.
  */
 final class SaasProviderConfigurationGate
 {
     /**
-     * True when this process is a hosted shop image (tenant catalog present).
-     * Standalone Core installs do not set ARK_HOSTED_TENANTS.
+     * True when this process is a hosted shop product runtime.
+     * Standalone Core has neither a Landlord tenant catalog nor Stancl tenancy.
      */
     public static function isHostedRuntime(): bool
     {
-        return HostedRuntime::catalogConfigured();
+        return HostedRuntime::isHostedProduct();
     }
 
     public static function allowsCommunicationsProviderSettings(): bool
