@@ -16,12 +16,18 @@ class ShopPlatformSettingsController
         ]);
     }
 
-    public function connect(Request $request): RedirectResponse
+    /**
+     * @param  mixed  $orchestrator  Ignored. Kept so SaaS overlays that still pass PlatformConnectOrchestrator do not fatally arity-mismatch.
+     */
+    public function connect(Request $request, mixed $orchestrator = null): RedirectResponse
     {
         return SaasProviderConfigurationGate::refuseBoxPairing();
     }
 
-    public function claim(Request $request): RedirectResponse
+    /**
+     * @param  mixed  $activation  Ignored. Kept for SaaS overlay call sites that still pass ArkMailActivationClient.
+     */
+    public function claim(Request $request, mixed $activation = null): RedirectResponse
     {
         return SaasProviderConfigurationGate::refuseBoxPairing();
     }
