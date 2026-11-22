@@ -73,6 +73,13 @@
             />
         </x-slot:actions>
 
+        {{-- Purpose: the staff-only record of this document as issued. The snapshot's internal execution, communication and
+             authorization context appears nowhere else. Reading the document itself belongs in the RO's inline PDF viewer. --}}
+        <div class="alert alert-info d-print-none" role="note" data-estimate-document-staff-record>
+            Staff record of this document as issued. It includes internal context that is not on the customer PDF.
+            <a href="{{ route('operations.repair-orders.show', [$repairOrder, 'view_document' => $document->id]) }}">View the {{ $document->isInvoice() ? 'invoice' : 'estimate' }} PDF in the repair order</a>
+        </div>
+
         {{-- The printable estimate document body, not staff chrome: it keeps its own markup and print rules. --}}
         @if ($documentTypography->css('[data-estimate-document-body]') !== '')
             <style>{!! $documentTypography->css('[data-estimate-document-body]') !!}</style>

@@ -255,7 +255,7 @@ test('F: replies stay behind the email feature and document links behind the vie
 
     $this->actingAs($this->advisor);
     expect(app(ConversationMessageEventMapper::class)->map($message)->links)
-        ->toBe(['Open estimate' => route('operations.repair-orders.estimate-documents.show', [$repairOrder->id, 991])]);
+        ->toBe(['Open estimate' => route('operations.repair-orders.show', ['repairOrder' => $repairOrder->id, 'view_document' => 991])]);
 });
 
 test('G: existing threads attached to the wrong customer are reported, repaired and restored without losing history', function () {

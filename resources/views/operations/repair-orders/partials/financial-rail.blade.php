@@ -318,6 +318,11 @@
             @endcan
 
             @if ($financial['invoice'])
+                <x-operations.pdf-preview-trigger
+                    :preview="\App\Ark\Operations\RepairOrders\RepairOrderPdfPreview::invoice($repairOrder, $financial['invoice'])"
+                    class="btn btn-outline-secondary w-100"
+                    data-ro-view-invoice
+                >View Invoice</x-operations.pdf-preview-trigger>
                 <a
                     href="{{ route('operations.repair-orders.estimate-documents.pdf.show', [$repairOrder, $financial['invoice']]) }}"
                     target="_blank"

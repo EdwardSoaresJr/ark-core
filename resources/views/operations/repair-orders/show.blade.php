@@ -2040,6 +2040,8 @@
             'rteLaborConcerns' => $rteLaborConcerns,
         ])
 
+        @include('operations.documents.partials.inline-pdf-viewer')
+
         @include('operations.repair-orders.partials.repair-order-orientation-header', [
             'repairOrder' => $repairOrder,
             'currentSituation' => $currentSituation ?? null,

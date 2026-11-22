@@ -41,6 +41,7 @@ import { markCallSessionHandled } from './ark-mark-call-handled';
 import { arkConversationQuickReply } from './ark-conversation-quick-reply';
 import { arkPortalSendMenu } from './ark-portal-send-menu';
 import { arkReviewPrintMenu } from './ark-review-print-menu';
+import { initInlinePdfViewer } from './ark-inline-pdf-viewer';
 import { arkFloatingCommsMenu } from './ark-floating-comms-menu';
 import { arkMessengerLinkCustomer } from './ark-messenger-link-customer';
 import { arkLearnPrintSelect } from './ark-learn-print';
@@ -170,6 +171,7 @@ initInspectionCaptureSurfaceCtas();
 initStaffPresenceHeartbeat();
 initWorkstationPresence();
 initPublicSurfaceTheme();
+initInlinePdfViewer();
 import('preline').then(() => {
     window.HSStaticMethods?.autoInit();
 });
