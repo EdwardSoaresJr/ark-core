@@ -8,10 +8,17 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Schema;
 
 beforeEach(function (): void {
-    enablePlatformConnection();
+    $this->hostedCatalog = enableHostedTenantCatalog();
     ShopSettings::reloadCurrent();
     fakePlatformVoiceStatus('active', runtimeOwner: 'core');
+    // HostedRuntime unlocks communications settings. Stock ManagedPaymentsGate still
+    // reads leftover pairing for captureEnabled(); keep that only for capture-form tests.
+    // Composed ARK Shop replaces ManagedPaymentsGate with LocalShop entitlements.
     config(['services.ark_platform.payments_capture' => true]);
+});
+
+afterEach(function (): void {
+    clearHostedTenantCatalog($this->hostedCatalog ?? null);
 });
 
 test('communications settings ignore submitted twilio account credentials', function () {
@@ -41,6 +48,9 @@ test('communications settings ignore submitted twilio account credentials', func
 test('payments settings save capture surfaces without merchant credentials', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+    // Satisfy stock ManagedPaymentsGate only; settings authority remains HostedRuntime.
+    enablePlatformConnection();
+    ShopSettings::reloadCurrent();
 
     ShopSettings::current()->persistTrusted([
         'square_application_id' => 'sq0idp-existing',
@@ -83,6 +93,8 @@ test('payments settings save capture surfaces without merchant credentials', fun
 test('payments settings leave leftover merchant secrets unchanged', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+    enablePlatformConnection();
+    ShopSettings::reloadCurrent();
 
     ShopSettings::current()->persistTrusted([
         'square_application_id' => 'sq0idp-existing',
@@ -229,6 +241,18 @@ test('integration settings pages omit dead provider credentials', function () {
         ->assertSee('Texting')
         ->assertDontSee('Account SID')
         ->assertDontSee('Auth token');
+
+    // HostedRuntime alone does not invent card-capture entitlement on stock Core.
+    $this->get(route('operations.settings.shop.edit', ['section' => 'payments']))
+        ->assertOk()
+        ->assertDontSee('Preferred terminal')
+        ->assertDontSee('Application ID')
+        ->assertDontSee('Access token')
+        ->assertDontSee('Webhook signature key');
+
+    // Stock ManagedPaymentsGate still needs leftover pairing for captureEnabled(); SaaS replaces that.
+    enablePlatformConnection();
+    ShopSettings::reloadCurrent();
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'payments']))
         ->assertOk()

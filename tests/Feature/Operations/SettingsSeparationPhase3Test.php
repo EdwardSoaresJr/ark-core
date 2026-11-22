@@ -38,26 +38,30 @@ test('standalone communications settings are refused; hosted email still has no 
         ]))
         ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'general']));
 
-    enablePlatformConnection();
+    $catalog = enableHostedTenantCatalog();
     fakePlatformVoiceStatus('not_enabled');
 
-    $this->actingAs($this->admin)
-        ->get(route('operations.settings.shop.edit', [
-            'section' => 'communications',
-            'communications-tab' => 'email',
-        ]))
-        ->assertOk()
-        ->assertSee('Customer email')
-        ->assertDontSee('Connect ARK Email', false)
-        ->assertDontSee('Disconnect ARK Email', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.enable').'"', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.disconnect').'"', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.claim').'"', false);
+    try {
+        $this->actingAs($this->admin)
+            ->get(route('operations.settings.shop.edit', [
+                'section' => 'communications',
+                'communications-tab' => 'email',
+            ]))
+            ->assertOk()
+            ->assertSee('Customer email')
+            ->assertDontSee('Connect ARK Email', false)
+            ->assertDontSee('Disconnect ARK Email', false)
+            ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.enable').'"', false)
+            ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.disconnect').'"', false)
+            ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.claim').'"', false);
 
-    $email = file_get_contents(resource_path('views/operations/settings/partials/communications-email-settings.blade.php'));
+        $email = file_get_contents(resource_path('views/operations/settings/partials/communications-email-settings.blade.php'));
 
-    expect($email)->not->toContain('ark-mail.enable')
-        ->and($email)->not->toContain('Disconnect ARK Email');
+        expect($email)->not->toContain('ark-mail.enable')
+            ->and($email)->not->toContain('Disconnect ARK Email');
+    } finally {
+        clearHostedTenantCatalog($catalog);
+    }
 });
 
 test('connected platform connection storage remains intact when viewing shop settings', function (): void {

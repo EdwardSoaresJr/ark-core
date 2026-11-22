@@ -52,7 +52,7 @@ final class PlatformConnectController
         return response()->json([
             'ok' => false,
             'status' => 'refused',
-            'message' => 'ARK Platform Box pairing is not configured from Core. Hosted shops are associated by ARK Shop / Landlord.',
+            'message' => 'Box pairing is not configured from Core. Hosted shops are associated by ARK Shop and Landlord.',
             'connected' => false,
         ], 403);
     }

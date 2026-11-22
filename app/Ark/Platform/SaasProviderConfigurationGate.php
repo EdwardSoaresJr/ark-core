@@ -3,27 +3,41 @@
 namespace App\Ark\Platform;
 
 use App\Ark\Platform\Payments\ManagedPaymentsGate;
+use App\Ark\Runtime\HostedRuntime;
 use Illuminate\Http\RedirectResponse;
 
 /**
  * Standalone Core must not expose SaaS provider configuration.
- * Hosted shops (Platform connection present) keep existing Core settings surfaces
- * until ARK Shop owns those screens fully. Pairing / Box connect is never offered here.
+ *
+ * Hosted vs standalone is decided by the Landlord/SaaS tenant-catalog
+ * contract ({@see HostedRuntime::catalogConfigured()}), not by discontinued
+ * ARK Platform / Box pairing state. Per-service capture and delivery stay
+ * behind the Managed* gates that ARK Shop replaces with LocalShop entitlements.
  */
 final class SaasProviderConfigurationGate
 {
-    public static function platformConnected(): bool
+    /**
+     * True when this process is a hosted shop image (tenant catalog present).
+     * Standalone Core installs do not set ARK_HOSTED_TENANTS.
+     */
+    public static function isHostedRuntime(): bool
     {
-        return PlatformConnection::current()->isConnected();
+        return HostedRuntime::catalogConfigured();
     }
 
     public static function allowsCommunicationsProviderSettings(): bool
     {
-        return self::platformConnected();
+        return self::isHostedRuntime() && HostedRuntime::tenantDatabaseSelected();
     }
 
     public static function allowsCardCaptureSettings(): bool
     {
+        if (! self::isHostedRuntime()) {
+            return false;
+        }
+
+        // Stock Core ManagedPaymentsGate is legacy; composed ARK Shop replaces it
+        // with LocalShop::connected('card-capture') entitlement checks.
         return ManagedPaymentsGate::platformCapture();
     }
 
@@ -32,11 +46,11 @@ final class SaasProviderConfigurationGate
      */
     public static function allowsPhoneDeviceProvisioning(): bool
     {
-        return self::platformConnected();
+        return self::isHostedRuntime() && HostedRuntime::tenantDatabaseSelected();
     }
 
     /**
-     * Legacy Box / ARK Platform pairing is not a Core Settings capability.
+     * Legacy Box pairing is not a Core Settings capability.
      * Landlord and ARK Shop own hosted association.
      */
     public static function allowsBoxPairing(): bool
@@ -69,6 +83,6 @@ final class SaasProviderConfigurationGate
     {
         return redirect()
             ->route('operations.settings.shop.edit', ['section' => 'general'])
-            ->with('status', 'ARK Platform Box pairing is not configured from Core Settings. Hosted shops are associated by ARK Shop / Landlord.');
+            ->with('status', 'Box pairing is not configured from Core Settings. Hosted shops are associated by ARK Shop and Landlord.');
     }
 }
