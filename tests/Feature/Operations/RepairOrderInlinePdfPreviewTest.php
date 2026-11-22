@@ -1,6 +1,5 @@
 <?php
 
-use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\PdfRenderer;
 use App\Ark\Operations\Financial\FinancialDocumentType;
@@ -8,7 +7,6 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderPdfPreview;
 use App\Ark\Operations\RepairOrders\RepairOrderPrintMenuProjection;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
-use App\Ark\Operations\Timeline\Mappers\ConversationMessageEventMapper;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
@@ -195,18 +193,8 @@ test('legacy html estimate links stay valid as an explicit staff record that lea
     $this->get(route('operations.repair-orders.estimate-documents.show', [$repairOrder, $invoice]))->assertRedirect(route('login'));
 });
 
-test('timeline links to an emailed document open the in-RO viewer deep link, which resolves to a viewer trigger', function () {
-    [$repairOrder, $invoice] = inlinePreviewIssuedInvoice();
-    $message = app(ConversationRecorder::class)->recordRepairOrderEmail(
-        $repairOrder, $this->advisor, 'customer@example.test', 'Invoice emailed.',
-        metadata: ['document_label' => 'Invoice', 'estimate_document_id' => $invoice->id],
-    );
-    $links = app(ConversationMessageEventMapper::class)->map($message)->links;
-
-    expect($links)->toBe(['Open invoice' => route('operations.repair-orders.show', ['repairOrder' => $repairOrder->id, 'view_document' => $invoice->id])]);
-
-    $this->get($links['Open invoice'])->assertOk()->assertSee('data-document-id="'.$invoice->id.'"', false);
-});
+// Timeline emailed-document links are covered in DocumentEmailRecipientTest (already on the
+// communications baseline): they resolve to operations.repair-orders.show?view_document=.
 
 test('the viewer is a progressive enhancement: triggers are real new-tab links to the same pdf', function () {
     $repairOrder = financialCloseoutRepairOrder(RepairOrderStatus::Estimate);
