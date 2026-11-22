@@ -12,6 +12,11 @@ use Illuminate\Testing\TestResponse;
 
 function enableHostedPlatformPayments(?string $shopPublicId = null): string
 {
+    // Card-capture settings require the Landlord hosted-runtime catalog first.
+    // Stock ManagedPaymentsGate still also reads leftover pairing rows below;
+    // composed ARK Shop replaces that gate with LocalShop entitlements.
+    enableHostedTenantCatalog();
+
     $installationUuid = (string) Str::uuid();
     InstallationIdentity::write($installationUuid);
 

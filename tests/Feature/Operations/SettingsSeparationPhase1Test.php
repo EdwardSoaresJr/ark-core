@@ -15,7 +15,14 @@ beforeEach(function (): void {
     $this->admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 });
 
+afterEach(function (): void {
+    clearHostedTenantCatalog($this->hostedCatalog ?? null);
+    $this->hostedCatalog = null;
+});
+
 test('communications general settings omit twilio account credentials', function (): void {
+    $this->hostedCatalog = enableHostedTenantCatalog();
+
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', [
             'section' => 'communications',
@@ -33,6 +40,8 @@ test('communications general settings omit twilio account credentials', function
 });
 
 test('communications general save does not write twilio account credentials', function (): void {
+    $this->hostedCatalog = enableHostedTenantCatalog();
+
     $this->actingAs($this->admin)
         ->patch(route('operations.settings.shop.telephony.update'), [
             'communications_tab' => 'general',
@@ -55,6 +64,8 @@ test('communications general save does not write twilio account credentials', fu
 });
 
 test('communications email tab loads reply-to without postmark credentials', function (): void {
+    $this->hostedCatalog = enableHostedTenantCatalog();
+
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', [
             'section' => 'communications',
@@ -71,6 +82,8 @@ test('communications email tab loads reply-to without postmark credentials', fun
 });
 
 test('communications email tab saves shop reply-to', function (): void {
+    $this->hostedCatalog = enableHostedTenantCatalog();
+
     $this->actingAs($this->admin)
         ->patch(route('operations.settings.shop.email.update'), [
             'postmark_reply_to' => 'service@example.com',
@@ -92,28 +105,25 @@ test('communications email tab saves shop reply-to', function (): void {
     }
 });
 
-test('disconnected square settings omit merchant credentials and missing webhook route', function (): void {
+test('standalone payments keep manual methods without card-capture form', function (): void {
     expect(Route::has('webhooks.square'))->toBeFalse();
 
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', ['section' => 'payments']))
         ->assertOk()
-        ->assertSee('Card capture is not connected', false)
+        ->assertSee('Integrated card capture is not available on standalone Core', false)
         ->assertSee('Record Payment still works', false)
-        ->assertSee('Counter terminal', false)
-        ->assertSee('Counter keyed entry', false)
-        ->assertSee('Customer portal pay', false)
-        ->assertSee('Emailed invoice pay link', false)
-        ->assertSee('Preferred terminal', false)
-        ->assertSee('name="square_terminal_device_id"', false)
+        ->assertDontSee('Preferred terminal', false)
+        ->assertDontSee('name="square_terminal_device_id"', false)
         ->assertDontSee('name="square_access_token"', false)
         ->assertDontSee('name="square_application_id"', false)
         ->assertDontSee('Webhook URL', false)
-        ->assertDontSee('Generate pairing code', false)
-        ->assertDontSee('Save Square API credentials here', false);
+        ->assertDontSee('Generate pairing code', false);
 });
 
 test('payment settings save capture surfaces without merchant credentials', function (): void {
+    enableHostedPlatformPayments();
+
     ShopSettings::current()->persistTrusted([
         'square_application_id' => 'sq0idp-existing',
         'square_enabled' => true,
