@@ -31,7 +31,10 @@ final class EstimateDocumentPdfSnapshot
 
         return $this->invoiceFinancialSnapshot->append(
             $document,
-            $this->snapshotBuilder->build($document->repairOrder, $user),
+            $this->withRetainedShopIdentity(
+                $document,
+                $this->snapshotBuilder->build($document->repairOrder, $user),
+            ),
         );
     }
 
@@ -58,6 +61,7 @@ final class EstimateDocumentPdfSnapshot
         if (is_array($stored) && data_get($stored, 'repair_order') !== null) {
             $resolved = RepairOrderFreeText::normalizeSnapshot(
                 $this->withLiveShopPresentation(
+                    $document,
                     $this->withLiveConcernIntent(
                         $document,
                         $this->withLiveDocumentLineLabels(
@@ -103,12 +107,50 @@ final class EstimateDocumentPdfSnapshot
      * @param  array<string, mixed>  $snapshot
      * @return array<string, mixed>
      */
-    private function withLiveShopPresentation(array $snapshot): array
+    private function withLiveShopPresentation(EstimateDocument $document, array $snapshot): array
     {
+        if ($document->retainsStoredShopIdentity()) {
+            return $this->withRetainedShopIdentity($document, $snapshot);
+        }
+
         $snapshot['shop'] = [
             ...((array) ($snapshot['shop'] ?? [])),
             ...$this->snapshotBuilder->presentationLayers()['shop'],
         ];
+
+        return $snapshot;
+    }
+
+    /**
+     * Issued/presented documents keep the identity they were stamped with. Keys the old snapshot
+     * never stored resolve to null so a later presentation layer cannot backfill today's value.
+     *
+     * @param  array<string, mixed>  $snapshot
+     * @return array<string, mixed>
+     */
+    private function withRetainedShopIdentity(EstimateDocument $document, array $snapshot): array
+    {
+        if (! $document->retainsStoredShopIdentity()) {
+            return $snapshot;
+        }
+
+        $stored = (array) data_get($document->snapshot_json, 'shop');
+        $shop = [
+            ...array_fill_keys(array_keys($this->snapshotBuilder->presentationLayers()['shop']), null),
+            ...$stored,
+        ];
+
+        // Older snapshots kept only the asset path; the retained file still carries the original logo.
+        if (blank($shop['logo_data_uri'] ?? null)) {
+            $logo = $this->snapshotBuilder->logoForStoredPath($stored['logo_path'] ?? null);
+
+            if ($logo !== null) {
+                $shop['logo_url'] = $logo['url'];
+                $shop['logo_data_uri'] = $logo['data_uri'];
+            }
+        }
+
+        $snapshot['shop'] = $shop;
 
         return $snapshot;
     }

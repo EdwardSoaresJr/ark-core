@@ -161,11 +161,36 @@ class EstimateSnapshotBuilder
     }
 
     /**
+     * Rebuild the embedded logo for a historical snapshot from the asset it referenced. Returns
+     * null when the snapshot named no logo or the retained file is gone.
+     *
+     * @return array{path: string, url: string, data_uri: string}|null
+     */
+    public function logoForStoredPath(?string $path): ?array
+    {
+        if (! filled($path)) {
+            return null;
+        }
+
+        $logo = $this->logoFromPath($path);
+
+        return $logo['data_uri'] === null ? null : $logo;
+    }
+
+    /**
      * @return array{path: string|null, url: string|null, data_uri: string|null}
      */
     private function logoSnapshot(ShopSettings $settings): array
     {
-        if (! $settings->logo_path || ! Storage::disk('public')->exists($settings->logo_path)) {
+        return $this->logoFromPath($settings->logo_path);
+    }
+
+    /**
+     * @return array{path: string|null, url: string|null, data_uri: string|null}
+     */
+    private function logoFromPath(?string $logoPath): array
+    {
+        if (! $logoPath || ! Storage::disk('public')->exists($logoPath)) {
             return [
                 'path' => null,
                 'url' => null,
@@ -173,15 +198,15 @@ class EstimateSnapshotBuilder
             ];
         }
 
-        $mimeType = Storage::disk('public')->mimeType($settings->logo_path) ?: 'image/png';
+        $mimeType = Storage::disk('public')->mimeType($logoPath) ?: 'image/png';
 
         return [
-            'path' => $settings->logo_path,
-            'url' => Storage::disk('public')->url($settings->logo_path),
+            'path' => $logoPath,
+            'url' => Storage::disk('public')->url($logoPath),
             'data_uri' => sprintf(
                 'data:%s;base64,%s',
                 $mimeType,
-                base64_encode(Storage::disk('public')->get($settings->logo_path)),
+                base64_encode(Storage::disk('public')->get($logoPath)),
             ),
         ];
     }
