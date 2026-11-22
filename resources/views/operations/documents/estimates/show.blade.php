@@ -1,7 +1,8 @@
 <x-operations.app title="RO #{{ $snapshot['repair_order']['repair_order_id'] }} Estimate" ui="tabler">
     @php
         $shopName = $snapshot['shop']['name'] ?: config('app.name');
-        $hasLogo = filled($snapshot['shop']['logo_url'] ?? null);
+        $shopLogoSrc = $snapshot['shop']['logo_data_uri'] ?? $snapshot['shop']['logo_url'] ?? null;
+        $hasLogo = filled($shopLogoSrc);
         $documentTypography = \App\Ark\Operations\Documents\DocumentTypography::fromSnapshot($snapshot);
         $shopCityLine = trim(collect([$snapshot['shop']['city'], $snapshot['shop']['state'], $snapshot['shop']['postal_code']])->filter()->implode(' '));
         $isTerminal = $repairOrder->isTerminal();
@@ -91,7 +92,7 @@
                     <div class="min-w-0">
                         @if ($hasLogo)
                             <div class="inline-flex h-14 w-36 items-center justify-start bg-white text-sm font-semibold leading-tight text-slate-700">
-                                <img src="{{ $snapshot['shop']['logo_url'] }}" alt="{{ $shopName }} logo" class="max-h-full max-w-full object-contain">
+                                <img src="{{ $shopLogoSrc }}" alt="{{ $shopName }} logo" class="max-h-full max-w-full object-contain">
                             </div>
                         @else
                             <p class="break-words text-2xl font-black leading-tight tracking-tight text-slate-950" style="overflow-wrap: anywhere" data-shop-brand-name>{{ $shopName }}</p>

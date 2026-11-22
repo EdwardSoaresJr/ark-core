@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Settings;
 
 use App\Ark\Operations\Documents\DocumentTypography;
+use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
@@ -58,16 +59,15 @@ class ShopGeneralSettingsController
 
         $settings = ShopSettings::current();
         $logoPath = $settings->logo_path;
+        $replacedLogoPath = null;
 
         if ((bool) ($data['remove_logo'] ?? false) && $logoPath) {
-            Storage::disk('public')->delete($logoPath);
+            $replacedLogoPath = $logoPath;
             $logoPath = null;
         }
 
         if ($request->hasFile('logo')) {
-            if ($logoPath) {
-                Storage::disk('public')->delete($logoPath);
-            }
+            $replacedLogoPath = $logoPath ?? $replacedLogoPath;
 
             $logoPath = $request->file('logo')->store('shop-logos', 'public');
         }
@@ -115,9 +115,32 @@ class ShopGeneralSettingsController
         ]);
 
         $this->syncOpenEstimateDocuments();
+        $this->discardReplacedLogo($replacedLogoPath);
 
         ShopDisplayTimezone::apply();
 
         return $this->redirectWithStatus('Shop identity saved.');
+    }
+
+    /**
+     * Issued and presented documents embed the logo they were stamped with, so a replaced asset is
+     * deleted only after living documents have been refreshed and no stored snapshot still names it.
+     */
+    private function discardReplacedLogo(?string $path): void
+    {
+        if (! filled($path) || $path === ShopSettings::current()->logo_path) {
+            return;
+        }
+
+        // Stored paths are slash-escaped inside the JSON, so match the unique generated file name.
+        $name = basename($path);
+
+        $referenced = EstimateDocument::query()
+            ->whereRaw('CAST(snapshot_json AS CHAR) LIKE ?', ['%'.addcslashes($name, '%_\\').'%'])
+            ->exists();
+
+        if (! $referenced) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

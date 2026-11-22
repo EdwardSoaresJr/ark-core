@@ -108,6 +108,21 @@ class EstimateDocument extends Model
             ], true);
     }
 
+    /**
+     * Issued, presented or otherwise customer-delivered evidence keeps the shop identity (name,
+     * logo, contact, address) it was stamped with. Living documents show the current identity.
+     */
+    public function retainsStoredShopIdentity(): bool
+    {
+        if (! $this->isIssuedInvoice() && $this->customer_presented_at === null && $this->issued_at === null) {
+            return false;
+        }
+
+        $shop = data_get($this->snapshot_json, 'shop');
+
+        return is_array($shop) && $shop !== [];
+    }
+
     public function wasPresentedToCustomer(): bool
     {
         return $this->isInvoice() && $this->customer_presented_at !== null;

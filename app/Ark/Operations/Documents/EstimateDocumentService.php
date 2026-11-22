@@ -510,7 +510,7 @@ class EstimateDocumentService
             ->with('repairOrder')
             ->get()
             ->each(function (EstimateDocument $document) use (&$refreshed): void {
-                if ($this->isLegacyImportFrozen($document)) {
+                if ($this->isLegacyImportFrozen($document) || $document->repairOrder->estimateDocumentIsFrozen()) {
                     return;
                 }
 
