@@ -2,59 +2,38 @@
 
 namespace App\Ark\Operations\Settings;
 
-use App\Ark\Platform\PlatformConnectOrchestrator;
-use App\Ark\Platform\Http\PlatformConnectController;
 use App\Ark\Mail\ArkMailActivationClient;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ShopPlatformSettingsController
 {
-    private function redirectToArkCloud(): RedirectResponse
+    private function redirectToGeneral(): RedirectResponse
     {
         return redirect()->route('operations.settings.shop.edit', [
-            'section' => 'ark-cloud',
+            'section' => 'general',
         ]);
     }
 
-    public function connect(Request $request, PlatformConnectOrchestrator $orchestrator): RedirectResponse
+    public function connect(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'ark_mail_service_url' => ['nullable', 'url', 'max:255'],
-        ]);
-
-        try {
-            $serviceUrl = filled($data['ark_mail_service_url'] ?? null)
-                ? rtrim((string) $data['ark_mail_service_url'], '/')
-                : null;
-            $returnTo = route('operations.cloud.connecting', absolute: true);
-            $started = $orchestrator->begin($serviceUrl, $returnTo);
-        } catch (\Throwable $e) {
-            return $this->redirectToArkCloud()->with('status', 'Could not start connecting: '.$e->getMessage());
-        }
-
-        return redirect()->away($started['connect_url']);
+        return SaasProviderConfigurationGate::refuseBoxPairing();
     }
 
-    public function claim(Request $request, ArkMailActivationClient $activation): RedirectResponse
+    public function claim(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'pairing_public_id' => ['nullable', 'uuid'],
-        ]);
-
-        try {
-            $activation->claimPairing($data['pairing_public_id'] ?? null);
-        } catch (\Throwable $e) {
-            return $this->redirectToArkCloud()->with('status', 'Could not finish connecting: '.$e->getMessage());
-        }
-
-        return $this->redirectToArkCloud()->with('status', 'ARK Platform connected.');
+        return SaasProviderConfigurationGate::refuseBoxPairing();
     }
 
     public function disconnect(ArkMailActivationClient $activation): RedirectResponse
     {
+        if (! SaasProviderConfigurationGate::platformConnected()) {
+            return SaasProviderConfigurationGate::refuseBoxPairing();
+        }
+
         $activation->disconnect();
 
-        return $this->redirectToArkCloud()->with('status', 'ARK Platform disconnected.');
+        return $this->redirectToGeneral()->with('status', 'ARK Platform disconnected.');
     }
 }

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 
 class AssignWorkstationExtensionController
 {
@@ -19,6 +20,11 @@ class AssignWorkstationExtensionController
         Workstation $workstation,
         AssignExtensionToWorkstationAction $assignExtension,
     ): RedirectResponse {
+        if (! SaasProviderConfigurationGate::allowsPhoneDeviceProvisioning()) {
+            return SaasProviderConfigurationGate::refusePhoneDeviceProvisioning();
+        }
+
+
         if (! ShopCommunicationsSchema::isReady()) {
             return redirect()
                 ->route('operations.shop.communications')

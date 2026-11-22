@@ -24,6 +24,7 @@ use App\Ark\Operations\Workstations\Workstation;
 use App\Ark\Operations\WorkTemplates\WorkTemplate;
 use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Ark\Platform\Payments\ManagedPaymentsGate;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 use App\Ark\Platform\Voice\ManagedVoiceGate;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Ark\Runtime\DemoInstall;
@@ -35,9 +36,18 @@ class ShopSettingsPageController
 {
     public function edit(Request $request): View|RedirectResponse
     {
-        if ($request->query('section') === 'communications'
-            && $request->query('communications-tab') === 'ark-voice') {
-            return redirect()->route('operations.shop.communications');
+        if ($request->query('section') === 'ark-cloud') {
+            return SaasProviderConfigurationGate::refuseBoxPairing();
+        }
+
+        if ($request->query('section') === 'communications') {
+            if (! SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()) {
+                return SaasProviderConfigurationGate::refuseCommunicationsProviderSettings();
+            }
+
+            if ($request->query('communications-tab') === 'ark-voice') {
+                return redirect()->route('operations.shop.communications');
+            }
         }
 
         if ($request->query('section') === 'public-surface') {
@@ -48,7 +58,10 @@ class ShopSettingsPageController
         if (DemoInstall::isDemo() && $initialSection === 'ark-cloud') {
             $initialSection = null;
         }
-        $allowedSections = ['general', 'financial', 'payments', 'partstech', 'communications', 'ark-cloud', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'runtime-health'];
+        $allowedSections = ['general', 'financial', 'payments', 'partstech', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'runtime-health'];
+        if (SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()) {
+            $allowedSections[] = 'communications';
+        }
 
         if (! in_array($initialSection, $allowedSections, true)) {
             $initialSection = $request->old('_member') !== null || $request->old('roles') !== null

@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Communications;
 
+use App\Ark\Platform\SaasProviderConfigurationGate;
 use Illuminate\Contracts\View\View;
 
 class CommunicationsShopController
@@ -16,6 +17,7 @@ class CommunicationsShopController
 
         return view('operations.shop.communications.index', [
             'shop' => $projection->resolve(),
+            'phoneProvisioningAvailable' => SaasProviderConfigurationGate::allowsPhoneDeviceProvisioning(),
         ]);
     }
 }

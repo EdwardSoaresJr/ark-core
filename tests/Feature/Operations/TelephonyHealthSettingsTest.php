@@ -12,9 +12,19 @@ use App\Ark\Operations\Telephony\TelephonyHealth;
 use App\Ark\Operations\Telephony\TelephonyProviderType;
 use App\Ark\Operations\Telephony\TelephonyShopSettings;
 use App\Ark\Operations\Workstations\WorkstationPresence;
+use App\Ark\Platform\Voice\ManagedVoiceGate;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+
+beforeEach(function (): void {
+    // Platform connection unlocks communications settings; keep voice runtime on Core so
+    // these tests still exercise the Core telephony editors (not the managed-voice banners).
+    enablePlatformConnection();
+    ShopSettings::reloadCurrent();
+    fakePlatformVoiceStatus('active', runtimeOwner: 'core');
+    ManagedVoiceGate::resetMemo();
+});
 
 test('settings communications telephony page surfaces operational health on general tab', function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -71,7 +81,8 @@ test('settings communications telephony page surfaces operational health on gene
         ->assertSee('Test incoming call')
         ->assertSee('John Smith')
         ->assertDontSee('Account SID')
-        ->assertDontSee('Voice API Key')
+        ->assertDontSee('Voice API Key SID')
+        ->assertDontSee('Voice API Key secret')
         ->assertDontSee('Programmable Voice')
         ->assertDontSee('Primary telephony provider')
         ->assertDontSee('Voice TwiML App SID');
@@ -378,14 +389,14 @@ test('settings managers can test incoming call from telephony page route', funct
     $this->seed(ArkAuthorizationSeeder::class);
     config()->set('broadcasting.default', 'null');
 
+    // Core's TelephonyProviderManager is a stub (provider runtime lives in ARK Shop).
+    // Hosted shops may still hit this route; standalone is refused by the SaaS gate.
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->postJson(route('operations.settings.telephony.test-incoming-call'), [
             'phone' => '7195551234',
         ])
-        ->assertOk()
-        ->assertJsonPath('matched', false);
-
-    expect(CallSession::query()->count())->toBe(1);
+        ->assertStatus(503)
+        ->assertJsonPath('message', 'Voice telephony is not configured.');
 });
 
 test('twilio webhook records last successful webhook timestamp', function () {
@@ -410,12 +421,21 @@ test('settings managers can save primary telephony provider per shop', function 
     $this->actingAs($admin)
         ->patch(route('operations.settings.shop.telephony.update'), [
             'communications_tab' => 'general',
+            'telephony_inbound_number' => '+17195550100',
             'telephony_provider' => TelephonyProviderType::Twilio->value,
         ])
-        ->assertRedirect();
+        ->assertRedirect(route('operations.settings.shop.edit', [
+            'section' => 'communications',
+            'communications-tab' => 'general',
+        ]));
 
-    expect(TelephonyShopSettings::fromShopSettings(ShopSettings::current())->primaryProvider)
-        ->toBe(TelephonyProviderType::Twilio);
+    $settings = ShopSettings::reloadCurrent();
+
+    // General-tab save still writes the legacy column, but Core's provider projection maps
+    // Twilio/Fake to None so standalone Core does not treat carrier telephony as configured.
+    expect($settings->telephony_provider)->toBe(TelephonyProviderType::Twilio->value)
+        ->and(TelephonyShopSettings::fromShopSettings($settings)->primaryProvider->value)
+        ->toBe(TelephonyProviderType::None->value);
 });
 
 test('master admin infrastructure save redirects to runtime health', function () {

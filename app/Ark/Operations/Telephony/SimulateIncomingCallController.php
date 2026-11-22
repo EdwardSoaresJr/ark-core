@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Telephony;
 
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Telephony\Providers\NotConfiguredTelephonyProvider;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,11 @@ class SimulateIncomingCallController
         TelephonyProviderManager $providers,
         ProcessIncomingCallAction $process,
     ): JsonResponse {
+        abort_unless(
+            SaasProviderConfigurationGate::allowsCommunicationsProviderSettings(),
+            404,
+        );
+
         abort_unless(
             app()->environment('local', 'testing')
                 || $request->user()?->can(ArkCapability::SettingsManage->value),

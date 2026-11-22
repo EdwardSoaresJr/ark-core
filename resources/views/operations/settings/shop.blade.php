@@ -1,12 +1,12 @@
 <x-operations.app title="Shop Settings" ui="tabler">
-    <x-tabler.page layout="fluid" title="Shop Settings" pretitle="System" subtitle="How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.">
+    <x-tabler.page layout="fluid" title="Shop Settings" pretitle="System" subtitle="How this shop runs: shop details, pricing, documents, workflow, and staff.">
     <section
         data-shop-settings
         x-data="{
             active: (() => {
                 const candidate = @js($initialSection) || new URLSearchParams(window.location.search).get('section') || localStorage.getItem('ark:shop-settings:section') || 'general';
 
-                if (candidate === 'dragon-memory' || (@js(\App\Ark\Runtime\DemoInstall::isDemo()) && candidate === 'ark-cloud')) {
+                if (candidate === 'dragon-memory' || candidate === 'ark-cloud' || (candidate === 'communications' && !@js(\App\Ark\Platform\SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()))) {
                     return 'general';
                 }
 
@@ -865,6 +865,7 @@
                     @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
                 </section>
 
+                @if (\App\Ark\Platform\SaasProviderConfigurationGate::allowsCommunicationsProviderSettings())
                 <section class="card" x-show="active === 'communications'" x-cloak data-settings-section="communications">
                     @include('operations.settings.partials.telephony-settings', [
                         'settings' => $settings,
@@ -878,19 +879,7 @@
                         'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
                     ])
                 </section>
-
-                @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                    <section class="card" x-show="active === 'ark-cloud'" x-cloak data-settings-section="ark-cloud">
-                        <div class="card-header">
-                            <div>
-                                <div class="subheader">ARK Platform</div>
-                                <h2 class="card-title">Managed ARK services</h2>
-                                <div class="card-subtitle">Connect this Box to ARK Platform for Email, Texting, Voice, and other managed services. Shop work stays in ARK. Service accounts are managed in ARK Platform.</div>
-                            </div>
-                        </div>
-                        @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
-                    </section>
-                @endunless
+                @endif
 
                 <section class="card" x-show="active === 'runtime-health'" x-cloak data-settings-section="runtime-health">
                     <div class="card-header">
