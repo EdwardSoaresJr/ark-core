@@ -4,7 +4,6 @@ use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Platform\Payments\ManagedPaymentsGate;
 use App\Ark\Platform\SaasProviderConfigurationGate;
-use App\Ark\Platform\Voice\ManagedVoiceGate;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
@@ -12,7 +11,8 @@ use Database\Seeders\ArkAuthorizationSeeder;
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
-    ManagedVoiceGate::resetMemo();
+    // Clears ManagedVoiceGate memo without importing App\Ark\Platform\Voice (communications CODE_DIRS).
+    fakePlatformStatusUnavailable();
     ShopSettings::forgetCurrent();
 
     $this->admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
