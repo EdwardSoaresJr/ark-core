@@ -10,7 +10,7 @@ use App\Ark\Operations\Parts\PartsCatalogButtonColor;
 use App\Ark\Operations\Parts\PartsCatalogLinks;
 use App\Ark\Operations\Parts\PartsCatalogProvider;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
-use App\Ark\Platform\PlatformConnectOrchestrator;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -36,6 +36,10 @@ class ShopIntegrationSettingsController
 
     public function updatePayments(Request $request): RedirectResponse
     {
+        if (! SaasProviderConfigurationGate::allowsCardCaptureSettings()) {
+            return SaasProviderConfigurationGate::refuseCardCaptureSettings();
+        }
+
         $data = $request->validate([
             'square_terminal_device_id' => ['nullable', 'string', 'max:128'],
             'square_terminal_enabled' => ['nullable', 'boolean'],
@@ -80,6 +84,10 @@ class ShopIntegrationSettingsController
 
     public function updateEmail(Request $request): RedirectResponse
     {
+        if (! SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()) {
+            return SaasProviderConfigurationGate::refuseCommunicationsProviderSettings();
+        }
+
         $data = $request->validate([
             'postmark_reply_to' => ['nullable', 'email', 'max:255'],
             'postmark_reply_to_name' => ['nullable', 'string', 'max:255'],
@@ -108,16 +116,13 @@ class ShopIntegrationSettingsController
     /** @deprecated Use ShopPlatformSettingsController - redirects preserved for old links. */
     public function enableArkMail(Request $request): RedirectResponse
     {
-        return app(ShopPlatformSettingsController::class)->connect(
-            $request,
-            app(PlatformConnectOrchestrator::class),
-        );
+        return app(ShopPlatformSettingsController::class)->connect($request);
     }
 
     /** @deprecated Use ShopPlatformSettingsController */
-    public function claimArkMail(Request $request, ArkMailActivationClient $activation): RedirectResponse
+    public function claimArkMail(Request $request): RedirectResponse
     {
-        return app(ShopPlatformSettingsController::class)->claim($request, $activation);
+        return app(ShopPlatformSettingsController::class)->claim($request);
     }
 
     /** @deprecated Use ShopPlatformSettingsController */

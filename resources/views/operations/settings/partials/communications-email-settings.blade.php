@@ -14,10 +14,7 @@
         <p class="small fw-semibold mb-0">Status: {{ $statusLabel }}</p>
         @unless ($mailReady)
             <p class="alert alert-warning small mt-2 mb-0">
-                Outbound customer email is not connected. You can still set reply-to. Messages will not send until ARK Email is connected.
-                @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="fw-semibold">Connect in ARK Platform</a>
-                @endunless
+                Outbound customer email is not connected. You can still set reply-to. Messages will not send until ARK Shop connects ARK Email for this shop.
             </p>
         @endunless
     </div>

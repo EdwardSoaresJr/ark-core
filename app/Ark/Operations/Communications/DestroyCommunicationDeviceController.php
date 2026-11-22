@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Communications;
 
 use Illuminate\Http\RedirectResponse;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 
 class DestroyCommunicationDeviceController
 {
@@ -10,6 +11,11 @@ class DestroyCommunicationDeviceController
         CommunicationDevice $communicationDevice,
         RemoveCommunicationDeviceAction $remove,
     ): RedirectResponse {
+        if (! SaasProviderConfigurationGate::allowsPhoneDeviceProvisioning()) {
+            return SaasProviderConfigurationGate::refusePhoneDeviceProvisioning();
+        }
+
+
         $name = $communicationDevice->name;
 
         $remove->execute($communicationDevice);

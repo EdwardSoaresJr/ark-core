@@ -7,6 +7,7 @@
 @php
     $current ??= null;
     $productUrl = fn (string $route): ?string => \Illuminate\Support\Facades\Route::has($route) ? route($route) : null;
+    $saasProviderSettings = \App\Ark\Platform\SaasProviderConfigurationGate::allowsCommunicationsProviderSettings();
     // Lightweight Basic / Optional / Advanced grouping. Keys, routes, and permissions are unchanged.
     $settingsNav = [
         'Basic' => [
@@ -20,9 +21,9 @@
             ['key' => 'website', 'label' => 'Website', 'href' => $productUrl('sites.settings.index'), 'hidden' => $productUrl('sites.settings.index') === null, 'can' => App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value],
             ['key' => 'booking-builder', 'label' => 'Book Service Builder', 'href' => $productUrl('booking.builder'), 'hidden' => $productUrl('booking.builder') === null, 'can' => App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value],
             ['key' => 'booking', 'label' => 'Online Requests', 'href' => route('operations.settings.booking')],
-            ['key' => 'payments', 'label' => 'Square Payments'],
+            ['key' => 'payments', 'label' => 'Payment methods'],
             ['key' => 'partstech', 'label' => 'Parts catalogs'],
-            ['key' => 'communications', 'label' => 'Communications'],
+            ['key' => 'communications', 'label' => 'Communications', 'hidden' => ! $saasProviderSettings],
         ],
         'Advanced' => [
             ['key' => 'overhead', 'label' => 'Shop Overhead'],
@@ -30,7 +31,6 @@
             ['key' => 'workflow', 'label' => 'Workflow Defaults'],
             ['key' => 'printing', 'label' => 'Label Printing'],
             ['key' => 'stations', 'label' => 'Stations & Phones', 'href' => route('operations.shop.communications')],
-            ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
         ],
     ];
     $settingsNav = array_map(fn (array $items): array => array_values(array_filter(

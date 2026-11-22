@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Communications;
 
 use Illuminate\Http\RedirectResponse;
 use RuntimeException;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 
 class GenerateCommunicationDeviceConfigController
 {
@@ -11,6 +12,11 @@ class GenerateCommunicationDeviceConfigController
         CommunicationDevice $communicationDevice,
         GenerateCommunicationDeviceConfigAction $generateConfig,
     ): RedirectResponse {
+        if (! SaasProviderConfigurationGate::allowsPhoneDeviceProvisioning()) {
+            return SaasProviderConfigurationGate::refusePhoneDeviceProvisioning();
+        }
+
+
         try {
             $generateConfig->execute($communicationDevice);
         } catch (RuntimeException $exception) {

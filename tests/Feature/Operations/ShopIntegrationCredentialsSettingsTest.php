@@ -7,6 +7,13 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Schema;
 
+beforeEach(function (): void {
+    enablePlatformConnection();
+    ShopSettings::reloadCurrent();
+    fakePlatformVoiceStatus('active', runtimeOwner: 'core');
+    config(['services.ark_platform.payments_capture' => true]);
+});
+
 test('communications settings ignore submitted twilio account credentials', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);

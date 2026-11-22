@@ -51,14 +51,15 @@ test('admin can view operational shop settings defaults', function () {
 
     $response = $this->get(route('operations.settings.shop.edit'))
         ->assertOk()
-        ->assertSee('How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.')
+        ->assertSee('How this shop runs: shop details, pricing, documents, workflow, and staff.')
         ->assertDontSee('Operational Settings')
         ->assertDontSee('Operational Domains')
         ->assertDontSee('Current outcomes')
         ->assertDontSee('Financial rules, estimate defaults, and document language')
-        ->assertSeeInOrder(['Basic', 'Shop Identity', 'Appointments &amp; Setup', 'Financial Rules', 'Documents / Disclaimers', 'Optional', 'Online Requests', 'Square Payments', 'Parts catalogs', 'Advanced', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Workflow Defaults', 'Label Printing'], false)
+        ->assertSeeInOrder(['Basic', 'Shop Identity', 'Appointments &amp; Setup', 'Financial Rules', 'Documents / Disclaimers', 'Optional', 'Online Requests', 'Payment methods', 'Parts catalogs', 'Advanced', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Workflow Defaults', 'Label Printing'], false)
         ->assertSee('fw-semibold', false)
-        ->assertSee('Communications')
+        ->assertDontSee("@click=\"setActive('communications')\"", false)
+        ->assertDontSee('Square Payments')
         ->assertSee('Stations & Phones')
         ->assertSee("@click=\"setActive('operations')\"", false)
         ->assertSee('<div class="subheader">Appointments &amp; Setup</div>', false)
@@ -178,14 +179,16 @@ test('settings pages use plain labels instead of posture, authority, truth, surf
         ->assertSee('+ Add Billing Class')
         ->assertDontSee('Manage Billing Classes')
         ->assertSee('Time zone sources')
-        ->assertSee('Where card payments are offered')
-        ->assertSee('Save card payment options')
+        ->assertSee('Payment methods')
+        ->assertSee('data-settings-manual-payment-methods', false)
+        ->assertDontSee('Where card payments are offered')
+        ->assertDontSee('Save card payment options')
+        ->assertDontSee(route('operations.settings.shop.payments.update'), false)
         ->assertSee('Shop performance targets')
         ->assertSee('Creates customer and vehicle records only. Repair history is not imported.')
         ->assertSee('Technicians record findings on each checklist item.')
         ->assertSee('name="default_visit_mode"', false)
-        ->assertDontSee('name="lp_posture"', false)
-        ->assertSee(route('operations.settings.shop.payments.update'), false);
+        ->assertDontSee('name="lp_posture"', false);
 });
 
 test('every financial rules tab opens from the financial-tab link that save redirects use', function () {

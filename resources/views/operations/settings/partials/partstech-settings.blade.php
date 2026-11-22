@@ -13,19 +13,15 @@
         <h3 class="mb-1">Parts catalog</h3>
         @if ($platformPartsCatalog)
             <p class="text-secondary small">
-                The shop PartsTech account is managed by ARK Platform. Optional personal seats stay on each person’s profile (avatar menu → Profile).
+                The shop PartsTech account is managed by ARK Shop. Optional personal seats stay on each person’s profile (avatar menu → Profile).
             </p>
             <div class="alert alert-secondary small" role="status">
-                Shop catalog access is granted and configured in ARK Platform. This shop does not store a shop-wide PartsTech password.
+                Shop catalog access is granted and configured in ARK Shop. This shop does not store a shop-wide PartsTech password.
             </div>
         @else
             <p class="text-secondary small">
-                @if (\App\Ark\Runtime\DemoInstall::isDemo())
-                    This shop does not store a shop-wide PartsTech password. Optional personal seats stay on each person’s profile (avatar menu → Profile).
-                @else
-                    This shop does not store a shop-wide PartsTech password. Connect ARK Platform for shop catalog access. Optional personal seats stay on each person’s profile (avatar menu → Profile).
-                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}">Connect in ARK Platform</a>
-                @endif
+                This shop does not store a shop-wide PartsTech password. Shop catalog access belongs to ARK Shop.
+                Optional personal seats stay on each person’s profile (avatar menu → Profile).
             </p>
         @endif
         <form method="POST" action="{{ route('operations.settings.shop.partstech.update') }}">
@@ -114,7 +110,7 @@
             @if (\App\Ark\Runtime\DemoInstall::isDemo())
                 Nexpart opens in a new tab like RepairLink. ARK does not sign in or pull a Nexpart cart.
             @else
-                If this shop pays for ARK Platform parts catalog, Nexpart sits on the estimate catalog button (Open and VIN copy; no cart pull). Otherwise it opens in a new tab like RepairLink. ARK does not sign in or pull a Nexpart cart.
+                If this shop has ARK Shop parts catalog, Nexpart sits on the estimate catalog button (Open and VIN copy; no cart pull). Otherwise it opens in a new tab like RepairLink. ARK does not sign in or pull a Nexpart cart.
             @endif
         </p>
 

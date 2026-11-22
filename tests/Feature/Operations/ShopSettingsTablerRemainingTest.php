@@ -38,7 +38,7 @@ test('every remaining section is a tabler card with no legacy island', function 
     $xpath = remainingSettingsPage($this);
     $legacy = remainingSettingsHasClass('ark-legacy');
 
-    foreach (['operations', 'staff', 'excellence', 'payments', 'partstech', 'communications', 'ark-cloud', 'runtime-health'] as $section) {
+    foreach (['operations', 'staff', 'excellence', 'payments', 'partstech', 'runtime-health'] as $section) {
         $cards = $xpath->query('//section[@data-settings-section="'.$section.'"]['.remainingSettingsHasClass('card').']');
 
         expect($cards->length)->toBe(1, "{$section} is not one card")
@@ -46,6 +46,9 @@ test('every remaining section is a tabler card with no legacy island', function 
             ->and($cards->item(0)->hasAttribute('x-cloak'))->toBeTrue()
             ->and($xpath->query('ancestor::*['.$legacy.']', $cards->item(0))->length)->toBe(0, "{$section} is inside a legacy island");
     }
+
+    expect($xpath->query('//section[@data-settings-section="communications"]')->length)->toBe(0)
+        ->and($xpath->query('//section[@data-settings-section="ark-cloud"]')->length)->toBe(0);
 
     expect($xpath->query('//section[@data-settings-section]//*['.$legacy.']')->length)->toBe(0)
         ->and($xpath->query('//*['.$legacy.'][contains(@x-show, "includes(active)")]')->length)->toBe(0)
@@ -72,7 +75,6 @@ test('the remaining settings forms keep their routes and field names', function 
             route('operations.settings.shop.excellence.update') => ['_method', 'effective_labor_rate_floor', 'aro_target', 'parts_margin_target_percent', 'monthly_fixed_costs', 'labor_sales_target_percent', 'parts_sales_target_percent', 'net_profit_target_percent', 'income_tax_reserve_percent', 'payroll_tax_reserve_percent', 'monthly_payroll_tax', 'opportunity_ros_per_open_day', 'dollar_close_target_percent', 'sold_labor_hours_per_open_day', 'median_cycle_target_days', 'stalled_ro_age_days', 'parts_margin_target_active', 'owner_digest_enabled', 'owner_digest_time', 'mark_target_reviewed'],
         ],
         'payments' => [
-            route('operations.settings.shop.payments.update') => ['_method', 'square_terminal_device_id', 'square_terminal_enabled', 'square_keyed_enabled', 'square_portal_pay_enabled', 'square_email_pay_enabled'],
             route('operations.settings.shop.manual-payment-methods.update') => ['_method'],
         ],
         'partstech' => [
@@ -80,10 +82,6 @@ test('the remaining settings forms keep their routes and field names', function 
             route('operations.settings.shop.repairlink.update') => ['_method', 'repairlink_enabled', 'repairlink_url', 'repairlink_color'],
             route('operations.settings.shop.nexpart.update') => ['_method', 'nexpart_enabled', 'nexpart_url', 'nexpart_color'],
             route('operations.settings.shop.catalog-links.update') => ['_method', 'create[label]', 'create[url]', 'create[mode]', 'create[color]'],
-        ],
-        'ark-cloud' => [
-            route('operations.settings.shop.ark-cloud.connect') => [],
-            route('operations.settings.shop.ark-cloud.connect-manual') => [],
         ],
     ];
 
@@ -104,8 +102,6 @@ test('the remaining settings forms keep their routes and field names', function 
         'scheduling_hours_follow_shop',
         'scheduling_hours[monday][enabled]',
         'appointment_request_availability[request_windows][flexible_enabled]',
-        'square_terminal_enabled',
-        'square_email_pay_enabled',
         'repairlink_enabled',
         'nexpart_enabled',
     ] as $field) {
@@ -164,7 +160,7 @@ test('staff without settings access cannot open or save the remaining sections',
     $userCount = User::query()->count();
     $this->actingAs(actingAsLearnCurrentStaff($role));
 
-    foreach (['operations', 'staff', 'excellence', 'payments', 'partstech', 'communications', 'ark-cloud', 'runtime-health'] as $section) {
+    foreach (['operations', 'staff', 'excellence', 'payments', 'partstech', 'runtime-health'] as $section) {
         $this->get(route('operations.settings.shop.edit', ['section' => $section]))
             ->assertRedirect(route('operations.index'));
     }

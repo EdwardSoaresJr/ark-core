@@ -19,6 +19,7 @@ use App\Ark\Operations\Telephony\TelephonyEndpointType;
 use App\Ark\Operations\Telephony\TelephonyProviderType;
 use App\Ark\Operations\Telephony\TelephonyRingSchedule;
 use App\Ark\Operations\Telephony\TelephonyStaffPhoneForRing;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 use App\Ark\Platform\Voice\ManagedVoiceGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +49,10 @@ class ShopCommunicationsSettingsController
 
     public function updateCustomerMessaging(Request $request): RedirectResponse
     {
+        if (! SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()) {
+            return SaasProviderConfigurationGate::refuseCommunicationsProviderSettings();
+        }
+
         $data = $request->validate([
             'google_reviews_url' => ['nullable', 'url', 'max:2048'],
             'postmark_reply_to' => ['nullable', 'email', 'max:255'],
@@ -147,6 +152,10 @@ class ShopCommunicationsSettingsController
         TelephonyEndpointSync $endpointSync,
         TelephonyStaffPhoneForRing $staffPhoneForRing,
     ): RedirectResponse {
+        if (! SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()) {
+            return SaasProviderConfigurationGate::refuseCommunicationsProviderSettings();
+        }
+
         $communicationsTab = in_array($request->input('communications_tab'), ['general', 'email', 'messenger', 'hours', 'recording', 'ring', 'infrastructure', 'mobile'], true)
             ? (string) $request->input('communications_tab')
             : 'general';

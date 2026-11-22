@@ -225,10 +225,7 @@
                         @if (($shopIntegrations ?? null)?->messagingConfigured())
                             ARK Texting is connected.
                         @else
-                            ARK Texting is not connected. The composer still works; messages will not send until the service is connected.
-                            @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                                <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}">Connect in ARK Platform</a>
-                            @endunless
+                            ARK Texting is not connected. The composer still works; messages will not send until ARK Shop connects texting for this shop.
                         @endif
                     </p>
                 </div>
