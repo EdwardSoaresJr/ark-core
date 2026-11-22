@@ -1,6 +1,6 @@
 {{-- Shared Print menu choices — consumed by header dropdown and sticky-footer dropup. --}}
 @php
-    /** @var list<array{key: string, label: string, href: ?string, opens_in_new_tab: bool, is_print: bool, print_document: ?string, blocked_reason: ?string, cache_bust_estimate_pdf: bool}> $printItems */
+    /** @var list<array{key: string, label: string, href: ?string, opens_in_new_tab: bool, is_print: bool, print_document: ?string, blocked_reason: ?string, cache_bust_estimate_pdf: bool, preview: ?array}> $printItems */
     $printItems = $printItems ?? [];
     // Empty closeExpr is intentional for Bootstrap dropdowns; never emit a leading ";" (Alpine SyntaxError).
     $closeExpr = trim((string) ($closeExpr ?? 'open = false'));
@@ -8,7 +8,14 @@
 @endphp
 
 @foreach ($printItems as $action)
-    @if (($action['is_print'] ?? false) && ($action['print_document'] ?? null) === 'key_tag')
+    @if (is_array($action['preview'] ?? null))
+        <x-operations.pdf-preview-trigger
+            :preview="$action['preview']"
+            role="menuitem"
+            class="dropdown-item"
+            data-ro-print-item="{{ $action['key'] }}"
+        >{{ $action['label'] }}</x-operations.pdf-preview-trigger>
+    @elseif (($action['is_print'] ?? false) && ($action['print_document'] ?? null) === 'key_tag')
         @if (filled($action['blocked_reason'] ?? null))
             <button
                 type="button"

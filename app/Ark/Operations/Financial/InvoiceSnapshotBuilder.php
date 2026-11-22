@@ -55,6 +55,9 @@ final class InvoiceSnapshotBuilder
             ] : ($advisorName ? [
                 'name' => $advisorName,
             ] : null),
+            // The identity the customer was given. The logo is kept as a retained asset path, not
+            // embedded, so each invoice row stays small; renders rebuild it from that asset.
+            'shop' => $this->shopIdentity(),
             'repair_order' => [
                 'repair_order_id' => $repairOrder->repair_order_id,
                 'status' => $repairOrder->status->value,
@@ -282,6 +285,17 @@ final class InvoiceSnapshotBuilder
         ];
 
         return hash('xxh3', json_encode($payload, JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function shopIdentity(): array
+    {
+        $shop = $this->estimateSnapshotBuilder->presentationLayers()['shop'];
+        unset($shop['logo_url'], $shop['logo_data_uri']);
+
+        return $shop;
     }
 
     /**

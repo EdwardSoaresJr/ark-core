@@ -13,7 +13,11 @@ class EstimateDocumentPdfController
     {
         $document = $documents->ensureCurrent($document, request()->user());
         $this->ensureViewablePdf($repairOrder, $document, $documents);
-        $document->markPresentedToCustomer();
+
+        // An in-page preview is only a look. Presenting an invoice to the customer is a real state change.
+        if (! request()->boolean('preview')) {
+            $document->markPresentedToCustomer();
+        }
 
         return DocumentPdfHttpResponse::inline(
             Storage::disk('local')->get($document->pdf_path),
