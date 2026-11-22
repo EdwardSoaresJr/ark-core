@@ -500,7 +500,6 @@
         "doc: docs/runtime/voice-runtime-authority.md",
         "doc: docs/sms-operational-proof-checklist.md",
         "doc: docs/voice/handheld-v0.1.md",
-        "doc: resources/views/install/welcome.blade.php",
         "doc: resources/views/operations/learn/admin/ark-mobile-push-setup.blade.php",
         "doc: resources/views/operations/learn/admin/comms-health-check.blade.php",
         "doc: resources/views/operations/learn/admin/getting-started.blade.php",

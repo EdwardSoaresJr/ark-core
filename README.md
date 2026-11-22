@@ -45,7 +45,6 @@ AllData and ProDemand buttons open the vendor site and copy the VIN. The shop us
 - First-run installer
 - Database migrations, tests, and configuration examples
 - Optional demo shop seed data
-- Dragon, so you can connect your own model provider. No ARK-hosted model is included.
 - API contracts for separate client apps (`/api/mobile`, `/api/desk`, `/api/tech`, `/api/station`). The apps themselves are not in this repository.
 
 The shop website editor is not part of Core. Core can keep shop identity and lead records. See [docs/platform/ark-core-website-boundary.md](docs/platform/ark-core-website-boundary.md).
@@ -76,7 +75,9 @@ These ARK-operated services already exist in the ARK ecosystem. They belong to A
 
 The fully managed ARK Shop product is still being built. Managed infrastructure, deployment, updates, backups, and operational monitoring are not available today.
 
-Also not available today: ARK Backup, ARK Storage, ARK Data, moving a shop between self-hosted Core and ARK Shop, ARK Connect, and an ARK-hosted Dragon model.
+Also not available today: ARK Backup, ARK Storage, ARK Data, moving a shop between self-hosted Core and ARK Shop, and ARK Connect.
+
+Dragon, customer messaging delivery, hosted phone, and in-app card capture are ARK Shop capabilities, not standalone Core features.
 
 This page does not publish prices or packaging.
 
@@ -90,11 +91,9 @@ PartsTech is one example. Shop catalog access is part of ARK Shop. This reposito
 
 ## A screen is not the service
 
-Core includes shop screens for communications, conversations, calls, parts catalogs, and payments. Those screens are the shop workflow. They do not mean the ARK-operated service ships with a free install.
+Core keeps provider-neutral shop workflow: the Communications workspace shell, payment recording, and catalog button presentation. Those screens are not the ARK-operated service.
 
-Sending customer texts or email, operating hosted phones, capturing a card inside ARK, and opening the shop parts catalog require ARK Shop. When those services are not connected, Core says so and the rest of the shop keeps running.
-
-Settings can still show Communications, Parts catalogs, or Square Payments. A settings screen is not a self-hosted texting, catalog, or card-processing product.
+Sending customer texts or email, operating hosted phones, capturing a card inside ARK, Dragon, and shop parts-catalog provider accounts require ARK Shop. Standalone Core does not advertise or expose SaaS provider configuration. When those services are not connected, Core says so and the rest of the shop keeps running.
 
 See [docs/PRODUCT_BOUNDARY.md](docs/PRODUCT_BOUNDARY.md).
 
@@ -197,9 +196,7 @@ Development seeders may create example staff accounts such as `admin@ark.test`. 
 
 ## Dragon
 
-Dragon ships with Core. Stock Core does not include an ARK-hosted model.
-
-Configure your own model provider under Settings after install, or set `DRAGON_PROVIDER` in the environment. The default is `none`. Tests may use `fake`. Private shop knowledge and training imports are not included.
+Dragon is an ARK Shop capability. Standalone Core does not provide Dragon settings or a model-provider integration. Private shop knowledge and training imports are not included.
 
 ## Architecture
 
