@@ -152,9 +152,10 @@ final class ConversationMessageEventMapper
 
         if (is_numeric($metadata['estimate_document_id'] ?? null) && is_numeric($metadata['repair_order_id'] ?? null)
             && $viewer->can(ArkCapability::RepairOrdersView->value)) {
-            return [$label => route('operations.repair-orders.estimate-documents.show', [
+            // Opens the document in the RO's inline PDF viewer rather than the legacy HTML screen.
+            return [$label => route('operations.repair-orders.show', [
                 'repairOrder' => (int) $metadata['repair_order_id'],
-                'document' => (int) $metadata['estimate_document_id'],
+                'view_document' => (int) $metadata['estimate_document_id'],
             ])];
         }
 

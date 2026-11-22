@@ -21,7 +21,8 @@ use App\Models\User;
  *     is_print: bool,
  *     print_document: ?string,
  *     blocked_reason: ?string,
- *     cache_bust_estimate_pdf: bool
+ *     cache_bust_estimate_pdf: bool,
+ *     preview: ?array<string, mixed>
  * }
  */
 final readonly class RepairOrderPrintMenuProjection
@@ -83,6 +84,14 @@ final readonly class RepairOrderPrintMenuProjection
             }
         }
 
+        $items[] = self::item(
+            key: 'view_estimate',
+            label: 'View Estimate',
+            href: route('operations.repair-orders.estimate.pdf', $repairOrder),
+            opensInNewTab: true,
+            preview: RepairOrderPdfPreview::estimate($repairOrder),
+        );
+
         $estimatePdfUrl = route('operations.repair-orders.estimate.pdf', $repairOrder);
         $items[] = self::item(
             key: 'estimate_pdf',
@@ -103,6 +112,14 @@ final readonly class RepairOrderPrintMenuProjection
 
         $issuedInvoice = $financial['invoice'] ?? null;
         if ($issuedInvoice instanceof EstimateDocument) {
+            $preview = RepairOrderPdfPreview::invoice($repairOrder, $issuedInvoice);
+            $items[] = self::item(
+                key: 'view_invoice',
+                label: 'View Invoice',
+                href: $preview['new_tab_url'],
+                opensInNewTab: true,
+                preview: $preview,
+            );
             $items[] = self::item(
                 key: 'final_invoice',
                 label: 'Final Invoice',
@@ -126,6 +143,7 @@ final readonly class RepairOrderPrintMenuProjection
         ?string $printDocument = null,
         ?string $blockedReason = null,
         bool $cacheBustEstimatePdf = false,
+        ?array $preview = null,
     ): array {
         return [
             'key' => $key,
@@ -136,6 +154,7 @@ final readonly class RepairOrderPrintMenuProjection
             'print_document' => $printDocument,
             'blocked_reason' => $blockedReason,
             'cache_bust_estimate_pdf' => $cacheBustEstimatePdf,
+            'preview' => $preview,
         ];
     }
 }
