@@ -20,12 +20,16 @@ test('ark cloud connect action refuses Box pairing from Core Settings', function
 
 test('customer messaging update does not fatal on controller load', function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    enablePlatformConnection();
+    $catalog = enableHostedTenantCatalog();
     fakePlatformVoiceStatus('active', runtimeOwner: 'core');
 
-    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
-        ->patch(route('operations.settings.shop.customer-messaging.update'), [
-            'postmark_reply_to' => 'reply@example.test',
-        ])
-        ->assertRedirect();
+    try {
+        $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
+            ->patch(route('operations.settings.shop.customer-messaging.update'), [
+                'postmark_reply_to' => 'reply@example.test',
+            ])
+            ->assertRedirect();
+    } finally {
+        clearHostedTenantCatalog($catalog);
+    }
 });

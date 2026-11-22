@@ -18,12 +18,16 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 
 beforeEach(function (): void {
-    // Platform connection unlocks communications settings; keep voice runtime on Core so
+    // Hosted tenant catalog unlocks communications settings; keep voice runtime on Core so
     // these tests still exercise the Core telephony editors (not the managed-voice banners).
-    enablePlatformConnection();
+    $this->hostedCatalog = enableHostedTenantCatalog();
     ShopSettings::reloadCurrent();
     fakePlatformVoiceStatus('active', runtimeOwner: 'core');
     ManagedVoiceGate::resetMemo();
+});
+
+afterEach(function (): void {
+    clearHostedTenantCatalog($this->hostedCatalog ?? null);
 });
 
 test('settings communications telephony page surfaces operational health on general tab', function () {

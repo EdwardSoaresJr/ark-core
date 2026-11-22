@@ -14,12 +14,19 @@ beforeEach(function (): void {
     // Clears ManagedVoiceGate memo without importing App\Ark\Platform\Voice (communications CODE_DIRS).
     fakePlatformStatusUnavailable();
     ShopSettings::forgetCurrent();
+    clearHostedTenantCatalog($this->hostedCatalog ?? null);
+    $this->hostedCatalog = null;
 
     $this->admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 });
 
+afterEach(function (): void {
+    clearHostedTenantCatalog($this->hostedCatalog ?? null);
+    $this->hostedCatalog = null;
+});
+
 test('standalone settings hide SaaS provider nav and refuse direct communications URLs', function (): void {
-    expect(SaasProviderConfigurationGate::platformConnected())->toBeFalse();
+    expect(SaasProviderConfigurationGate::isHostedRuntime())->toBeFalse();
 
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit'))
@@ -78,14 +85,28 @@ test('standalone payments section keeps manual methods without card-capture form
         ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'payments']));
 });
 
-test('hosted platform connection restores communications settings and card capture controls', function (): void {
+test('legacy Platform connection rows alone do not unlock SaaS provider settings', function (): void {
     enablePlatformConnection();
     ShopSettings::reloadCurrent();
+
+    expect(SaasProviderConfigurationGate::isHostedRuntime())->toBeFalse()
+        ->and(SaasProviderConfigurationGate::allowsCommunicationsProviderSettings())->toBeFalse()
+        ->and(SaasProviderConfigurationGate::allowsCardCaptureSettings())->toBeFalse();
+
+    $this->actingAs($this->admin)
+        ->get(route('operations.settings.shop.edit', ['section' => 'communications']))
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'general']));
+});
+
+test('hosted tenant catalog restores communications settings shell without Box pairing', function (): void {
+    $this->hostedCatalog = enableHostedTenantCatalog();
+    ShopSettings::reloadCurrent();
     fakePlatformVoiceStatus('active', runtimeOwner: 'platform');
-    config(['services.ark_platform.payments_capture' => true]);
 
     expect(SaasProviderConfigurationGate::allowsCommunicationsProviderSettings())->toBeTrue()
-        ->and(ManagedPaymentsGate::platformCapture())->toBeTrue();
+        // Stock Core ManagedPaymentsGate still requires legacy pairing; composed SaaS replaces it.
+        ->and(SaasProviderConfigurationGate::allowsCardCaptureSettings())->toBeFalse()
+        ->and(ManagedPaymentsGate::platformCapture())->toBeFalse();
 
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit'))
@@ -101,9 +122,8 @@ test('hosted platform connection restores communications settings and card captu
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', ['section' => 'payments']))
         ->assertOk()
-        ->assertSee('data-settings-card-payments', false)
-        ->assertSee('data-settings-manual-payment-methods', false)
-        ->assertSee('Card capture is connected for this shop');
+        ->assertDontSee('data-settings-card-payments', false)
+        ->assertSee('data-settings-manual-payment-methods', false);
 });
 
 test('standalone stations page keeps workstations and refuses phone device routes', function (): void {

@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Settings;
 
 use App\Ark\Mail\ArkMailActivationClient;
+use App\Ark\Platform\PlatformConnection;
 use App\Ark\Platform\SaasProviderConfigurationGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,14 +33,18 @@ class ShopPlatformSettingsController
         return SaasProviderConfigurationGate::refuseBoxPairing();
     }
 
+    /**
+     * Legacy cleanup only: clear leftover pairing rows from discontinued Box enrollment.
+     * This is not product-boundary authority for hosted vs standalone.
+     */
     public function disconnect(ArkMailActivationClient $activation): RedirectResponse
     {
-        if (! SaasProviderConfigurationGate::platformConnected()) {
+        if (! PlatformConnection::current()->isConnected()) {
             return SaasProviderConfigurationGate::refuseBoxPairing();
         }
 
         $activation->disconnect();
 
-        return $this->redirectToGeneral()->with('status', 'ARK Platform disconnected.');
+        return $this->redirectToGeneral()->with('status', 'Legacy cloud association cleared.');
     }
 }
