@@ -8,23 +8,33 @@ This page is the current public product split. It is not a roadmap and it does n
 
 Public Core runs the shop. Private ARK Shop sells the extras. Private Landlord runs the infrastructure. Only the project owner authorizes an exception.
 
-A change belongs in this repository when a shop needs it to operate with no ARK Shop account. Communications, commercial AI, parts catalogs, card capture, subscriptions, and provider accounts do not. If that is unclear, stop and ask the project owner.
+A change belongs in this repository when a shop needs it to operate with no ARK Shop account. Customer communications delivery, commercial AI (Dragon), licensed labor-data integrations, card capture, parts-catalog provider accounts, subscriptions, and SaaS provider configuration do not. If that is unclear, stop and ask the project owner.
+
+## What standalone Core does not provide
+
+These belong to proprietary ARK SaaS (ARK Shop). Standalone Core must not advertise them, require them, or expose their provider configuration:
+
+- Dragon and other commercial AI integrations
+- Licensed labor-data integrations (catalog credentials and partner APIs)
+- Customer email delivery
+- SMS and MMS
+- Hosted telephony (inbound/outbound voice, SIP, voicemail, recordings, phone provisioning)
+- Integrated payment processing (card capture inside ARK, terminals that settle through ARK)
+- SaaS provider configuration screens and credentials
 
 ## Communications are not part of Core
 
 Core manages the shop. ARK Shop powers its communications.
 
-Core does not contain a functional communications subsystem, except the shared Communications workspace described below. That includes one described as optional, self-hosted, or bring-your-own-provider. Core must not send, receive, route, store, or display customer communications through any provider. That covers:
+Core does not contain a functional communications delivery subsystem. That includes one described as optional, self-hosted, or bring-your-own-provider. Core must not send, receive, or route customer communications through any provider. That covers:
 
 - email sending and delivery to customers
 - SMS and MMS, in either direction
 - inbound and outbound voice, SIP routing, SIP endpoints, and provisioning
 - voicemail and call recording
-- Twilio, SMTP relays, and any other communications provider integration
-- communications credentials, settings, templates, and automations
-- conversation history, inboxes, and call logs
-- communications notifications, delivery queues, webhooks, callbacks, and background processing
-- communications screens and APIs
+- Twilio, SMTP relays for customer mail, and any other communications provider integration
+- communications credentials, provider settings, templates, and automations
+- communications notifications, delivery queues, webhooks, callbacks, and background processing that send or receive customer messages
 
 ARK Shop can offer ARK-managed providers or the shop's own provider account. Either is part of the private product, in a paid tier or as an add-on.
 
@@ -32,8 +42,9 @@ Core keeps:
 
 - the customer's phone numbers and email addresses as contact fields
 - basic customer intake: the website contact or booking request and the resulting lead record, with its source and status
-- local staff sign-in and account recovery that work without ARK Shop. The framework's password-reset and staff email-verification mail use the shop's own mail settings. Recovery must also work from the command line, with no mail at all.
+- local staff sign-in and account recovery that work without ARK Shop. The framework's password-reset and staff email-verification mail use the shop's own mail settings for **staff** accounts only. Recovery must also work from the command line, with no mail at all.
 - small, provider-neutral extension points: domain events, contracts whose Core implementation does nothing, and registries for navigation, timeline entries, attention sources, and settings sections
+- historical communications records and the shared workspace shell described below, without a standalone delivery stack
 
 ARK Shop owns everything that communicates about a lead or a customer:
 
@@ -41,12 +52,13 @@ ARK Shop owns everything that communicates about a lead or a customer:
 - escalation of uncontacted leads
 - verification codes sent by email or text
 - notifications to customers
+- customer email, SMS/MMS, and hosted voice delivery
 
 Core may confirm a code that ARK Shop sent through a minimal contract. Core never sends one.
 
-An extension point must not contain a working sender, receiver, router, or store. With no ARK Shop installed, a shop has no communications features, and Core says so without failing. A fresh Core install creates no communications tables and does not depend on tables ARK Shop owns.
+An extension point must not contain a working sender, receiver, router, or provider credential store. With no ARK Shop installed, a shop has no communications delivery features, and Core says so without failing. A fresh Core install does not depend on tables ARK Shop owns for delivery.
 
-There is no self-hosted Twilio exception. The one exception to this section is the shared Communications workspace below.
+There is no self-hosted Twilio exception and no standalone Core customer-mail exception. The one exception to this section is the shared Communications workspace below.
 
 ### Owner-approved exception: the shared Communications workspace (2026-11-03)
 
@@ -54,11 +66,12 @@ The project owner approved one narrowly scoped exception. Core keeps one provide
 
 - **The workspace in Core:**
   - the conversation list (needs attention, waiting, resolved, calls and voicemail, history; everyone, mine, unassigned; search);
-  - the conversation with its customer and repair-order header, message timeline, repair-order activity, and composer;
+  - the conversation with its customer and repair-order header, message timeline, repair-order activity, and composer shell;
   - the shop context lane (customer, vehicles, repair orders, assignment, follow-up, internal notes, recent visits);
   - the workflows on Core's own records: assignment, attention, waiting, follow-up, resolve and reopen, read state, internal notes, and conversation history.
-- **Core's own communications capability:** email to and from customers where the shop has configured mail, plus the records above. With nothing configured, the workspace still shows history, notes, assignments, and context, and says plainly what cannot be sent.
+- **Core does not deliver customer messages from this workspace.** With no ARK Shop, the workspace still shows history, notes, assignments, and context, and says plainly what cannot be sent.
 - **What ARK Shop adds to the same workspace,** through Core's extension points (`App\Ark\Operations\Communications\CommunicationsWorkspaceSignals` and the workspace's actions and slots):
+  - customer email delivery;
   - hosted SMS and MMS;
   - voice, voicemail, and recordings;
   - delivery tracking and provider errors;
@@ -94,12 +107,11 @@ A stock install (Docker Compose and `/setup`, with no ARK Shop account) provides
 - Tax, shop fees, deposits, and customer types
 - A ledger for payments taken outside ARK (cash, check, or a card charged on a standalone terminal)
 - First-run installer
-- Dragon, with your own model provider. No ARK-hosted model is included.
 - API contracts for separate client apps (`/api/mobile`, `/api/desk`, `/api/tech`, `/api/station`), excluding communications endpoints. The apps are not shipped here.
 
 The customer portal can show an amount owed. Showing that amount is not card processing.
 
-AllData and ProDemand buttons open the vendor site with the shop's own login. Core ships a labor-guide import interface. Licensed labor-guide data is not in this repository.
+AllData and ProDemand buttons open the vendor site with the shop's own login. That is not a licensed labor-data integration. Core may ship a labor-guide **import interface**. Licensed labor-guide data and commercial catalog provider accounts are not in this repository and are not standalone Core features.
 
 One Core installation is one shop. Core is not a shared-database multi-tenant product.
 
@@ -119,14 +131,16 @@ These capabilities already exist in the ARK ecosystem. They belong to ARK Shop, 
 
 | Capability | Where it lives |
 | --- | --- |
-| Customer email | ARK Shop |
+| Dragon and commercial AI | ARK Shop |
+| Customer email delivery | ARK Shop |
 | Customer texting (SMS and MMS) | ARK Shop |
 | Voice: inbound, outbound, SIP phones, voicemail, and recordings | ARK Shop |
-| Conversation history, inbox, and call log | ARK Shop |
+| Conversation delivery, provider inboxes, and call log services | ARK Shop |
 | Communications automations, templates, and notifications | ARK Shop |
 | Provider accounts, ARK-managed or the shop's own | ARK Shop |
 | Card capture inside ARK | ARK Shop |
-| PartsTech shop catalog access | ARK Shop |
+| PartsTech shop catalog access and other licensed catalog integrations | ARK Shop |
+| SaaS provider configuration | ARK Shop |
 
 ### Shop work that stays in Core
 
@@ -134,7 +148,9 @@ These capabilities already exist in the ARK ecosystem. They belong to ARK Shop, 
 | --- | --- |
 | Customer phone and email contact fields | Core |
 | Recording a payment the shop already took | Core |
-| Labor-guide data | You license it. Core ships the import interface, not the data. |
+| Manual payment-method labels for the ledger | Core |
+| Provider-neutral contracts, events, and extension registries consumed by SaaS | Core |
+| Labor-guide import interface | Core ships the interface. Licensed data is separate. |
 | AllData / ProDemand buttons | Core. They open the vendor site with the shop's own login. |
 | Label printing (QZ Tray) | Core, after the shop supplies its own certificate and private key. |
 | Example staff such as `admin@ark.test` | Optional development seed data. Not created by first-run setup. |
@@ -148,7 +164,6 @@ The fully managed ARK Shop product is still being built. These are not available
 - ARK Backup, ARK Storage, and ARK Data
 - Moving a shop between self-hosted Core and ARK Shop
 - ARK Connect
-- An ARK-hosted Dragon model
 
 ## Why some Hosted work is not in this repository
 
@@ -167,10 +182,7 @@ PartsTech is one example. Shop catalog access is part of ARK Shop. This reposito
 | Shop website | Customer-facing site and editor. See [platform/ark-core-website-boundary.md](platform/ark-core-website-boundary.md). |
 | Desk, Tech, Companion, and similar clients | Separate apps. Core exposes `/api/mobile`, `/api/desk`, `/api/tech`, and `/api/station` without communications endpoints. |
 | Licensed labor guides | Data you license separately. Not redistributed. |
-
-## Dragon
-
-Core includes Dragon settings so a shop can point at a model it already runs. The default is `none`. Tests may use `fake`. An ARK-hosted model, provider credential store, and new AI product are not added here. Those belong to ARK Shop.
+| Dragon | ARK Shop. Not a standalone Core feature. |
 
 ## Enforcement
 
@@ -186,6 +198,8 @@ Core CI rejects functional communications code: provider SDKs and hosts, webhook
 The script holds a short allowlist of framework files, each with a reason. Today it has one entry: `config/mail.php`, the framework mailer for staff sign-in mail. The baseline does not hold allowances.
 
 ARK Shop CI separately proves that each communications route and service in the composed product is the one it expects. Each must come from Core until its move, and from ARK Shop after.
+
+Standalone Core must not expose SaaS provider configuration through Settings navigation or by direct URL. Provider-neutral contracts and historical records remain. Hosted shops receive provider configuration through ARK Shop entitlements, not through a free standalone setup path.
 
 ## Related
 

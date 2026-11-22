@@ -35,7 +35,7 @@ Redis is part of the Docker Compose runtime (cache, sessions, Horizon queues, Re
 ## After install
 
 - `/setup` is **locked**. There is no `?force=` reopen.
-- Configure Dragon, telephony, and mail under **Settings** when ready. Record external payments on the repair order; managed processors belong to ARK Platform Payments.
+- Use **Settings** for ordinary shop configuration (identity, financial rules, documents, staff). Record external payments on the repair order. Customer email, SMS, hosted phone, Dragon, and card capture inside ARK belong to ARK Shop when that product is connected.
 - Licensed labor-guide data is never bundled. Import only what you are licensed to use.
 
 ## Operator commands

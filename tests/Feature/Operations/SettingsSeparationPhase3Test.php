@@ -16,57 +16,55 @@ beforeEach(function (): void {
     $this->admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 });
 
-test('settings exposes one platform connection surface', function (): void {
+test('settings no longer exposes Box pairing as a Core configuration surface', function (): void {
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', ['section' => 'ark-cloud']))
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'general']));
+
+    $this->actingAs($this->admin)
+        ->get(route('operations.settings.shop.edit'))
         ->assertOk()
-        ->assertSee('ARK Platform', false)
-        ->assertSee('Connect ARK Platform', false)
-        ->assertSee('action="'.route('operations.settings.shop.ark-cloud.connect').'"', false)
-        ->assertSee('action="'.route('operations.settings.shop.ark-cloud.connect-manual').'"', false)
-        ->assertDontSee('Connect ARK Email', false)
-        ->assertDontSee('Disconnect ARK Email', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.enable').'"', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.disconnect').'"', false);
+        ->assertDontSee('Connect ARK Platform', false)
+        ->assertDontSee('action="'.route('operations.settings.shop.ark-cloud.connect').'"', false)
+        ->assertDontSee('action="'.route('operations.settings.shop.ark-cloud.connect-manual').'"', false)
+        ->assertDontSee("@click=\"setActive('ark-cloud')\"", false);
 });
 
-test('communications and email settings do not host connection controls', function (): void {
+test('standalone communications settings are refused; hosted email still has no separate mail pairing controls', function (): void {
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', [
             'section' => 'communications',
             'communications-tab' => 'email',
         ]))
-        ->assertOk()
-        ->assertSee('Customer email')
-        ->assertSee('Reply-To')
-        ->assertSee('Connect in ARK Platform', false)
-        ->assertDontSee('Connect ARK Email', false)
-        ->assertDontSee('Disconnect ARK Email', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.enable').'"', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.disconnect').'"', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.claim').'"', false);
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'general']));
 
-    $email = file_get_contents(resource_path('views/operations/settings/partials/communications-email-settings.blade.php'));
-
-    expect($email)->not->toContain('ark-mail.enable')
-        ->and($email)->not->toContain('Disconnect ARK Email');
-});
-
-test('connected platform still disconnects only from the platform settings section', function (): void {
-    enablePlatformConnection();
+    $catalog = enableHostedTenantCatalog();
     fakePlatformVoiceStatus('not_enabled');
-    config(['services.ark_platform.base_url' => 'https://cloud.test']);
 
-    $this->actingAs($this->admin)
-        ->get(route('operations.settings.shop.edit', ['section' => 'ark-cloud']))
-        ->assertOk()
-        ->assertSee('action="'.route('operations.settings.shop.ark-cloud.disconnect').'"', false)
-        ->assertSee('Manage in ARK Platform', false)
-        ->assertDontSee('Disconnect ARK Email', false)
-        ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.disconnect').'"', false);
+    try {
+        $this->actingAs($this->admin)
+            ->get(route('operations.settings.shop.edit', [
+                'section' => 'communications',
+                'communications-tab' => 'email',
+            ]))
+            ->assertOk()
+            ->assertSee('Customer email')
+            ->assertDontSee('Connect ARK Email', false)
+            ->assertDontSee('Disconnect ARK Email', false)
+            ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.enable').'"', false)
+            ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.disconnect').'"', false)
+            ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.claim').'"', false);
+
+        $email = file_get_contents(resource_path('views/operations/settings/partials/communications-email-settings.blade.php'));
+
+        expect($email)->not->toContain('ark-mail.enable')
+            ->and($email)->not->toContain('Disconnect ARK Email');
+    } finally {
+        clearHostedTenantCatalog($catalog);
+    }
 });
 
-test('viewing platform settings leaves all three connection storage families intact', function (): void {
+test('connected platform connection storage remains intact when viewing shop settings', function (): void {
     expect(Schema::hasColumn('shop_settings', 'ark_mail_status'))->toBeTrue()
         ->and(Schema::hasColumn('shop_settings', 'cloud_status'))->toBeTrue()
         ->and(Schema::hasColumn('shop_settings', 'platform_status'))->toBeTrue();
@@ -96,7 +94,7 @@ test('viewing platform settings leaves all three connection storage families int
     ]);
 
     $this->actingAs($this->admin)
-        ->get(route('operations.settings.shop.edit', ['section' => 'ark-cloud']))
+        ->get(route('operations.settings.shop.edit', ['section' => 'general']))
         ->assertOk();
 
     $settings = ShopSettings::current()->fresh();
@@ -115,30 +113,12 @@ test('viewing platform settings leaves all three connection storage families int
         ->and($settings->platform_shop_public_id)->toBe('33333333-3333-4333-8333-333333333333');
 });
 
-test('legacy email connection routes still start and stop the same platform connection', function (): void {
+test('legacy email connection routes refuse Box pairing from Core', function (): void {
     expect(Route::has('operations.settings.shop.email.ark-mail.enable'))->toBeTrue()
         ->and(Route::has('operations.settings.shop.email.ark-mail.claim'))->toBeTrue()
         ->and(Route::has('operations.settings.shop.email.ark-mail.disconnect'))->toBeTrue();
 
-    config([
-        'services.ark_platform.base_url' => 'https://cloud.example.test',
-        'services.ark_cloud.base_url' => 'https://cloud.example.test',
-        'services.ark_mail.base_url' => 'https://cloud.example.test',
-    ]);
-
-    Http::fake([
-        'cloud.example.test/api/v1/pairing/start' => Http::response([
-            'ok' => true,
-            'pairing_code' => 'ABCD1234',
-            'public_id' => '00000000-0000-4000-8000-000000000099',
-            'expires_at' => now()->addMinutes(10)->toIso8601String(),
-        ], 200),
-    ]);
-
-    $response = $this->actingAs($this->admin)
-        ->post(route('operations.settings.shop.email.ark-mail.enable'));
-
-    $response->assertRedirect();
-    expect($response->headers->get('Location'))
-        ->toStartWith('https://cloud.example.test/connect/00000000-0000-4000-8000-000000000099');
+    $this->actingAs($this->admin)
+        ->post(route('operations.settings.shop.email.ark-mail.enable'))
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'general']));
 });

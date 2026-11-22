@@ -2,59 +2,49 @@
 
 namespace App\Ark\Operations\Settings;
 
-use App\Ark\Platform\PlatformConnectOrchestrator;
-use App\Ark\Platform\Http\PlatformConnectController;
 use App\Ark\Mail\ArkMailActivationClient;
+use App\Ark\Platform\PlatformConnection;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ShopPlatformSettingsController
 {
-    private function redirectToArkCloud(): RedirectResponse
+    private function redirectToGeneral(): RedirectResponse
     {
         return redirect()->route('operations.settings.shop.edit', [
-            'section' => 'ark-cloud',
+            'section' => 'general',
         ]);
     }
 
-    public function connect(Request $request, PlatformConnectOrchestrator $orchestrator): RedirectResponse
+    /**
+     * @param  mixed  $orchestrator  Ignored. Kept so SaaS overlays that still pass PlatformConnectOrchestrator do not fatally arity-mismatch.
+     */
+    public function connect(Request $request, mixed $orchestrator = null): RedirectResponse
     {
-        $data = $request->validate([
-            'ark_mail_service_url' => ['nullable', 'url', 'max:255'],
-        ]);
-
-        try {
-            $serviceUrl = filled($data['ark_mail_service_url'] ?? null)
-                ? rtrim((string) $data['ark_mail_service_url'], '/')
-                : null;
-            $returnTo = route('operations.cloud.connecting', absolute: true);
-            $started = $orchestrator->begin($serviceUrl, $returnTo);
-        } catch (\Throwable $e) {
-            return $this->redirectToArkCloud()->with('status', 'Could not start connecting: '.$e->getMessage());
-        }
-
-        return redirect()->away($started['connect_url']);
+        return SaasProviderConfigurationGate::refuseBoxPairing();
     }
 
-    public function claim(Request $request, ArkMailActivationClient $activation): RedirectResponse
+    /**
+     * @param  mixed  $activation  Ignored. Kept for SaaS overlay call sites that still pass ArkMailActivationClient.
+     */
+    public function claim(Request $request, mixed $activation = null): RedirectResponse
     {
-        $data = $request->validate([
-            'pairing_public_id' => ['nullable', 'uuid'],
-        ]);
-
-        try {
-            $activation->claimPairing($data['pairing_public_id'] ?? null);
-        } catch (\Throwable $e) {
-            return $this->redirectToArkCloud()->with('status', 'Could not finish connecting: '.$e->getMessage());
-        }
-
-        return $this->redirectToArkCloud()->with('status', 'ARK Platform connected.');
+        return SaasProviderConfigurationGate::refuseBoxPairing();
     }
 
+    /**
+     * Legacy cleanup only: clear leftover pairing rows from discontinued Box enrollment.
+     * This is not product-boundary authority for hosted vs standalone.
+     */
     public function disconnect(ArkMailActivationClient $activation): RedirectResponse
     {
+        if (! PlatformConnection::current()->isConnected()) {
+            return SaasProviderConfigurationGate::refuseBoxPairing();
+        }
+
         $activation->disconnect();
 
-        return $this->redirectToArkCloud()->with('status', 'ARK Platform disconnected.');
+        return $this->redirectToGeneral()->with('status', 'Legacy cloud association cleared.');
     }
 }

@@ -13,8 +13,13 @@ beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
     ManagedVoiceGate::resetMemo();
+    $this->hostedCatalog = enableHostedTenantCatalog();
 
     $this->admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+});
+
+afterEach(function (): void {
+    clearHostedTenantCatalog($this->hostedCatalog ?? null);
 });
 
 test('platform connection without voice service keeps core hours settings', function (): void {
@@ -169,21 +174,23 @@ test('recording core ownership after rollback restores hours settings', function
     enablePlatformConnection();
     ManagedVoiceGate::resetMemo();
 
-    $voiceRow = fn (string $owner): array => [
-        'key' => 'voice',
-        'label' => 'ARK Voice',
-        'status' => 'active',
-        'status_label' => 'Active',
-        'detail' => null,
-        'runtime_owner' => $owner,
-    ];
+    $runtime = (object) ['owner' => 'platform'];
 
+    // Settings pages may call /status more than once per request; do not use a short sequence.
     Http::fake([
-        'cloud.test/api/v1/status' => Http::sequence()
-            ->push(['ok' => true, 'services' => [$voiceRow('platform')]], 200)
-            ->push(['ok' => true, 'services' => [$voiceRow('platform')]], 200)
-            ->push(['ok' => true, 'services' => [$voiceRow('core')]], 200)
-            ->push(['ok' => true, 'services' => [$voiceRow('core')]], 200),
+        'cloud.test/api/v1/status' => function () use ($runtime) {
+            return Http::response([
+                'ok' => true,
+                'services' => [[
+                    'key' => 'voice',
+                    'label' => 'ARK Voice',
+                    'status' => 'active',
+                    'status_label' => 'Active',
+                    'detail' => null,
+                    'runtime_owner' => $runtime->owner,
+                ]],
+            ], 200);
+        },
     ]);
 
     $this->actingAs($this->admin)
@@ -194,6 +201,7 @@ test('recording core ownership after rollback restores hours settings', function
         ->assertOk()
         ->assertSee('Phone settings are managed in ARK Cloud', false);
 
+    $runtime->owner = 'core';
     ManagedVoiceGate::resetMemo();
 
     $this->actingAs($this->admin)

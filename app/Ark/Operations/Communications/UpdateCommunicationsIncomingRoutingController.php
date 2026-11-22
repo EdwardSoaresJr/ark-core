@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Communications;
 
 use App\Ark\Operations\Telephony\TelephonyEndpoint;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,6 +12,10 @@ class UpdateCommunicationsIncomingRoutingController
 {
     public function __invoke(Request $request): RedirectResponse
     {
+        if (! SaasProviderConfigurationGate::allowsPhoneDeviceProvisioning()) {
+            return SaasProviderConfigurationGate::refusePhoneDeviceProvisioning();
+        }
+
         $data = $request->validate([
             'ring_user_ids' => ['nullable', 'array'],
             'ring_user_ids.*' => ['integer', Rule::exists('users', 'id')],

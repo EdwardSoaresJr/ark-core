@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 
 class StoreCommunicationDeviceController
 {
@@ -22,6 +23,11 @@ class StoreCommunicationDeviceController
         CommunicationDeviceModelResolver $modelResolver,
         EnsureWorkstationTelephonyExtensionAction $ensureExtension,
     ): RedirectResponse {
+        if (! SaasProviderConfigurationGate::allowsPhoneDeviceProvisioning()) {
+            return SaasProviderConfigurationGate::refusePhoneDeviceProvisioning();
+        }
+
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:128'],
             'model' => ['nullable', 'string', 'max:64'],

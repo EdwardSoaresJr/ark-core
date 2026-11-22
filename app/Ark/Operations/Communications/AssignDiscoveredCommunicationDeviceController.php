@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use App\Ark\Platform\SaasProviderConfigurationGate;
 
 final class AssignDiscoveredCommunicationDeviceController
 {
@@ -20,6 +21,11 @@ final class AssignDiscoveredCommunicationDeviceController
         RegenerateEndpointConfigurationAction $regenerate,
         StoreWorkstationAction $storeWorkstation,
     ): RedirectResponse {
+        if (! SaasProviderConfigurationGate::allowsPhoneDeviceProvisioning()) {
+            return SaasProviderConfigurationGate::refusePhoneDeviceProvisioning();
+        }
+
+
         if ($communicationDevice->status !== CommunicationDeviceStatus::Discovered) {
             throw ValidationException::withMessages([
                 'device' => 'This device is no longer waiting for station assignment.',

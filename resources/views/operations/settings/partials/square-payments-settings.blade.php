@@ -14,17 +14,16 @@
 
 <div class="card-header">
     <div>
-        <div class="subheader">Square Payments</div>
-        <h2 class="card-title">Card capture inside ARK</h2>
+        <div class="subheader">Payment methods</div>
+        <h2 class="card-title">How this shop records payments</h2>
         @if ($platformPaymentsCapture)
             <div class="card-subtitle">
-                Card capture is connected for this shop. Choose where a card payment may be offered.
+                Card capture is connected for this shop through ARK Shop. Choose where a card payment may be offered.
                 Take Payment and Record Payment stay on the repair order.
             </div>
         @else
             <div class="card-subtitle">
-                Card capture inside ARK is not connected. Record a card, cash, or check taken at the counter.
-                A card button appears only when a processor can settle the charge.
+                Record cash, check, or a card taken on a standalone terminal. Integrated card capture belongs to ARK Shop.
             </div>
         @endif
     </div>
@@ -36,11 +35,12 @@
             Card capture is connected for this shop.
         </div>
     @else
-        <div class="alert alert-warning" role="status" data-card-capture-status="not-connected">
-            Card capture is not connected. Record Payment still works on the repair order.
+        <div class="alert alert-secondary" role="status" data-card-capture-status="not-connected">
+            Integrated card capture is not available on standalone Core. Record Payment still works on the repair order.
         </div>
     @endif
 
+    @if ($platformPaymentsCapture)
     <form method="POST" action="{{ route('operations.settings.shop.payments.update') }}" style="max-width: 48rem" data-settings-card-payments>
         @csrf
         @method('PATCH')
@@ -134,6 +134,7 @@
             </button>
         </div>
     </form>
+    @endif
 </div>
 
 @php
