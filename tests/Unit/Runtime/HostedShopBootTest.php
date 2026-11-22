@@ -8,12 +8,14 @@ use App\Ark\Runtime\HostedRuntime;
 use App\Http\Middleware\ApplyShopRuntimeConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\FakeStanclTenancy;
 
 beforeEach(function () {
     $this->catalog = tempnam(sys_get_temp_dir(), 'ark-tenants-');
     $this->originalDefault = config('database.default');
     $this->originalConnection = config('database.connections.'.$this->originalDefault);
     $this->originalReplyTo = config('mail.reply_to.address');
+    FakeStanclTenancy::clear();
 });
 
 afterEach(function () {
@@ -26,6 +28,7 @@ afterEach(function () {
     ShopSettings::forgetCurrent();
     ShopDisplayTimezone::forget();
     InstallationState::markInstalled();
+    FakeStanclTenancy::clear();
     if (is_string($this->catalog) && is_file($this->catalog)) {
         unlink($this->catalog);
     }
@@ -51,7 +54,18 @@ it('still forces file drivers for a self-hosted shop that is not installed', fun
     putenv('ARK_HOSTED_TENANTS');
 
     expect(HostedRuntime::catalogConfigured())->toBeFalse()
+        ->and(HostedRuntime::isHostedProduct())->toBeFalse()
         ->and(HostedRuntime::shouldUseFileDriversBeforeInstall())->toBeTrue();
+});
+
+it('treats an initialized Stancl tenant as a hosted product without ARK_HOSTED_TENANTS', function () {
+    putenv('ARK_HOSTED_TENANTS');
+    FakeStanclTenancy::enable();
+
+    expect(HostedRuntime::catalogConfigured())->toBeFalse()
+        ->and(HostedRuntime::stanclTenantInitialized())->toBeTrue()
+        ->and(HostedRuntime::isHostedProduct())->toBeTrue()
+        ->and(HostedRuntime::tenantDatabaseSelected())->toBeTrue();
 });
 
 it('does not open the image default database before the hosted tenant is selected', function () {

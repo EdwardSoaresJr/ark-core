@@ -5,8 +5,10 @@ use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Platform\Payments\ManagedPaymentsGate;
 use App\Ark\Platform\SaasProviderConfigurationGate;
 use App\Ark\Runtime\Authorization\ArkRole;
+use App\Ark\Runtime\HostedRuntime;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Tests\Support\FakeStanclTenancy;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -16,6 +18,7 @@ beforeEach(function (): void {
     ShopSettings::forgetCurrent();
     clearHostedTenantCatalog($this->hostedCatalog ?? null);
     $this->hostedCatalog = null;
+    FakeStanclTenancy::clear();
 
     $this->admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 });
@@ -23,6 +26,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     clearHostedTenantCatalog($this->hostedCatalog ?? null);
     $this->hostedCatalog = null;
+    FakeStanclTenancy::clear();
 });
 
 test('standalone settings hide SaaS provider nav and refuse direct communications URLs', function (): void {
@@ -124,6 +128,46 @@ test('hosted tenant catalog restores communications settings shell without Box p
         ->assertOk()
         ->assertDontSee('data-settings-card-payments', false)
         ->assertSee('data-settings-manual-payment-methods', false);
+});
+
+test('initialized Stancl tenant restores communications settings without ARK_HOSTED_TENANTS', function (): void {
+    expect(HostedRuntime::catalogConfigured())->toBeFalse();
+
+    FakeStanclTenancy::enable();
+    ShopSettings::reloadCurrent();
+    fakePlatformVoiceStatus('active', runtimeOwner: 'platform');
+
+    expect(HostedRuntime::stanclTenantInitialized())->toBeTrue()
+        ->and(HostedRuntime::isHostedProduct())->toBeTrue()
+        ->and(SaasProviderConfigurationGate::isHostedRuntime())->toBeTrue()
+        ->and(SaasProviderConfigurationGate::allowsCommunicationsProviderSettings())->toBeTrue()
+        ->and(SaasProviderConfigurationGate::allowsPhoneDeviceProvisioning())->toBeTrue()
+        // Stock Core still refuses card-capture form until ARK Shop replaces ManagedPaymentsGate.
+        ->and(SaasProviderConfigurationGate::allowsCardCaptureSettings())->toBeFalse();
+
+    $this->actingAs($this->admin)
+        ->get(route('operations.settings.shop.edit', ['section' => 'communications']))
+        ->assertOk()
+        ->assertSee('Phone, SMS, and email');
+
+    $this->actingAs($this->admin)
+        ->get(route('operations.shop.communications'))
+        ->assertOk()
+        ->assertDontSee('Phone device provisioning belongs to ARK Shop');
+});
+
+test('Stancl helper without an initialized tenant stays standalone for settings', function (): void {
+    FakeStanclTenancy::enable();
+    FakeStanclTenancy::clear();
+
+    expect(HostedRuntime::catalogConfigured())->toBeFalse()
+        ->and(HostedRuntime::stanclTenantInitialized())->toBeFalse()
+        ->and(SaasProviderConfigurationGate::isHostedRuntime())->toBeFalse()
+        ->and(SaasProviderConfigurationGate::allowsCommunicationsProviderSettings())->toBeFalse();
+
+    $this->actingAs($this->admin)
+        ->get(route('operations.settings.shop.edit', ['section' => 'communications']))
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'general']));
 });
 
 test('standalone stations page keeps workstations and refuses phone device routes', function (): void {
