@@ -5,6 +5,7 @@ namespace App\Ark\Operations\RepairOrders;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Recommendations\RecommendationEstimateLink;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -21,6 +22,10 @@ final class WorkCompletionAuthorization
     public const LIFECYCLE_BLOCKED = 'Installed parts or completed labor on this repair order are outside the approved scope and have no documented exception.';
 
     public const CONCERN_DELETE_BLOCKED = 'This concern has an approval or exception on file and cannot be deleted.';
+
+    public const CONCERN_DELETE_HAS_LINES = 'Delete or move concern lines before deleting the concern.';
+
+    public const CONCERN_DELETE_RECOMMENDATION_LINK = 'This concern is linked to a recommendation estimate and cannot be deleted.';
 
     /** @var list<string> */
     private const FINISHED_STATUSES = [
@@ -621,6 +626,14 @@ final class WorkCompletionAuthorization
 
     public function concernDeletionBlockedReason(RepairOrderConcern $concern): ?string
     {
+        $hasLines = $concern->relationLoaded('lines')
+            ? $concern->lines->isNotEmpty()
+            : $concern->lines()->exists();
+
+        if ($hasLines) {
+            return self::CONCERN_DELETE_HAS_LINES;
+        }
+
         $hasHistory = ApprovedWorkScope::query()
             ->where('repair_order_concern_id', $concern->id)
             ->exists()
@@ -628,7 +641,17 @@ final class WorkCompletionAuthorization
                 ->where('repair_order_concern_id', $concern->id)
                 ->exists();
 
-        return $hasHistory ? self::CONCERN_DELETE_BLOCKED : null;
+        if ($hasHistory) {
+            return self::CONCERN_DELETE_BLOCKED;
+        }
+
+        if (RecommendationEstimateLink::query()
+            ->where('repair_order_concern_id', $concern->id)
+            ->exists()) {
+            return self::CONCERN_DELETE_RECOMMENDATION_LINK;
+        }
+
+        return null;
     }
 
     /**

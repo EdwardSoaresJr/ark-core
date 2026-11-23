@@ -39,14 +39,10 @@ final class MobileConcernDestroyController
         $repairOrder->ensureOpenForEditing();
         $concurrency->guard($request, $repairOrder);
 
-        if ($concern->lines()->exists()) {
-            throw new HttpException(422, 'Delete or move concern lines before deleting the concern.');
-        }
+        $deletionBlock = app(WorkCompletionAuthorization::class)->concernDeletionBlockedReason($concern);
 
-        $authorizationBlock = app(WorkCompletionAuthorization::class)->concernDeletionBlockedReason($concern);
-
-        if ($authorizationBlock !== null) {
-            throw new HttpException(422, $authorizationBlock);
+        if ($deletionBlock !== null) {
+            throw new HttpException(422, $deletionBlock);
         }
 
         $payload = [

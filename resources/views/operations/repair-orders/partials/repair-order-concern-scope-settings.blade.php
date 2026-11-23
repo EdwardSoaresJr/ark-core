@@ -98,17 +98,90 @@
                 </form>
             @endcan
         @endif
-        @if ($concern->lines->isEmpty())
-            @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersDestructive->value)
-                <form method="POST" action="{{ route('operations.repair-orders.concerns.destroy', [$repairOrder, $concern]) }}" data-refresh-scope="worksheet" data-continuity-focus="#concern-store [name='summary']" @submit.prevent="submitWorksheetForm($event)">
-                    @csrf
-                    @method('DELETE')
-                    <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                    <button type="submit" class="btn btn-sm btn-ghost-danger" aria-label="Delete empty concern" title="Remove this concern after all lines are deleted">
-                        Delete concern
-                    </button>
-                </form>
-            @endcan
-        @endif
+        @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersDestructive->value)
+            @php
+                $concernDeletionBlockedReason = app(App\Ark\Operations\RepairOrders\WorkCompletionAuthorization::class)
+                    ->concernDeletionBlockedReason($concern);
+            @endphp
+            @if ($concernDeletionBlockedReason === null)
+                <div
+                    x-data="{
+                        confirmDelete: false,
+                        confirmTimer: null,
+                        armDelete() {
+                            this.confirmDelete = true;
+                            this.clearDeleteTimer();
+                            this.confirmTimer = setTimeout(() => {
+                                this.confirmDelete = false;
+                                this.confirmTimer = null;
+                            }, 3000);
+                        },
+                        clearDeleteTimer() {
+                            if (this.confirmTimer) {
+                                clearTimeout(this.confirmTimer);
+                                this.confirmTimer = null;
+                            }
+                        },
+                        submitDelete(event) {
+                            if (! this.confirmDelete) {
+                                event.preventDefault();
+                                this.armDelete();
+                                return;
+                            }
+                            this.clearDeleteTimer();
+                            const worksheet = this.$el.closest('[data-worksheet-root]')?._x_dataStack?.[0];
+                            if (typeof worksheet?.submitWorksheetForm === 'function') {
+                                worksheet.submitWorksheetForm(event);
+                                return;
+                            }
+                            event.target.submit();
+                        },
+                    }"
+                >
+                    <form
+                        method="POST"
+                        action="{{ route('operations.repair-orders.concerns.destroy', [$repairOrder, $concern]) }}"
+                        data-refresh-scope="worksheet"
+                        data-continuity-focus="#concern-store [name='summary']"
+                        @submit.prevent="submitDelete($event)"
+                    >
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+                        <button
+                            type="button"
+                            x-show="! confirmDelete"
+                            class="btn btn-sm btn-ghost-danger"
+                            aria-label="Delete concern"
+                            title="Remove this unlinked concern (requires confirmation)"
+                            @click="armDelete()"
+                        >
+                            Delete concern
+                        </button>
+                        <button
+                            type="submit"
+                            x-show="confirmDelete"
+                            x-cloak
+                            class="btn btn-sm btn-danger"
+                            aria-label="Confirm delete concern"
+                        >
+                            Confirm delete
+                        </button>
+                    </form>
+                </div>
+            @else
+                <button
+                    type="button"
+                    class="btn btn-sm btn-ghost-secondary"
+                    disabled
+                    aria-disabled="true"
+                    aria-label="Cannot delete concern"
+                    title="{{ $concernDeletionBlockedReason }}"
+                >
+                    Cannot delete
+                </button>
+                <span class="text-secondary small text-wrap" style="max-width: 16rem;">{{ $concernDeletionBlockedReason }}</span>
+            @endif
+        @endcan
     </div>
 </div>
