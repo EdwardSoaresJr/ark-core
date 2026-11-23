@@ -105,6 +105,7 @@
             @endphp
             @if ($concernDeletionBlockedReason === null)
                 <div
+                    class="d-flex flex-wrap align-items-center gap-1"
                     x-data="{
                         confirmDelete: false,
                         confirmTimer: null,
@@ -116,25 +117,43 @@
                                 this.confirmTimer = null;
                             }, 3000);
                         },
+                        cancelDelete() {
+                            this.clearDeleteTimer();
+                            this.confirmDelete = false;
+                        },
                         clearDeleteTimer() {
                             if (this.confirmTimer) {
                                 clearTimeout(this.confirmTimer);
                                 this.confirmTimer = null;
                             }
                         },
-                        submitDelete(event) {
+                        worksheetController() {
+                            const root = this.$el.closest('[data-worksheet-root]');
+                            if (! root || typeof window.Alpine?.$data !== 'function') {
+                                return null;
+                            }
+                            return window.Alpine.$data(root);
+                        },
+                        async submitDelete(event) {
                             if (! this.confirmDelete) {
                                 event.preventDefault();
                                 this.armDelete();
                                 return;
                             }
                             this.clearDeleteTimer();
-                            const worksheet = this.$el.closest('[data-worksheet-root]')?._x_dataStack?.[0];
-                            if (typeof worksheet?.submitWorksheetForm === 'function') {
-                                worksheet.submitWorksheetForm(event);
+                            const worksheet = this.worksheetController();
+                            if (typeof worksheet?.submitWorksheetForm !== 'function') {
+                                if (typeof worksheet?.surfaceWorksheetMessage === 'function') {
+                                    worksheet.surfaceWorksheetMessage(
+                                        'Could not update this repair order. Refresh and try again.',
+                                        { tone: 'error' },
+                                    );
+                                } else if (typeof window.arkOpsToast === 'function') {
+                                    window.arkOpsToast('Could not update this repair order. Refresh and try again.');
+                                }
                                 return;
                             }
-                            event.target.submit();
+                            await worksheet.submitWorksheetForm(event);
                         },
                     }"
                 >
@@ -166,6 +185,16 @@
                             aria-label="Confirm delete concern"
                         >
                             Confirm delete
+                        </button>
+                        <button
+                            type="button"
+                            x-show="confirmDelete"
+                            x-cloak
+                            class="btn btn-sm"
+                            aria-label="Cancel delete concern"
+                            @click="cancelDelete()"
+                        >
+                            Cancel
                         </button>
                     </form>
                 </div>
