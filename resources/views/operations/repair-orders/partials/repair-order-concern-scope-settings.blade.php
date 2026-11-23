@@ -98,17 +98,119 @@
                 </form>
             @endcan
         @endif
-        @if ($concern->lines->isEmpty())
-            @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersDestructive->value)
-                <form method="POST" action="{{ route('operations.repair-orders.concerns.destroy', [$repairOrder, $concern]) }}" data-refresh-scope="worksheet" data-continuity-focus="#concern-store [name='summary']" @submit.prevent="submitWorksheetForm($event)">
-                    @csrf
-                    @method('DELETE')
-                    <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                    <button type="submit" class="btn btn-sm btn-ghost-danger" aria-label="Delete empty concern" title="Remove this concern after all lines are deleted">
-                        Delete concern
-                    </button>
-                </form>
-            @endcan
-        @endif
+        @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersDestructive->value)
+            @php
+                $concernDeletionBlockedReason = app(App\Ark\Operations\RepairOrders\WorkCompletionAuthorization::class)
+                    ->concernDeletionBlockedReason($concern);
+            @endphp
+            @if ($concernDeletionBlockedReason === null)
+                <div
+                    class="d-flex flex-wrap align-items-center gap-1"
+                    x-data="{
+                        confirmDelete: false,
+                        confirmTimer: null,
+                        armDelete() {
+                            this.confirmDelete = true;
+                            this.clearDeleteTimer();
+                            this.confirmTimer = setTimeout(() => {
+                                this.confirmDelete = false;
+                                this.confirmTimer = null;
+                            }, 3000);
+                        },
+                        cancelDelete() {
+                            this.clearDeleteTimer();
+                            this.confirmDelete = false;
+                        },
+                        clearDeleteTimer() {
+                            if (this.confirmTimer) {
+                                clearTimeout(this.confirmTimer);
+                                this.confirmTimer = null;
+                            }
+                        },
+                        worksheetController() {
+                            const root = this.$el.closest('[data-worksheet-root]');
+                            if (! root || typeof window.Alpine?.$data !== 'function') {
+                                return null;
+                            }
+                            return window.Alpine.$data(root);
+                        },
+                        async submitDelete(event) {
+                            if (! this.confirmDelete) {
+                                event.preventDefault();
+                                this.armDelete();
+                                return;
+                            }
+                            this.clearDeleteTimer();
+                            const worksheet = this.worksheetController();
+                            if (typeof worksheet?.submitWorksheetForm !== 'function') {
+                                if (typeof worksheet?.surfaceWorksheetMessage === 'function') {
+                                    worksheet.surfaceWorksheetMessage(
+                                        'Could not update this repair order. Refresh and try again.',
+                                        { tone: 'error' },
+                                    );
+                                } else if (typeof window.arkOpsToast === 'function') {
+                                    window.arkOpsToast('Could not update this repair order. Refresh and try again.');
+                                }
+                                return;
+                            }
+                            await worksheet.submitWorksheetForm(event);
+                        },
+                    }"
+                >
+                    <form
+                        method="POST"
+                        action="{{ route('operations.repair-orders.concerns.destroy', [$repairOrder, $concern]) }}"
+                        data-refresh-scope="worksheet"
+                        data-continuity-focus="#concern-store [name='summary']"
+                        @submit.prevent="submitDelete($event)"
+                    >
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+                        <button
+                            type="button"
+                            x-show="! confirmDelete"
+                            class="btn btn-sm btn-ghost-danger"
+                            aria-label="Delete concern"
+                            title="Remove this unlinked concern (requires confirmation)"
+                            @click="armDelete()"
+                        >
+                            Delete concern
+                        </button>
+                        <button
+                            type="submit"
+                            x-show="confirmDelete"
+                            x-cloak
+                            class="btn btn-sm btn-danger"
+                            aria-label="Confirm delete concern"
+                        >
+                            Confirm delete
+                        </button>
+                        <button
+                            type="button"
+                            x-show="confirmDelete"
+                            x-cloak
+                            class="btn btn-sm"
+                            aria-label="Cancel delete concern"
+                            @click="cancelDelete()"
+                        >
+                            Cancel
+                        </button>
+                    </form>
+                </div>
+            @else
+                <button
+                    type="button"
+                    class="btn btn-sm btn-ghost-secondary"
+                    disabled
+                    aria-disabled="true"
+                    aria-label="Cannot delete concern"
+                    title="{{ $concernDeletionBlockedReason }}"
+                >
+                    Cannot delete
+                </button>
+                <span class="text-secondary small text-wrap" style="max-width: 16rem;">{{ $concernDeletionBlockedReason }}</span>
+            @endif
+        @endcan
     </div>
 </div>

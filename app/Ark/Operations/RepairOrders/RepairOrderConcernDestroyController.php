@@ -21,14 +21,8 @@ class RepairOrderConcernDestroyController
         $repairOrder->ensureOpenForEditing();
         $concurrency->guard($request, $repairOrder);
 
-        abort_if(
-            $concern->lines()->exists(),
-            422,
-            'Delete or move concern lines before deleting the concern.',
-        );
-
-        $authorizationBlock = app(WorkCompletionAuthorization::class)->concernDeletionBlockedReason($concern);
-        abort_if($authorizationBlock !== null, 422, $authorizationBlock);
+        $deletionBlock = app(WorkCompletionAuthorization::class)->concernDeletionBlockedReason($concern);
+        abort_if($deletionBlock !== null, 422, $deletionBlock);
 
         $payload = [
             'concern_id' => $concern->id,
