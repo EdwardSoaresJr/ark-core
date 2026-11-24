@@ -11,7 +11,7 @@ Shared home-card / triage projections remain for other surfaces.
 | Money total / due | No (display) | Total column |
 | Exception / attention | No (display; +N dropdown list only) | Attention column |
 | Clock / age | No (display) | Updated column |
-| Activity marks (estimate, SMS, email, phone, photo, calendar) | **No** on cards — tooltip only | Active marks only (max 4 + `+N`). Verified deep links: estimate → `#builder`, sms/email/phone → `#comms`, dvi → `#inspect`. Scheduled remains tooltip-only. |
+| Activity marks (estimate, SMS, email, phone, photo, calendar) | **No** on cards — tooltip only | All active marks in fixed category order (no overflow). Verified deep links: estimate → `#builder`, sms/email/phone → `#comms`, dvi → `#inspect`. Scheduled remains tooltip-only. |
 | Promise / due time | No (display) | Removed from list UI (fields retained elsewhere) |
 | Parts pressure | No (display) | Removed from list UI (Waiting Parts status + RO detail retained) |
 | Technician / owner | No (display) | Tech column |

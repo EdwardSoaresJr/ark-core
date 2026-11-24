@@ -1,96 +1,94 @@
-# Issue #251 / PR #252 — Activity indicators UX refinement
+# Job Board — Owner / Carlos visual acceptance package
 
-Stop for Carlos/owner visual acceptance. No merge. No deploy. No SaaS pin. No production data changes.
+**PR:** [#252](https://github.com/EdwardSoaresJr/ark-core/pull/252) (draft)  
+**Accepted tip SHA:** _(recorded on push; see PR comment)_  
+**Base:** `main`  
+**Issue:** #251  
 
-Prior SHA: `25843e57ddac1b21b389e509f6e4678fed343adf`.
+**Stop state:** Feature development stopped after Activity icon refinement. No merge. No deploy. No Core pin / Sites release coordination. No migrations or production data changes.
 
-## Commit
+---
 
-Recorded on push (see PR comment for exact SHA).
-
-## Root cause (single-icon impression)
-
-1. The table correctly **hides idle marks** (no six-placeholder strip).
-2. Most open ROs only have **Estimate → Ready** (priced lines), so one document glyph appears.
-3. Marks were wrapped in similar **avatar chips**, so category glyphs were hard to tell apart at a glance.
-4. SYN fixtures previously did not seed multi-channel activity, so review screenshots reinforced the “one icon” impression.
-
-Projection categories and `ready` / `sent` / `engaged` / `attention` semantics were already present; the list was under-presenting them.
-
-## Activity column behavior
+## Activity presentation (this pass)
 
 | Rule | Behavior |
 | --- | --- |
 | Idle | Neutral `—` |
 | Active only | Inactive categories omitted |
-| Cap | Max **4** visible icons |
-| Overflow | `+N` with tooltip summarizing hidden marks |
-| Priority | Attention → Engaged → Sent → Ready; stable category order within a tier |
-| Category order | estimate, sms, email, phone, dvi, scheduled |
-| Tooltips | Existing projection tooltips (e.g. `SMS - Customer replied 1d ago`) |
-| Deep links | estimate → `#builder`; sms/email/phone → `#comms`; dvi → `#inspect`; scheduled informational only |
+| Cap | **None** — all active categories render (up to six) |
+| Overflow | **Removed** — no `+N` |
+| Order | Fixed: estimate → sms → email → phone → dvi → scheduled |
+| Priority | Via color / badge styling only (not reorder) |
+| Chrome | Standalone ~16px icons; no avatar chips / permanent colored backgrounds |
+| States | Ready/Sent = muted gray; Engaged = subtle blue; Attention = orange/red by semantics |
+| Deep links | estimate → `#builder`; sms/email/phone → `#comms`; dvi → `#inspect`; scheduled informational |
+| Tooltips | Native `title` on links; Bootstrap tooltip on informational marks only |
 
-## Activity-state matrix (existing projection)
+---
 
-| Category | Ready | Sent | Engaged | Attention |
-| --- | --- | --- | --- | --- |
-| Estimate | Priced estimate on file | Estimate sent | Estimate viewed | — |
-| SMS | Outbound sent | Delivered | Customer replied | Delivery failed (no later delivery) |
-| Email | — | Sent | Opened / read | — |
-| Phone | — | Inbound/outbound call | — | Unworked missed call / voicemail |
-| DVI | Inspection on file | Inspection sent | — | — |
-| Appointment | Upcoming | Today / confirmed | Checked in | Missed appointment |
+## Synthetic fixtures to walk
 
-## Synthetic scenarios (SYN-*)
-
-| Fixture | Intent |
+| Fixture | Expect |
 | --- | --- |
-| Quiet None | No activity → `—` |
-| Brakes Demo | Single recorded estimate |
-| Comms Pair | SMS + Email |
-| Wip Bay | Estimate viewed + DVI on file |
-| Parts Hold | Unresolved missed call (+ estimate) |
-| Full Strip | Six active categories → 4 + `+2` |
-| Ready Pickup | Estimate + SMS delivery failed |
+| SYN Quiet None | Activity `—` |
+| SYN Brakes Demo | Single estimate |
+| SYN Comms Pair | SMS + Email (+ estimate if priced) |
+| SYN Wip Bay | Estimate + DVI |
+| SYN Parts Hold | Phone attention (+ estimate) |
+| SYN Full Strip | **Six** icons, no `+N` |
+| SYN Ready Pickup | Estimate + SMS attention |
 
-## Screenshots
+Local seed helper only: `review-artifacts/issue-251-job-board-list/seed-syn.php` — do **not** run against production.
 
-| File | Notes |
+---
+
+## Viewport measures (Playwright, local `ark-core.test`)
+
+| Viewport | Table vs wrap | Full Strip marks | Overflow UI |
+| --- | --- | --- | --- |
+| 1366×900 | 1076 === 1076 (no table scroll) | 6 icons, fixed order | none |
+| 1440×900 | 1150 === 1150 | 6 icons | none |
+| 1920×1080 | 1630 === 1630 | 6 icons | none |
+| 390×844 | Mobile cards unchanged | n/a | n/a |
+
+---
+
+## Screenshot index
+
+Path: `review-artifacts/issue-251-job-board-list/screenshots/`
+
+| File | Focus |
 | --- | --- |
-| `screenshots/list-desktop-1366.png` | Overflow **0**; multi-icon Activity |
-| `screenshots/list-desktop-1440.png` | |
-| `screenshots/list-desktop-1920.png` | |
-| `screenshots/list-mobile-390.png` | Mobile cards unchanged (no activity strip added) |
-| `screenshots/activity-heavy-row.png` | Full Strip overflow |
-| `screenshots/activity-attention-row.png` | Missed-call attention |
-| `screenshots/activity-empty-row.png` | Quiet None |
+| `list-desktop-1366.png` | Full board @ 1366 |
+| `list-desktop-1440.png` | Full board @ 1440 |
+| `list-desktop-1920.png` | Full board @ 1920 |
+| `list-mobile-390.png` | Mobile cards |
+| `activity-heavy-row.png` | Six active icons, no overflow |
+| `activity-attention-row.png` | Missed-call phone attention |
+| `activity-empty-row.png` | Quiet None `—` |
 
-## Focused tests
+Also: `ACTION_PRESERVATION.md`.
 
-- `JobBoardActivityPresentationTest`
-- `JobBoardListViewTest`
-- `WorkboardCardActivityTest`
-- `AdvisorHomeAttentionBoardTest`
+---
 
-**passed 36 / failed 0 / skipped 0**
+## Remaining visual / product items (owner decision)
 
-## Unsupported deep links
+1. Appointment / scheduled marks stay tooltip-only (no deep link).
+2. Mobile cards still omit Activity strip by design.
+3. Default Watch volume / promise-overdue / parts-needed Attention dual signals unchanged.
+4. Small status dots on engaged/attention marks remain for non-color-only cues — confirm they are restrained enough.
 
-- **Appointment / scheduled** — no verified stable RO hash; remains tooltip-only.
-- Mobile cards — activity strip not added (preserve primary hierarchy).
+---
 
-## CI / navigation follow-up
+## Explicitly out of scope
 
-- Synthetic activity seeding for communications events lives in baseline-allowed `WorkboardCardActivityTest` (not a new Support file) so the communications boundary gate stays intact.
-- Workspace-tab link intercept now preserves RO fragments; Job Board activity clicks land on `#builder` / `#comms` / `#inspect` with Alpine tab selected. Anonymous users are redirected to login.
+Merge, deploy, SaaS pin, Sites release, Attention rewrite, migrations, production data, unrelated RO index redesign.
 
-## Remaining owner/Carlos items
+---
 
-1. Default Watch volume (Attention classifier unchanged).
-2. Promise overdue Attention for shops that rarely use promises.
-3. Parts-needed Attention vs Waiting Parts status.
-4. Whether appointment marks should later deep-link to a schedule surface.
+## Sign-off
 
-## Still out of scope
-
-No merge, deploy, SaaS pin, migrations, production data, Sites release change, or Attention classifier rewrite.
+| Role | Accept? | Notes / blockers | Date |
+| --- | --- | --- | --- |
+| Owner | | | |
+| Carlos (visual) | | | |

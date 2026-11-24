@@ -125,7 +125,7 @@ final class JobBoardAcceptanceScenario
                 last: 'Full Strip',
                 vehicle: [2015, 'Jeep', 'Cherokee'],
                 status: RepairOrderStatus::InProgress,
-                concern: 'Multi-channel activity sample for overflow presentation.',
+                concern: 'Multi-channel activity sample for six-category presentation.',
                 tech: $techJordan,
                 laborCents: 55_000,
                 promiseAt: null,

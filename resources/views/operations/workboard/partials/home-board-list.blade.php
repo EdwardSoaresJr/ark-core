@@ -75,7 +75,7 @@
                             <th scope="col">
                                 <span title="ARK attention signal, not a user-entered priority" data-job-board-sort="attention">Attention</span>
                             </th>
-                            <th scope="col">Activity</th>
+                            <th scope="col" class="ark-job-board-col-activity">Activity</th>
                             <th scope="col" @if ($jobBoardListPage->ariaSort('updated')) aria-sort="{{ $jobBoardListPage->ariaSort('updated') }}" @endif>
                                 <a href="{{ $jobBoardListPage->sortUrl('updated') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="updated">Updated</a>
                             </th>

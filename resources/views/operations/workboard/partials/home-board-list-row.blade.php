@@ -88,11 +88,11 @@
             <span class="text-secondary">—</span>
         @endif
     </td>
-    <td class="text-nowrap" data-job-board-row-activity data-job-card-activity>
+    <td class="text-nowrap ark-job-board-col-activity" data-job-board-row-activity data-job-card-activity>
         @if ($activityStrip['visible'] === [])
             <span class="text-secondary" data-job-board-activity-empty>—</span>
         @else
-            <div class="d-inline-flex align-items-center ark-job-board-activity" role="group" aria-label="Activity">
+            <div class="d-inline-flex align-items-center flex-nowrap ark-job-board-activity" role="group" aria-label="Activity">
                 @foreach ($activityStrip['visible'] as $mark)
                     @php
                         $markHref = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::destinationFor($mark->key, $card->href);
@@ -137,19 +137,6 @@
                         </span>
                     @endif
                 @endforeach
-                @if ($activityStrip['overflowCount'] > 0)
-                    <span
-                        class="ark-job-board-activity-overflow"
-                        data-job-board-activity-overflow
-                        data-job-board-activity-overflow-count="{{ $activityStrip['overflowCount'] }}"
-                        role="img"
-                        tabindex="-1"
-                        title="{{ $activityStrip['overflowTooltip'] }}"
-                        aria-label="{{ $activityStrip['overflowTooltip'] }}"
-                        data-bs-toggle="tooltip"
-                        data-bs-trigger="hover focus"
-                    >+{{ $activityStrip['overflowCount'] }}</span>
-                @endif
             </div>
         @endif
     </td>

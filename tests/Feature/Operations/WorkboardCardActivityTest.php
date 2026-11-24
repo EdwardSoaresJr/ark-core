@@ -255,7 +255,7 @@ test('activity strip marks checked-in appointments as engaged', function () {
         ->and($marks[5]->tooltip)->toBe('Scheduled - Checked in');
 });
 
-test('job board activity column shows overflow deep links and attention marks from real events', function () {
+test('job board activity column shows all active marks deep links and attention without overflow', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $rows = \Tests\Support\JobBoardAcceptanceScenario::seed($advisor);
     $byLast = $rows->keyBy(fn (RepairOrder $repairOrder) => (string) $repairOrder->customer?->last_name);
@@ -402,7 +402,11 @@ test('job board activity column shows overflow deep links and attention marks fr
         ->and($wipRow)->toBeInstanceOf(DOMElement::class);
 
     $fullMarks = $xpath->query('.//*[@data-job-board-activity-mark]', $fullStripRow);
-    $overflow = $xpath->query('.//*[@data-job-board-activity-overflow]', $fullStripRow)->item(0);
+    $overflow = $xpath->query('.//*[@data-job-board-activity-overflow]', $fullStripRow);
+    $fullKeys = [];
+    for ($index = 0; $index < $fullMarks->length; $index++) {
+        $fullKeys[] = $fullMarks->item($index)?->attributes?->getNamedItem('data-job-card-mark')?->nodeValue;
+    }
     $estimateHref = (string) $xpath->query('.//*[@data-job-card-mark="estimate"][@data-job-board-activity-link]', $fullStripRow)
         ->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
     $smsHref = (string) $xpath->query('.//*[@data-job-card-mark="sms"][@data-job-board-activity-link]', $fullStripRow)
@@ -410,9 +414,9 @@ test('job board activity column shows overflow deep links and attention marks fr
     $dviHref = (string) $xpath->query('.//*[@data-job-card-mark="dvi"][@data-job-board-activity-link]', $wipRow)
         ->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
 
-    expect($fullMarks->length)->toBe(4)
-        ->and($overflow)->toBeInstanceOf(DOMElement::class)
-        ->and((int) $overflow?->attributes?->getNamedItem('data-job-board-activity-overflow-count')?->nodeValue)->toBeGreaterThanOrEqual(2)
+    expect($fullMarks->length)->toBe(6)
+        ->and($fullKeys)->toBe(['estimate', 'sms', 'email', 'phone', 'dvi', 'scheduled'])
+        ->and($overflow->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-activity-empty]', $quietRow)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-card-mark="phone"][@data-job-card-mark-state="attention"]', $missedRow)->length)->toBe(1)
         ->and($estimateHref)->toContain('#builder')
