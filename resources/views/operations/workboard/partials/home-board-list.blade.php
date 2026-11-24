@@ -40,8 +40,31 @@
                             <th scope="col" @if ($jobBoardListPage->ariaSort('ro')) aria-sort="{{ $jobBoardListPage->ariaSort('ro') }}" @endif>
                                 <a href="{{ $jobBoardListPage->sortUrl('ro') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="ro">RO #</a>
                             </th>
-                            <th scope="col" class="ark-job-board-col-customer-vehicle" @if ($jobBoardListPage->ariaSort('customer')) aria-sort="{{ $jobBoardListPage->ariaSort('customer') }}" @endif>
-                                <a href="{{ $jobBoardListPage->sortUrl('customer') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="customer">Customer / Vehicle</a>
+                            @php
+                                $customerVehicleAriaSort = $jobBoardListPage->ariaSort('customer')
+                                    ?? $jobBoardListPage->ariaSort('vehicle');
+                            @endphp
+                            <th
+                                scope="col"
+                                class="ark-job-board-col-customer-vehicle"
+                                data-job-board-col="customer-vehicle"
+                                @if ($customerVehicleAriaSort) aria-sort="{{ $customerVehicleAriaSort }}" @endif
+                            >
+                                <span class="d-inline-flex flex-wrap align-items-center column-gap-1">
+                                    <a
+                                        href="{{ $jobBoardListPage->sortUrl('customer') }}"
+                                        class="btn btn-ghost-secondary btn-sm px-1"
+                                        data-job-board-sort="customer"
+                                        @if ($jobBoardListPage->ariaSort('customer')) aria-current="true" @endif
+                                    >Customer</a>
+                                    <span class="text-secondary" aria-hidden="true">/</span>
+                                    <a
+                                        href="{{ $jobBoardListPage->sortUrl('vehicle') }}"
+                                        class="btn btn-ghost-secondary btn-sm px-1"
+                                        data-job-board-sort="vehicle"
+                                        @if ($jobBoardListPage->ariaSort('vehicle')) aria-current="true" @endif
+                                    >Vehicle</a>
+                                </span>
                             </th>
                             <th scope="col" class="ark-job-board-col-concern">Concern / Job</th>
                             <th scope="col" @if ($jobBoardListPage->ariaSort('status')) aria-sort="{{ $jobBoardListPage->ariaSort('status') }}" @endif>

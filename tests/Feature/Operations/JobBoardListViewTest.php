@@ -78,12 +78,13 @@ test('job board table renders dense columns including total and activity marks',
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$closed->repair_order_id.'"]', $board)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-sort="ro"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-sort="customer"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-sort="vehicle"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-col="customer-vehicle"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $board)->length)->toBe(2)
         ->and($xpath->query('.//*[@data-job-board-row-total]', $board)->length)->toBe(2)
         ->and($xpath->query('.//*[@data-job-board-row-activity]', $board)->length)->toBe(2)
         ->and($xpath->query('.//*[@data-job-board-row-promised]', $board)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-row-parts]', $board)->length)->toBe(0)
-        ->and($html)->toContain('Customer / Vehicle')
         ->and($html)->toContain('Brake noise diagnosis')
         ->and($html)->toContain('Attention')
         ->and($html)->not->toContain('>Promised<')
@@ -204,18 +205,52 @@ test('job board sort links set aria-sort on the active column', function () {
     repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Sort A');
     repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Sort B');
 
-    $html = $this->actingAs($advisor)
+    $customerHtml = $this->actingAs($advisor)
         ->get(route('operations.index', ['sort' => 'customer', 'dir' => 'asc']))
+        ->assertOk()
+        ->getContent();
+
+    $vehicleHtml = $this->actingAs($advisor)
+        ->get(route('operations.index', ['sort' => 'vehicle', 'dir' => 'asc']))
         ->assertOk()
         ->getContent();
 
     $document = new DOMDocument;
     libxml_use_internal_errors(true);
-    $document->loadHTML($html);
+    $document->loadHTML($customerHtml);
     libxml_clear_errors();
     $xpath = new DOMXPath($document);
 
-    expect($xpath->query('//*[@data-job-board-sort="customer"]/ancestor::th[@aria-sort="ascending"]')->length)->toBe(1);
+    $vehicleDocument = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $vehicleDocument->loadHTML($vehicleHtml);
+    libxml_clear_errors();
+    $vehicleXpath = new DOMXPath($vehicleDocument);
+
+    expect($xpath->query('//*[@data-job-board-sort="customer"]/ancestor::th[@aria-sort="ascending"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-sort="customer"][@aria-current="true"]')->length)->toBe(1)
+        ->and($vehicleXpath->query('//*[@data-job-board-sort="vehicle"]/ancestor::th[@aria-sort="ascending"]')->length)->toBe(1)
+        ->and($vehicleXpath->query('//*[@data-job-board-sort="vehicle"][@aria-current="true"]')->length)->toBe(1);
+});
+
+test('job board customer vehicle header has a single class attribute', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Header Class');
+
+    $html = $this->actingAs($advisor)->get(route('operations.index'))->assertOk()->getContent();
+
+    expect(preg_match_all(
+        '/<th\b[^>]*\bdata-job-board-col="customer-vehicle"[^>]*>/',
+        $html,
+        $matches
+    ))->toBe(1);
+
+    $th = $matches[0][0] ?? '';
+    $classCount = preg_match_all('/\sclass="/', $th);
+
+    expect($th)->toContain('class="ark-job-board-col-customer-vehicle"')
+        ->and($classCount)->toBe(1)
+        ->and(substr_count($th, ' class='))->toBe(1);
 });
 
 test('job board is denied to users without operations access', function () {
@@ -372,8 +407,10 @@ test('job board acceptance scenario surfaces tech status totals without promised
         ->and($html)->toContain('Alex Rivera')
         ->and($html)->toContain('Jordan Lee')
         ->and($html)->toContain('grinding front brakes')
-        ->and($html)->toContain('Customer / Vehicle')
         ->and($html)->toContain('Waiting Parts')
+        ->and($xpath->query('//*[@data-job-board-col="customer-vehicle"]', $document)->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-sort="customer"]', $document)->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-sort="vehicle"]', $document)->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-row-customer-vehicle]', $document)->length)->toBeGreaterThan(0)
         ->and($xpath->query('//*[@data-job-board-row-promised]', $document)->length)->toBe(0)
         ->and($xpath->query('//*[@data-job-board-row-parts]', $document)->length)->toBe(0)
