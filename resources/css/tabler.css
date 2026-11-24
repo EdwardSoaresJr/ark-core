@@ -47,10 +47,104 @@
 }
 
 /*
- * Job Board table-first layout. Dense DataTables-style rows; mobile stacked cards.
+ * Job Board table-first layout. Dense DataTables-style rows; optional Cards grid.
+ * Layout modes: list | cards | auto (List on md+, Cards below md until the user chooses).
  */
 [data-job-board] [x-cloak] {
     display: none !important;
+}
+
+/* Prefer the effective layout once JS runs; fall back to mode / auto media rules. */
+[data-job-board][data-job-board-effective-layout="list"] [data-job-board-view="cards"],
+[data-job-board][data-job-board-effective-layout="cards"] [data-job-board-view="list"],
+[data-job-board]:not([data-job-board-effective-layout])[data-job-board-layout="list"] [data-job-board-view="cards"],
+[data-job-board]:not([data-job-board-effective-layout])[data-job-board-layout="cards"] [data-job-board-view="list"] {
+    display: none !important;
+}
+
+[data-job-board]:not([data-job-board-effective-layout])[data-job-board-layout="auto"] [data-job-board-view="cards"] {
+    display: none !important;
+}
+
+[data-job-board]:not([data-job-board-effective-layout])[data-job-board-layout="auto"] [data-job-board-view="list"] {
+    display: block;
+}
+
+@media (max-width: 767.98px) {
+    [data-job-board]:not([data-job-board-effective-layout])[data-job-board-layout="auto"] [data-job-board-view="list"] {
+        display: none !important;
+    }
+
+    [data-job-board]:not([data-job-board-effective-layout])[data-job-board-layout="auto"] [data-job-board-view="cards"] {
+        display: block !important;
+    }
+}
+
+[data-job-board] .nav-segmented[data-job-board-layout-toggle] {
+    flex-wrap: nowrap;
+}
+
+[data-job-board] .nav-segmented[data-job-board-layout-toggle] .nav-link {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.ark-job-board-cards .ark-job-board-card .ark-job-board-concern-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.25;
+}
+
+.ark-job-board-cards .ark-job-board-activity-mark {
+    --ark-job-board-activity-hit: 1.5rem;
+    width: var(--ark-job-board-activity-hit);
+    height: var(--ark-job-board-activity-hit);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    text-decoration: none;
+    color: var(--tblr-secondary);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    flex: 0 0 auto;
+    line-height: 1;
+}
+
+.ark-job-board-cards .ark-job-board-activity-mark svg {
+    width: 1rem;
+    height: 1rem;
+    display: block;
+}
+
+.ark-job-board-cards .ark-job-board-activity-mark[data-job-card-mark-state="engaged"] {
+    color: var(--tblr-azure);
+}
+
+.ark-job-board-cards .ark-job-board-activity-mark[data-job-card-mark-state="attention"] {
+    color: var(--tblr-orange, #f76707);
+}
+
+.ark-job-board-cards .ark-job-board-activity-mark[data-job-card-mark-state="attention"][data-job-card-mark="phone"],
+.ark-job-board-cards .ark-job-board-activity-mark[data-job-card-mark-state="attention"][data-job-card-mark="sms"] {
+    color: var(--tblr-danger);
+}
+
+.ark-job-board-cards .ark-job-board-activity-mark .badge {
+    position: absolute;
+    top: 0.05rem;
+    right: 0.05rem;
+    width: 0.3rem;
+    height: 0.3rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--tblr-bg-surface);
 }
 
 .ark-job-board-list .card {

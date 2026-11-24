@@ -71,6 +71,8 @@ final class JobBoardListPageBuilder
             ->values()
             ->all();
 
+        $view = JobBoardLayout::tryParse(is_string($request->query('view')) ? (string) $request->query('view') : null);
+
         return new JobBoardListPage(
             repairOrders: $repairOrders,
             laneTabs: $laneTabs,
@@ -87,6 +89,7 @@ final class JobBoardListPageBuilder
             rows: $rows,
             pageColumns: $pageColumns,
             pageRepairOrders: $pageRepairOrders,
+            view: $view?->value,
         );
     }
 

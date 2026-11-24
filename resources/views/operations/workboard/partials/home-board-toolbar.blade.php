@@ -1,5 +1,8 @@
 @php
     /** @var \App\Ark\Operations\Workboard\JobBoardListPage $jobBoardListPage */
+    /** @var string $jobBoardLayoutMode */
+    $listActive = $jobBoardLayoutMode === \App\Ark\Operations\Workboard\JobBoardLayout::List->value;
+    $cardsActive = $jobBoardLayoutMode === \App\Ark\Operations\Workboard\JobBoardLayout::Cards->value;
 @endphp
 
 <form
@@ -20,6 +23,13 @@
     @if ($jobBoardListPage->sortDir !== 'desc')
         <input type="hidden" name="dir" value="{{ $jobBoardListPage->sortDir }}">
     @endif
+    <input
+        type="hidden"
+        name="view"
+        value="{{ $jobBoardLayoutMode === 'auto' ? '' : $jobBoardLayoutMode }}"
+        data-job-board-view-input
+        @if ($jobBoardLayoutMode === 'auto') disabled @endif
+    >
 
     <div class="col-12 col-md">
         <div class="input-icon">
@@ -48,6 +58,29 @@
     </div>
     <div class="col-auto">
         <button type="submit" class="btn btn-outline-secondary">Search</button>
+    </div>
+    <div class="col-auto">
+        <div
+            class="nav nav-segmented"
+            role="group"
+            aria-label="Job board layout"
+            data-job-board-layout-toggle
+        >
+            <button
+                type="button"
+                class="nav-link{{ $listActive ? ' active' : '' }}"
+                data-job-board-layout-option="list"
+                aria-pressed="{{ $listActive ? 'true' : 'false' }}"
+                @if ($listActive) aria-current="true" @endif
+            >List</button>
+            <button
+                type="button"
+                class="nav-link{{ $cardsActive ? ' active' : '' }}"
+                data-job-board-layout-option="cards"
+                aria-pressed="{{ $cardsActive ? 'true' : 'false' }}"
+                @if ($cardsActive) aria-current="true" @endif
+            >Cards</button>
+        </div>
     </div>
     @can('repair_orders.manage')
         <div class="col-auto">

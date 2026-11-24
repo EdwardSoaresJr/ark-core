@@ -3,17 +3,20 @@
 namespace App\Ark\Operations\Workboard;
 
 /**
- * Legacy layout values. The Job Board is table-first; board/list query/cookie
- * values are accepted and normalized to List so saved links keep working.
+ * Job Board presentation: table list or compact cards over the same result set.
+ * Legacy `board` query/cookie values map to Cards.
  */
 enum JobBoardLayout: string
 {
-    case Board = 'board';
     case List = 'list';
+    case Cards = 'cards';
 
     public function label(): string
     {
-        return 'Job Board';
+        return match ($this) {
+            self::List => 'List',
+            self::Cards => 'Cards',
+        };
     }
 
     public static function default(): self
@@ -23,12 +26,28 @@ enum JobBoardLayout: string
 
     public static function parse(?string $value): self
     {
-        // Board is retired as a presentation mode; always serve the table.
-        return self::List;
+        return match ($value) {
+            self::Cards->value, 'board' => self::Cards,
+            default => self::List,
+        };
+    }
+
+    public static function tryParse(?string $value): ?self
+    {
+        return match ($value) {
+            self::List->value => self::List,
+            self::Cards->value, 'board' => self::Cards,
+            default => null,
+        };
     }
 
     public function isList(): bool
     {
-        return true;
+        return $this === self::List;
+    }
+
+    public function isCards(): bool
+    {
+        return $this === self::Cards;
     }
 }
