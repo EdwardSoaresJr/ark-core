@@ -34,14 +34,14 @@ Also: Corner, Posture, Closeout acknowledgment, Section walk, AuthorizationInteg
 
 Pre-existing flake: `InspectionTemplatesV1Test` GVI archive assertion fails on `origin/main` baseline as well (not introduced here).
 
-## Production baseline (live at diagnosis)
+## Production baseline (live Tabler UX — do not roll back)
 
 | Layer | SHA |
 | --- | --- |
-| SaaS | `df735e4096e94eb8f0440f5124794ea924a88d2a` |
-| Core pin | `9cc852899b2ab9754185675b7d83d656978b2b33` |
+| SaaS | `5eaf8f0c04aa043ca4eccbc53f13a37868facc34` |
+| Core pin | `960b0080917fe06b20766e7e793113e18883c111` |
 
-This branch is from Core `origin/main` (`960b0080…`). Deploy requires later SaaS Core-pin update after merge — **not** bundled with Tabler UX pack.
+This branch is from Core `origin/main` (`960b0080…`). Customer publication is enforced via `GuardInspectionCustomerPublication` on portal-link mint and send-inspection. Staff preview remains ungated. Existing portal tokens stay resolvable.
 
 ## Rollback
 

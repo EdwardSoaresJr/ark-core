@@ -40,6 +40,15 @@ Evidence gaps do **not** reduce coverage checked/total and do **not** create `in
 - **Internal review:** coverage complete (or inspection never started)
 - **Customer publication:** coverage complete **and** no required evidence gaps
 
+### Publication enforcement
+
+`InspectionReviewReadinessProjection` is not informational-only for customer share. Customer publication actions call `GuardInspectionCustomerPublication`:
+
+- Web JSON: `operations.repair-orders.inspection-portal-link`
+- Messaging: `SendInspectionLinkAction` / conversation send projection block reasons
+
+Staff preview (`inspection-portal-preview`, mobile preview with `forStaffPreview: true`) is not gated by evidence readiness. Existing portal access tokens remain resolvable so previously published links keep working.
+
 ## Template policy
 
 Do not silently rewrite shop Corner / Standard template photo policies. Supporting photos remain configured as today; they move from coverage into evidence unless a shop opts into `coverage_requires_photo_when`.

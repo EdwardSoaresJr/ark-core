@@ -1,9 +1,11 @@
 <?php
 
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Inspections\ApplyInspectionTemplateAction;
 use App\Ark\Operations\Inspections\DefaultInspectionTemplateCatalog;
 use App\Ark\Operations\Inspections\EnsureInspectionAction;
+use App\Ark\Operations\Inspections\GuardInspectionCustomerPublication;
 use App\Ark\Operations\Inspections\Inspection;
 use App\Ark\Operations\Inspections\InspectionChecklistStatus;
 use App\Ark\Operations\Inspections\InspectionItem;
@@ -25,7 +27,6 @@ use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderOperationalOutstandingWork;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\ScopeProductionStatus;
-use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -450,4 +451,115 @@ test('mobile follow_up reports coverage and evidence gaps independently', functi
 
     expect($response->json('follow_up.evidence_gaps.0.message'))
         ->toBe('Photo missing — Yellow finding recorded');
+});
+
+test('customer publication is blocked when coverage is complete but required evidence is missing', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $repairOrder = coverageEvidenceRepairOrder($technician);
+    $inspection = coverageEvidenceInspection($repairOrder, $technician);
+    markVisiblePointsNa($inspection);
+    yellowBrakePadWithoutPhoto($repairOrder, $inspection->fresh(), $technician);
+
+    $blocked = $this->actingAs($advisor)
+        ->getJson(route('operations.repair-orders.inspection-portal-link', $repairOrder))
+        ->assertStatus(422)
+        ->json('message');
+
+    expect($blocked)->toContain('Photo missing')
+        ->and($blocked)->toContain('Yellow finding recorded');
+
+    $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.inspection-portal-preview', $repairOrder))
+        ->assertOk();
+
+    expect(app(GuardInspectionCustomerPublication::class)
+        ->blockReason($repairOrder->fresh()))
+        ->toContain('Photo missing');
+});
+
+test('customer publication is blocked while coverage remains incomplete', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $repairOrder = coverageEvidenceRepairOrder($technician);
+    $inspection = coverageEvidenceInspection($repairOrder, $technician);
+    yellowBrakePadWithoutPhoto($repairOrder, $inspection, $technician);
+
+    $blocked = $this->actingAs($advisor)
+        ->getJson(route('operations.repair-orders.inspection-portal-link', $repairOrder))
+        ->assertStatus(422)
+        ->json('message');
+
+    expect($blocked)->toContain('coverage is incomplete');
+});
+
+test('customer publication succeeds when coverage and evidence are complete', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $this->actingAs($technician);
+    $repairOrder = coverageEvidenceRepairOrder($technician);
+    $inspection = coverageEvidenceInspection($repairOrder, $technician);
+    markVisiblePointsNa($inspection);
+    $item = yellowBrakePadWithoutPhoto($repairOrder, $inspection->fresh(), $technician);
+
+    $this->post(route('operations.repair-orders.inspection.photos.store', [$repairOrder, $item]), [
+        'purpose' => InspectionPhotoPurpose::Internal->value,
+        'photo' => UploadedFile::fake()->image('pads.jpg'),
+    ])->assertRedirect();
+
+    $readiness = app(InspectionReviewReadinessProjection::class)->forRepairOrder($repairOrder->fresh());
+    expect($readiness['ready_for_customer_publication'])->toBeTrue();
+
+    $this->actingAs($advisor)
+        ->getJson(route('operations.repair-orders.inspection-portal-link', $repairOrder))
+        ->assertOk()
+        ->assertJsonStructure(['url']);
+});
+
+test('unauthorized actors cannot mint customer inspection portal links', function () {
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $outsider = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $repairOrder = coverageEvidenceRepairOrder($technician);
+    $inspection = coverageEvidenceInspection($repairOrder, $technician);
+    markVisiblePointsNa($inspection);
+    $item = yellowBrakePadWithoutPhoto($repairOrder, $inspection->fresh(), $technician);
+    $this->actingAs($technician)
+        ->post(route('operations.repair-orders.inspection.photos.store', [$repairOrder, $item]), [
+            'purpose' => InspectionPhotoPurpose::Internal->value,
+            'photo' => UploadedFile::fake()->image('pads.jpg'),
+        ])
+        ->assertRedirect();
+
+    $this->actingAs($outsider)
+        ->getJson(route('operations.repair-orders.inspection-portal-link', $repairOrder))
+        ->assertForbidden();
+});
+
+test('existing customer portal tokens remain resolvable after evidence gaps appear', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $this->actingAs($technician);
+    $repairOrder = coverageEvidenceRepairOrder($technician);
+    $inspection = coverageEvidenceInspection($repairOrder, $technician);
+    markVisiblePointsNa($inspection);
+    $item = yellowBrakePadWithoutPhoto($repairOrder, $inspection->fresh(), $technician);
+    $this->post(route('operations.repair-orders.inspection.photos.store', [$repairOrder, $item]), [
+        'purpose' => InspectionPhotoPurpose::Internal->value,
+        'photo' => UploadedFile::fake()->image('pads.jpg'),
+    ])->assertRedirect();
+
+    $link = $this->actingAs($advisor)
+        ->getJson(route('operations.repair-orders.inspection-portal-link', $repairOrder))
+        ->assertOk()
+        ->json('url');
+
+    expect($link)->toContain('/portal/inspections/');
+    $token = basename(parse_url($link, PHP_URL_PATH) ?: '');
+
+    $item->photos()->delete();
+    expect(app(InspectionReviewReadinessProjection::class)
+        ->forRepairOrder($repairOrder->fresh())['ready_for_customer_publication'])->toBeFalse();
+
+    $this->get(route('portal.inspections.show', ['token' => $token]))
+        ->assertOk();
 });

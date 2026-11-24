@@ -7,8 +7,8 @@ use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
 use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Inspections\GuardInspectionCustomerPublication;
 use App\Ark\Operations\Inspections\Inspection;
-use App\Ark\Operations\Inspections\InspectionFindingCardProjection;
 use App\Ark\Operations\Portal\CreateOrReuseInspectionAccessTokenAction;
 use App\Ark\Operations\Portal\CreatePortalShortLinkAction;
 use App\Ark\Operations\Portal\PortalShortLinkPurpose;
@@ -24,6 +24,7 @@ class SendInspectionLinkAction
         private readonly CreatePortalShortLinkAction $shortLinks,
         private readonly SendOutboundMessageAction $sender,
         private readonly CommunicationEventRecorder $communicationEvents,
+        private readonly GuardInspectionCustomerPublication $publication,
     ) {}
 
     /**
@@ -45,9 +46,7 @@ class SendInspectionLinkAction
             throw new RuntimeException('Closed repair orders cannot send inspection links.');
         }
 
-        if (InspectionFindingCardProjection::recordedCountForRepairOrder($repairOrder) === 0) {
-            throw new RuntimeException('Record at least one inspection finding before sharing.');
-        }
+        $this->publication->assertReady($repairOrder);
 
         $accessToken = $this->tokens->execute($repairOrder, $actor);
         $url = route('portal.inspections.show', ['token' => $accessToken->plainToken]);
