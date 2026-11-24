@@ -35,7 +35,8 @@ final class JobBoardListRowProjection
                 $technicianId = $repairOrder->concerns
                     ->flatMap->workGroups
                     ->first(fn ($group) => $group->hasOwner())
-                    ?->owner_user_id;
+                    ?->owner_user_id
+                    ?? $repairOrder->assigned_technician_id;
                 $parts = $repairOrder->partsPressure();
                 $partsLabel = $parts->showsChip()
                     ? ($repairOrder->partsPressureSummary($parts) ?? $parts->label())

@@ -30,6 +30,12 @@
         'attention' => 'bg-orange text-white',
         default => 'bg-transparent text-secondary',
     };
+    $concernFull = trim((string) (
+        $repairOrder->concern_summary
+        ?: $surface->concernLabel
+        ?: ($card->concernHeadline !== 'No concern recorded' ? $card->concernHeadline : '')
+    ));
+    $concernText = $concernFull !== '' ? $concernFull : '—';
 @endphp
 
 <tr
@@ -61,8 +67,12 @@
     <td class="text-truncate ark-job-board-col-vehicle">
         <a href="{{ $builderUrl }}" class="text-reset" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
     </td>
-    <td class="text-truncate text-secondary ark-job-board-col-concern" title="{{ $surface->concernLabel ?? $card->concernHeadline }}">
-        {{ $surface->concernLabel ?? ($card->concernHeadline !== 'No concern recorded' ? $card->concernHeadline : '—') }}
+    <td
+        class="text-body ark-job-board-col-concern"
+        data-job-board-row-concern
+        title="{{ $concernFull !== '' ? $concernFull : null }}"
+    >
+        <span class="ark-job-board-concern-text">{{ $concernText }}</span>
     </td>
     <td>
         <a href="{{ $builderUrl }}" class="text-decoration-none" data-job-board-row-status data-job-card-status>
@@ -88,12 +98,17 @@
             <span class="small fw-normal">due</span>
         @endif
     </td>
-    <td class="small" data-job-board-row-attention>
+    <td class="small" data-job-board-row-attention data-attention="{{ $surface->attention }}">
         @if ($attentionLabel)
-            <span @class([
-                'text-danger' => $surface->attention === 'critical',
-                'text-warning' => in_array($surface->attention, ['attention', 'watch'], true),
-            ])>{{ $attentionLabel }}</span>
+            <span
+                @class([
+                    'ark-job-board-attention',
+                    'text-danger fw-semibold' => $surface->attention === 'critical',
+                    'text-warning fw-semibold' => $surface->attention === 'attention',
+                    'text-secondary' => $surface->attention === 'watch',
+                ])
+                data-attention-tone="{{ $surface->attention }}"
+            >{{ $attentionLabel }}</span>
         @else
             <span class="text-secondary">—</span>
         @endif

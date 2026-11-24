@@ -8,6 +8,7 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\JobBoardAcceptanceScenario;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -266,4 +267,105 @@ test('job board high-volume request stays within page projection bound', functio
         'query_count' => $queries,
         'measured_at' => now()->toIso8601String(),
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
+});
+
+test('job board concern column prefers readable two-line clamp markup', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Concern Read');
+    $repairOrder->update([
+        'concern_summary' => 'Customer reports grinding brakes on every stop with a longer readable concern description for the board.',
+    ]);
+    $repairOrder->concerns()->first()?->update([
+        'summary' => 'Customer reports grinding brakes on every stop with a longer readable concern description for the board.',
+    ]);
+
+    $html = $this->actingAs($advisor)->get(route('operations.index'))->assertOk()->getContent();
+
+    expect($html)->toContain('ark-job-board-col-concern')
+        ->and($html)->toContain('ark-job-board-concern-text')
+        ->and($html)->toContain('data-job-board-row-concern')
+        ->and($html)->toContain('grinding brakes on every stop');
+});
+
+test('job board watch attention is neutral while actionable attention stays prominent', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Watch Tone');
+
+    $html = $this->actingAs($advisor)->get(route('operations.index'))->assertOk()->getContent();
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    $watch = $xpath->query('//*[@data-attention-tone="watch"]');
+    $attention = $xpath->query('//*[@data-attention-tone="attention"]');
+    $critical = $xpath->query('//*[@data-attention-tone="critical"]');
+
+    if ($watch->length > 0) {
+        $class = (string) $watch->item(0)?->attributes?->getNamedItem('class')?->nodeValue;
+        expect($class)->toContain('text-secondary')
+            ->and($class)->not->toContain('text-warning')
+            ->and($class)->not->toContain('text-danger');
+    }
+
+    if ($attention->length > 0) {
+        expect((string) $attention->item(0)?->attributes?->getNamedItem('class')?->nodeValue)->toContain('text-warning');
+    }
+
+    if ($critical->length > 0) {
+        expect((string) $critical->item(0)?->attributes?->getNamedItem('class')?->nodeValue)->toContain('text-danger');
+    }
+
+    expect($watch->length + $attention->length + $critical->length)->toBeGreaterThan(0);
+});
+
+test('job board click contract keeps RO vehicle and customer destinations separate', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Link Contract');
+    $roId = $repairOrder->repair_order_id;
+    $customerId = $repairOrder->customer_id;
+
+    $html = $this->actingAs($advisor)->get(route('operations.index'))->assertOk()->getContent();
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $row = $xpath->query('//*[@id="ops-list-ro-'.$roId.'"]')->item(0);
+
+    expect($row)->toBeInstanceOf(DOMElement::class);
+
+    $roHref = (string) $xpath->query('.//*[@data-job-board-row-ro]', $row)->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
+    $vehicleHref = (string) $xpath->query('.//*[@data-job-board-row-vehicle]', $row)->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
+    $customerHref = (string) $xpath->query('.//*[@data-job-board-row-customer]', $row)->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
+
+    expect($roHref)->toContain('/repair-orders/'.$roId)
+        ->and($vehicleHref)->toContain('/repair-orders/'.$roId)
+        ->and($customerHref)->toContain('/customers/'.$customerId)
+        ->and($customerHref)->not->toContain('/repair-orders/')
+        ->and($xpath->query('.//td[@data-job-board-row-concern]//a', $row)->length)->toBe(0);
+});
+
+test('job board acceptance scenario surfaces tech promise parts and varied totals', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    JobBoardAcceptanceScenario::seed($advisor);
+
+    $html = $this->actingAs($advisor)->get(route('operations.index'))->assertOk()->getContent();
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    expect($html)->toContain('SYN Brakes Demo')
+        ->and($html)->toContain('Alex Rivera')
+        ->and($html)->toContain('Jordan Lee')
+        ->and($html)->toContain('grinding front brakes')
+        ->and($html)->toContain('Promise overdue')
+        ->and($html)->toContain('Due ')
+        ->and($html)->toContain('Promise ')
+        ->and($xpath->query('//*[@data-job-board-row-parts]//*[contains(@class,"badge")]')->length)->toBeGreaterThan(0)
+        ->and($html)->toContain('$425')
+        ->and($html)->toContain('$1,066');
 });

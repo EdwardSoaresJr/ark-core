@@ -73,7 +73,31 @@
 }
 
 .ark-job-board-table .ark-job-board-col-concern {
-    max-width: 9rem;
+    min-width: 10rem;
+    max-width: 16rem;
+    width: 16%;
+    vertical-align: top;
+}
+
+.ark-job-board-table .ark-job-board-concern-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.25;
+    color: var(--tblr-body-color);
+}
+
+.ark-job-board-table .ark-job-board-attention[data-attention-tone="watch"] {
+    font-weight: var(--tblr-font-weight-normal, 400);
+    opacity: 0.72;
+}
+
+.ark-job-board-table .ark-job-board-attention[data-attention-tone="attention"],
+.ark-job-board-table .ark-job-board-attention[data-attention-tone="critical"] {
+    opacity: 1;
 }
 
 .ark-job-board-table .ark-job-board-activity .avatar-xs {
@@ -83,6 +107,11 @@
 @media (max-width: 1399.98px) {
     .ark-job-board-table {
         --tblr-table-cell-padding-x: 0.3rem;
+    }
+
+    .ark-job-board-table .ark-job-board-col-concern {
+        min-width: 8.5rem;
+        max-width: 12rem;
     }
 }
 
