@@ -1,7 +1,7 @@
 # Job Board — Owner / Carlos visual acceptance package
 
 **PR:** [#252](https://github.com/EdwardSoaresJr/ark-core/pull/252) (draft)  
-**Accepted tip SHA:** _(recorded on push; see PR comment)_  
+**Accepted tip SHA:** `6c2529dba4a8682f45dc4009e52a0486ed679490`  
 **Base:** `main`  
 **Issue:** #251  
 
