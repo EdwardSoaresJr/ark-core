@@ -313,9 +313,10 @@ test('advisor home renders customer first attention cockpit', function () {
         ->assertSee('John Smith', false)
         ->assertSee('2018 Ram 2500', false)
         ->assertSee('$0', false)
-        ->assertSee('Estimate - None', false)
-        ->assertSee('Scheduled - None', false)
+        ->assertSee('data-job-board-list', false)
+        ->assertSee('data-job-board-row-activity', false)
         ->assertDontSee('ops-job-card__exception-mark', false)
+        ->assertDontSee('data-job-board-lanes', false)
         ->assertSee('Search job board', false)
         ->assertSee('data-job-board-filters', false);
 });

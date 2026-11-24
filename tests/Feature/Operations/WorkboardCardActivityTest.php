@@ -254,3 +254,172 @@ test('activity strip marks checked-in appointments as engaged', function () {
     expect($marks[5]->state)->toBe(WorkboardCardActivityState::Engaged)
         ->and($marks[5]->tooltip)->toBe('Scheduled - Checked in');
 });
+
+test('job board activity column shows all active marks deep links and attention without overflow', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $rows = \Tests\Support\JobBoardAcceptanceScenario::seed($advisor);
+    $byLast = $rows->keyBy(fn (RepairOrder $repairOrder) => (string) $repairOrder->customer?->last_name);
+
+    $quiet = $byLast->get('Quiet None');
+    $full = $byLast->get('Full Strip');
+    $missed = $byLast->get('Parts Hold');
+    $comms = $byLast->get('Comms Pair');
+    $wip = $byLast->get('Wip Bay');
+    $ready = $byLast->get('Ready Pickup');
+
+    expect($quiet)->toBeInstanceOf(RepairOrder::class)
+        ->and($full)->toBeInstanceOf(RepairOrder::class)
+        ->and($missed)->toBeInstanceOf(RepairOrder::class);
+
+    CommunicationEvent::query()->create([
+        'repair_order_id' => $comms->id,
+        'event_type' => OperationalCommunicationType::SmsDelivered,
+        'channel' => OperationalCommunicationChannel::Sms,
+        'direction' => OperationalCommunicationDirection::Outbound,
+        'summary' => 'SYN sms delivered',
+        'occurred_at' => now()->subHours(3),
+    ]);
+    CommunicationEvent::query()->create([
+        'repair_order_id' => $comms->id,
+        'event_type' => OperationalCommunicationType::InvoiceSent,
+        'channel' => OperationalCommunicationChannel::Email,
+        'direction' => OperationalCommunicationDirection::Outbound,
+        'summary' => 'SYN email sent',
+        'occurred_at' => now()->subHours(2),
+    ]);
+
+    CommunicationEvent::query()->create([
+        'repair_order_id' => $wip->id,
+        'event_type' => OperationalCommunicationType::EstimateViewed,
+        'channel' => OperationalCommunicationChannel::Website,
+        'direction' => OperationalCommunicationDirection::Inbound,
+        'summary' => 'SYN estimate viewed',
+        'occurred_at' => now()->subHour(),
+    ]);
+    Inspection::query()->create([
+        'repair_order_id' => $wip->id,
+        'started_at' => now()->subHours(4),
+        'completed_at' => now()->subHours(3),
+    ]);
+
+    CallSession::query()->create([
+        'provider' => 'twilio',
+        'provider_call_sid' => 'CAsyn251missedci',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195552002',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195552002',
+        'status' => CallSessionStatus::Missed,
+        'repair_order_id' => $missed->id,
+        'started_at' => now()->subHours(5),
+    ]);
+
+    CommunicationEvent::query()->create([
+        'repair_order_id' => $full->id,
+        'event_type' => OperationalCommunicationType::EstimateViewed,
+        'channel' => OperationalCommunicationChannel::Website,
+        'direction' => OperationalCommunicationDirection::Inbound,
+        'summary' => 'SYN full estimate viewed',
+        'occurred_at' => now()->subHours(6),
+    ]);
+    CommunicationEvent::query()->create([
+        'repair_order_id' => $full->id,
+        'event_type' => OperationalCommunicationType::CustomerReply,
+        'channel' => OperationalCommunicationChannel::Sms,
+        'direction' => OperationalCommunicationDirection::Inbound,
+        'summary' => 'SYN full sms reply',
+        'occurred_at' => now()->subMinutes(40),
+    ]);
+    CommunicationEvent::query()->create([
+        'repair_order_id' => $full->id,
+        'event_type' => OperationalCommunicationType::MessageRead,
+        'channel' => OperationalCommunicationChannel::Email,
+        'direction' => OperationalCommunicationDirection::Inbound,
+        'summary' => 'SYN full email opened',
+        'occurred_at' => now()->subHours(2),
+    ]);
+    CallSession::query()->create([
+        'provider' => 'twilio',
+        'provider_call_sid' => 'CAsyn251workedci',
+        'direction' => CallSessionDirection::Outbound,
+        'from_number' => '+17195559999',
+        'to_number' => '+17195552007',
+        'normalized_from' => '7195559999',
+        'status' => CallSessionStatus::Completed,
+        'repair_order_id' => $full->id,
+        'started_at' => now()->subHours(8),
+        'worked_at' => now()->subHours(7),
+    ]);
+    Inspection::query()->create([
+        'repair_order_id' => $full->id,
+        'started_at' => now()->subDay(),
+        'completed_at' => now()->subDay()->addHours(2),
+    ]);
+    Appointment::query()->create([
+        'customer_id' => $full->customer_id,
+        'vehicle_id' => $full->vehicle_id,
+        'repair_order_id' => $full->id,
+        'created_by_user_id' => $advisor->id,
+        'advisor_user_id' => $advisor->id,
+        'starts_at' => ShopDisplayTimezone::now()->addDay()->setTime(10, 0)->utc(),
+        'ends_at' => ShopDisplayTimezone::now()->addDay()->setTime(11, 0)->utc(),
+        'concern' => 'SYN follow-up',
+        'status' => AppointmentStatus::Scheduled,
+    ]);
+
+    CommunicationEvent::query()->create([
+        'repair_order_id' => $ready->id,
+        'event_type' => OperationalCommunicationType::SmsDeliveryFailed,
+        'channel' => OperationalCommunicationChannel::Sms,
+        'direction' => OperationalCommunicationDirection::Outbound,
+        'summary' => 'SYN sms failed',
+        'occurred_at' => now()->subMinutes(25),
+    ]);
+    CommunicationEvent::query()->create([
+        'repair_order_id' => $ready->id,
+        'event_type' => OperationalCommunicationType::EstimateSent,
+        'channel' => OperationalCommunicationChannel::Sms,
+        'direction' => OperationalCommunicationDirection::Outbound,
+        'summary' => 'SYN estimate sent',
+        'occurred_at' => now()->subDay(),
+    ]);
+
+    $html = $this->actingAs($advisor)->get(route('operations.index'))->assertOk()->getContent();
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    $fullStripRow = $xpath->query('//*[@data-job-board-row][.//*[@data-job-board-row-customer][contains(.,"Full Strip")]]')->item(0);
+    $quietRow = $xpath->query('//*[@data-job-board-row][.//*[@data-job-board-row-customer][contains(.,"Quiet None")]]')->item(0);
+    $missedRow = $xpath->query('//*[@data-job-board-row][.//*[@data-job-board-row-customer][contains(.,"Parts Hold")]]')->item(0);
+    $wipRow = $xpath->query('//*[@data-job-board-row][.//*[@data-job-board-row-customer][contains(.,"Wip Bay")]]')->item(0);
+
+    expect($fullStripRow)->toBeInstanceOf(DOMElement::class)
+        ->and($quietRow)->toBeInstanceOf(DOMElement::class)
+        ->and($missedRow)->toBeInstanceOf(DOMElement::class)
+        ->and($wipRow)->toBeInstanceOf(DOMElement::class);
+
+    $fullMarks = $xpath->query('.//*[@data-job-board-activity-mark]', $fullStripRow);
+    $overflow = $xpath->query('.//*[@data-job-board-activity-overflow]', $fullStripRow);
+    $fullKeys = [];
+    for ($index = 0; $index < $fullMarks->length; $index++) {
+        $fullKeys[] = $fullMarks->item($index)?->attributes?->getNamedItem('data-job-card-mark')?->nodeValue;
+    }
+    $estimateHref = (string) $xpath->query('.//*[@data-job-card-mark="estimate"][@data-job-board-activity-link]', $fullStripRow)
+        ->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
+    $smsHref = (string) $xpath->query('.//*[@data-job-card-mark="sms"][@data-job-board-activity-link]', $fullStripRow)
+        ->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
+    $dviHref = (string) $xpath->query('.//*[@data-job-card-mark="dvi"][@data-job-board-activity-link]', $wipRow)
+        ->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
+
+    expect($fullMarks->length)->toBe(6)
+        ->and($fullKeys)->toBe(['estimate', 'sms', 'email', 'phone', 'dvi', 'scheduled'])
+        ->and($overflow->length)->toBe(0)
+        ->and($xpath->query('.//*[@data-job-board-activity-empty]', $quietRow)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-card-mark="phone"][@data-job-card-mark-state="attention"]', $missedRow)->length)->toBe(1)
+        ->and($estimateHref)->toContain('#builder')
+        ->and($smsHref)->toContain('#comms')
+        ->and($dviHref)->toContain('#inspect');
+});

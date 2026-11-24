@@ -47,6 +47,228 @@
 }
 
 /*
+ * Job Board table-first layout. Dense DataTables-style rows; mobile stacked cards.
+ */
+[data-job-board] [x-cloak] {
+    display: none !important;
+}
+
+.ark-job-board-list .card {
+    border-radius: var(--tblr-border-radius);
+}
+
+.ark-job-board-table {
+    --tblr-table-cell-padding-y: 0.35rem;
+    --tblr-table-cell-padding-x: 0.4rem;
+    width: 100%;
+    font-size: 0.8125rem;
+}
+
+.ark-job-board-table .ark-job-board-col-customer-vehicle {
+    min-width: 9rem;
+    max-width: 14rem;
+    width: 16%;
+    vertical-align: top;
+}
+
+.ark-job-board-table .ark-job-board-col-concern {
+    min-width: 12rem;
+    max-width: 28rem;
+    width: 28%;
+    vertical-align: top;
+}
+
+.ark-job-board-table .ark-job-board-concern-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.25;
+    color: var(--tblr-body-color);
+}
+
+.ark-job-board-table .ark-job-board-attention[data-attention-tone="watch"] {
+    font-weight: var(--tblr-font-weight-normal, 400);
+    opacity: 0.72;
+}
+
+.ark-job-board-table .ark-job-board-attention[data-attention-tone="attention"],
+.ark-job-board-table .ark-job-board-attention[data-attention-tone="critical"] {
+    opacity: 1;
+}
+
+.ark-job-board-table .ark-job-board-col-activity {
+    min-width: 7.5rem;
+    width: 1%;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.ark-job-board-table .ark-job-board-activity {
+    gap: 0.1rem;
+}
+
+.ark-job-board-table .ark-job-board-activity-mark {
+    --ark-job-board-activity-hit: 1.5rem;
+    width: var(--ark-job-board-activity-hit);
+    height: var(--ark-job-board-activity-hit);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 0;
+    text-decoration: none;
+    color: var(--tblr-secondary);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    flex: 0 0 auto;
+    line-height: 1;
+}
+
+.ark-job-board-table .ark-job-board-activity-mark svg {
+    width: 1rem;
+    height: 1rem;
+    display: block;
+}
+
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="ready"],
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="sent"] {
+    color: var(--tblr-secondary);
+}
+
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="engaged"] {
+    color: var(--tblr-azure);
+}
+
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="attention"] {
+    color: var(--tblr-orange, #f76707);
+}
+
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="attention"][data-job-card-mark="phone"],
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="attention"][data-job-card-mark="sms"] {
+    color: var(--tblr-danger);
+}
+
+.ark-job-board-table .ark-job-board-activity-mark .badge {
+    position: absolute;
+    top: 0.05rem;
+    right: 0.05rem;
+    width: 0.3rem;
+    height: 0.3rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--tblr-bg-surface);
+}
+
+@media (max-width: 1399.98px) {
+    .ark-job-board-table {
+        --tblr-table-cell-padding-x: 0.3rem;
+    }
+
+    .ark-job-board-table .ark-job-board-col-customer-vehicle {
+        min-width: 8rem;
+        max-width: 12rem;
+    }
+
+    .ark-job-board-table .ark-job-board-col-concern {
+        min-width: 10rem;
+        max-width: 18rem;
+    }
+}
+
+.ark-job-board-table thead th {
+    white-space: nowrap;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--tblr-secondary);
+    border-bottom-width: 1px;
+}
+
+.ark-job-board-table thead .btn {
+    font-weight: inherit;
+    color: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: inherit;
+}
+
+.ark-job-board-table tbody tr:hover {
+    background: var(--tblr-bg-surface-secondary);
+}
+
+.ark-job-board-table .avatar-xs {
+    --tblr-avatar-size: 1.1rem;
+}
+
+[data-job-board-lane-tabs].nav-tabs {
+    border-bottom: 1px solid var(--tblr-border-color);
+}
+
+[data-job-board-lane-tabs] .nav-link {
+    cursor: pointer;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: var(--tblr-secondary);
+    margin-bottom: -1px;
+}
+
+[data-job-board-lane-tabs] .nav-link.active {
+    color: var(--tblr-body-color);
+    background: transparent;
+    border-bottom-color: var(--tblr-primary);
+    font-weight: var(--tblr-font-weight-medium, 500);
+}
+
+[data-job-board-lane-tabs] .status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    background: var(--tblr-secondary);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-azure,
+[data-job-board-lane-tabs] .status-dot.status-blue,
+[data-job-board-lane-tabs] .status-dot.status-primary {
+    background: var(--tblr-primary);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-yellow,
+[data-job-board-lane-tabs] .status-dot.status-orange,
+[data-job-board-lane-tabs] .status-dot.status-warning {
+    background: var(--tblr-warning);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-green,
+[data-job-board-lane-tabs] .status-dot.status-success,
+[data-job-board-lane-tabs] .status-dot.status-teal {
+    background: var(--tblr-success);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-cyan,
+[data-job-board-lane-tabs] .status-dot.status-info {
+    background: var(--tblr-info);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-red,
+[data-job-board-lane-tabs] .status-dot.status-danger,
+[data-job-board-lane-tabs] .status-dot.status-pink {
+    background: var(--tblr-danger);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-secondary,
+[data-job-board-lane-tabs] .status-dot.status-dark,
+[data-job-board-lane-tabs] .status-dot.status-muted {
+    background: var(--tblr-secondary);
+}
+
+/*
  * Repair order Visit panel controls (#review-toolbar): Status, Technician, and review follow-up
  * share the same labeled column as Visit type / Billing / Mileage.
  */

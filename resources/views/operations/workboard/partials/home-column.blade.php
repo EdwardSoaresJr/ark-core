@@ -15,6 +15,7 @@
     data-lane-color="{{ $column->color }}"
     @if ($isConstraintColumn) data-lane-constraint @endif
     aria-labelledby="ops-home-col-{{ $column->key }}-title"
+    x-show="laneKey === 'all' || laneKey === '{{ $column->key }}'"
 >
     <div class="card card-sm">
         <div class="card-status-top bg-{{ $laneColor }}"></div>
@@ -33,6 +34,7 @@
     @foreach ($column->visibleCards as $card)
         @include('operations.workboard.partials.home-card', [
             'card' => $card,
+            'column' => $column,
             'columnTone' => $column->tone,
             'repairOrderTotals' => $repairOrderTotals,
             'homeCardSurfaces' => $homeCardSurfaces,

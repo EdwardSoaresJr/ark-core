@@ -71,6 +71,9 @@ final class WorkboardTriageProjection
         return $this->observationsForRepairOrder($repairOrder);
     }
 
+    /**
+     * @return list<WorkboardTriageLaneProjection>
+     */
     public function forAdvisorHomeBoard(Collection $repairOrders): array
     {
         /** @var array<string, Collection<int, RepairOrder>> $repairOrdersByColumn */

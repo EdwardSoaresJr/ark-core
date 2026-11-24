@@ -56,6 +56,7 @@
     id="ops-card-ro-{{ $repairOrder->repair_order_id }}"
     data-home-search="{{ $homeSearch }}"
     data-home-tech-id="{{ $repairOrder->concerns->flatMap->workGroups->first(fn ($g) => $g->hasOwner())?->owner_user_id ?? '' }}"
+    data-home-lane-key="{{ $column->key ?? '' }}"
     x-show="cardMatches($el)"
     x-cloak
 >

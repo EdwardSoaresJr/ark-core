@@ -465,10 +465,12 @@ function normalizeRepairOrderRoute(entityId, route) {
     try {
         const url = new URL(String(route), window.location.origin);
         const match = url.pathname.match(/^\/app\/repair-orders\/(\d+)(?:\/edit|\/estimate-review)?$/);
+        const hash = url.hash || '';
 
         if (match && match[1] === String(entityId)) {
             // Working-set tabs always land on canonical RO show - authoring lives in workspace modals.
-            return fallback;
+            // Keep fragments so Job Board activity deep-links (#builder/#comms/#inspect) survive intercept.
+            return fallback + hash;
         }
     } catch {
         /* ignore */
@@ -939,7 +941,7 @@ function saveContextForKey(key) {
 
             tab.route = normalizeRepairOrderRoute(
                 key.split(':')[1],
-                window.location.pathname + window.location.search,
+                window.location.pathname + window.location.search + window.location.hash,
             );
             saveState();
         }
@@ -1179,6 +1181,23 @@ function navigateTo(route, key, samePage, departingKey = null, options = {}) {
 
     if (samePage && !(freshIntake && isIntakeKey(key))) {
         if (isIntakeKey(key) && isExplicitIntakeResetRoute(route)) {
+            state.activeKey = key;
+            saveState();
+            renderBar();
+            window.location.assign(route);
+
+            return;
+        }
+
+        let desiredHash = '';
+        try {
+            desiredHash = new URL(String(route), window.location.origin).hash || '';
+        } catch {
+            desiredHash = '';
+        }
+
+        // Same RO path with a different fragment (e.g. Job Board activity → #comms) must still navigate.
+        if (desiredHash && window.location.hash !== desiredHash) {
             state.activeKey = key;
             saveState();
             renderBar();
@@ -2099,12 +2118,12 @@ function buildOpenPayloadFromUrl(url, linkEl) {
             entityType: entity.type,
             entityId: entity.id,
             route: entity.type === 'repair_order'
-                ? normalizeRepairOrderRoute(entity.id, parsed.pathname + parsed.search)
+                ? normalizeRepairOrderRoute(entity.id, parsed.pathname + parsed.search + parsed.hash)
                 : entity.type === 'intake'
                     ? normalizeIntakeRoute(parsed.pathname + parsed.search, entity.id)
                     : entity.type === 'report'
                         ? normalizeReportRoute(entity.id, parsed.pathname + parsed.search)
-                        : parsed.pathname + parsed.search,
+                        : parsed.pathname + parsed.search + parsed.hash,
             title: entity.type === 'intake' ? 'Check In' : title,
         };
     } catch {
