@@ -17,12 +17,17 @@
     $builderUrl = $card->href.'#builder';
     $isBalanceDue = $row->moneyCaption === 'due';
     $moneyLabel = filled($row->moneyLabel) ? $row->moneyLabel : '$0';
-    $concernFull = trim((string) (
-        $repairOrder->concern_summary
-        ?: $surface->concernLabel
-        ?: ($card->concernHeadline !== 'No concern recorded' ? $card->concernHeadline : '')
-    ));
-    $concernText = $concernFull !== '' ? $concernFull : '—';
+    $concernLines = \App\Ark\Operations\RepairOrders\RepairOrderConcernText::lines($repairOrder, 2);
+    if ($concernLines === []) {
+        $fallback = trim((string) (
+            $surface->concernLabel
+            ?: ($card->concernHeadline !== 'No concern recorded' ? $card->concernHeadline : '')
+        ));
+        if ($fallback !== '') {
+            $concernLines = [$fallback];
+        }
+    }
+    $concernFull = implode("\n", $concernLines);
     $activityStrip = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::forList($row->activityMarks);
 @endphp
 
@@ -57,7 +62,15 @@
         data-job-board-row-concern
         title="{{ $concernFull !== '' ? $concernFull : null }}"
     >
-        <span class="ark-job-board-concern-text">{{ $concernText }}</span>
+        @if ($concernLines === [])
+            <span class="ark-job-board-concern-text text-secondary">—</span>
+        @else
+            <div class="ark-job-board-concern-stack">
+                @foreach ($concernLines as $line)
+                    <div class="ark-job-board-concern-text{{ $loop->first ? '' : ' ark-job-board-concern-text--secondary' }}">{{ $line }}</div>
+                @endforeach
+            </div>
+        @endif
     </td>
     <td>
         <a href="{{ $builderUrl }}" class="text-decoration-none" data-job-board-row-status data-job-card-status>

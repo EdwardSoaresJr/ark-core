@@ -23,6 +23,12 @@ final readonly class JobBoardListPage
 
     public const SORT_STATUS = 'status';
 
+    public const SORT_TECH = 'tech';
+
+    public const SORT_TOTAL = 'total';
+
+    public const SORT_ATTENTION = 'attention';
+
     /**
      * @param  Collection<int, RepairOrder>  $repairOrders
      * @param  list<array{key: string, label: string, color: string, count: int}>  $laneTabs
@@ -124,7 +130,7 @@ final readonly class JobBoardListPage
 
         if ($this->sortKey === $column) {
             $dir = $this->sortDir === 'asc' ? 'desc' : 'asc';
-        } elseif (in_array($column, [self::SORT_UPDATED], true)) {
+        } elseif (in_array($column, [self::SORT_UPDATED, self::SORT_TOTAL, self::SORT_ATTENTION], true)) {
             $dir = 'desc';
         }
 
@@ -144,9 +150,31 @@ final readonly class JobBoardListPage
         return $this->sortDir === 'asc' ? 'ascending' : 'descending';
     }
 
+    public function isSortActive(string $column): bool
+    {
+        return $this->sortKey === $column;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function sortableColumns(): array
+    {
+        return [
+            self::SORT_RO,
+            self::SORT_CUSTOMER,
+            self::SORT_VEHICLE,
+            self::SORT_STATUS,
+            self::SORT_TECH,
+            self::SORT_TOTAL,
+            self::SORT_ATTENTION,
+            self::SORT_UPDATED,
+        ];
+    }
+
     public static function parseSort(?string $sort): string
     {
-        return in_array($sort, [self::SORT_UPDATED, self::SORT_RO, self::SORT_CUSTOMER, self::SORT_VEHICLE, self::SORT_STATUS], true)
+        return in_array($sort, self::sortableColumns(), true)
             ? $sort
             : self::SORT_UPDATED;
     }

@@ -3,10 +3,8 @@
 namespace App\Ark\Operations\Workboard;
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
-use App\Ark\Operations\RepairOrders\PartsPressure;
 use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\Settings\ShopDisplayTimezone;
-use App\Ark\Operations\Today\AdvisorHomeCardSurface;
+use App\Ark\Operations\RepairOrders\RepairOrderConcernText;
 use App\Ark\Operations\Today\AdvisorHomeCardSurfaceProjection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -36,6 +34,10 @@ final class JobBoardListPageBuilder
         $sortDir = JobBoardListPage::parseDir($request->query('dir'));
         $page = JobBoardListPage::parsePage($request);
         $perPage = JobBoardListPage::PAGE_SIZE;
+        if ($request->attributes->get('job_board.allow_variable_page_size')) {
+            $requested = (int) $request->input('length', $request->integer('per_page', JobBoardListPage::PAGE_SIZE));
+            $perPage = max(1, min(100, $requested > 0 ? $requested : JobBoardListPage::PAGE_SIZE));
+        }
 
         $candidates = $laneKey === 'all'
             ? $byLane->flatten(1)
@@ -181,6 +183,7 @@ final class JobBoardListPageBuilder
             $repairOrder->customer?->name,
             $repairOrder->vehicle?->display_name,
             $repairOrder->concern_summary,
+            ...RepairOrderConcernText::lines($repairOrder, 5),
             $repairOrder->statusDisplayLabel(),
             $repairOrder->technicianOwnershipLabel(),
         ])->filter()->join(' '));
@@ -213,20 +216,110 @@ final class JobBoardListPageBuilder
      */
     private function sortRepairOrders(Collection $repairOrders, string $sortKey, string $sortDir): Collection
     {
-        $callback = function (RepairOrder $repairOrder) use ($sortKey): string|int {
-            return match ($sortKey) {
-                JobBoardListPage::SORT_RO => (string) $repairOrder->repair_order_id,
-                JobBoardListPage::SORT_CUSTOMER => Str::lower((string) ($repairOrder->customer?->name ?? '')),
-                JobBoardListPage::SORT_VEHICLE => Str::lower((string) ($repairOrder->vehicle?->display_name ?? '')),
-                JobBoardListPage::SORT_STATUS => Str::lower($repairOrder->statusDisplayLabel()),
-                default => $repairOrder->updated_at?->getTimestamp() ?? 0,
-            };
-        };
+        $totalCentsById = null;
+        $attentionRankById = null;
 
-        $sorted = $sortDir === 'desc'
-            ? $repairOrders->sortByDesc($callback)
-            : $repairOrders->sortBy($callback);
+        if ($sortKey === JobBoardListPage::SORT_TOTAL) {
+            $totalCentsById = $repairOrders->mapWithKeys(
+                fn (RepairOrder $repairOrder): array => [
+                    $repairOrder->id => $this->totalsCalculator->totalsFor($repairOrder)->totalCents(),
+                ],
+            );
+        }
 
-        return $sorted->values();
+        if ($sortKey === JobBoardListPage::SORT_ATTENTION) {
+            $attentionRankById = collect($this->workboardTriage->cardsForRepairOrders($repairOrders))
+                ->mapWithKeys(fn (WorkboardTriageCard $card): array => [
+                    $card->repairOrder->id => $this->attentionSortRank($card),
+                ]);
+        }
+
+        $ascending = $sortDir !== 'desc';
+
+        return $repairOrders
+            ->sort(function (RepairOrder $left, RepairOrder $right) use (
+                $sortKey,
+                $ascending,
+                $totalCentsById,
+                $attentionRankById,
+            ): int {
+                $comparison = match ($sortKey) {
+                    JobBoardListPage::SORT_RO => strnatcasecmp(
+                        (string) $left->repair_order_id,
+                        (string) $right->repair_order_id,
+                    ),
+                    JobBoardListPage::SORT_CUSTOMER => strcasecmp(
+                        (string) ($left->customer?->name ?? ''),
+                        (string) ($right->customer?->name ?? ''),
+                    ),
+                    JobBoardListPage::SORT_VEHICLE => strcasecmp(
+                        (string) ($left->vehicle?->display_name ?? ''),
+                        (string) ($right->vehicle?->display_name ?? ''),
+                    ),
+                    JobBoardListPage::SORT_STATUS => strcasecmp(
+                        $left->statusDisplayLabel(),
+                        $right->statusDisplayLabel(),
+                    ),
+                    JobBoardListPage::SORT_TECH => $this->compareTechnicianNames($left, $right),
+                    JobBoardListPage::SORT_TOTAL => ($totalCentsById[$left->id] ?? 0) <=> ($totalCentsById[$right->id] ?? 0),
+                    JobBoardListPage::SORT_ATTENTION => ($attentionRankById[$left->id] ?? 0) <=> ($attentionRankById[$right->id] ?? 0),
+                    default => ($left->updated_at?->getTimestamp() ?? 0) <=> ($right->updated_at?->getTimestamp() ?? 0),
+                };
+
+                if ($comparison === 0) {
+                    return $left->id <=> $right->id;
+                }
+
+                return $ascending ? $comparison : -$comparison;
+            })
+            ->values();
+    }
+
+    /**
+     * Unassigned technicians sort after named techs in ascending order (and before them when descending).
+     */
+    private function compareTechnicianNames(RepairOrder $left, RepairOrder $right): int
+    {
+        $leftName = $this->technicianSortName($left);
+        $rightName = $this->technicianSortName($right);
+        $leftUnassigned = $leftName === '';
+        $rightUnassigned = $rightName === '';
+
+        if ($leftUnassigned !== $rightUnassigned) {
+            return $leftUnassigned ? 1 : -1;
+        }
+
+        return strcasecmp($leftName, $rightName);
+    }
+
+    private function technicianSortName(RepairOrder $repairOrder): string
+    {
+        $fromActions = trim((string) ($repairOrder->repairActionOwnerSummary() ?? ''));
+
+        if ($fromActions !== '') {
+            return $fromActions;
+        }
+
+        return trim((string) ($repairOrder->assignedTechnician?->name ?? ''));
+    }
+
+    /**
+     * Semantic severity: Critical > Attention > Watch/pressure > quiet.
+     */
+    private function attentionSortRank(WorkboardTriageCard $card): int
+    {
+        if ($card->countsAsOverduePickup) {
+            return 40;
+        }
+
+        if ($card->countsAsNeedsAttention) {
+            return 30;
+        }
+
+        if ($card->pressureScore > 0) {
+            return 20;
+        }
+
+        return 10;
     }
 }

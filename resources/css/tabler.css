@@ -172,6 +172,13 @@
     vertical-align: top;
 }
 
+.ark-job-board-table .ark-job-board-concern-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
 .ark-job-board-table .ark-job-board-concern-text {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -181,6 +188,16 @@
     white-space: normal;
     line-height: 1.25;
     color: var(--tblr-body-color);
+}
+
+.ark-job-board-table .ark-job-board-concern-stack .ark-job-board-concern-text {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+}
+
+.ark-job-board-table .ark-job-board-concern-text--secondary {
+    color: var(--tblr-secondary);
+    font-size: 0.75rem;
 }
 
 .ark-job-board-table .ark-job-board-attention[data-attention-tone="watch"] {
@@ -275,19 +292,90 @@
 
 .ark-job-board-table thead th {
     white-space: nowrap;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: var(--tblr-secondary);
-    border-bottom-width: 1px;
+    font-weight: var(--tblr-font-weight-bold, 600);
+    color: var(--tblr-body-color);
+    background: color-mix(in srgb, var(--tblr-secondary) 10%, var(--tblr-bg-surface));
+    border-bottom: 1px solid var(--tblr-border-color);
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+    vertical-align: bottom;
 }
 
-.ark-job-board-table thead .btn {
-    font-weight: inherit;
-    color: inherit;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
+.ark-job-board-table .ark-job-board-th-static {
+    display: inline-block;
+    padding: 0.15rem 0.15rem;
+    color: var(--tblr-secondary);
+    font-weight: var(--tblr-font-weight-semibold, 600);
+}
+
+.ark-job-board-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    max-width: 100%;
+    padding: 0.15rem 0.2rem;
+    margin: -0.15rem -0.2rem;
+    border-radius: var(--tblr-border-radius-sm, 0.25rem);
+    color: var(--tblr-secondary);
+    text-decoration: none;
+    font-weight: var(--tblr-font-weight-semibold, 600);
     font-size: inherit;
+    letter-spacing: inherit;
+    text-transform: uppercase;
+    line-height: 1.2;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+.ark-job-board-sort:hover {
+    color: var(--tblr-body-color);
+    background: color-mix(in srgb, var(--tblr-primary) 8%, transparent);
+}
+
+.ark-job-board-sort:focus-visible {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 1px;
+    color: var(--tblr-body-color);
+}
+
+.ark-job-board-sort.is-active {
+    color: var(--tblr-body-color);
+}
+
+.ark-job-board-sort__label {
+    min-width: 0;
+}
+
+.ark-job-board-sort__indicators {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    line-height: 0.65;
+    font-size: 0.45rem;
+    opacity: 0.45;
+}
+
+.ark-job-board-sort.is-active .ark-job-board-sort__indicators {
+    opacity: 1;
+}
+
+.ark-job-board-sort__chevron {
+    color: var(--tblr-secondary);
+}
+
+.ark-job-board-sort__chevron.is-on {
+    color: var(--tblr-primary);
+}
+
+.ark-job-board-table th.text-end .ark-job-board-sort {
+    justify-content: flex-end;
+    width: 100%;
 }
 
 .ark-job-board-table tbody tr:hover {
@@ -300,22 +388,47 @@
 
 [data-job-board-lane-tabs].nav-tabs {
     border-bottom: 1px solid var(--tblr-border-color);
+    gap: 0.15rem;
+    padding-bottom: 0;
 }
 
 [data-job-board-lane-tabs] .nav-link {
     cursor: pointer;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    border-radius: 0;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: var(--tblr-border-radius) var(--tblr-border-radius) 0 0;
     color: var(--tblr-secondary);
+    font-weight: var(--tblr-font-weight-normal, 400);
     margin-bottom: -1px;
+    background: transparent;
+}
+
+[data-job-board-lane-tabs] .nav-link:hover {
+    color: var(--tblr-body-color);
+    background: color-mix(in srgb, var(--tblr-bg-surface-secondary) 70%, transparent);
+}
+
+[data-job-board-lane-tabs] .nav-link:focus-visible {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 1px;
 }
 
 [data-job-board-lane-tabs] .nav-link.active {
     color: var(--tblr-body-color);
-    background: transparent;
-    border-bottom-color: var(--tblr-primary);
-    font-weight: var(--tblr-font-weight-medium, 500);
+    background: color-mix(in srgb, var(--tblr-primary) 10%, var(--tblr-bg-surface));
+    border-color: var(--tblr-border-color);
+    border-bottom-color: color-mix(in srgb, var(--tblr-primary) 10%, var(--tblr-bg-surface));
+    font-weight: var(--tblr-font-weight-bold, 600);
+    box-shadow: inset 0 -2px 0 var(--tblr-primary);
+}
+
+[data-bs-theme='dark'] [data-job-board-lane-tabs] .nav-link.active {
+    background: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface));
+    border-bottom-color: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface));
+}
+
+[data-bs-theme='dark'] .ark-job-board-table thead th {
+    background: color-mix(in srgb, var(--tblr-secondary) 18%, var(--tblr-bg-surface));
 }
 
 [data-job-board-lane-tabs] .status-dot {

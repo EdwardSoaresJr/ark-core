@@ -19,7 +19,7 @@
                     <thead>
                         <tr>
                             <th scope="col" @if ($jobBoardListPage->ariaSort('ro')) aria-sort="{{ $jobBoardListPage->ariaSort('ro') }}" @endif>
-                                <a href="{{ $jobBoardListPage->sortUrl('ro') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="ro">RO #</a>
+                                @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'ro', 'label' => 'RO #'])
                             </th>
                             @php
                                 $customerVehicleAriaSort = $jobBoardListPage->ariaSort('customer')
@@ -32,33 +32,31 @@
                                 @if ($customerVehicleAriaSort) aria-sort="{{ $customerVehicleAriaSort }}" @endif
                             >
                                 <span class="d-inline-flex flex-wrap align-items-center column-gap-1">
-                                    <a
-                                        href="{{ $jobBoardListPage->sortUrl('customer') }}"
-                                        class="btn btn-ghost-secondary btn-sm px-1"
-                                        data-job-board-sort="customer"
-                                        @if ($jobBoardListPage->ariaSort('customer')) aria-current="true" @endif
-                                    >Customer</a>
+                                    @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'customer', 'label' => 'Customer'])
                                     <span class="text-secondary" aria-hidden="true">/</span>
-                                    <a
-                                        href="{{ $jobBoardListPage->sortUrl('vehicle') }}"
-                                        class="btn btn-ghost-secondary btn-sm px-1"
-                                        data-job-board-sort="vehicle"
-                                        @if ($jobBoardListPage->ariaSort('vehicle')) aria-current="true" @endif
-                                    >Vehicle</a>
+                                    @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'vehicle', 'label' => 'Vehicle'])
                                 </span>
                             </th>
-                            <th scope="col" class="ark-job-board-col-concern">Concern / Job</th>
+                            <th scope="col" class="ark-job-board-col-concern">
+                                <span class="ark-job-board-th-static">Concern / Job</span>
+                            </th>
                             <th scope="col" @if ($jobBoardListPage->ariaSort('status')) aria-sort="{{ $jobBoardListPage->ariaSort('status') }}" @endif>
-                                <a href="{{ $jobBoardListPage->sortUrl('status') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="status">Status</a>
+                                @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'status', 'label' => 'Status'])
                             </th>
-                            <th scope="col">Tech</th>
-                            <th scope="col" class="text-end">Total</th>
-                            <th scope="col">
-                                <span title="ARK attention signal, not a user-entered priority" data-job-board-sort="attention">Attention</span>
+                            <th scope="col" @if ($jobBoardListPage->ariaSort('tech')) aria-sort="{{ $jobBoardListPage->ariaSort('tech') }}" @endif>
+                                @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'tech', 'label' => 'Tech'])
                             </th>
-                            <th scope="col" class="ark-job-board-col-activity">Activity</th>
+                            <th scope="col" class="text-end" @if ($jobBoardListPage->ariaSort('total')) aria-sort="{{ $jobBoardListPage->ariaSort('total') }}" @endif>
+                                @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'total', 'label' => 'Total'])
+                            </th>
+                            <th scope="col" @if ($jobBoardListPage->ariaSort('attention')) aria-sort="{{ $jobBoardListPage->ariaSort('attention') }}" @endif>
+                                @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'attention', 'label' => 'Attention'])
+                            </th>
+                            <th scope="col" class="ark-job-board-col-activity">
+                                <span class="ark-job-board-th-static">Activity</span>
+                            </th>
                             <th scope="col" @if ($jobBoardListPage->ariaSort('updated')) aria-sort="{{ $jobBoardListPage->ariaSort('updated') }}" @endif>
-                                <a href="{{ $jobBoardListPage->sortUrl('updated') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="updated">Updated</a>
+                                @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'updated', 'label' => 'Updated'])
                             </th>
                             <th scope="col" class="w-1"><span class="visually-hidden">Open</span></th>
                         </tr>

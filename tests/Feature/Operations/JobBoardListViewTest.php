@@ -562,3 +562,84 @@ test('job board acceptance scenario surfaces tech status totals without promised
         ->and($html)->toContain('$425')
         ->and($html)->toContain('$1,066');
 });
+
+test('job board concern column falls back to concern row summaries when RO summary is empty', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Empty Summary');
+    $repairOrder->update(['concern_summary' => '']);
+    $repairOrder->concerns()->first()?->update([
+        'summary' => 'Imported transmission concern from concern rows',
+        'position' => 1,
+    ]);
+    $repairOrder->concerns()->create([
+        'summary' => 'Secondary fluid service job',
+        'disposition' => \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::Recommended,
+        'recommendation_intent' => 'maintenance',
+        'position' => 2,
+    ]);
+
+    $html = $this->actingAs($advisor)->get(route('operations.index', ['view' => 'list']))->assertOk()->getContent();
+
+    expect($html)->toContain('Imported transmission concern from concern rows')
+        ->and($html)->toContain('Secondary fluid service job')
+        ->and($html)->toContain('ark-job-board-concern-stack');
+});
+
+test('job board exposes tech total and attention sort controls with aria-sort', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Sort Extra A');
+    repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Sort Extra B');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', ['sort' => 'tech', 'dir' => 'asc']))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    expect($xpath->query('//*[@data-job-board-sort="tech"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-sort="total"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-sort="attention"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-sort="tech"]/ancestor::th[@aria-sort="ascending"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-sort="tech"][@aria-current="true"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-lane-tabs]//a[contains(@class,"active")][@aria-current="page"]')->length)->toBe(1);
+
+    $totalHtml = $this->actingAs($advisor)
+        ->get(route('operations.index', ['sort' => 'total', 'dir' => 'desc']))
+        ->assertOk()
+        ->getContent();
+
+    expect($totalHtml)->toContain('data-job-board-sort="total"')
+        ->and($totalHtml)->toContain('aria-sort="descending"');
+});
+
+test('job board total sort uses numeric cents not formatted strings', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $low = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Low Total');
+    $high = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'High Total');
+    $low->lines()->update(['unit_price_cents' => 500, 'subtotal_cents' => 500, 'total_cents' => 500]);
+    $high->lines()->update(['unit_price_cents' => 25000, 'subtotal_cents' => 25000, 'total_cents' => 25000]);
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', ['sort' => 'total', 'dir' => 'desc', 'lane' => 'waiting_approval']))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $rows = $xpath->query('//*[@data-job-board-list-body]//tr[@data-job-board-row]');
+
+    expect($rows->length)->toBeGreaterThanOrEqual(2);
+    $firstId = (string) $rows->item(0)?->attributes?->getNamedItem('data-ro-id')?->nodeValue;
+    $secondId = (string) $rows->item(1)?->attributes?->getNamedItem('data-ro-id')?->nodeValue;
+
+    expect($firstId)->toBe((string) $high->repair_order_id)
+        ->and($secondId)->toBe((string) $low->repair_order_id);
+});

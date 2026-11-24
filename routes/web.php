@@ -445,6 +445,14 @@ SurfaceRouting::appRoutes(function (): void {
                 ->middleware('front_door:attention')
                 ->name('operations.index');
 
+            // Review-only DataTables + Tabler Job Board prototype (eval branch). Gated 404 when disabled.
+            Route::get('/app/eval/job-board-datatables', [\App\Ark\Operations\Workboard\Eval\JobBoardDataTablesPrototypeController::class, 'page'])
+                ->middleware('front_door:attention')
+                ->name('operations.eval.job-board-datatables');
+            Route::get('/app/eval/job-board-datatables/data', [\App\Ark\Operations\Workboard\Eval\JobBoardDataTablesPrototypeController::class, 'data'])
+                ->middleware('front_door:attention')
+                ->name('operations.eval.job-board-datatables.data');
+
             Route::get('/app/display', [OperationsShopDisplayController::class, 'index'])
                 ->name('operations.display');
 

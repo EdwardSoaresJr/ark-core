@@ -1,0 +1,94 @@
+/**
+ * Tabler-skinned DataTables chrome for the Job Board eval prototype.
+ * Do not load default DataTables CSS — Tabler owns the design system.
+ */
+
+.ark-dt-prototype .dataTables_wrapper .row {
+    --tblr-gutter-x: 0.75rem;
+}
+
+.ark-dt-prototype .dataTables_length,
+.ark-dt-prototype .dataTables_filter,
+.ark-dt-prototype .dataTables_info,
+.ark-dt-prototype .dataTables_paginate {
+    font-size: 0.8125rem;
+    color: var(--tblr-secondary);
+}
+
+.ark-dt-prototype .dataTables_length label,
+.ark-dt-prototype .dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.ark-dt-prototype .dataTables_length select,
+.ark-dt-prototype .dataTables_filter input {
+    min-height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+    border: var(--tblr-border-width) solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius);
+    background: var(--tblr-bg-surface);
+    color: var(--tblr-body-color);
+}
+
+.ark-dt-prototype .dataTables_paginate .paginate_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    padding: 0.25rem 0.5rem;
+    margin: 0 0.125rem;
+    border: var(--tblr-border-width) solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius);
+    background: var(--tblr-bg-surface);
+    color: var(--tblr-body-color) !important;
+    cursor: pointer;
+}
+
+.ark-dt-prototype .dataTables_paginate .paginate_button.current {
+    background: color-mix(in srgb, var(--tblr-primary) 12%, var(--tblr-bg-surface));
+    border-color: var(--tblr-primary);
+    font-weight: 600;
+}
+
+.ark-dt-prototype .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.ark-dt-prototype .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+    background: var(--tblr-bg-surface-secondary);
+}
+
+.ark-dt-prototype table.dataTable thead > tr > th {
+    background: color-mix(in srgb, var(--tblr-secondary) 10%, var(--tblr-bg-surface));
+    color: var(--tblr-body-color);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    border-bottom: 1px solid var(--tblr-border-color);
+    vertical-align: middle;
+}
+
+.ark-dt-prototype table.dataTable thead > tr > th.dt-ordering-asc,
+.ark-dt-prototype table.dataTable thead > tr > th.dt-ordering-desc {
+    color: var(--tblr-body-color);
+    box-shadow: inset 0 -2px 0 var(--tblr-primary);
+}
+
+.ark-dt-prototype table.dataTable.table-sm > :not(caption) > * > * {
+    padding: 0.35rem 0.5rem;
+}
+
+.ark-dt-prototype .ark-dt-banner {
+    border: 1px dashed var(--tblr-border-color);
+    background: color-mix(in srgb, var(--tblr-azure) 8%, var(--tblr-bg-surface));
+}
+
+[data-bs-theme='dark'] .ark-dt-prototype .ark-dt-banner {
+    background: color-mix(in srgb, var(--tblr-azure) 16%, var(--tblr-bg-surface));
+}
