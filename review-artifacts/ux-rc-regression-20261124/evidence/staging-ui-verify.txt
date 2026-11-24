@@ -1,0 +1,16 @@
+staging_host=demo.staging.arksms.com
+staging_ip=157.230.172.143
+saas_sha=67762712fe5fb6a65307450dd54b57ab464ed159
+core_pin=bc5b8187008f3002a6d28039f86eb4a44841484e
+APP_ENV=staging
+demo_up=200
+Authenticated curl after demo/enter (guest advisor):
+- /app (Job Board) 200 — data-job-board, List/Cards, Tabler assets
+- /app?view=cards 200
+- /app/customers/search 200
+- /app/vehicles/search 200
+- /repair-orders 200
+- /app/profile 200 — display_theme / Dark mode present
+Tabler assets: tabler-DOFHxzQL.css, tabler-Bs_7zNN4.js, app-CUXIi8-O.css, app-US1jlZt9.js
+No preline/HSStaticMethods on login.
+Note: demo enter previously blocked by staff-seat exhaustion (guest.invalid assignments); freed seats for verification only.
