@@ -192,7 +192,9 @@ final class InspectionSectionWalkProjection
             ];
         }
 
-        $addressed = InspectionPointCompletion::isAddressed($item, $templateItem);
+        $addressed = InspectionPointCompletion::isCovered($item, $templateItem);
+        $coverageState = InspectionPointCompletion::coverageState($item, $templateItem);
+        $evidenceGaps = InspectionPointCompletion::evidenceGaps($item, $templateItem);
         $missingSlots = InspectionPointCompletion::missingRequiredSlotNames($item, $templateItem);
         $gateGroup = $templateItem?->gate_group;
         $isAxleGate = $gateGroup === 'axle_gate';
@@ -240,6 +242,9 @@ final class InspectionSectionWalkProjection
             'status' => $status?->value,
             'status_label' => InspectionTemplatePointMeta::statusDisplayLabel($templateItem, $status) ?? '-',
             'addressed' => $addressed,
+            'coverage_state' => $coverageState,
+            'evidence_gaps' => $evidenceGaps,
+            'evidence_complete' => $evidenceGaps === [],
             'missing_measurement_slots' => $missingSlots,
             'measurement_slots' => $slotValues,
             'note' => $note,

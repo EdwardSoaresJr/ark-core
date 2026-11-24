@@ -4,6 +4,7 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Inspections\ApplyInspectionTemplateAction;
 use App\Ark\Operations\Inspections\DefaultInspectionTemplateCatalog;
 use App\Ark\Operations\Inspections\EnsureInspectionAction;
+use App\Ark\Operations\Labor\TechnicianTimeSession;
 use App\Ark\Operations\Maintenance\MaintenanceService;
 use App\Ark\Operations\RepairOrders\RepairActionOwnerType;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -19,6 +20,7 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Foundation\Vite;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\Testing\TestResponse;
 
@@ -267,7 +269,8 @@ function inspectionTabletBody(TestResponse $response): string
     $html = $response->assertOk()
         ->assertSee('<!-- vite: resources/css/app.css,resources/css/tabler.css,resources/js/app.js,resources/js/tabler.js -->', false)
         ->assertSee('data-inspection-tablet-shell', false)
-        ->assertSee("document.documentElement.setAttribute('data-bs-theme', theme)", false)
+        ->assertSee('name="ark-display-theme"', false)
+        ->assertSee("document.documentElement.setAttribute('data-bs-theme'", false)
         ->assertDontSee('navbar navbar-vertical', false)
         ->getContent();
 
@@ -555,7 +558,7 @@ test('the staff time clock history renders in the Tabler shell and keeps every f
         ->post(route('operations.time-clock.staff.in', $technician))
         ->assertRedirect(route('operations.time-clock.staff', $technician));
 
-    $session = \App\Ark\Operations\Labor\TechnicianTimeSession::query()->where('user_id', $technician->id)->firstOrFail();
+    $session = TechnicianTimeSession::query()->where('user_id', $technician->id)->firstOrFail();
     $url = route('operations.time-clock.staff', $technician);
 
     $main = dailyOpsTablerMain($this->actingAs($admin)->get($url));
@@ -589,17 +592,12 @@ test('the staff time clock history renders in the Tabler shell and keeps every f
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Technician->value))->get($url)->assertForbidden();
 });
 
-test('ARK Cloud connecting renders in the Tabler shell and keeps its poller', function (): void {
+test('ARK Cloud connecting refuses box pairing from Core and sends staff to shop settings', function (): void {
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
-    $main = dailyOpsTablerMain($this->actingAs($admin)->get(route('operations.cloud.connecting')));
-
-    expectNoLegacyMarkup($main);
-    expect($main)->toContain('id="cloud-connect-status"')
-        ->toContain("document.getElementById('cloud-connect-status')")
-        ->toContain(json_encode(route('operations.cloud.poll')))
-        ->toContain('action="'.route('operations.settings.shop.ark-cloud.claim').'"')
-        ->toContain('Check now');
+    $this->actingAs($admin)
+        ->get(route('operations.cloud.connecting'))
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'general']));
 });
 
 test('Platform clusters render in the Tabler shell for master admins only', function (): void {
@@ -617,7 +615,7 @@ test('Platform clusters render in the Tabler shell for master admins only', func
 });
 
 test('the 409 page renders in the Tabler shell', function (): void {
-    \Illuminate\Support\Facades\Route::middleware('web')->get('/_tests/estimate-conflict', fn () => response()->view('errors.409', [
+    Route::middleware('web')->get('/_tests/estimate-conflict', fn () => response()->view('errors.409', [
         'message' => 'DAILY-OPS-CONFLICT',
     ], 409));
 

@@ -37,7 +37,10 @@ final class InspectionItemLivingRecordProjection
         $slots = InspectionMeasurementSlots::fromTemplateItem($templateItem);
         $inspection = $item->inspection ?? Inspection::query()->find($item->inspection_id);
         $gateGroup = $templateItem?->gate_group;
-        $addressed = InspectionPointCompletion::isAddressed($item, $templateItem);
+        $addressed = InspectionPointCompletion::isCovered($item, $templateItem);
+        $coverageState = InspectionPointCompletion::coverageState($item, $templateItem);
+        $evidenceGaps = InspectionPointCompletion::evidenceGaps($item, $templateItem);
+        $missingFacts = InspectionPointCompletion::missingCoverageFacts($item, $templateItem);
         $missingSlots = InspectionPointCompletion::missingRequiredSlotNames($item, $templateItem);
         $brakePrompts = $inspection instanceof Inspection
             ? InspectionBrakeComparison::promptsForItem($item, $inspection)
@@ -80,6 +83,10 @@ final class InspectionItemLivingRecordProjection
             'condition_palette' => InspectionTemplatePointMeta::conditionPalette($templateItem),
             'checked' => $addressed,
             'addressed' => $addressed,
+            'coverage_state' => $coverageState,
+            'missing_coverage_facts' => $missingFacts,
+            'evidence_gaps' => $evidenceGaps,
+            'evidence_complete' => $evidenceGaps === [],
             'missing_measurement_slots' => $missingSlots,
             'concern' => $item->concern !== null
                 ? [

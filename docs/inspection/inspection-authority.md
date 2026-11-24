@@ -57,6 +57,8 @@ Evidence
 
 The technician records **condition**. Photos, measurements, video, and notes are **evidence** for that condition - not a separate “finding” authority.
 
+**Coverage vs evidence (projections):** whether a point is *covered* (required facts recorded) is separate from whether supporting photos and scans are complete, and separate from customer-publication readiness. See [Inspection coverage vs evidence](inspection-coverage-evidence-contract.md). Do not collapse those into one completion percentage.
+
 ---
 
 ## Authority layers

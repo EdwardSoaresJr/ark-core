@@ -137,7 +137,7 @@ test('applied standard has corner points with builder meta and gyr palette', fun
     expect($options)->toContain('Green', 'Yellow', 'Red');
 });
 
-test('yellow rotor requires observation note and photo before addressed', function () {
+test('yellow rotor is covered with observation and note; photo is evidence not coverage', function () {
     $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
     $repairOrder = cornerRepairOrder($technician);
     $inspection = app(EnsureInspectionAction::class)->execute($repairOrder, $technician);
@@ -154,7 +154,7 @@ test('yellow rotor requires observation note and photo before addressed', functi
         actor: $technician,
     );
 
-    expect(InspectionPointCompletion::isAddressed($rotor->fresh(), $templateItem))->toBeFalse();
+    expect(InspectionPointCompletion::isCovered($rotor->fresh(), $templateItem))->toBeFalse();
 
     app(UpdateInspectionChecklistItemAction::class)->execute(
         repairOrder: $repairOrder,
@@ -166,7 +166,11 @@ test('yellow rotor requires observation note and photo before addressed', functi
         selectedObservations: ['heat_spotting'],
     );
 
-    expect(InspectionPointCompletion::isAddressed($rotor->fresh(), $templateItem))->toBeFalse();
+    $covered = $rotor->fresh()->load('photos');
+    expect(InspectionPointCompletion::isCovered($covered, $templateItem))->toBeTrue()
+        ->and(InspectionPointCompletion::evidenceGaps($covered, $templateItem))->not->toBeEmpty()
+        ->and(InspectionPointCompletion::coverageState($covered, $templateItem))
+        ->toBe('addressed_with_evidence_gaps');
 
     $this->actingAs($technician)
         ->post(route('operations.repair-orders.inspection.photos.store', [$repairOrder, $rotor]), [
@@ -175,7 +179,10 @@ test('yellow rotor requires observation note and photo before addressed', functi
         ])
         ->assertRedirect();
 
-    expect(InspectionPointCompletion::isAddressed($rotor->fresh()->load('photos'), $templateItem))->toBeTrue();
+    $withPhoto = $rotor->fresh()->load('photos');
+    expect(InspectionPointCompletion::isCovered($withPhoto, $templateItem))->toBeTrue()
+        ->and(InspectionPointCompletion::evidenceGaps($withPhoto, $templateItem))->toBe([])
+        ->and(InspectionPointCompletion::coverageState($withPhoto, $templateItem))->toBe('addressed');
 });
 
 test('section walk projects corner stage first with green yellow red labels', function () {

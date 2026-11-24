@@ -85,12 +85,22 @@ final class InspectionWalkWorkspaceProjection
             ->filter(function (InspectionItem $item) use ($templateItems): bool {
                 $tpl = $templateItems->get($item->inspection_template_item_id);
 
-                return InspectionPointCompletion::isAddressed(
+                return InspectionPointCompletion::isCovered(
                     $item,
                     $tpl instanceof InspectionTemplateItem ? $tpl : null,
                 );
             })
             ->count();
+
+        $evidenceGapCount = $ordered
+            ->sum(function (InspectionItem $item) use ($templateItems): int {
+                $tpl = $templateItems->get($item->inspection_template_item_id);
+
+                return count(InspectionPointCompletion::evidenceGaps(
+                    $item,
+                    $tpl instanceof InspectionTemplateItem ? $tpl : null,
+                ));
+            });
 
         $conditionOptions = collect(InspectionChecklistStatus::ordered())
             ->map(fn (InspectionChecklistStatus $status): array => [
@@ -104,6 +114,7 @@ final class InspectionWalkWorkspaceProjection
             'checked' => $checkedCount,
             'total' => $ordered->count(),
             'remaining' => max(0, $ordered->count() - $checkedCount),
+            'evidence_gap_count' => $evidenceGapCount,
         ];
 
         $walkPoints = $ordered
@@ -114,7 +125,7 @@ final class InspectionWalkWorkspaceProjection
                     'id' => $item->id,
                     'label' => $item->label,
                     'category_name' => $item->checklist_category_name,
-                    'checked' => InspectionPointCompletion::isAddressed(
+                    'checked' => InspectionPointCompletion::isCovered(
                         $item,
                         $tpl instanceof InspectionTemplateItem ? $tpl : null,
                     ),

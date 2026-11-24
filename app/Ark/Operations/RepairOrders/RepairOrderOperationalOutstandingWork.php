@@ -96,13 +96,14 @@ final class RepairOrderOperationalOutstandingWork
     {
         $posture = $this->inspectionPosture->forRepairOrder($repairOrder);
 
-        // Never started: no warning. Complete / needs review: no warning.
+        // Coverage-based only. Supporting evidence gaps do not count as unfinished inspection work.
+        // Never started / complete / needs review: no outstanding inspection item.
         if (! $posture->started || $posture->key !== InspectionPosture::IN_PROGRESS) {
             return null;
         }
 
         $template = $posture->templateName ?: 'Inspection';
-        $detail = $posture->detail ?: ($posture->checked.' of '.$posture->total.' items completed');
+        $detail = $posture->detail ?: ($posture->checked.' of '.$posture->total.' items covered');
 
         return [
             'key' => 'inspection:in_progress',

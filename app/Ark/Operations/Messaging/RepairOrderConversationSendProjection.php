@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Messaging;
 use App\Ark\Operations\Communications\ScheduledOutboundEstimateProjection;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
-use App\Ark\Operations\Inspections\InspectionFindingCardProjection;
+use App\Ark\Operations\Inspections\GuardInspectionCustomerPublication;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
@@ -390,10 +390,6 @@ final class RepairOrderConversationSendProjection
             return 'Closed repair orders cannot send inspection links.';
         }
 
-        if (InspectionFindingCardProjection::recordedCountForRepairOrder($repairOrder) === 0) {
-            return 'Record at least one inspection finding before sharing.';
-        }
-
-        return null;
+        return app(GuardInspectionCustomerPublication::class)->blockReason($repairOrder);
     }
 }

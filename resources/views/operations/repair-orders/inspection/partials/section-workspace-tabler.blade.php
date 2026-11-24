@@ -165,10 +165,19 @@
                                     >
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <h4 class="mb-0 flex-fill" x-text="point.label"></h4>
-                                            <span class="text-success" x-show="point.addressed" x-cloak>
+                                            <span class="text-success" x-show="point.addressed && (!point.evidence_gaps || point.evidence_gaps.length === 0)" x-cloak>
                                                 <x-tabler.icon name="circle-check" />
                                                 <span class="visually-hidden">Addressed</span>
                                             </span>
+                                            <span class="text-warning" x-show="point.addressed && point.evidence_gaps && point.evidence_gaps.length > 0" x-cloak title="Addressed — documentation still needed">
+                                                <x-tabler.icon name="circle-dashed" />
+                                                <span class="visually-hidden">Addressed with documentation needed</span>
+                                            </span>
+                                        </div>
+                                        <div class="small text-warning mb-2" x-show="point.evidence_gaps && point.evidence_gaps.length > 0" x-cloak>
+                                            <template x-for="(gap, gapIndex) in point.evidence_gaps" :key="gapIndex">
+                                                <div x-text="gap.message"></div>
+                                            </template>
                                         </div>
 
                                         <div role="group" :aria-label="'Condition for ' + point.label">
