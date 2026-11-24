@@ -6,10 +6,13 @@ use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Today\AdvisorHomeCardSurfaceProjection;
 use App\Ark\Operations\Today\AdvisorHomeCockpitProjection;
+use App\Ark\Operations\Workboard\JobBoardLayout;
+use App\Ark\Operations\Workboard\JobBoardListRowProjection;
 use App\Ark\Operations\Workboard\WorkboardTriageCard;
 use App\Ark\Operations\Workboard\WorkboardTriageLaneProjection;
 use App\Ark\Operations\Workboard\WorkboardTriageProjection;
 use App\Ark\Operations\Workboard\WorkboardTriageRepairOrderQuery;
+use App\Ark\Runtime\Preferences\JobBoardLayoutPreference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -22,9 +25,14 @@ class OperationsHomeController
         WorkboardTriageProjection $workboardTriage,
         EstimateTotalsCalculator $totalsCalculator,
         AdvisorHomeCardSurfaceProjection $homeCardSurfaces,
+        JobBoardListRowProjection $listRows,
     ): View {
+        $layout = JobBoardLayoutPreference::resolve($request);
         $repairOrders = $repairOrderQuery->forAdvisor();
-        $homeBoardColumns = $workboardTriage->forAdvisorHomeBoard($repairOrders);
+        $homeBoardColumns = $workboardTriage->forAdvisorHomeBoard(
+            $repairOrders,
+            uncapped: $layout->isList(),
+        );
         $visibleRepairOrders = new \Illuminate\Database\Eloquent\Collection(
             $this->visibleRepairOrders($homeBoardColumns)->all(),
         );
@@ -34,6 +42,9 @@ class OperationsHomeController
         ]);
 
         $cardSurfaces = $homeCardSurfaces->mapForHomeBoard($visibleRepairOrders, $homeBoardColumns, $repairOrderTotals);
+        $listRowModels = $layout->isList()
+            ? $listRows->fromHomeBoard($homeBoardColumns, $cardSurfaces)
+            : [];
 
         return view('operations.home', [
             'cockpit' => AdvisorHomeCockpitProjection::forJobBoard(
@@ -47,6 +58,9 @@ class OperationsHomeController
             'homeBoardTechnicians' => $homeCardSurfaces->technicianOptions($repairOrders),
             'repairOrderTotals' => $repairOrderTotals,
             'activeRepairOrderCount' => $repairOrders->count(),
+            'jobBoardLayout' => $layout,
+            'jobBoardListRows' => $listRowModels,
+            'jobBoardLaneTabs' => $listRows->laneTabs($homeBoardColumns),
         ]);
     }
 

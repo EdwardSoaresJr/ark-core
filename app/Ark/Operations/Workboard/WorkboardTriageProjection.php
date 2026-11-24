@@ -71,7 +71,10 @@ final class WorkboardTriageProjection
         return $this->observationsForRepairOrder($repairOrder);
     }
 
-    public function forAdvisorHomeBoard(Collection $repairOrders): array
+    /**
+     * @return list<WorkboardTriageLaneProjection>
+     */
+    public function forAdvisorHomeBoard(Collection $repairOrders, bool $uncapped = false): array
     {
         /** @var array<string, Collection<int, RepairOrder>> $repairOrdersByColumn */
         $repairOrdersByColumn = collect(WorkboardSwimlaneCatalog::advisorHomeBoardColumns())
@@ -88,16 +91,19 @@ final class WorkboardTriageProjection
             $repairOrdersByColumn[$columnKey]->push($repairOrder);
         }
 
-        $visibleLimit = WorkboardSwimlaneCatalog::HOME_BOARD_VISIBLE_CARD_LIMIT;
+        $visibleLimit = $uncapped
+            ? PHP_INT_MAX
+            : WorkboardSwimlaneCatalog::HOME_BOARD_VISIBLE_CARD_LIMIT;
         $candidateRepairOrders = collect();
 
         foreach ($repairOrdersByColumn as $columnRepairOrders) {
             // Project the oldest open work first so stale cards stay on the board.
+            $sorted = $columnRepairOrders
+                ->sortBy(fn (RepairOrder $repairOrder): int => $repairOrder->updated_at->getTimestamp())
+                ->values();
+
             $candidateRepairOrders = $candidateRepairOrders->merge(
-                $columnRepairOrders
-                    ->sortBy(fn (RepairOrder $repairOrder): int => $repairOrder->updated_at->getTimestamp())
-                    ->take($visibleLimit)
-                    ->values(),
+                $uncapped ? $sorted : $sorted->take($visibleLimit),
             );
         }
 
@@ -109,7 +115,7 @@ final class WorkboardTriageProjection
             ->keyBy(fn (WorkboardTriageCard $card): int => $card->repairOrder->id);
 
         return collect(WorkboardSwimlaneCatalog::advisorHomeBoardColumns())
-            ->map(function (array $column) use ($repairOrdersByColumn, $cardsById, $visibleLimit): WorkboardTriageLaneProjection {
+            ->map(function (array $column) use ($repairOrdersByColumn, $cardsById, $visibleLimit, $uncapped): WorkboardTriageLaneProjection {
                 $columnRepairOrders = $repairOrdersByColumn[$column['key']] ?? collect();
                 $laneCards = $columnRepairOrders
                     ->map(fn (RepairOrder $repairOrder): ?WorkboardTriageCard => $cardsById->get($repairOrder->id))
@@ -120,7 +126,7 @@ final class WorkboardTriageProjection
                     ])
                     ->values();
 
-                $visibleCards = $laneCards->take($visibleLimit)->all();
+                $visibleCards = $uncapped ? $laneCards->all() : $laneCards->take($visibleLimit)->all();
                 $hiddenCount = max(0, $columnRepairOrders->count() - count($visibleCards));
                 $inventoryUrl = $columnRepairOrders->isNotEmpty()
                     ? WorkboardSwimlaneCatalog::inventoryUrlForHomeColumn($column['key'])

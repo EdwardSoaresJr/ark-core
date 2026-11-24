@@ -47,6 +47,67 @@
 }
 
 /*
+ * Job Board list (DataTables-style). Dense table on md+; mobile uses stacked cards.
+ * Header buttons inherit table header weight without looking like primary actions.
+ */
+[data-job-board] [x-cloak] {
+    display: none !important;
+}
+
+.ark-job-board-table thead .btn {
+    font-weight: inherit;
+    color: inherit;
+}
+
+[data-job-board-lane-tabs] .nav-link {
+    cursor: pointer;
+}
+
+[data-job-board-lane-tabs] .status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    background: var(--tblr-secondary);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-azure,
+[data-job-board-lane-tabs] .status-dot.status-blue,
+[data-job-board-lane-tabs] .status-dot.status-primary {
+    background: var(--tblr-primary);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-yellow,
+[data-job-board-lane-tabs] .status-dot.status-orange,
+[data-job-board-lane-tabs] .status-dot.status-warning {
+    background: var(--tblr-warning);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-green,
+[data-job-board-lane-tabs] .status-dot.status-success,
+[data-job-board-lane-tabs] .status-dot.status-teal {
+    background: var(--tblr-success);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-cyan,
+[data-job-board-lane-tabs] .status-dot.status-info {
+    background: var(--tblr-info);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-red,
+[data-job-board-lane-tabs] .status-dot.status-danger,
+[data-job-board-lane-tabs] .status-dot.status-pink {
+    background: var(--tblr-danger);
+}
+
+[data-job-board-lane-tabs] .status-dot.status-secondary,
+[data-job-board-lane-tabs] .status-dot.status-dark,
+[data-job-board-lane-tabs] .status-dot.status-muted {
+    background: var(--tblr-secondary);
+}
+
+/*
  * Repair order Visit panel controls (#review-toolbar): Status, Technician, and review follow-up
  * share the same labeled column as Visit type / Billing / Mileage.
  */

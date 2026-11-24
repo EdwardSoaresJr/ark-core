@@ -1,3 +1,9 @@
+@php
+    /** @var \App\Ark\Operations\Workboard\JobBoardLayout $jobBoardLayout */
+    $boardUrl = route('operations.index', ['view' => 'board']);
+    $listUrl = route('operations.index', ['view' => 'list']);
+@endphp
+
 <div class="row g-2 align-items-center" aria-label="Job board filters" role="group" data-job-board-filters>
     <div class="col-12 col-md">
         <div class="input-icon">
@@ -22,6 +28,28 @@
                 <option value="{{ $technician->id }}">{{ $technician->name }}</option>
             @endforeach
         </select>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group" role="group" aria-label="Job board layout">
+            <a
+                href="{{ $boardUrl }}"
+                @class(['btn', $jobBoardLayout->value === 'board' ? 'btn-primary' : 'btn-outline-secondary'])
+                data-job-board-layout-toggle="board"
+                @if ($jobBoardLayout->value === 'board') aria-current="page" @endif
+            >
+                <x-tabler.icon name="layout-grid" />
+                <span class="d-none d-sm-inline">Board</span>
+            </a>
+            <a
+                href="{{ $listUrl }}"
+                @class(['btn', $jobBoardLayout->value === 'list' ? 'btn-primary' : 'btn-outline-secondary'])
+                data-job-board-layout-toggle="list"
+                @if ($jobBoardLayout->value === 'list') aria-current="page" @endif
+            >
+                <x-tabler.icon name="list" />
+                <span class="d-none d-sm-inline">List</span>
+            </a>
+        </div>
     </div>
     @can('repair_orders.manage')
         <div class="col-auto">
