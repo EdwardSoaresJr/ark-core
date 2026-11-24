@@ -7,7 +7,7 @@
 | Role | SHA |
 |------|-----|
 | Core `origin/main` baseline | `9cc852899b2ab9754185675b7d83d656978b2b33` |
-| This branch tip | *(filled after push)* |
+| This branch tip | `326feca9e66de56e6fb9f9a1f7c5f70e82c92436` |
 | SaaS / Stancl `origin/main` (unchanged pin) | `df735e4096e94eb8f0440f5124794ea924a88d2a` → Core `9cc85289` |
 
 Related open PRs left alone: #254 List UX, #256 Card hierarchy, #255 DataTables eval, #257 collection List/Cards.
