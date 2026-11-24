@@ -1,0 +1,57 @@
+PASS   pass=13  fail=0  skip=0  AuthorizedCentDriftTest.php
+PASS   pass=16  fail=0  skip=0  ApprovedWorkChangesAfterAuthorizationTest.php
+PASS   pass=31  fail=0  skip=0  AuthorizationIntegrityTest.php
+PASS   pass=24  fail=0  skip=0  EstimateFinancialAuthorityTest.php
+PASS   pass=3   fail=0  skip=0  Core747295FinancialIntegrityTest.php
+PASS   pass=9   fail=0  skip=0  LaborMatrixLifecycleTest.php
+PASS   pass=13  fail=0  skip=0  PartsMatrixAndTaxForwardOnlyTest.php
+PASS   pass=8   fail=0  skip=0  ShopFeeFlatDollarTest.php
+PASS   pass=6   fail=0  skip=0  ShopFeePerLineAllocationTest.php
+PASS   pass=23  fail=0  skip=0  ShopFeeAppliesToTest.php
+PASS   pass=7   fail=0  skip=0  PaymentCaptureFoundationTest.php
+PASS   pass=6   fail=0  skip=0  FinancialIntegrityCaptureRepairTest.php
+PASS   pass=8   fail=0  skip=0  CommercialPricingProfileForwardOnlyTest.php
+PASS   pass=5   fail=0  skip=0  PricingEngineSafetyTest.php
+PASS   pass=8   fail=0  skip=0  UnifiedBillingWarrantyTermsTest.php
+PASS   pass=23  fail=0  skip=0  LaborAuthorityTest.php
+PASS   pass=8   fail=0  skip=0  LaborRateAuthorityTest.php
+PASS   pass=14  fail=0  skip=0  AccountsReceivablePaymentAllocationTest.php
+PASS   pass=31  fail=0  skip=0  FinancialCoreAuthorityTest.php
+PASS   pass=3   fail=0  skip=0  WorksheetContinuityAuthorizationTest.php
+PASS   pass=4   fail=0  skip=0  WorksheetContinuitySettlementTest.php
+PASS   pass=7   fail=0  skip=0  EstimatePricingFloorIntegrityTest.php
+PASS   pass=6   fail=0  skip=0  CustomerFacingLaborAuthorityBoundaryTest.php
+PASS   pass=4   fail=0  skip=0  BillingClassSettingsConsistencyTest.php
+PASS   pass=9   fail=0  skip=0  ConcernBillingRepricingTest.php
+FAIL   pass=5   fail=1  skip=0  RepairOrderFinancialPresenterBalanceAxesTest.php
+         FAIL: presenter with preloaded balance projection does not add BalanceDueCalculator queries
+PASS   pass=4   fail=0  skip=0  FinancialPositionProjectionTest.php
+PASS   pass=14  fail=0  skip=0  FinancialSubmissionIntentTest.php
+PASS   pass=7   fail=0  skip=0  InvoiceDocumentViewTest.php
+PASS   pass=10  fail=0  skip=0  InvoiceRevisionHistoryTest.php
+PASS   pass=7   fail=0  skip=0  IssuedInvoicePdfPreservationTest.php
+PASS   pass=11  fail=0  skip=0  AccountsReceivableCardCaptureTest.php
+PASS   pass=3   fail=0  skip=0  PlatformStaffPaymentCaptureTest.php
+PASS   pass=9   fail=0  skip=0  PaymentWorkspaceTest.php
+PASS   pass=10  fail=0  skip=0  CaptureCompletionAfterCloseTest.php
+PASS   pass=7   fail=0  skip=0  SettingsSeparationPhase1Test.php
+PASS   pass=10  fail=0  skip=0  SettingsSeparationPhase2Test.php
+PASS   pass=4   fail=0  skip=0  SettingsSeparationPhase3Test.php
+PASS   pass=5   fail=0  skip=0  IntakeEntryTest.php
+PASS   pass=12  fail=0  skip=0  VisitCheckInActionTest.php
+PASS   pass=31  fail=0  skip=0  RepairOrderStatusCatalogTest.php
+PASS   pass=14  fail=0  skip=0  RepairOrderCloseoutFinalPdfTest.php
+PASS   pass=20  fail=0  skip=0  JobBoardListViewTest.php
+PASS   pass=7   fail=0  skip=0  WorkboardCardGlanceTest.php
+FAIL   pass=7   fail=7  skip=0  AdvisorHomeBoardTest.php
+         FAIL: advisor home shows compact brief and full active repair order board
+         FAIL: advisor home waiting approval column holds customer-decision repair orders
+         FAIL: waiting approval cards surface configured status not estimate overlay
+         FAIL: in progress cards hide empty labor progress and empty promise time
+         FAIL: home card anchors RO number upper left before vehicle and customer
+         FAIL: home card surfaces promise time on the meta row
+         FAIL: home card plus-count names the other attention items
+MISSING pass=0   fail=0  skip=0  ConcurrencyOverlapTest.php
+
+OVERALL total=4849 pass=4467 fail=224 skip=158
+junit_attrs tests=4849 failures=195 errors=29 skipped=158 time=4841.752682 assertions=28990

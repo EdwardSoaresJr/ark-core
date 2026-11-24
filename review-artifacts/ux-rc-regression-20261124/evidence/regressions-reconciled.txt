@@ -1,0 +1,37 @@
+raw_regressions=37
+advisor_home_remediated=7
+remaining_after_advisor_fix=30
+comms_like=20
+daily_demo_owner=9
+other=1
+
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::adding phone to legacy workstation without extension assigns extension automatically
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::adding phone to workstation opens device workspace without server error
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::creating workstation auto-assigns extension and advances to phone step
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::device provisioning controls stay hidden from non master admins
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::ensure extension reclaims legacy orphan extension row for same number
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::incoming routing updates ring targets by person not extension
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::settings manager can remove a communication device and return to voice setup
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::shop communications answers whether the shop can communicate
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::shop communications projects live calls in todays coverage
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::shop communications shows setup in progress when workstation lacks phone path
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::store communication device persists normalized mac and resolved model
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::store communication device rejects duplicate mac with validation error
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::store communication device rejects invalid mac with validation error
+tests/Feature/Communications/CommunicationsWorkspaceShellTest.php::stations and phones pages render in the Tabler shell with their forms
+tests/Feature/Communications/DiscoveredDeviceAssignTest.php::assigning pending device to station provisions without manual mac entry
+tests/Feature/Communications/DiscoveredDeviceAssignTest.php::pending device appears under needs attention when shop is operating
+tests/Feature/Communications/EndpointArchitecturePr1Test.php::shop assign extension route completes first contact operator path
+tests/Feature/Communications/MissedCallRescueTest.php::admin can save missed call rescue settings on hours tab
+tests/Feature/Operations/CommunicationsQueueTest.php::sidebar does not show retired intake queue nav
+tests/Feature/Operations/CommunicationsQuickReplyTemplatesTest.php::communications settings can add and delete canned responses
+tests/Feature/Operations/DailyOperationsTablerTest.php::ARK Cloud connecting renders in the Tabler shell and keeps its poller
+tests/Feature/Operations/DailyOperationsTablerTest.php::the inspection tablet point walk keeps its camera form, tablet photo URLs, and walk navigation
+tests/Feature/Operations/DailyOperationsTablerTest.php::the inspection tablet surface renders the section walk in a Tabler bay layout with data set "dataset "admin""
+tests/Feature/Operations/DailyOperationsTablerTest.php::the inspection tablet surface renders the section walk in a Tabler bay layout with data set "dataset "advisor""
+tests/Feature/Operations/DailyOperationsTablerTest.php::the inspection tablet surface renders the section walk in a Tabler bay layout with data set "dataset "assigned technician""
+tests/Feature/Operations/DailyOperationsTablerTest.php::the inspection tablet surface renders the section walk in a Tabler bay layout with data set "dataset "other technician""
+tests/Feature/Operations/DemoCompanionSurfaceTest.php::demo hides arkademy and platform surfaces
+tests/Feature/Operations/DemoCompanionSurfaceTest.php::shops outside the demo still show arkademy and platform
+tests/Feature/Operations/OwnerCallIntelligenceTest.php::core settings no longer expose call intelligence provider configuration
+tests/Feature/Operations/RepairOrderOpenProfileTest.php::opening a repair order reuses settlement catalog and messaging reads
