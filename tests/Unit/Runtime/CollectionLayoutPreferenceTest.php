@@ -14,7 +14,8 @@ it('defaults to auto when no view or cookie is present', function () {
     expect($resolved['mode'])->toBe(CollectionLayoutPreference::MODE_AUTO)
         ->and($resolved['layout'])->toBeNull()
         ->and($resolved['explicit'])->toBeFalse()
-        ->and($resolved['module'])->toBe(CollectionLayoutModule::Customers);
+        ->and($resolved['module'])->toBe(CollectionLayoutModule::Customers)
+        ->and($resolved['scope'])->toHaveKeys(['tenant', 'user']);
 });
 
 it('honors explicit view query and queues a module cookie', function () {

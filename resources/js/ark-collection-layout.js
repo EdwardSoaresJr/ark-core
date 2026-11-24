@@ -1,45 +1,36 @@
 /**
  * Shared List | Cards switcher for record indexes (Customers, Vehicles, Repair Orders).
- * Module cookie name comes from data-collection-cookie on the root.
+ * Uses ark-ui-layout-preference (tenant + user + module). Does not rewrite ?view=.
  */
-const MD_UP = '(min-width: 768px)';
+import {
+    MD_UP,
+    UiLayoutModule,
+    normalizeLayout,
+    readExplicitLayout,
+    readViewQueryParam,
+    scopeFromDocument,
+    stripViewQueryParam,
+    viewportDefault,
+    writeExplicitLayout,
+} from './ark-ui-layout-preference';
 
-function readCookie(name) {
-    const prefix = `${name}=`;
-    const parts = document.cookie.split(';');
-    for (const part of parts) {
-        const trimmed = part.trim();
-        if (trimmed.startsWith(prefix)) {
-            return decodeURIComponent(trimmed.slice(prefix.length));
-        }
-    }
-    return null;
-}
+const MODULE_BY_ATTR = Object.freeze({
+    customers: UiLayoutModule.Customers,
+    vehicles: UiLayoutModule.Vehicles,
+    repair_orders: UiLayoutModule.RepairOrders,
+});
 
-function writeCookie(name, value, domain) {
-    const maxAge = 60 * 60 * 24 * 365;
-    let cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; samesite=lax`;
-    if (window.location.protocol === 'https:') {
-        cookie += '; secure';
-    }
-    if (domain) {
-        cookie += `; domain=${domain}`;
-    }
-    document.cookie = cookie;
-}
+function collectionScope(root) {
+    const docScope = scopeFromDocument(document);
+    const moduleAttr = root.getAttribute('data-collection-module') || '';
+    const module = MODULE_BY_ATTR[moduleAttr] || moduleAttr;
 
-function viewportDefault() {
-    return window.matchMedia(MD_UP).matches ? 'list' : 'cards';
-}
-
-function normalizeLayout(value) {
-    if (value === 'cards') {
-        return 'cards';
-    }
-    if (value === 'list') {
-        return 'list';
-    }
-    return null;
+    return {
+        tenant: root.getAttribute('data-ark-ui-tenant') || docScope.tenant,
+        userId: root.getAttribute('data-ark-ui-user') || docScope.userId,
+        module,
+        cookieDomain: root.getAttribute('data-collection-cookie-domain') || null,
+    };
 }
 
 function syncHiddenInputs(root, layout) {
@@ -63,25 +54,11 @@ function syncToggle(root, layout) {
     });
 }
 
-function syncUrlView(layout) {
-    try {
-        const url = new URL(window.location.href);
-        url.searchParams.set('view', layout);
-        window.history.replaceState(window.history.state, '', url.toString());
-    } catch (error) {
-        // History API unavailable; cookie + hidden input still persist the choice.
-    }
-}
-
-function applyLayout(root, layout, { persist = false, mode = null } = {}) {
-    if (persist) {
+function applyLayout(root, layout, { persist = false, mode = null, scope = null } = {}) {
+    if (persist && scope) {
+        writeExplicitLayout(scope, layout, { cookieDomain: scope.cookieDomain });
         root.setAttribute('data-collection-layout', layout);
         root.setAttribute('data-collection-layout-explicit', '1');
-        const cookieName = root.getAttribute('data-collection-cookie');
-        if (cookieName) {
-            writeCookie(cookieName, layout, root.getAttribute('data-collection-cookie-domain') || undefined);
-        }
-        syncUrlView(layout);
     } else if (mode) {
         root.setAttribute('data-collection-layout', mode);
     }
@@ -97,14 +74,31 @@ function initCollection(root) {
     }
     root.dataset.collectionLayoutReady = '1';
 
-    const cookieName = root.getAttribute('data-collection-cookie') || '';
-    const cookieLayout = cookieName ? normalizeLayout(readCookie(cookieName)) : null;
+    const scope = collectionScope(root);
+    const fromQuery = readViewQueryParam();
+    const fromStore = readExplicitLayout(scope);
     const modeAttr = root.getAttribute('data-collection-layout') || 'auto';
-    const explicitMode = normalizeLayout(modeAttr);
-    const layout = explicitMode || cookieLayout || viewportDefault();
+    const serverExplicit = normalizeLayout(modeAttr);
 
-    root.setAttribute('data-collection-layout-explicit', explicitMode || cookieLayout ? '1' : '0');
-    applyLayout(root, layout, { persist: false, mode: explicitMode || cookieLayout || 'auto' });
+    let mode = 'auto';
+    let layout = viewportDefault();
+
+    if (fromQuery) {
+        writeExplicitLayout(scope, fromQuery, { cookieDomain: scope.cookieDomain });
+        mode = fromQuery;
+        layout = fromQuery;
+        stripViewQueryParam();
+    } else if (fromStore) {
+        mode = fromStore;
+        layout = fromStore;
+    } else if (serverExplicit) {
+        mode = serverExplicit;
+        layout = serverExplicit;
+        writeExplicitLayout(scope, serverExplicit, { cookieDomain: scope.cookieDomain });
+    }
+
+    root.setAttribute('data-collection-layout-explicit', mode === 'auto' ? '0' : '1');
+    applyLayout(root, layout, { persist: false, mode });
 
     root.querySelectorAll('[data-collection-layout-option]').forEach((btn) => {
         btn.addEventListener('click', (event) => {
@@ -113,13 +107,17 @@ function initCollection(root) {
             if (!next) {
                 return;
             }
-            applyLayout(root, next, { persist: true });
+            applyLayout(root, next, { persist: true, scope });
         });
     });
 
     const media = window.matchMedia(MD_UP);
     const onViewportChange = () => {
         if (root.getAttribute('data-collection-layout-explicit') === '1') {
+            applyLayout(root, root.getAttribute('data-collection-layout') === 'cards' ? 'cards' : 'list', {
+                persist: false,
+                mode: root.getAttribute('data-collection-layout'),
+            });
             return;
         }
         applyLayout(root, viewportDefault(), { persist: false, mode: 'auto' });

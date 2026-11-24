@@ -30,6 +30,8 @@
             data-collection-layout-explicit="{{ $collectionLayoutExplicit ? '1' : '0' }}"
             data-collection-cookie="{{ $collectionLayoutModule->cookieName() }}"
             data-collection-cookie-domain="{{ $cookieDomain }}"
+            data-ark-ui-tenant="{{ $uiPreferenceScope['tenant'] ?? 'local' }}"
+            data-ark-ui-user="{{ $uiPreferenceScope['user'] ?? 'anon' }}"
         >
             <x-tabler.search-filters
                 id="vehicle"

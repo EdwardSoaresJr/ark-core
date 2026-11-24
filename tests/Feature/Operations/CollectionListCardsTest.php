@@ -30,6 +30,8 @@ it('customers index serves list and cards over the same authorized set', functio
         ->and($html)->toContain('data-collection-view="list"')
         ->and($html)->toContain('data-collection-view="cards"')
         ->and($html)->toContain('data-collection-layout-toggle')
+        ->and($html)->toContain('data-ark-ui-tenant=')
+        ->and($html)->toContain('data-ark-ui-user=')
         ->and($html)->toContain('List Cards Customer')
         ->and($html)->toContain('data-collection-sort="name"');
 

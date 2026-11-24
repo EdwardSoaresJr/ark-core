@@ -9,8 +9,8 @@
 | Type | Symbol | Role |
 |------|--------|------|
 | Enum | `CollectionLayout` | `list` \| `cards` |
-| Enum | `CollectionLayoutModule` | `customers` \| `vehicles` \| `repair_orders` + cookie names |
-| Preference | `CollectionLayoutPreference` | `?view=` → module cookie → `auto` |
+| Enum | `CollectionLayoutModule` | `customers` \| `vehicles` \| `repair_orders` + legacy cookie names |
+| Preference | `CollectionLayoutPreference` | Thin adapter over `UiLayoutPreference` (browser-local tenant+user+module; legacy cookie dual-write) |
 | Sort | `CollectionSortState` | Server-side sort URL / aria-sort / apply |
 
 Cookie names (EncryptCookies excepted in Core):

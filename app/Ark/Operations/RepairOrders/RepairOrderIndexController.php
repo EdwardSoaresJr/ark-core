@@ -11,6 +11,7 @@ use App\Ark\Operations\Workboard\WorkboardInventoryContext;
 use App\Ark\Operations\Workboard\WorkboardSwimlaneCatalog;
 use App\Ark\Runtime\Preferences\CollectionLayoutModule;
 use App\Ark\Runtime\Preferences\CollectionLayoutPreference;
+use App\Ark\Runtime\Preferences\UiPreferenceScope;
 use App\Ark\Ui\Collection\CollectionSortState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -189,7 +190,6 @@ class RepairOrderIndexController
             'created_to' => $createdTo?->toDateString(),
             'collected_from' => $collectedFrom?->toDateString(),
             'collected_to' => $collectedTo?->toDateString(),
-            'view' => $layoutPreference['explicit'] ? $layoutPreference['mode'] : null,
         ], static fn ($value) => $value !== null && $value !== '');
 
         return view('operations.repair-orders.index', [
@@ -218,6 +218,7 @@ class RepairOrderIndexController
             'collectionLayoutMode' => $layoutPreference['mode'],
             'collectionLayoutExplicit' => $layoutPreference['explicit'],
             'collectionLayoutModule' => CollectionLayoutModule::RepairOrders,
+            'uiPreferenceScope' => $layoutPreference['scope'] ?? UiPreferenceScope::forRequest($request),
         ]);
     }
 }

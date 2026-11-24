@@ -5,6 +5,7 @@ namespace App\Ark\Operations\Customers;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Preferences\CollectionLayoutModule;
 use App\Ark\Runtime\Preferences\CollectionLayoutPreference;
+use App\Ark\Runtime\Preferences\UiPreferenceScope;
 use App\Ark\Ui\Collection\CollectionSortState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -84,7 +85,6 @@ class CustomerSearchController
             'created_from' => $createdFrom?->toDateString(),
             'created_to' => $createdTo?->toDateString(),
             'intake' => $intakeMode ? 1 : null,
-            'view' => $layoutPreference['explicit'] ? $layoutPreference['mode'] : null,
         ], static fn ($value) => $value !== null && $value !== '');
 
         return view('operations.customers.search', [
@@ -101,6 +101,7 @@ class CustomerSearchController
             'collectionLayoutMode' => $layoutPreference['mode'],
             'collectionLayoutExplicit' => $layoutPreference['explicit'],
             'collectionLayoutModule' => CollectionLayoutModule::Customers,
+            'uiPreferenceScope' => $layoutPreference['scope'] ?? UiPreferenceScope::forRequest($request),
         ]);
     }
 }

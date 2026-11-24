@@ -5,6 +5,7 @@ namespace App\Ark\Operations\Vehicles;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Runtime\Preferences\CollectionLayoutModule;
 use App\Ark\Runtime\Preferences\CollectionLayoutPreference;
+use App\Ark\Runtime\Preferences\UiPreferenceScope;
 use App\Ark\Ui\Collection\CollectionSortState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -104,7 +105,6 @@ class VehicleSearchController
             'work' => $work !== '' ? $work : null,
             'created_from' => $createdFrom?->toDateString(),
             'created_to' => $createdTo?->toDateString(),
-            'view' => $layoutPreference['explicit'] ? $layoutPreference['mode'] : null,
         ], static fn ($value) => $value !== null && $value !== '');
 
         return view('operations.vehicles.search', [
@@ -119,6 +119,7 @@ class VehicleSearchController
             'collectionLayoutMode' => $layoutPreference['mode'],
             'collectionLayoutExplicit' => $layoutPreference['explicit'],
             'collectionLayoutModule' => CollectionLayoutModule::Vehicles,
+            'uiPreferenceScope' => $layoutPreference['scope'] ?? UiPreferenceScope::forRequest($request),
         ]);
     }
 }

@@ -2,71 +2,57 @@
 
 namespace App\Ark\Runtime\Preferences;
 
+use App\Ark\Operations\Workboard\JobBoardLayout;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
 
 /**
- * Shared List/Cards preference resolver for record indexes.
+ * Collection indexes (Customers, Vehicles, Repair Orders) resolve through
+ * {@see UiLayoutPreference}. This class adapts module enums and layout types
+ * so controllers keep a stable return shape without a second preference store.
  *
- * Resolution: ?view= → module cookie → auto (List on desktop, Cards on phone/tablet in the UI).
- * Does not share Job Board's cookie; later preference storage can replace both.
- *
- * @return array{mode: string, layout: CollectionLayout|null, explicit: bool, module: CollectionLayoutModule}
+ * @return array{
+ *     mode: string,
+ *     layout: CollectionLayout|null,
+ *     explicit: bool,
+ *     module: CollectionLayoutModule,
+ *     scope: array{tenant: string, user: string}
+ * }
  */
 final class CollectionLayoutPreference
 {
-    public const MODE_AUTO = 'auto';
+    public const MODE_AUTO = UiLayoutPreference::MODE_AUTO;
 
     /**
-     * @return array{mode: string, layout: CollectionLayout|null, explicit: bool, module: CollectionLayoutModule}
+     * @return array{
+     *     mode: string,
+     *     layout: CollectionLayout|null,
+     *     explicit: bool,
+     *     module: CollectionLayoutModule,
+     *     scope: array{tenant: string, user: string}
+     * }
      */
     public static function resolve(Request $request, CollectionLayoutModule $module): array
     {
-        if ($request->filled('view')) {
-            $layout = CollectionLayout::parse((string) $request->string('view'));
-            self::queue($module, $layout);
-
-            return [
-                'mode' => $layout->value,
-                'layout' => $layout,
-                'explicit' => true,
-                'module' => $module,
-            ];
-        }
-
-        $cookie = $request->cookie($module->cookieName());
-        $fromCookie = is_string($cookie) ? CollectionLayout::tryParse($cookie) : null;
-
-        if ($fromCookie instanceof CollectionLayout) {
-            return [
-                'mode' => $fromCookie->value,
-                'layout' => $fromCookie,
-                'explicit' => true,
-                'module' => $module,
-            ];
-        }
+        $resolved = UiLayoutPreference::resolve($request, self::toUiModule($module));
+        $layout = $resolved['layout'] instanceof JobBoardLayout
+            ? CollectionLayout::tryParse($resolved['layout']->value)
+            : null;
 
         return [
-            'mode' => self::MODE_AUTO,
-            'layout' => null,
-            'explicit' => false,
+            'mode' => $resolved['mode'],
+            'layout' => $layout,
+            'explicit' => $resolved['explicit'],
             'module' => $module,
+            'scope' => $resolved['scope'],
         ];
     }
 
     public static function queue(CollectionLayoutModule $module, CollectionLayout $layout): void
     {
-        Cookie::queue(cookie(
-            $module->cookieName(),
-            $layout->value,
-            minutes: 60 * 24 * 365,
-            path: '/',
-            domain: EcosystemDisplayTheme::cookieDomain(),
-            secure: (bool) config('session.secure', false),
-            httpOnly: false,
-            raw: false,
-            sameSite: 'lax',
-        ));
+        UiLayoutPreference::queueLegacyCookie(
+            self::toUiModule($module),
+            JobBoardLayout::parse($layout->value),
+        );
     }
 
     /**
@@ -76,9 +62,19 @@ final class CollectionLayoutPreference
      */
     public static function cookieNames(): array
     {
-        return array_map(
-            static fn (CollectionLayoutModule $module): string => $module->cookieName(),
-            CollectionLayoutModule::cases(),
-        );
+        return array_values(array_filter([
+            UiLayoutModule::Customers->legacyCookieName(),
+            UiLayoutModule::Vehicles->legacyCookieName(),
+            UiLayoutModule::RepairOrders->legacyCookieName(),
+        ]));
+    }
+
+    public static function toUiModule(CollectionLayoutModule $module): UiLayoutModule
+    {
+        return match ($module) {
+            CollectionLayoutModule::Customers => UiLayoutModule::Customers,
+            CollectionLayoutModule::Vehicles => UiLayoutModule::Vehicles,
+            CollectionLayoutModule::RepairOrders => UiLayoutModule::RepairOrders,
+        };
     }
 }

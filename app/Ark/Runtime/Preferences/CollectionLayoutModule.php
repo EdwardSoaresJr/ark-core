@@ -4,7 +4,7 @@ namespace App\Ark\Runtime\Preferences;
 
 /**
  * Preference scope for shared collection layouts.
- * Cookie keys stay module-scoped until durable user+tenant storage lands.
+ * Legacy cookie names match {@see UiLayoutModule::legacyCookieName()}.
  */
 enum CollectionLayoutModule: string
 {
@@ -14,7 +14,11 @@ enum CollectionLayoutModule: string
 
     public function cookieName(): string
     {
-        return 'ark_collection_layout_'.$this->value;
+        return match ($this) {
+            self::Customers => (string) UiLayoutModule::Customers->legacyCookieName(),
+            self::Vehicles => (string) UiLayoutModule::Vehicles->legacyCookieName(),
+            self::RepairOrders => (string) UiLayoutModule::RepairOrders->legacyCookieName(),
+        };
     }
 
     public function label(): string
