@@ -43,7 +43,8 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
     $showTopbarCommsStrip = $commsChannelTabs !== [] && ! request()->routeIs('operations.communications.*');
     $workstationPresence = WorkstationPresence::resolve(request());
     $accountMenu = auth()->user() ? StaffNavigation::accountMenu(auth()->user(), $workstationPresence) : [];
-    // Tabler views still load app.css for the shell components that have not migrated. See docs/engineering/TABLER.md.
+    // Tabler views still load app.css while .ark-legacy islands remain (guide modal, worksheet, print).
+    // See docs/engineering/TABLER.md and docs/engineering/TABLER_LEGACY_ASSET_RETIREMENT.md.
     $usesTabler = $ui === 'tabler';
 @endphp
 <!DOCTYPE html>

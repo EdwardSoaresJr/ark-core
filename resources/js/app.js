@@ -174,6 +174,6 @@ initStaffPresenceHeartbeat();
 initWorkstationPresence();
 initPublicSurfaceTheme();
 initInlinePdfViewer();
-import('preline').then(() => {
-    window.HSStaticMethods?.autoInit();
-});
+// Preline is not loaded on staff pages. No Blade view mounts hs-* widgets;
+// the former dynamic import pulled ~370KB for HSStaticMethods.autoInit() with
+// no consumers. See docs/engineering/TABLER_LEGACY_ASSET_RETIREMENT.md.

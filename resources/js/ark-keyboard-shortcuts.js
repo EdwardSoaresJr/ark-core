@@ -22,7 +22,7 @@ function shouldIgnoreKeyboardShortcut(event) {
         return true;
     }
 
-    if (target.closest('[role="listbox"], [role="menu"], .hs-dropdown-open')) {
+    if (target.closest('[role="listbox"], [role="menu"], [aria-expanded="true"]')) {
         return true;
     }
 
