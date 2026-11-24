@@ -193,7 +193,7 @@ final class WorkboardCardGlanceProjection
         bool $waitingOnDecision,
         ?BalanceDueResult $balance,
         bool $hasDueRecommendationFollowUp,
-    ): string {
+    ): ?string {
         if ($card->countsAsOverduePickup) {
             return 'Call for pickup';
         }
@@ -220,13 +220,14 @@ final class WorkboardCardGlanceProjection
             return 'Present recommendation';
         }
 
-        if ($columnKey === 'work_in_progress' && (
+        if (
             $card->repairOrder->status->is(RepairOrderStatus::WaitingParts)
+            || $columnKey === 'parts'
             || (is_string($card->signalLabel) && (
                 str_contains($card->signalLabel, 'Waiting on Parts')
                 || str_contains($card->signalLabel, 'Waiting Parts')
             ))
-        )) {
+        ) {
             return 'Check parts';
         }
 
@@ -240,13 +241,10 @@ final class WorkboardCardGlanceProjection
             return 'Assign tech';
         }
 
+        // Prefer omission over generic column copy ("Review", "Work active", "Close or collect").
         return match ($columnKey) {
             'estimates' => $card->repairOrder->status->is(RepairOrderStatus::Draft) ? 'Diagnose' : 'Finish estimate',
-            'waiting_approval' => 'Follow up',
-            'parts' => 'Check parts',
-            'work_in_progress' => 'Work active',
-            'completed' => 'Close or collect',
-            default => 'Review',
+            default => null,
         };
     }
 

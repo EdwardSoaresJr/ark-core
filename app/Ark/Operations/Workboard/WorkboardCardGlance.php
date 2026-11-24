@@ -14,7 +14,7 @@ final readonly class WorkboardCardGlance
 
     public function __construct(
         public string $whyLabel,
-        public string $nextLabel,
+        public ?string $nextLabel,
         public ?string $moneyLabel,
         public ?string $moneyCaption,
         public string $ageLabel,

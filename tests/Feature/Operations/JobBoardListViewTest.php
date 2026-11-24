@@ -488,8 +488,12 @@ test('cards view keeps Watch without yellow edge while attention and critical ke
 
     for ($i = 0; $i < $watchCards->length; $i++) {
         $card = $watchCards->item($i);
-        expect($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " card-status-start ")]', $card)->length)->toBe(0)
-            ->and($xpath->query('.//*[@data-attention-tone="watch"][contains(@class,"text-secondary")]', $card)->length)->toBe(1);
+        expect($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " card-status-start ")]', $card)->length)->toBe(0);
+
+        $watchTone = $xpath->query('.//*[@data-attention-tone="watch"][contains(@class,"text-secondary")]', $card)->length;
+        $concreteNext = $xpath->query('.//*[@data-next-kind="action"]', $card)->length;
+        // Watch stays edge-less; band may show understated Watch or a concrete Next action.
+        expect($watchTone + $concreteNext)->toBeGreaterThan(0);
     }
 
     for ($i = 0; $i < $attentionCards->length; $i++) {
@@ -503,6 +507,37 @@ test('cards view keeps Watch without yellow edge while attention and critical ke
     }
 
     expect($watchCards->length + $attentionCards->length + $criticalCards->length)->toBeGreaterThan(0);
+});
+
+test('cards view uses hierarchical Tabler bands and shared card grid', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Card Hierarchy');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'cards']))
+        ->assertOk()
+        ->getContent();
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    $card = $xpath->query('//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]')->item(0);
+    expect($card)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('//*[@data-job-board-cards-grid][contains(@class,"ark-card-grid")]')->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-ro]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-card-total]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-concern]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-status]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-technician]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-attention]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-card-activity]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-card-clock]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-vehicle]', $card)->length)->toBe(1)
+        ->and($card->getAttribute('class'))->toContain('ark-job-board-card')
+        ->and($card->getAttribute('class'))->not->toContain('card-sm');
 });
 
 test('job board click contract keeps RO vehicle and customer destinations separate', function () {

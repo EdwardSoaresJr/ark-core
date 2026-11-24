@@ -9,7 +9,10 @@
         ? \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::chipTone($surface->chip->statusColor)
         : ($surface->chip->tone ?? 'move');
     $builderUrl = $card->href.'#builder';
-    $nextAction = $surface->nextMoveLabel ?? $surface->exceptionLabel ?? $statusLabel;
+    $nextPresentation = \App\Ark\Operations\Workboard\JobBoardCardNextPresentation::forSurface($surface);
+    $nextAction = in_array($nextPresentation['kind'], ['action', 'warning', 'watch'], true)
+        ? $nextPresentation['label']
+        : null;
     $moneyLabel = filled($row->moneyLabel) ? $row->moneyLabel : '$0';
     $isBalanceDue = $row->moneyCaption === 'due';
 @endphp
@@ -34,7 +37,7 @@
         <div class="fw-medium text-truncate mt-1" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</div>
         <div class="small text-secondary text-truncate" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</div>
         <div class="d-flex align-items-center gap-2 mt-2 small">
-            <span class="text-truncate">{{ $nextAction }}</span>
+            <span class="text-truncate{{ $nextAction === null ? ' text-secondary' : '' }}" data-next-kind="{{ $nextPresentation['kind'] }}">{{ $nextAction ?? '—' }}</span>
             <span class="ms-auto text-secondary text-nowrap">{{ $row->updatedLabel }}</span>
         </div>
     </a>

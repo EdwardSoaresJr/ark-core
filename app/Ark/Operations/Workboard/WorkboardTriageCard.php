@@ -117,7 +117,7 @@ final readonly class WorkboardTriageCard
                 str_contains($this->signalLabel, 'Customer Waiting') => 'Respond',
                 str_contains($this->signalLabel, 'Waiting on Parts'),
                 str_contains($this->signalLabel, 'Waiting Parts') => 'Check parts',
-                str_contains($this->signalLabel, 'Vehicle ID') => 'Confirm vehicle',
+                str_contains($this->signalLabel, 'Vehicle ID') => $this->vehicleIdentityNextMove(),
                 str_contains($this->signalLabel, 'Unassigned Tech'),
                 str_contains($this->signalLabel, 'Unassigned') => 'Assign tech',
                 str_contains($this->signalLabel, 'Overdue Pickup') => 'Call for pickup',
@@ -137,8 +137,24 @@ final readonly class WorkboardTriageCard
             return 'Respond';
         }
 
-        if ($this->countsAsNeedsAttention) {
-            return 'Review';
+        // Do not invent a generic "Review" from needs-attention pressure alone.
+        return null;
+    }
+
+    /**
+     * "Confirm vehicle" is only meaningful while identity is still being established —
+     * not after the RO is already in shop-floor or pickup states.
+     */
+    private function vehicleIdentityNextMove(): ?string
+    {
+        $status = $this->repairOrder->status;
+
+        if (
+            $status->is(RepairOrderStatus::Draft)
+            || $status->is(RepairOrderStatus::Estimate)
+            || $status->is(RepairOrderStatus::WaitingApproval)
+        ) {
+            return 'Confirm vehicle';
         }
 
         return null;
