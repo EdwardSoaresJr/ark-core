@@ -1,51 +1,48 @@
 # Issue #251 / PR #252 — table-first Job Board acceptance
 
-Stop for Carlos/owner visual review. No merge. No deploy. No SaaS pin.
+Stop for Carlos/owner visual inspection of the live `/app` Job Board. No merge. No deploy. No SaaS pin.
+
+Direction from review [#7120220723](https://github.com/EdwardSoaresJr/ark-core/pull/252#issuecomment-7120220723): code direction accepted; **visual acceptance not yet granted**.
 
 ## Commit
 
 Recorded on push (see PR comment for exact SHA).
 
-## Owner direction (comment 7120053252)
+## Layout verification (local browser)
 
-Kanban columns and Board/List toggle are **removed** from the Job Board. One polished table-first board with horizontal shop lane tabs is the primary UI. Shared home-card/triage components remain for other surfaces.
-
-## Requirements addressed
-
-| # | Requirement | Resolution |
-| --- | --- | --- |
-| 1 | Table-first primary Job Board | `/app` always renders the dense RO table; no Kanban columns, no Board/List toggle. |
-| 2 | Horizontal workflow tabs | Shop lane tabs (All + configured lanes) with queue-total badges; server `lane` filter. |
-| 3 | Density / columns | RO #, Customer, Vehicle, Concern/Job, Status, Tech, Promised, Parts, Total, Attention, Activity, Updated, open. |
-| 4 | Preserve workflows/actions | See `ACTION_PRESERVATION.md`. Row links + Check In + RO workspace cover former card affordances. |
-| 5 | Legacy view/cookie | `?view=board`, `?view=list`, cookie `ark_job_board_layout` normalize to the unified table. |
-| 6 | Bounded performance | Page size 50; page-only projection; cheap lane totals. |
-| 7 | Honest counts | Badge = queue totals; summary = `Showing X–Y of Z [matching] · Queue total N`. |
-| 8 | Mobile | Compact stacked rows with RO/vehicle/status/next action + open affordance. |
-| 9 | Evidence | Full-page desktop/mobile screenshots + lane filter + RO drill-through + `PERF_LIST.json`. |
-
-## Screenshots
-
-| Viewport / flow | Path |
+| Viewport | Result |
 | --- | --- |
-| Unified Job Board · desktop full page | `screenshots/list-desktop.png` |
-| Lane filtered (Waiting Approval) | `screenshots/list-lane-filtered.png` |
-| RO drill-through | `screenshots/list-drillthrough.png` |
-| Unified Job Board · mobile ~390px full page | `screenshots/list-mobile.png` |
+| **1366×900** | All 13 columns present. Idle activity marks collapse to `—` (no six-icon idle row). Table width ≈ wrap +13px; `.table-responsive` absorbs residual. Sticky chrome stays `position: sticky`. Screenshot: `screenshots/list-desktop-1366.png` |
+| **1920×1080** | No horizontal overflow (`tableW === wrapW`). Phone numbers visible under customer. Screenshot: `screenshots/list-desktop-1920.png` |
+| **390×844** | Desktop table hidden; compact mobile rows with RO / total / status / vehicle / customer / next action / updated. Screenshot: `screenshots/list-mobile-390.png` |
 
-## Performance (synthetic)
+## Workflow preservation
 
-See `PERF_LIST.json` (120 waiting-approval ROs, list page 1):
+Card activity marks were **never clickable** (informational tooltips only). After row drill-through to RO #85:
 
-- rendered rows: 50 (`PAGE_SIZE`)
-- filtered total: 120
-- query count: ~38
-- elapsed: ~121 ms (test env)
+- Message link present
+- Customer phone / email links present
+- Communications tab present
+- Inspection / Add Photo present
 
-## Focused tests
+Matrix: `ACTION_PRESERVATION.md`. Drill-through screenshot: `screenshots/list-drillthrough.png`.
 
-`tests/Feature/Operations/JobBoardListViewTest.php` + Job Board cases in `WorkboardTriageTest.php` — **27 passing**.
+## Scale note (honest)
+
+List still hydrates eligible ROs then projects page 50. `PERF_LIST.json` (120 RO / ~38 queries / ~121 ms) is synthetic evidence, **not** a high-volume DB pagination guarantee. Keep a separate scale gate before broad rollout.
+
+## CI (head SHA — recorded on push)
+
+| Workflow | Result |
+| --- | --- |
+| **Tests** | success (lint, security, focused, targeted, communications-boundary) |
+| **Secret scan** | success |
+| **Regression** | skipped (expected; not a green regression suite) |
+
+## Focused local tests
+
+`JobBoardListViewTest` + Job Board cases in `WorkboardTriageTest` — **27 passing**.
 
 ## Still out of scope
 
-No merge, staging/production deploy, SaaS pin, ARK Sites, booking, billing, or customer production data changes. PR stays **draft**.
+No merge, staging/production deploy, SaaS pin, ARK Sites, or production data changes. PR stays **draft**.

@@ -58,9 +58,32 @@
 }
 
 .ark-job-board-table {
-    --tblr-table-cell-padding-y: 0.4rem;
-    --tblr-table-cell-padding-x: 0.65rem;
-    font-size: 0.875rem;
+    --tblr-table-cell-padding-y: 0.35rem;
+    --tblr-table-cell-padding-x: 0.4rem;
+    width: 100%;
+    font-size: 0.8125rem;
+}
+
+.ark-job-board-table .ark-job-board-col-customer {
+    max-width: 8.5rem;
+}
+
+.ark-job-board-table .ark-job-board-col-vehicle {
+    max-width: 8.5rem;
+}
+
+.ark-job-board-table .ark-job-board-col-concern {
+    max-width: 9rem;
+}
+
+.ark-job-board-table .ark-job-board-activity .avatar-xs {
+    --tblr-avatar-size: 1rem;
+}
+
+@media (max-width: 1399.98px) {
+    .ark-job-board-table {
+        --tblr-table-cell-padding-x: 0.3rem;
+    }
 }
 
 .ark-job-board-table thead th {

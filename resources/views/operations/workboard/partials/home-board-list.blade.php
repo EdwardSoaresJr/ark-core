@@ -46,7 +46,7 @@
                                     <a href="{{ $jobBoardListPage->sortUrl($sortKey) }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="{{ $sortKey }}">{{ $label }}</a>
                                 </th>
                             @endforeach
-                            <th scope="col">Concern / Job</th>
+                            <th scope="col" class="ark-job-board-col-concern">Concern / Job</th>
                             <th scope="col" @if ($jobBoardListPage->ariaSort('status')) aria-sort="{{ $jobBoardListPage->ariaSort('status') }}" @endif>
                                 <a href="{{ $jobBoardListPage->sortUrl('status') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="status">Status</a>
                             </th>

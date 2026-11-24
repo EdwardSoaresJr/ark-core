@@ -46,7 +46,7 @@
     <td>
         <a href="{{ $builderUrl }}" class="fw-bold text-reset text-nowrap" data-job-board-row-ro data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</a>
     </td>
-    <td style="max-width: 11rem;">
+    <td class="ark-job-board-col-customer">
         <div class="text-truncate">
             @if ($surface->customerHubUrl)
                 <a href="{{ $surface->customerHubUrl }}" class="text-reset" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
@@ -55,13 +55,13 @@
             @endif
         </div>
         @if ($customerPhone)
-            <div class="small text-secondary text-truncate">{{ $customerPhone }}</div>
+            <div class="small text-secondary text-truncate d-none d-xxl-block">{{ $customerPhone }}</div>
         @endif
     </td>
-    <td class="text-truncate" style="max-width: 11rem;">
+    <td class="text-truncate ark-job-board-col-vehicle">
         <a href="{{ $builderUrl }}" class="text-reset" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
     </td>
-    <td class="text-truncate text-secondary" style="max-width: 12rem;" title="{{ $surface->concernLabel ?? $card->concernHeadline }}">
+    <td class="text-truncate text-secondary ark-job-board-col-concern" title="{{ $surface->concernLabel ?? $card->concernHeadline }}">
         {{ $surface->concernLabel ?? ($card->concernHeadline !== 'No concern recorded' ? $card->concernHeadline : '—') }}
     </td>
     <td>
@@ -98,28 +98,38 @@
             <span class="text-secondary">—</span>
         @endif
     </td>
-    <td data-job-board-row-activity data-job-card-activity>
-        <div class="d-flex gap-1" role="group" aria-label="Activity">
-            @foreach ($row->activityMarks as $mark)
-                <span
-                    class="avatar avatar-xs rounded {{ $markClasses($mark->state->value) }}"
-                    data-job-card-mark="{{ $mark->key }}"
-                    data-job-card-mark-state="{{ $mark->state->value }}"
-                    role="img"
-                    tabindex="-1"
-                    title="{{ $mark->tooltip }}"
-                    aria-label="{{ $mark->tooltip }}"
-                    data-bs-toggle="tooltip"
-                    data-bs-trigger="hover focus"
-                >
-                    @include('operations.workboard.partials.activity-mark-icon', [
-                        'key' => $mark->key,
-                        'filled' => $mark->active,
-                        'badge' => $mark->badge,
-                    ])
-                </span>
-            @endforeach
-        </div>
+    <td class="text-nowrap" data-job-board-row-activity data-job-card-activity>
+        @php
+            $activeMarks = array_values(array_filter(
+                $row->activityMarks,
+                static fn ($mark) => $mark->active,
+            ));
+        @endphp
+        @if ($activeMarks === [])
+            <span class="text-secondary">—</span>
+        @else
+            <div class="d-inline-flex gap-1 ark-job-board-activity" role="group" aria-label="Activity">
+                @foreach ($activeMarks as $mark)
+                    <span
+                        class="avatar avatar-xs rounded {{ $markClasses($mark->state->value) }}"
+                        data-job-card-mark="{{ $mark->key }}"
+                        data-job-card-mark-state="{{ $mark->state->value }}"
+                        role="img"
+                        tabindex="-1"
+                        title="{{ $mark->tooltip }}"
+                        aria-label="{{ $mark->tooltip }}"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="hover focus"
+                    >
+                        @include('operations.workboard.partials.activity-mark-icon', [
+                            'key' => $mark->key,
+                            'filled' => true,
+                            'badge' => $mark->badge,
+                        ])
+                    </span>
+                @endforeach
+            </div>
+        @endif
     </td>
     <td class="text-secondary text-nowrap small" data-job-board-row-updated data-job-card-clock>{{ $row->updatedLabel }}</td>
     <td>

@@ -77,7 +77,7 @@ test('job board table renders dense columns including total and activity marks',
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$closed->repair_order_id.'"]', $board)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-sort="ro"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-row-total]', $board)->length)->toBe(2)
-        ->and($xpath->query('.//*[@data-job-board-row-activity]//*[@data-job-card-mark]', $board)->length)->toBeGreaterThanOrEqual(2)
+        ->and($xpath->query('.//*[@data-job-board-row-activity]', $board)->length)->toBe(2)
         ->and($html)->toContain('Brake noise diagnosis')
         ->and($html)->toContain('Attention')
         ->and($html)->toContain('data-job-board-list-mobile');
