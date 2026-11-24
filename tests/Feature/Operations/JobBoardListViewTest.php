@@ -50,7 +50,7 @@ test('view=list and view=cards persist cookie and keep shared board chrome', fun
     $listHtml = $this->actingAs($advisor)
         ->get(route('operations.index', ['view' => 'list']))
         ->assertOk()
-        ->assertCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::List->value)
+        ->assertPlainCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::List->value)
         ->getContent();
 
     expect($listHtml)->toContain('data-job-board-layout="list"')
@@ -62,7 +62,7 @@ test('view=list and view=cards persist cookie and keep shared board chrome', fun
     $cardsHtml = $this->actingAs($advisor)
         ->get(route('operations.index', ['view' => 'cards']))
         ->assertOk()
-        ->assertCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
+        ->assertPlainCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
         ->getContent();
 
     $document = new DOMDocument;
@@ -85,7 +85,7 @@ test('legacy view=board maps to cards preference', function () {
     $this->actingAs($advisor)
         ->get(route('operations.index', ['view' => 'board']))
         ->assertOk()
-        ->assertCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
+        ->assertPlainCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
         ->assertSee('data-job-board-layout="cards"', false);
 });
 
@@ -96,7 +96,7 @@ test('job board cookie preference selects cards without a user settings column',
     expect(\Illuminate\Support\Facades\Schema::hasColumn('users', 'job_board_layout'))->toBeFalse();
 
     $this->actingAs($advisor)
-        ->withCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
+        ->withUnencryptedCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
         ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('data-job-board-layout="cards"', false)
@@ -466,6 +466,43 @@ test('job board watch attention is neutral while actionable attention stays prom
     }
 
     expect($watch->length + $attention->length + $critical->length)->toBeGreaterThan(0);
+});
+
+test('cards view keeps Watch without yellow edge while attention and critical keep accents', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Card Watch Tone');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'cards']))
+        ->assertOk()
+        ->getContent();
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    $watchCards = $xpath->query('//*[@data-job-board-card][@data-workboard-attention="watch"]');
+    $attentionCards = $xpath->query('//*[@data-job-board-card][@data-workboard-attention="attention"]');
+    $criticalCards = $xpath->query('//*[@data-job-board-card][@data-workboard-attention="critical"]');
+
+    for ($i = 0; $i < $watchCards->length; $i++) {
+        $card = $watchCards->item($i);
+        expect($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " card-status-start ")]', $card)->length)->toBe(0)
+            ->and($xpath->query('.//*[@data-attention-tone="watch"][contains(@class,"text-secondary")]', $card)->length)->toBe(1);
+    }
+
+    for ($i = 0; $i < $attentionCards->length; $i++) {
+        $card = $attentionCards->item($i);
+        expect($xpath->query('.//*[contains(@class,"card-status-start") and contains(@class,"bg-yellow")]', $card)->length)->toBe(1);
+    }
+
+    for ($i = 0; $i < $criticalCards->length; $i++) {
+        $card = $criticalCards->item($i);
+        expect($xpath->query('.//*[contains(@class,"card-status-start") and contains(@class,"bg-red")]', $card)->length)->toBe(1);
+    }
+
+    expect($watchCards->length + $attentionCards->length + $criticalCards->length)->toBeGreaterThan(0);
 });
 
 test('job board click contract keeps RO vehicle and customer destinations separate', function () {

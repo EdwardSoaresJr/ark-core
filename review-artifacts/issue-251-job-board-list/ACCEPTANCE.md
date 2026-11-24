@@ -1,48 +1,80 @@
-# Job Board — List | Cards view switcher
+# Job Board List | Cards — final acceptance (PR #253)
 
-**PR:** _(new focused Core PR; #252 already merged)_  
-**Supersedes Job Board tip:** `38c8d9c9dcb16aa795e0795f9af5ead505145f7e`  
-**Base:** `main` (includes merged #252)
+**PR:** [#253](https://github.com/EdwardSoaresJr/ark-core/pull/253) (draft until authorized)  
+**SHA:** _(recorded on push)_  
+**Supersedes:** `38c8d9c9` (#252 merged)
 
-**Stop state:** Implement + CI + screenshots done. No merge without integration-owner authorization. No deploy. No SaaS Core pin change. No Sites changes.
+No merge / deploy / SaaS pin / Sites / migrations / production data from this session.
 
 ---
 
-## What landed
+## Preference scope (browser-level)
 
-| Area | Behavior |
+| Item | Finding |
 | --- | --- |
-| Selector | Compact Tabler `nav-segmented` **List \| Cards** in the Job Board filter toolbar |
-| Default | `auto`: List on desktop (md+), Cards on mobile until the user chooses |
-| Persistence | Cookie `ark_job_board_layout` (1 year). No migration. Shop-default storage is a documented follow-up |
-| Data | List and Cards render the **same** `JobBoardListPage` / `JobBoardListRow` result set |
-| Cards | Compact cards with RO #, customer, vehicle, concern, status, tech, total, attention, activity deep links, updated |
-| Switch | Client-side toggle (no full reload); `?view=list\|cards` also works and sets the cookie |
-| Legacy | `?view=board` maps to Cards |
+| Storage | Cookie `ark_job_board_layout` only — **not** an account/user-column preference |
+| Path | `/` |
+| Domain | Host-only when `ARK_ECOSYSTEM_COOKIE_DOMAIN` is empty (matches other ecosystem cookies) |
+| Encryption | Cookie is on the EncryptCookies **except** list so the client switcher can write a plain value that the server can read |
+| Query | `?view=list\|cards` wins and queues the cookie; legacy `?view=board` → cards |
+| Switcher | Updates cookie **and** `history.replaceState` view param so reload keeps the choice without a full navigation |
+| Shop default | Follow-up (not in this PR) |
+| Other surfaces | Cookie name is Job Board–specific; no effect on schedule/estimate preferences |
+
+---
+
+## Switching / filters (Playwright)
+
+| Check | Result |
+| --- | --- |
+| List → Cards without page reload | Yes (`navigationsDuringSwitch: 0`) |
+| Cards → List without page reload | Yes |
+| Lane preserved | Yes (`waiting_approval`) |
+| Search preserved | Yes (`q=SYN`) |
+| Same RO ids both layouts | Yes |
+| Activity / RO / customer deep links | Preserved (`#builder`, customer hub) |
+| Reload remembers Cards | Yes (after URL+cookie sync fix) |
+
+Evidence: `SWITCHER_ACCEPTANCE_EVIDENCE.json`
+
+---
+
+## Mobile @ 390
+
+| Check | Result |
+| --- | --- |
+| Auto default | Cards (`layout=auto`, `effective=cards`) |
+| Explicit List | Usable mobile rows; desktop table `display:none`; `scrollWidth=390` |
+| Switch back to Cards | Works |
+
+---
+
+## Watch on Cards
+
+| State | Presentation |
+| --- | --- |
+| Watch | Muted text; **no** yellow `card-status-start` |
+| Attention | Yellow edge accent |
+| Critical | Red edge accent |
+
+Classifier unchanged.
 
 ---
 
 ## Screenshots
 
-| File | Focus |
-| --- | --- |
-| `screenshots/switcher-list-1366.png` | List @ 1366 |
-| `screenshots/switcher-cards-1366.png` | Cards @ 1366 |
-| `screenshots/switcher-cards-1440.png` | Cards @ 1440 |
-| `screenshots/switcher-cards-1920.png` | Cards @ 1920 |
-| `screenshots/switcher-cards-390.png` | Cards @ 390 |
-| `screenshots/switcher-list-390.png` | Explicit List on mobile |
+| File |
+| --- |
+| `screenshots/switcher-list-1366.png` |
+| `screenshots/switcher-cards-1366.png` |
+| `screenshots/switcher-cards-1440.png` |
+| `screenshots/switcher-cards-1920.png` |
+| `screenshots/switcher-cards-390.png` |
+| `screenshots/switcher-list-390.png` |
+| `screenshots/switcher-cards-dense-attention-1366.png` |
 
 ---
 
-## Follow-ups (not in this PR)
+## Remaining blockers
 
-1. Shop-default Job Board layout (requires settings/storage decision).
-2. Optional per-user DB column if cookie/device sync is insufficient.
-3. Appointment activity deep link (still tooltip-only).
-
----
-
-## Integration note
-
-Previous Job Board SHA `38c8d9c9` is superseded by this PR tip once accepted. Integration owner should pin the new Core SHA for the combined Sites + Job Board release — do **not** change the SaaS pin from this session.
+None for merge authorization from this acceptance pass. Integration owner still owns staging pin + combined Sites release cutover.

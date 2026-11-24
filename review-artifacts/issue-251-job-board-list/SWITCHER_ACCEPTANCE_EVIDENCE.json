@@ -1,0 +1,141 @@
+{
+  "switching": {
+    "listToCards": {
+      "navigationsDuringSwitch": 0,
+      "sameFilteredTotal": true,
+      "sameLane": true,
+      "sameQuery": true,
+      "sameTech": true,
+      "sameRoIds": true,
+      "listHidden": true,
+      "cardsShown": true,
+      "cookieSet": true,
+      "layout": "cards",
+      "effective": "cards",
+      "roIds": [
+        "90",
+        "91"
+      ],
+      "deepLinks": {
+        "estimate": "https://ark-core.test/app/repair-orders/90#builder",
+        "customer": "https://ark-core.test/app/customers/85",
+        "ro": "https://ark-core.test/app/repair-orders/90#builder"
+      }
+    },
+    "cardsToList": {
+      "navigationsDuringSwitch": 0,
+      "sameFilteredTotal": true,
+      "sameLane": true,
+      "sameQuery": true,
+      "sameRoIds": true,
+      "listShown": true,
+      "cardsHidden": true,
+      "cookieSet": true
+    }
+  },
+  "mobile": {
+    "autoDefault": {
+      "layout": "auto",
+      "effective": "cards",
+      "explicit": "0",
+      "listVisible": false,
+      "cardsVisible": true,
+      "scrollWidth": 390
+    },
+    "explicitList": {
+      "effective": "list",
+      "listVisible": true,
+      "cardsVisible": false,
+      "mobileRows": 21,
+      "desktopTableDisplay": "none",
+      "scrollWidth": 390,
+      "readableSample": "RO #89 $0 Building Estimate 2016 Chevrolet Malibu SYN Quiet None Confirm vehicle 1m ago"
+    },
+    "switchBackToCards": {
+      "effective": "cards",
+      "cardsVisible": true
+    }
+  },
+  "preference": {
+    "reloadRemembersCards": {
+      "layout": "cards",
+      "effective": "cards",
+      "cookie": "ark_job_board_layout=cards",
+      "cardsVisible": true,
+      "filtersKept": true,
+      "href": "https://ark-core.test/app?view=cards&lane=waiting_approval&q=SYN"
+    },
+    "queryOverrides": {
+      "layout": "list",
+      "cookie": "ark_job_board_layout=eyJpdiI6IkcvOGJ1SUZNb2pNSHVQSHRqM0U5SUE9PSIsInZhbHVlIjoiUmk2RUdyYW42Mm16a1pOVVcwZXRBeVlrWVJNVEhHMmUrSFRLUjlJV0hsUG8vM3lYV0dPbU9jOG1ZWkltd2FkNCIsIm1hYyI6IjZhZGY3ZjBjNDc5Y2FlZGI5ZmI2NmRlNGE0YWIwNzg3MGQ3OGRjMmRmYjRkODMzYzM3Mjg1ZGM2OGFhZjgyZGYiLCJ0YWciOiIifQ%3D%3D",
+      "listVisible": true
+    },
+    "legacyBoardMapsToCards": {
+      "layout": "cards",
+      "cookie": "ark_job_board_layout=eyJpdiI6IitQVEtnZWMyWUpyVzUzS3B0cHRFZkE9PSIsInZhbHVlIjoiUnBPZ3l0R0NRWGE0TUdESXdzMERsQXluaVVrYTVvMU50OWpzVG1tZVZTVlF6UjhhWEU1MTk5UGVGRTZWWWpBZSIsIm1hYyI6IjQ3M2RjN2QxNzg2NDJlMzcwZDhkMzI4YzI4YzI0MTM5MjNiNWM5ZTk0ZmY2ZWU3NDEyNGI1MTQwMzZjZDZkN2IiLCJ0YWciOiIifQ%3D%3D",
+      "cardsVisible": true
+    },
+    "cookieScope": {
+      "present": true,
+      "value": "ark_job_board_layout=cards (plain; EncryptCookies except)",
+      "cookieDomainAttr": "",
+      "accountLevel": false,
+      "note": "Browser-level cookie preference (path=/). Not account/user-column storage. Excepted from cookie encryption so client writes are readable server-side."
+    }
+  },
+  "watch": {
+    "watchCount": 1,
+    "attentionCount": 1,
+    "criticalCount": 0,
+    "watchHasYellowStrip": false,
+    "attentionAllYellow": true,
+    "criticalAllRed": true
+  },
+  "screenshots": [
+    {
+      "name": "switcher-list-1366.png",
+      "layout": "list",
+      "effective": "list",
+      "listVisible": true,
+      "cardsVisible": false,
+      "scrollWidth": 1366,
+      "innerWidth": 1366
+    },
+    {
+      "name": "switcher-cards-1366.png",
+      "layout": "cards",
+      "effective": "cards",
+      "listVisible": false,
+      "cardsVisible": true,
+      "scrollWidth": 1366,
+      "innerWidth": 1366
+    },
+    {
+      "name": "switcher-cards-1440.png",
+      "layout": "cards",
+      "effective": "cards",
+      "listVisible": false,
+      "cardsVisible": true,
+      "scrollWidth": 1440,
+      "innerWidth": 1440
+    },
+    {
+      "name": "switcher-cards-1920.png",
+      "layout": "cards",
+      "effective": "cards",
+      "listVisible": false,
+      "cardsVisible": true,
+      "scrollWidth": 1920,
+      "innerWidth": 1920
+    },
+    {
+      "name": "switcher-cards-dense-attention-1366.png",
+      "layout": "cards",
+      "effective": "cards",
+      "listVisible": false,
+      "cardsVisible": true,
+      "scrollWidth": 1366,
+      "innerWidth": 1366
+    }
+  ]
+}

@@ -24,8 +24,9 @@
         default => $surface->exceptionLabel,
     };
     $activityStrip = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::forList($row->activityMarks);
+    // Watch stays visually neutral like List (muted text only). Accent strip is for actionable states.
     $attentionColor = match ($surface->attention) {
-        'watch', 'attention' => 'yellow',
+        'attention' => 'yellow',
         'critical' => 'red',
         default => null,
     };

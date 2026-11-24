@@ -71,11 +71,22 @@ function syncToggle(board, layout) {
     });
 }
 
+function syncUrlView(layout) {
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('view', layout);
+        window.history.replaceState(window.history.state, '', url.toString());
+    } catch (error) {
+        // History API unavailable; cookie + hidden input still persist the choice.
+    }
+}
+
 function applyLayout(board, layout, { persist = false, mode = null } = {}) {
     if (persist) {
         board.setAttribute('data-job-board-layout', layout);
         board.setAttribute('data-job-board-layout-explicit', '1');
         writeCookie(COOKIE_NAME, layout, board.getAttribute('data-job-board-cookie-domain') || undefined);
+        syncUrlView(layout);
     } else if (mode) {
         board.setAttribute('data-job-board-layout', mode);
     }
