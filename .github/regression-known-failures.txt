@@ -134,9 +134,7 @@ tests/Feature/Operations/RepairOrderConversationSendProjectionTest.php::estimate
 tests/Feature/Operations/RepairOrderConversationSendProjectionTest.php::payment send projection allows email via platform without core postmark
 tests/Feature/Operations/RepairOrderConversationSendProjectionTest.php::payment send projection explains missing issued invoice
 tests/Feature/Operations/RepairOrderLifecycleQueueTest.php::assigned work can move into progress and snapshot execution posture
-tests/Feature/Operations/RepairOrderLifecycleQueueTest.php::operations home survives dense active queue without full estimate graph dependency
 tests/Feature/Operations/RepairOrderLifecycleQueueTest.php::ready pickup requires payment before terminal closeout
-tests/Feature/Operations/RepairOrderLifecycleQueueTest.php::repair order index searches retrieval fields and paginates results
 tests/Feature/Operations/RepairOrderLifecycleQueueTest.php::solo owner shop without advisor staff can start work without technician assignment
 tests/Feature/Operations/RepairOrderLifecycleQueueTest.php::technician assignment cannot be cleared while work is in progress
 tests/Feature/Operations/RepairOrderLifecycleQueueTest.php::technician assignment is lightweight server-owned execution context

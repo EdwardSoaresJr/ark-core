@@ -51,7 +51,7 @@ test('a repair order card links the order, vehicle, and customer with its status
         ->assertSee('Index Owner')
         ->assertSee('Grinding noise when braking')
         ->assertSee($repairOrder->statusDisplayLabel())
-        ->assertSee('1 total');
+        ->assertSee('Showing 1–1 of 1', false);
 });
 
 test('queue drill-downs keep their hidden filters and an empty result offers a way back', function (): void {
