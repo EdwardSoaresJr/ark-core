@@ -47,20 +47,65 @@
 }
 
 /*
- * Job Board list (DataTables-style). Dense table on md+; mobile uses stacked cards.
- * Header buttons inherit table header weight without looking like primary actions.
+ * Job Board table-first layout. Dense DataTables-style rows; mobile stacked cards.
  */
 [data-job-board] [x-cloak] {
     display: none !important;
 }
 
+.ark-job-board-list .card {
+    border-radius: var(--tblr-border-radius);
+}
+
+.ark-job-board-table {
+    --tblr-table-cell-padding-y: 0.4rem;
+    --tblr-table-cell-padding-x: 0.65rem;
+    font-size: 0.875rem;
+}
+
+.ark-job-board-table thead th {
+    white-space: nowrap;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--tblr-secondary);
+    border-bottom-width: 1px;
+}
+
 .ark-job-board-table thead .btn {
     font-weight: inherit;
     color: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: inherit;
+}
+
+.ark-job-board-table tbody tr:hover {
+    background: var(--tblr-bg-surface-secondary);
+}
+
+.ark-job-board-table .avatar-xs {
+    --tblr-avatar-size: 1.1rem;
+}
+
+[data-job-board-lane-tabs].nav-tabs {
+    border-bottom: 1px solid var(--tblr-border-color);
 }
 
 [data-job-board-lane-tabs] .nav-link {
     cursor: pointer;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: var(--tblr-secondary);
+    margin-bottom: -1px;
+}
+
+[data-job-board-lane-tabs] .nav-link.active {
+    color: var(--tblr-body-color);
+    background: transparent;
+    border-bottom-color: var(--tblr-primary);
+    font-weight: var(--tblr-font-weight-medium, 500);
 }
 
 [data-job-board-lane-tabs] .status-dot {

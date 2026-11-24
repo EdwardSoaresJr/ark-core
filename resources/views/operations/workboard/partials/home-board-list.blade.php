@@ -1,10 +1,10 @@
 @php
     /** @var list<\App\Ark\Operations\Workboard\JobBoardListRow> $jobBoardListRows */
     /** @var \App\Ark\Operations\Workboard\JobBoardListPage $jobBoardListPage */
-    $clearUrl = route('operations.index', ['view' => 'list']);
+    $clearUrl = route('operations.index');
 @endphp
 
-<div data-job-board-list>
+<div data-job-board-list class="ark-job-board-list">
     <div class="d-flex flex-wrap align-items-center gap-2 mb-2" data-job-board-list-summary>
         <p class="mb-0 text-secondary small" data-job-board-list-range>
             @if ($jobBoardListPage->filteredTotal === 0)
@@ -32,7 +32,6 @@
             @endif
         </x-tabler.empty-state>
     @else
-        {{-- Dense desktop/tablet table --}}
         <div class="card d-none d-md-block" data-job-board-list-desktop>
             <div class="table-responsive">
                 <table class="table table-vcenter table-hover card-table table-sm mb-0 ark-job-board-table">
@@ -51,12 +50,14 @@
                             <th scope="col" @if ($jobBoardListPage->ariaSort('status')) aria-sort="{{ $jobBoardListPage->ariaSort('status') }}" @endif>
                                 <a href="{{ $jobBoardListPage->sortUrl('status') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="status">Status</a>
                             </th>
-                            <th scope="col">Technician</th>
+                            <th scope="col">Tech</th>
                             <th scope="col">Promised</th>
                             <th scope="col">Parts</th>
+                            <th scope="col" class="text-end">Total</th>
                             <th scope="col">
-                                <span class="btn btn-ghost-secondary btn-sm px-1 disabled" aria-disabled="true" title="ARK attention signal, not a user-entered priority" data-job-board-sort="attention">Attention</span>
+                                <span title="ARK attention signal, not a user-entered priority" data-job-board-sort="attention">Attention</span>
                             </th>
+                            <th scope="col">Activity</th>
                             <th scope="col" @if ($jobBoardListPage->ariaSort('updated')) aria-sort="{{ $jobBoardListPage->ariaSort('updated') }}" @endif>
                                 <a href="{{ $jobBoardListPage->sortUrl('updated') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="updated">Updated</a>
                             </th>
@@ -72,7 +73,6 @@
             </div>
         </div>
 
-        {{-- Narrow mobile list --}}
         <div class="d-md-none d-flex flex-column gap-2" data-job-board-list-mobile>
             @foreach ($jobBoardListRows as $row)
                 @include('operations.workboard.partials.home-board-list-mobile-row', ['row' => $row])

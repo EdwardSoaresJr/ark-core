@@ -10,24 +10,29 @@
         : ($surface->chip->tone ?? 'move');
     $builderUrl = $card->href.'#builder';
     $nextAction = $surface->nextMoveLabel ?? $surface->exceptionLabel ?? $statusLabel;
+    $moneyLabel = filled($row->moneyLabel) ? $row->moneyLabel : '$0';
+    $isBalanceDue = $row->moneyCaption === 'due';
 @endphp
 
 <article
     class="card card-sm"
     data-job-board-row
+    data-job-card
     data-job-board-mobile-for="{{ $repairOrder->repair_order_id }}"
     data-ro-id="{{ $repairOrder->repair_order_id }}"
     data-home-search="{{ $row->searchHaystack }}"
     data-home-tech-id="{{ $row->technicianId ?? '' }}"
     data-home-lane-key="{{ $row->laneKey }}"
+    data-workboard-attention="{{ $surface->attention }}"
 >
-    <a href="{{ $builderUrl }}" class="card-body p-2 text-reset text-decoration-none">
+    <a href="{{ $builderUrl }}" class="card-body py-2 px-3 text-reset text-decoration-none">
         <div class="d-flex align-items-baseline gap-2">
-            <span class="fw-bold" data-job-board-row-ro>RO #{{ $repairOrder->repair_order_id }}</span>
-            <x-tabler.status-badge :tone="$statusTone" class="ms-auto">{{ $statusLabel }}</x-tabler.status-badge>
+            <span class="fw-bold" data-job-board-row-ro data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</span>
+            <span @class(['ms-auto fw-bold ark-money text-nowrap small', 'text-danger' => $isBalanceDue]) data-job-card-total>{{ $moneyLabel }}</span>
+            <x-tabler.status-badge :tone="$statusTone">{{ $statusLabel }}</x-tabler.status-badge>
         </div>
-        <div class="fw-medium text-truncate mt-1" data-job-board-row-vehicle>{{ $card->vehicleLabel }}</div>
-        <div class="small text-secondary text-truncate" data-job-board-row-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</div>
+        <div class="fw-medium text-truncate mt-1" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</div>
+        <div class="small text-secondary text-truncate" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</div>
         <div class="d-flex align-items-center gap-2 mt-2 small">
             <span class="text-truncate">{{ $nextAction }}</span>
             <span class="ms-auto text-secondary text-nowrap">{{ $row->updatedLabel }}</span>

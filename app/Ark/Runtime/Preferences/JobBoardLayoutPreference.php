@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 
 /**
- * Job Board Board/List layout. Cookie only — Board stays the default until product
- * acceptance promotes List. Query ?view=list|board wins for the request and refreshes the cookie.
+ * Legacy Board/List cookie. The Job Board is table-first; any view=board|list
+ * or cookie value is normalized to list so bookmarks and sessions keep working.
  */
 final class JobBoardLayoutPreference
 {
@@ -17,22 +17,17 @@ final class JobBoardLayoutPreference
     public static function resolve(Request $request): JobBoardLayout
     {
         if ($request->filled('view')) {
-            $layout = JobBoardLayout::parse((string) $request->string('view'));
-            self::queue($layout);
-
-            return $layout;
+            self::queue(JobBoardLayout::List);
         }
 
-        $cookie = $request->cookie(self::COOKIE_NAME);
-
-        return JobBoardLayout::parse(is_string($cookie) ? $cookie : null);
+        return JobBoardLayout::List;
     }
 
     public static function queue(JobBoardLayout $layout): void
     {
         Cookie::queue(cookie(
             self::COOKIE_NAME,
-            $layout->value,
+            JobBoardLayout::List->value,
             minutes: 60 * 24 * 365,
             path: '/',
             domain: EcosystemDisplayTheme::cookieDomain(),

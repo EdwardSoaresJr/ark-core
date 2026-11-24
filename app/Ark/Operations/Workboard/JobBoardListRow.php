@@ -9,6 +9,9 @@ use App\Ark\Operations\Today\AdvisorHomeCardSurface;
  */
 final readonly class JobBoardListRow
 {
+    /**
+     * @param  list<\App\Ark\Operations\Workboard\WorkboardCardActivityMark>  $activityMarks
+     */
     public function __construct(
         public WorkboardTriageCard $card,
         public AdvisorHomeCardSurface $surface,
@@ -18,6 +21,9 @@ final readonly class JobBoardListRow
         public ?string $technicianName,
         public ?string $technicianId,
         public ?string $partsLabel,
+        public ?string $moneyLabel,
+        public ?string $moneyCaption,
+        public array $activityMarks,
         public string $updatedLabel,
         public int $updatedAtTimestamp,
         public string $searchHaystack,

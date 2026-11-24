@@ -83,7 +83,7 @@ final readonly class JobBoardListPage
         $dir = array_key_exists('dir', $overrides) ? $overrides['dir'] : $this->sortDir;
         $page = array_key_exists('page', $overrides) ? (int) $overrides['page'] : $this->page;
 
-        $params = ['view' => JobBoardLayout::List->value];
+        $params = [];
 
         if (is_string($lane) && $lane !== '' && $lane !== 'all') {
             $params['lane'] = $lane;
