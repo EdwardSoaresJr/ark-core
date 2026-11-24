@@ -23,6 +23,8 @@ final class UpdateInspectionChecklistItemAction
      *     requires_measurement: bool,
      *     missing_measurement_slots: list<string>,
      *     addressed: bool,
+     *     coverage_state: string,
+     *     evidence_gaps: list<array{kind: string, severity: string, message: string, status: ?string, status_display: ?string}>,
      *     brake_prompts: list<array<string, mixed>>,
      * }
      */
@@ -115,7 +117,8 @@ final class UpdateInspectionChecklistItemAction
         $inspection->refresh();
 
         $missingSlots = InspectionPointCompletion::missingRequiredSlotNames($item, $templateItem);
-        $addressed = InspectionPointCompletion::isAddressed($item, $templateItem);
+        $addressed = InspectionPointCompletion::isCovered($item, $templateItem);
+        $evidenceGaps = InspectionPointCompletion::evidenceGaps($item, $templateItem);
         $missingPhoto = $requiresPhoto && $item->photos->isEmpty()
             && ! (filled($item->notes) && ($templateItem?->requires_scan_evidence ?? false));
 
@@ -125,6 +128,8 @@ final class UpdateInspectionChecklistItemAction
             'requires_measurement' => $missingSlots !== [],
             'missing_measurement_slots' => $missingSlots,
             'addressed' => $addressed,
+            'coverage_state' => InspectionPointCompletion::coverageState($item, $templateItem),
+            'evidence_gaps' => $evidenceGaps,
             'brake_prompts' => InspectionBrakeComparison::promptsForItem($item, $inspection),
         ];
     }

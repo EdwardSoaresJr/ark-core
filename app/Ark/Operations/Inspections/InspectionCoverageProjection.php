@@ -36,12 +36,17 @@ final class InspectionCoverageProjection
      *     has_captured_evidence: bool,
      *     retained_history_count: int,
      *     previous_template_name: ?string,
+     *     evidence_gap_count: int,
+     *     evidence_detail: ?string,
+     *     ready_for_internal_review: bool,
+     *     ready_for_customer_publication: bool,
      * }
      */
     public static function for(RepairOrder $repairOrder, ?User $actor = null): array
     {
         $canRecord = InspectionCaptureLinks::canRecord($actor, $repairOrder);
         $posture = app(InspectionPostureProjection::class)->forRepairOrder($repairOrder);
+        $readiness = app(InspectionReviewReadinessProjection::class)->forRepairOrder($repairOrder);
         $capture = InspectionCaptureSurfaceResolver::forRepairOrder($repairOrder);
         $inspection = Inspection::query()
             ->where('repair_order_id', $repairOrder->id)
@@ -73,6 +78,10 @@ final class InspectionCoverageProjection
             'has_captured_evidence' => $inspection instanceof Inspection && $inspection->hasCapturedEvidence(),
             'retained_history_count' => $inspection instanceof Inspection ? $inspection->retainedHistoryCount() : 0,
             'previous_template_name' => $inspection?->previousTemplate?->name,
+            'evidence_gap_count' => $posture->evidenceGapCount,
+            'evidence_detail' => $posture->evidenceDetail,
+            'ready_for_internal_review' => $readiness['ready_for_internal_review'],
+            'ready_for_customer_publication' => $readiness['ready_for_customer_publication'],
         ];
     }
 

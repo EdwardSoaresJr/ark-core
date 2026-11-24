@@ -148,10 +148,10 @@ export function arkInspectionSectionWalk(config = {}) {
                 return;
             }
             if (remaining > 0) {
-                el.textContent = `${addressed} of ${total} checked · ${remaining} remaining`;
+                el.textContent = `${addressed} of ${total} covered · ${remaining} remaining`;
                 return;
             }
-            el.textContent = `${addressed} of ${total} checked`;
+            el.textContent = `${addressed} of ${total} covered`;
         },
 
         async setCondition(point, status) {
@@ -352,6 +352,16 @@ export function arkInspectionSectionWalk(config = {}) {
                 } else if (typeof living.addressed === 'boolean') {
                     point.addressed = living.addressed;
                 }
+                if (Array.isArray(data.follow_up?.evidence_gaps)) {
+                    point.evidence_gaps = data.follow_up.evidence_gaps;
+                } else if (Array.isArray(living.evidence_gaps)) {
+                    point.evidence_gaps = living.evidence_gaps;
+                }
+                if (typeof data.follow_up?.coverage_state === 'string') {
+                    point.coverage_state = data.follow_up.coverage_state;
+                } else if (typeof living.coverage_state === 'string') {
+                    point.coverage_state = living.coverage_state;
+                }
 
                 point.saveState = 'saved';
                 clearTimeout(point._savedTimer);
@@ -385,6 +395,8 @@ function hydratePoint(point) {
             : [],
         observation_options: point.observation_options ?? [],
         expand_when: expandWhen,
+        evidence_gaps: Array.isArray(point.evidence_gaps) ? [...point.evidence_gaps] : [],
+        coverage_state: point.coverage_state ?? null,
         measurement_slots: (point.measurement_slots ?? []).map((slot) => ({
             ...slot,
             value: slot.value ?? '',

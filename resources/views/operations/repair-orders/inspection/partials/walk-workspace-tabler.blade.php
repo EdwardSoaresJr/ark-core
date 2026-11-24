@@ -62,7 +62,10 @@
                             {{ $template_name }} ·
                         @endif
                         Point {{ $nav['index'] ?? '-' }} of {{ $nav['total'] ?? '-' }}
-                        · {{ $checked }}/{{ $total }} checked
+                        · {{ $checked }}/{{ $total }} covered
+                        @if ((int) ($progress['evidence_gap_count'] ?? 0) > 0)
+                            · {{ (int) $progress['evidence_gap_count'] }} doc warning{{ (int) $progress['evidence_gap_count'] === 1 ? '' : 's' }}
+                        @endif
                     </div>
                     <h2 @class(['mb-0 text-break', 'h1' => $tabletMode, 'h2' => ! $tabletMode]) data-inspection-walk-title>{{ $living_record['label'] }}</h2>
                     @if ($living_record['category_name'] ?? null)
@@ -299,6 +302,31 @@
         </div>
     @endif
 
+    @php
+        $coverageState = $living_record['coverage_state'] ?? null;
+        $evidenceGaps = $living_record['evidence_gaps'] ?? [];
+        $missingFacts = $living_record['missing_coverage_facts'] ?? [];
+    @endphp
+    @if ($coverageState === 'missing_facts' && count($missingFacts) > 0)
+        <div class="alert alert-warning mb-0" role="status" data-inspection-missing-facts>
+            <div class="fw-bold">Still needed to cover this point</div>
+            <ul class="mb-0 ps-3">
+                @foreach ($missingFacts as $fact)
+                    <li>{{ $fact['message'] ?? 'Required fact missing' }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @elseif (count($evidenceGaps) > 0)
+        <div class="alert alert-warning mb-0" role="status" data-inspection-evidence-gaps>
+            <div class="fw-bold">Finding recorded — documentation still needed</div>
+            <ul class="mb-0 ps-3">
+                @foreach ($evidenceGaps as $gap)
+                    <li>{{ $gap['message'] ?? 'Supporting evidence missing' }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if ($tabletMode)
         @if ($canEdit)
             <section class="card" aria-labelledby="inspection-camera-heading" data-inspection-walk-camera>
@@ -434,7 +462,12 @@
 
         <section class="card" aria-labelledby="inspection-evidence-heading">
             <div class="card-header">
-                <h3 id="inspection-evidence-heading" class="card-title">Photos &amp; video</h3>
+                <h3 id="inspection-evidence-heading" class="card-title">
+                    Photos &amp; video
+                    @if (($living_record['requires_photo'] ?? false) && count($living_record['photos'] ?? []) === 0)
+                        <span class="text-warning">· required for documentation</span>
+                    @endif
+                </h3>
             </div>
             <div class="card-body p-3">
                 @include('operations.repair-orders.inspection.partials.walk-evidence-tabler', [

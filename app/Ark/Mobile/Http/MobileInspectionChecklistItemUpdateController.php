@@ -81,6 +81,9 @@ final class MobileInspectionChecklistItemUpdateController
             'follow_up' => [
                 'requires_photo' => $result['requires_photo'],
                 'requires_measurement' => $result['requires_measurement'],
+                'addressed' => $result['addressed'],
+                'coverage_state' => $result['coverage_state'],
+                'evidence_gaps' => $result['evidence_gaps'],
             ],
         ]);
     }

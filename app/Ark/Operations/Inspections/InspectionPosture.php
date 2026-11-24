@@ -30,6 +30,8 @@ final class InspectionPosture
         public readonly int $attentionCount,
         public readonly bool $started,
         public readonly ?string $templateName,
+        public readonly int $evidenceGapCount = 0,
+        public readonly ?string $evidenceDetail = null,
     ) {}
 
     /** Single-line label for chips and existing `posture_label` consumers. */
@@ -55,6 +57,8 @@ final class InspectionPosture
      *     attention_count: int,
      *     started: bool,
      *     template_name: ?string,
+     *     evidence_gap_count: int,
+     *     evidence_detail: ?string,
      * }
      */
     public function toArray(): array
@@ -71,6 +75,8 @@ final class InspectionPosture
             'attention_count' => $this->attentionCount,
             'started' => $this->started,
             'template_name' => $this->templateName,
+            'evidence_gap_count' => $this->evidenceGapCount,
+            'evidence_detail' => $this->evidenceDetail,
         ];
     }
 }

@@ -103,6 +103,8 @@ final class RepairOrderInspectionPointUpdateController
                 'requires_measurement' => $result['requires_measurement'],
                 'missing_measurement_slots' => $result['missing_measurement_slots'],
                 'addressed' => $result['addressed'],
+                'coverage_state' => $result['coverage_state'],
+                'evidence_gaps' => $result['evidence_gaps'],
             ],
             'brake_prompts' => $result['brake_prompts'],
         ]);

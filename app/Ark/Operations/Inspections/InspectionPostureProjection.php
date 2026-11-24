@@ -24,6 +24,7 @@ final class InspectionPostureProjection
         $checked = 0;
         $total = 0;
         $attentionCount = 0;
+        $evidenceGapCount = 0;
 
         if ($inspection instanceof Inspection) {
             $inspection->loadMissing('template');
@@ -44,13 +45,14 @@ final class InspectionPostureProjection
 
             foreach ($ordered as $item) {
                 $templateItem = $templateItems->get($item->inspection_template_item_id);
+                $resolvedTemplate = $templateItem instanceof InspectionTemplateItem ? $templateItem : null;
 
-                if (InspectionPointCompletion::isAddressed(
-                    $item,
-                    $templateItem instanceof InspectionTemplateItem ? $templateItem : null,
-                )) {
+                // Coverage only — supporting photos do not reduce checked/total.
+                if (InspectionPointCompletion::isCovered($item, $resolvedTemplate)) {
                     $checked++;
                 }
+
+                $evidenceGapCount += count(InspectionPointCompletion::evidenceGaps($item, $resolvedTemplate));
 
                 if ($this->isAttentionFinding($item)) {
                     $attentionCount++;
@@ -82,6 +84,13 @@ final class InspectionPostureProjection
             default => null,
         };
 
+        $evidenceDetail = null;
+        if ($evidenceGapCount > 0) {
+            $evidenceDetail = $evidenceGapCount === 1
+                ? '1 documentation item still needed'
+                : $evidenceGapCount.' documentation items still needed';
+        }
+
         return new InspectionPosture(
             key: $key,
             headline: $headline,
@@ -93,6 +102,8 @@ final class InspectionPostureProjection
             attentionCount: $attentionCount,
             started: $started,
             templateName: $templateName,
+            evidenceGapCount: $evidenceGapCount,
+            evidenceDetail: $evidenceDetail,
         );
     }
 

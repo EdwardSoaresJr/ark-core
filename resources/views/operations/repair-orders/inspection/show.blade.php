@@ -5,13 +5,17 @@
     $checked = (int) ($progress['checked'] ?? $coverage['checked'] ?? 0);
     $total = (int) ($progress['total'] ?? $coverage['total'] ?? 0);
     $remaining = (int) ($progress['remaining'] ?? max(0, $total - $checked));
-    $postureLabel = $checked > 0
+    $evidenceGapCount = (int) ($coverage['evidence_gap_count'] ?? $progress['evidence_gap_count'] ?? 0);
+    $coverageLabel = $checked > 0
         ? ($total > 0
             ? ($remaining > 0
-                ? "{$checked} of {$total} checked · {$remaining} remaining"
-                : "{$checked} of {$total} checked")
-            : "{$checked} checked")
-        : ($total > 0 ? "0 of {$total} checked · {$remaining} remaining" : 'Not Started');
+                ? "{$checked} of {$total} covered · {$remaining} remaining"
+                : "{$checked} of {$total} covered")
+            : "{$checked} covered")
+        : ($total > 0 ? "0 of {$total} covered · {$remaining} remaining" : 'Not Started');
+    $postureLabel = $evidenceGapCount > 0
+        ? $coverageLabel.' · '.($evidenceGapCount === 1 ? '1 photo/doc warning' : $evidenceGapCount.' photo/doc warnings')
+        : $coverageLabel;
     $walkMode = $walk_mode ?? 'empty';
     $isPointWalk = $walk_enabled && $walkMode === 'point' && $living_record;
     $sectionsUrl = $sections_url ?? route('operations.repair-orders.inspection.show', $repairOrder);

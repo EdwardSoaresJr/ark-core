@@ -13,6 +13,7 @@ namespace App\Ark\Operations\Inspections;
  *     require_observation_when?: list<string>,
  *     require_note_when?: list<string>,
  *     require_photo_when?: list<string>,
+ *     coverage_requires_photo_when?: list<string>,
  *     corner?: string,
  *     group?: string,
  *     walk_section?: string
@@ -214,6 +215,9 @@ final class InspectionTemplatePointMeta
         return self::expandWhen($templateItem);
     }
 
+    /**
+     * Supporting evidence photo expected for this status (does not erase coverage by itself).
+     */
     public static function photoRequiredForStatus(
         ?InspectionTemplateItem $templateItem,
         InspectionChecklistStatus $status,
@@ -224,6 +228,29 @@ final class InspectionTemplatePointMeta
 
         return in_array($status->value, self::requirePhotoWhen($templateItem), true)
             || ((bool) ($templateItem?->requires_photo ?? false) && $status->requiresEvidencePrompt());
+    }
+
+    /**
+     * Photo that must be present before the point counts as covered.
+     * Opt-in via builder_meta.coverage_requires_photo_when — existing templates stay evidence-only.
+     *
+     * @return list<string>
+     */
+    public static function coverageRequiresPhotoWhen(?InspectionTemplateItem $templateItem): array
+    {
+        $meta = self::from($templateItem);
+        if (isset($meta['coverage_requires_photo_when']) && is_array($meta['coverage_requires_photo_when'])) {
+            return array_values(array_map('strval', $meta['coverage_requires_photo_when']));
+        }
+
+        return [];
+    }
+
+    public static function photoRequiredForCoverage(
+        ?InspectionTemplateItem $templateItem,
+        InspectionChecklistStatus $status,
+    ): bool {
+        return in_array($status->value, self::coverageRequiresPhotoWhen($templateItem), true);
     }
 
     /**
