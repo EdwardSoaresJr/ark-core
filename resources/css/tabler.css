@@ -99,8 +99,60 @@
     opacity: 1;
 }
 
-.ark-job-board-table .ark-job-board-activity .avatar-xs {
-    --tblr-avatar-size: 1rem;
+.ark-job-board-table .ark-job-board-activity {
+    gap: 0.2rem;
+}
+
+.ark-job-board-table .ark-job-board-activity-mark {
+    --ark-job-board-activity-size: 1.15rem;
+    width: var(--ark-job-board-activity-size);
+    height: var(--ark-job-board-activity-size);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    color: var(--tblr-secondary);
+    background: var(--tblr-bg-surface-secondary);
+    flex: 0 0 auto;
+}
+
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="ready"],
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="sent"] {
+    color: var(--tblr-secondary);
+    background: var(--tblr-bg-surface-secondary);
+}
+
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="engaged"] {
+    color: var(--tblr-azure);
+    background: rgba(var(--tblr-azure-rgb), 0.14);
+}
+
+.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="attention"] {
+    color: var(--tblr-danger);
+    background: rgba(var(--tblr-danger-rgb), 0.14);
+}
+
+.ark-job-board-table .ark-job-board-activity-mark .badge {
+    position: absolute;
+    top: -0.15rem;
+    right: -0.15rem;
+    width: 0.35rem;
+    height: 0.35rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--tblr-bg-surface);
+}
+
+.ark-job-board-table .ark-job-board-activity-overflow {
+    font-size: 0.68rem;
+    line-height: 1;
+    font-weight: 600;
+    color: var(--tblr-secondary);
+    padding: 0.15rem 0.25rem;
+    border-radius: 0.25rem;
+    background: var(--tblr-bg-surface-secondary);
 }
 
 @media (max-width: 1399.98px) {

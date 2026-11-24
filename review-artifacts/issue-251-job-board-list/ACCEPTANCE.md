@@ -1,63 +1,91 @@
-# Issue #251 / PR #252 — Final RO index corrections
+# Issue #251 / PR #252 — Activity indicators UX refinement
 
 Stop for Carlos/owner visual acceptance. No merge. No deploy. No SaaS pin. No production data changes.
 
-Prior layout SHA: `e65c211d92535ad57b1f5f36dd4a9f4d3e8271eb`.
+Prior SHA: `25843e57ddac1b21b389e509f6e4678fed343adf`.
 
 ## Commit
 
 Recorded on push (see PR comment for exact SHA).
 
-## Corrections in this pass
+## Root cause (single-icon impression)
 
-### 1. Customer / Vehicle header markup
+1. The table correctly **hides idle marks** (no six-placeholder strip).
+2. Most open ROs only have **Estimate → Ready** (priced lines), so one document glyph appears.
+3. Marks were wrapped in similar **avatar chips**, so category glyphs were hard to tell apart at a glance.
+4. SYN fixtures previously did not seed multi-channel activity, so review screenshots reinforced the “one icon” impression.
 
-Header uses a **single** `class="ark-job-board-col-customer-vehicle"` on the `<th>`, plus `data-job-board-col="customer-vehicle"`. Guarded by test `job board customer vehicle header has a single class attribute`.
+Projection categories and `ready` / `sent` / `engaged` / `attention` semantics were already present; the list was under-presenting them.
 
-### 2. Vehicle sorting preserved
+## Activity column behavior
 
-Combined column exposes two compact server-side sort links (existing `JobBoardListPage` / builder):
-
-- **Customer** → `sort=customer`
-- **Vehicle** → `sort=vehicle`
-
-`aria-sort` reflects whichever is active; `aria-current="true"` on the active link. No new sorting system.
-
-### 3. Unchanged from prior refinement
-
-- Promised / Parts absent from list UI; storage and RO workflows intact
-- Combined Customer / Vehicle cell; Concern 2-line clamp + tooltip
-- Watch muted; Attention / Critical prominent
-- Activity + Updated retained
-- Mobile cards unchanged
-
-## Layout verification
-
-| Viewport | Result |
+| Rule | Behavior |
 | --- | --- |
-| **1366×900** | Overflow **0**. `screenshots/list-desktop-1366.png` |
-| **1440×900** | Clean spacing. `screenshots/list-desktop-1440.png` |
-| **1920×1080** | Concern uses width naturally. `screenshots/list-desktop-1920.png` |
-| **390×844** | Compact mobile cards. `screenshots/list-mobile-390.png` |
+| Idle | Neutral `—` |
+| Active only | Inactive categories omitted |
+| Cap | Max **4** visible icons |
+| Overflow | `+N` with tooltip summarizing hidden marks |
+| Priority | Attention → Engaged → Sent → Ready; stable category order within a tier |
+| Category order | estimate, sms, email, phone, dvi, scheduled |
+| Tooltips | Existing projection tooltips (e.g. `SMS - Customer replied 1d ago`) |
+| Deep links | estimate → `#builder`; sms/email/phone → `#comms`; dvi → `#inspect`; scheduled informational only |
 
-Local: `jobboard-review-251@example.test` / `Review251!`. Reseed: `php review-artifacts/issue-251-job-board-list/seed-syn.php`.
+## Activity-state matrix (existing projection)
+
+| Category | Ready | Sent | Engaged | Attention |
+| --- | --- | --- | --- | --- |
+| Estimate | Priced estimate on file | Estimate sent | Estimate viewed | — |
+| SMS | Outbound sent | Delivered | Customer replied | Delivery failed (no later delivery) |
+| Email | — | Sent | Opened / read | — |
+| Phone | — | Inbound/outbound call | — | Unworked missed call / voicemail |
+| DVI | Inspection on file | Inspection sent | — | — |
+| Appointment | Upcoming | Today / confirmed | Checked in | Missed appointment |
+
+## Synthetic scenarios (SYN-*)
+
+| Fixture | Intent |
+| --- | --- |
+| Quiet None | No activity → `—` |
+| Brakes Demo | Single recorded estimate |
+| Comms Pair | SMS + Email |
+| Wip Bay | Estimate viewed + DVI on file |
+| Parts Hold | Unresolved missed call (+ estimate) |
+| Full Strip | Six active categories → 4 + `+2` |
+| Ready Pickup | Estimate + SMS delivery failed |
+
+## Screenshots
+
+| File | Notes |
+| --- | --- |
+| `screenshots/list-desktop-1366.png` | Overflow **0**; multi-icon Activity |
+| `screenshots/list-desktop-1440.png` | |
+| `screenshots/list-desktop-1920.png` | |
+| `screenshots/list-mobile-390.png` | Mobile cards unchanged (no activity strip added) |
+| `screenshots/activity-heavy-row.png` | Full Strip overflow |
+| `screenshots/activity-attention-row.png` | Missed-call attention |
+| `screenshots/activity-empty-row.png` | Quiet None |
 
 ## Focused tests
 
-`JobBoardListViewTest` + `AdvisorHomeAttentionBoardTest`:
+- `JobBoardActivityPresentationTest`
+- `JobBoardListViewTest`
+- `WorkboardCardActivityTest`
+- `AdvisorHomeAttentionBoardTest`
 
-- **passed:** 23
-- **failed:** 0
-- **skipped:** 0
+**passed 36 / failed 0 / skipped 0**
 
-## Remaining owner/Carlos acceptance items (not implemented)
+## Unsupported deep links
 
-1. Excessive default **Watch** on otherwise idle ROs (classifier unchanged).
-2. **Promise overdue** Attention for shops that rarely use promised times.
-3. **Parts-needed** Attention vs **Waiting Parts** status semantics.
+- **Appointment / scheduled** — no verified stable RO hash; remains tooltip-only.
+- Mobile cards — activity strip not added (preserve primary hierarchy).
 
-These need a separate Attention-rules review — out of scope here.
+## Remaining owner/Carlos items
+
+1. Default Watch volume (Attention classifier unchanged).
+2. Promise overdue Attention for shops that rarely use promises.
+3. Parts-needed Attention vs Waiting Parts status.
+4. Whether appointment marks should later deep-link to a schedule surface.
 
 ## Still out of scope
 
-No merge, deploy, SaaS pin, production/staging DB changes, Sites release change, or Attention rule rewrite.
+No merge, deploy, SaaS pin, migrations, production data, Sites release change, or Attention classifier rewrite.

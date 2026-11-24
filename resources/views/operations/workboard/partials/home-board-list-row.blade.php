@@ -17,19 +17,13 @@
     $builderUrl = $card->href.'#builder';
     $isBalanceDue = $row->moneyCaption === 'due';
     $moneyLabel = filled($row->moneyLabel) ? $row->moneyLabel : '$0';
-    $markClasses = fn (string $state): string => match ($state) {
-        'ready' => 'bg-secondary-lt',
-        'sent' => 'bg-azure-lt',
-        'engaged' => 'bg-azure text-white',
-        'attention' => 'bg-orange text-white',
-        default => 'bg-transparent text-secondary',
-    };
     $concernFull = trim((string) (
         $repairOrder->concern_summary
         ?: $surface->concernLabel
         ?: ($card->concernHeadline !== 'No concern recorded' ? $card->concernHeadline : '')
     ));
     $concernText = $concernFull !== '' ? $concernFull : '—';
+    $activityStrip = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::forList($row->activityMarks);
 @endphp
 
 <tr
@@ -95,23 +89,24 @@
         @endif
     </td>
     <td class="text-nowrap" data-job-board-row-activity data-job-card-activity>
-        @php
-            $activeMarks = array_values(array_filter(
-                $row->activityMarks,
-                static fn ($mark) => $mark->active,
-            ));
-        @endphp
-        @if ($activeMarks === [])
-            <span class="text-secondary">—</span>
+        @if ($activityStrip['visible'] === [])
+            <span class="text-secondary" data-job-board-activity-empty>—</span>
         @else
-            <div class="d-inline-flex gap-1 ark-job-board-activity" role="group" aria-label="Activity">
-                @foreach ($activeMarks as $mark)
-                    <span
-                        class="avatar avatar-xs rounded {{ $markClasses($mark->state->value) }}"
+            <div class="d-inline-flex align-items-center ark-job-board-activity" role="group" aria-label="Activity">
+                @foreach ($activityStrip['visible'] as $mark)
+                    @php
+                        $markHref = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::destinationFor($mark->key, $card->href);
+                        $markTag = $markHref ? 'a' : 'span';
+                    @endphp
+                    <{{ $markTag }}
+                        @if ($markHref) href="{{ $markHref }}" @endif
+                        class="ark-job-board-activity-mark"
                         data-job-card-mark="{{ $mark->key }}"
                         data-job-card-mark-state="{{ $mark->state->value }}"
-                        role="img"
-                        tabindex="-1"
+                        data-job-board-activity-mark
+                        @if ($markHref) data-job-board-activity-link @endif
+                        role="{{ $markHref ? 'link' : 'img' }}"
+                        @if (! $markHref) tabindex="-1" @endif
                         title="{{ $mark->tooltip }}"
                         aria-label="{{ $mark->tooltip }}"
                         data-bs-toggle="tooltip"
@@ -122,8 +117,21 @@
                             'filled' => true,
                             'badge' => $mark->badge,
                         ])
-                    </span>
+                    </{{ $markTag }}>
                 @endforeach
+                @if ($activityStrip['overflowCount'] > 0)
+                    <span
+                        class="ark-job-board-activity-overflow"
+                        data-job-board-activity-overflow
+                        data-job-board-activity-overflow-count="{{ $activityStrip['overflowCount'] }}"
+                        role="img"
+                        tabindex="-1"
+                        title="{{ $activityStrip['overflowTooltip'] }}"
+                        aria-label="{{ $activityStrip['overflowTooltip'] }}"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="hover focus"
+                    >+{{ $activityStrip['overflowCount'] }}</span>
+                @endif
             </div>
         @endif
     </td>
