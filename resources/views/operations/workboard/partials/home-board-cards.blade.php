@@ -13,11 +13,9 @@
             @endif
         </x-tabler.empty-state>
     @else
-        <div class="row row-cards g-2" data-job-board-cards-grid>
+        <div class="ark-card-grid ark-job-board-card-grid" data-job-board-cards-grid>
             @foreach ($jobBoardListRows as $row)
-                <div class="col-12 col-sm-6 col-xl-4 col-xxl-3">
-                    @include('operations.workboard.partials.home-board-card', ['row' => $row])
-                </div>
+                @include('operations.workboard.partials.home-board-card', ['row' => $row])
             @endforeach
         </div>
     @endif
