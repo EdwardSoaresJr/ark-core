@@ -37,22 +37,17 @@
                 <table class="table table-vcenter table-hover card-table table-sm mb-0 ark-job-board-table">
                     <thead>
                         <tr>
-                            @foreach ([
-                                'ro' => 'RO #',
-                                'customer' => 'Customer',
-                                'vehicle' => 'Vehicle',
-                            ] as $sortKey => $label)
-                                <th scope="col" @if ($jobBoardListPage->ariaSort($sortKey)) aria-sort="{{ $jobBoardListPage->ariaSort($sortKey) }}" @endif>
-                                    <a href="{{ $jobBoardListPage->sortUrl($sortKey) }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="{{ $sortKey }}">{{ $label }}</a>
-                                </th>
-                            @endforeach
+                            <th scope="col" @if ($jobBoardListPage->ariaSort('ro')) aria-sort="{{ $jobBoardListPage->ariaSort('ro') }}" @endif>
+                                <a href="{{ $jobBoardListPage->sortUrl('ro') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="ro">RO #</a>
+                            </th>
+                            <th scope="col" class="ark-job-board-col-customer-vehicle" @if ($jobBoardListPage->ariaSort('customer')) aria-sort="{{ $jobBoardListPage->ariaSort('customer') }}" @endif>
+                                <a href="{{ $jobBoardListPage->sortUrl('customer') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="customer">Customer / Vehicle</a>
+                            </th>
                             <th scope="col" class="ark-job-board-col-concern">Concern / Job</th>
                             <th scope="col" @if ($jobBoardListPage->ariaSort('status')) aria-sort="{{ $jobBoardListPage->ariaSort('status') }}" @endif>
                                 <a href="{{ $jobBoardListPage->sortUrl('status') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="status">Status</a>
                             </th>
                             <th scope="col">Tech</th>
-                            <th scope="col">Promised</th>
-                            <th scope="col">Parts</th>
                             <th scope="col" class="text-end">Total</th>
                             <th scope="col">
                                 <span title="ARK attention signal, not a user-entered priority" data-job-board-sort="attention">Attention</span>

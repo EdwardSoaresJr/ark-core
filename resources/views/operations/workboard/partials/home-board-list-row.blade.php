@@ -4,7 +4,6 @@
     $surface = $row->surface;
     $repairOrder = $card->repairOrder;
     $customerName = trim((string) ($repairOrder->customer?->name ?? ''));
-    $customerPhone = filled($surface->customerPhone) ? $surface->customerPhone : null;
     $statusLabel = filled($surface->chip->label) ? $surface->chip->label : 'No Status';
     $statusTone = filled($surface->chip->statusColor)
         ? \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::chipTone($surface->chip->statusColor)
@@ -16,11 +15,6 @@
         default => $surface->exceptionLabel,
     };
     $builderUrl = $card->href.'#builder';
-    $promiseToneClass = match ($surface->promiseTone) {
-        'overdue' => 'text-danger',
-        'today' => 'text-warning',
-        default => 'text-secondary',
-    };
     $isBalanceDue = $row->moneyCaption === 'due';
     $moneyLabel = filled($row->moneyLabel) ? $row->moneyLabel : '$0';
     $markClasses = fn (string $state): string => match ($state) {
@@ -52,7 +46,7 @@
     <td>
         <a href="{{ $builderUrl }}" class="fw-bold text-reset text-nowrap" data-job-board-row-ro data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</a>
     </td>
-    <td class="ark-job-board-col-customer">
+    <td class="ark-job-board-col-customer-vehicle" data-job-board-row-customer-vehicle>
         <div class="text-truncate">
             @if ($surface->customerHubUrl)
                 <a href="{{ $surface->customerHubUrl }}" class="text-reset" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
@@ -60,12 +54,9 @@
                 <span data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</span>
             @endif
         </div>
-        @if ($customerPhone)
-            <div class="small text-secondary text-truncate d-none d-xxl-block">{{ $customerPhone }}</div>
-        @endif
-    </td>
-    <td class="text-truncate ark-job-board-col-vehicle">
-        <a href="{{ $builderUrl }}" class="text-reset" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
+        <div class="small text-secondary text-truncate">
+            <a href="{{ $builderUrl }}" class="text-reset" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
+        </div>
     </td>
     <td
         class="text-body ark-job-board-col-concern"
@@ -81,16 +72,6 @@
     </td>
     <td class="text-nowrap small" data-job-board-row-technician>
         {{ $row->technicianName ?? '—' }}
-    </td>
-    <td @class(['text-nowrap small', $promiseToneClass]) data-job-board-row-promised>
-        {{ $surface->promiseLabel ?? '—' }}
-    </td>
-    <td class="text-nowrap small" data-job-board-row-parts>
-        @if ($row->partsLabel)
-            <span @class(['badge', $row->partsLabel === 'Ready' ? 'bg-success-lt' : 'bg-orange-lt'])>{{ $row->partsLabel }}</span>
-        @else
-            —
-        @endif
     </td>
     <td @class(['text-nowrap text-end fw-bold ark-money', 'text-danger' => $isBalanceDue]) data-job-board-row-total data-job-card-total>
         {{ $moneyLabel }}

@@ -77,10 +77,17 @@ test('job board table renders dense columns including total and activity marks',
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$parts->repair_order_id.'"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$closed->repair_order_id.'"]', $board)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-sort="ro"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-sort="customer"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $board)->length)->toBe(2)
         ->and($xpath->query('.//*[@data-job-board-row-total]', $board)->length)->toBe(2)
         ->and($xpath->query('.//*[@data-job-board-row-activity]', $board)->length)->toBe(2)
+        ->and($xpath->query('.//*[@data-job-board-row-promised]', $board)->length)->toBe(0)
+        ->and($xpath->query('.//*[@data-job-board-row-parts]', $board)->length)->toBe(0)
+        ->and($html)->toContain('Customer / Vehicle')
         ->and($html)->toContain('Brake noise diagnosis')
         ->and($html)->toContain('Attention')
+        ->and($html)->not->toContain('>Promised<')
+        ->and($html)->not->toContain('>Parts</th>')
         ->and($html)->toContain('data-job-board-list-mobile');
 });
 
@@ -344,10 +351,13 @@ test('job board click contract keeps RO vehicle and customer destinations separa
         ->and($vehicleHref)->toContain('/repair-orders/'.$roId)
         ->and($customerHref)->toContain('/customers/'.$customerId)
         ->and($customerHref)->not->toContain('/repair-orders/')
-        ->and($xpath->query('.//td[@data-job-board-row-concern]//a', $row)->length)->toBe(0);
+        ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//td[@data-job-board-row-concern]//a', $row)->length)->toBe(0)
+        ->and($xpath->query('.//*[@data-job-board-row-promised]', $row)->length)->toBe(0)
+        ->and($xpath->query('.//*[@data-job-board-row-parts]', $row)->length)->toBe(0);
 });
 
-test('job board acceptance scenario surfaces tech promise parts and varied totals', function () {
+test('job board acceptance scenario surfaces tech status totals without promised or parts columns', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     JobBoardAcceptanceScenario::seed($advisor);
 
@@ -362,10 +372,13 @@ test('job board acceptance scenario surfaces tech promise parts and varied total
         ->and($html)->toContain('Alex Rivera')
         ->and($html)->toContain('Jordan Lee')
         ->and($html)->toContain('grinding front brakes')
-        ->and($html)->toContain('Promise overdue')
-        ->and($html)->toContain('Due ')
-        ->and($html)->toContain('Promise ')
-        ->and($xpath->query('//*[@data-job-board-row-parts]//*[contains(@class,"badge")]')->length)->toBeGreaterThan(0)
+        ->and($html)->toContain('Customer / Vehicle')
+        ->and($html)->toContain('Waiting Parts')
+        ->and($xpath->query('//*[@data-job-board-row-customer-vehicle]', $document)->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@data-job-board-row-promised]', $document)->length)->toBe(0)
+        ->and($xpath->query('//*[@data-job-board-row-parts]', $document)->length)->toBe(0)
+        ->and($html)->not->toContain('>Promised<')
+        ->and($html)->not->toContain('>Parts</th>')
         ->and($html)->toContain('$425')
         ->and($html)->toContain('$1,066');
 });

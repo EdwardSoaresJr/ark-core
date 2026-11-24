@@ -64,18 +64,17 @@
     font-size: 0.8125rem;
 }
 
-.ark-job-board-table .ark-job-board-col-customer {
-    max-width: 8.5rem;
-}
-
-.ark-job-board-table .ark-job-board-col-vehicle {
-    max-width: 8.5rem;
+.ark-job-board-table .ark-job-board-col-customer-vehicle {
+    min-width: 9rem;
+    max-width: 14rem;
+    width: 16%;
+    vertical-align: top;
 }
 
 .ark-job-board-table .ark-job-board-col-concern {
-    min-width: 10rem;
-    max-width: 16rem;
-    width: 16%;
+    min-width: 12rem;
+    max-width: 28rem;
+    width: 28%;
     vertical-align: top;
 }
 
@@ -109,9 +108,14 @@
         --tblr-table-cell-padding-x: 0.3rem;
     }
 
-    .ark-job-board-table .ark-job-board-col-concern {
-        min-width: 8.5rem;
+    .ark-job-board-table .ark-job-board-col-customer-vehicle {
+        min-width: 8rem;
         max-width: 12rem;
+    }
+
+    .ark-job-board-table .ark-job-board-col-concern {
+        min-width: 10rem;
+        max-width: 18rem;
     }
 }
 
