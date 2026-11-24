@@ -166,6 +166,56 @@
     gap: 0.1rem;
 }
 
+/*
+ * Shared record-index List | Cards (Customers, Vehicles, Repair Orders).
+ * Parallel to Job Board layout CSS; does not alter Job Board selectors.
+ */
+[data-collection][data-collection-effective-layout="list"] [data-collection-view="cards"],
+[data-collection][data-collection-effective-layout="cards"] [data-collection-view="list"],
+[data-collection]:not([data-collection-effective-layout])[data-collection-layout="list"] [data-collection-view="cards"],
+[data-collection]:not([data-collection-effective-layout])[data-collection-layout="cards"] [data-collection-view="list"] {
+    display: none !important;
+}
+
+[data-collection]:not([data-collection-effective-layout])[data-collection-layout="auto"] [data-collection-view="cards"] {
+    display: none !important;
+}
+
+[data-collection]:not([data-collection-effective-layout])[data-collection-layout="auto"] [data-collection-view="list"] {
+    display: block;
+}
+
+@media (max-width: 767.98px) {
+    [data-collection]:not([data-collection-effective-layout])[data-collection-layout="auto"] [data-collection-view="list"] {
+        display: none !important;
+    }
+
+    [data-collection]:not([data-collection-effective-layout])[data-collection-layout="auto"] [data-collection-view="cards"] {
+        display: block !important;
+    }
+}
+
+.ark-collection-layout-toggle {
+    min-height: 2.25rem;
+    flex-wrap: nowrap;
+}
+
+.ark-collection-layout-toggle .nav-link {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.ark-collection-list-table {
+    --tblr-table-cell-padding-x: 0.65rem;
+    --tblr-table-cell-padding-y: 0.55rem;
+}
+
+.ark-collection-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
 .ark-job-board-cards .ark-job-board-card .ark-job-board-concern-text {
     display: -webkit-box;
     -webkit-box-orient: vertical;

@@ -329,7 +329,7 @@ test('repair order index supports unassigned shop floor queue filter', function 
         ->get(route('operations.repair-orders.index', ['unassigned' => '1']))
         ->assertOk()
         ->assertSee('Unassigned shop floor queue')
-        ->assertSee('1 total');
+        ->assertSee('Showing 1–1 of 1', false);
 
     expect($response->getContent())->toContain('UNASSIGNED-RO-AAA')
         ->and($response->getContent())->not->toContain('ASSIGNED-RO-BBB');
