@@ -1,7 +1,7 @@
 # Job Board List | Cards — final acceptance (PR #253)
 
 **PR:** [#253](https://github.com/EdwardSoaresJr/ark-core/pull/253) (draft until authorized)  
-**SHA:** _(recorded on push)_  
+**SHA:** `b24c93be72d5edfb32511a236edbc8872e8724a4`  
 **Supersedes:** `38c8d9c9` (#252 merged)
 
 No merge / deploy / SaaS pin / Sites / migrations / production data from this session.
