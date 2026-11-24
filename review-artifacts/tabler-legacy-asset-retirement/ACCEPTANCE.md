@@ -7,7 +7,7 @@
 | Role | SHA |
 |------|-----|
 | Core `origin/main` baseline | `9cc852899b2ab9754185675b7d83d656978b2b33` |
-| This branch tip | *(filled after push)* |
+| This branch tip | `9b68f541621d4d2cc0bc54267354d727156c1bb1` |
 | SaaS / Stancl pin (unchanged) | `df735e4096e94eb8f0440f5124794ea924a88d2a` → Core `9cc85289` |
 
 Left alone: #254–#258 (Job Board / List-Cards / preferences).
