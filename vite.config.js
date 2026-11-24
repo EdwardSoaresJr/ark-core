@@ -15,9 +15,11 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/tabler.css',
+                'resources/css/eval/job-board-datatables.css',
                 'resources/js/app.js',
                 'resources/js/tabler.js',
                 'resources/js/cloud-funnel.js',
+                'resources/js/eval/job-board-datatables.js',
             ],
             buildDirectory: process.env.VITE_BUILD_DIRECTORY || 'build',
             refresh: true,

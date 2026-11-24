@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <title>Card concept B — status-led</title>
+  <style>
+    :root { --bg:#f1f5f9; --card:#fff; --border:#dde1e6; --text:#0f172a; --muted:#64748b; }
+    body { margin:0; font:14px/1.45 system-ui,sans-serif; background:var(--bg); color:var(--text); padding:2rem; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(18rem,1fr)); gap:1rem; max-width:1100px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:0; overflow:hidden; }
+    .head { display:flex; align-items:center; gap:.5rem; padding:.65rem .85rem; background:color-mix(in srgb, #f76707 10%, #fff); border-bottom:1px solid var(--border); }
+    .dot { width:.55rem; height:.55rem; border-radius:50%; background:#f76707; }
+    .head strong { font-size:12px; letter-spacing:.02em; text-transform:uppercase; }
+    .head .money { margin-left:auto; font-weight:700; }
+    .body { padding:.75rem .85rem .85rem; }
+    .ro { font-weight:700; font-size:15px; }
+    .party { color:var(--muted); font-size:12px; margin:.2rem 0 .5rem; }
+    .concern { margin-bottom:.55rem; }
+    .foot { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); border-top:1px dashed var(--border); padding-top:.5rem; margin-top:.35rem; }
+    h1 { font-size:1.1rem; margin:0 0 .35rem; }
+    .note { color:var(--muted); font-size:12px; margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+  <h1>Concept B — status-led header band</h1>
+  <p class="note">Lane/status color fills a header chip row so the board reads by queue at a glance (Tabler status-dot language).</p>
+  <div class="grid">
+    <article class="card">
+      <div class="head"><span class="dot"></span><strong>Waiting Approval</strong><span class="money">$220</span></div>
+      <div class="body">
+        <div class="ro">RO #91</div>
+        <div class="party">SYN Comms Pair · 2017 Nissan Rogue</div>
+        <div class="concern">Estimate ready — customer asked about brake pad brands.</div>
+        <div class="foot"><span>Alex Rivera</span><span>Respond · 1h ago</span></div>
+      </div>
+    </article>
+    <article class="card">
+      <div class="head" style="background:color-mix(in srgb,#206bc4 10%,#fff)"><span class="dot" style="background:#206bc4"></span><strong>In Progress</strong><span class="money">$505</span></div>
+      <div class="body">
+        <div class="ro">RO #92</div>
+        <div class="party">SYN Wip Bay · 2018 Ford F-150</div>
+        <div class="concern">Bay 2 — alignment after suspension work.</div>
+        <div class="foot"><span>Jordan Lee</span><span>Follow up · 1h ago</span></div>
+      </div>
+    </article>
+  </div>
+</body>
+</html>

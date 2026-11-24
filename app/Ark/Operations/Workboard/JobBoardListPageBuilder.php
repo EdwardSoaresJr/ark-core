@@ -34,6 +34,10 @@ final class JobBoardListPageBuilder
         $sortDir = JobBoardListPage::parseDir($request->query('dir'));
         $page = JobBoardListPage::parsePage($request);
         $perPage = JobBoardListPage::PAGE_SIZE;
+        if ($request->attributes->get('job_board.allow_variable_page_size')) {
+            $requested = (int) $request->input('length', $request->integer('per_page', JobBoardListPage::PAGE_SIZE));
+            $perPage = max(1, min(100, $requested > 0 ? $requested : JobBoardListPage::PAGE_SIZE));
+        }
 
         $candidates = $laneKey === 'all'
             ? $byLane->flatten(1)

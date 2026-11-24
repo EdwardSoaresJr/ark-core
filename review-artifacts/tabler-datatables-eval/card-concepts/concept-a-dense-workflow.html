@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <title>Card concept A — dense workflow</title>
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --border:#e6e8eb; --text:#1e293b; --muted:#667382; --primary:#206bc4; --warn:#f59f00; }
+    body { margin:0; font:14px/1.4 system-ui,sans-serif; background:var(--bg); color:var(--text); padding:2rem; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(17rem,1fr)); gap:1rem; max-width:1100px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+    .strip { width:4px; background:var(--warn); float:left; min-height:9.5rem; }
+    .body { padding:.75rem .9rem .75rem .75rem; margin-left:4px; }
+    .row1 { display:flex; justify-content:space-between; font-weight:700; }
+    .party { color:var(--muted); font-size:12px; margin-top:.15rem; }
+    .concern { margin:.55rem 0 .45rem; }
+    .state { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--muted); }
+    .badge { background:#fff4e6; color:#a15c00; border-radius:4px; padding:.1rem .4rem; font-weight:600; }
+    .next { margin-top:.45rem; font-size:12px; font-weight:600; color:#a15c00; }
+    .marks { margin-top:.35rem; letter-spacing:.15rem; opacity:.75; }
+    h1 { font-size:1.1rem; margin:0 0 1rem; }
+    .note { color:var(--muted); font-size:12px; margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+  <h1>Concept A — dense workflow card</h1>
+  <p class="note">Stronger “Next” line; identity/money on one row; concern as the middle story.</p>
+  <div class="grid">
+    <article class="card"><div class="strip"></div><div class="body">
+      <div class="row1"><span>RO #90</span><span>$425</span></div>
+      <div class="party">SYN Brakes Demo · 2019 Honda CR-V</div>
+      <div class="concern">Customer reports grinding front brakes on deceleration.</div>
+      <div class="state"><span class="badge">Waiting Approval</span><span>Alex Rivera</span><span style="margin-left:auto">1h ago</span></div>
+      <div class="next">Next: Send estimate</div>
+      <div class="marks" aria-hidden="true">📄 💬</div>
+    </div></article>
+    <article class="card"><div class="strip" style="background:#d63939"></div><div class="body">
+      <div class="row1"><span>RO #93</span><span>$1,066</span></div>
+      <div class="party">SYN Parts Hold · 2021 Toyota Tacoma</div>
+      <div class="concern">Waiting on OE pads; customer approved labor.</div>
+      <div class="state"><span class="badge" style="background:#ffe8e8;color:#a11">Waiting Parts</span><span>Jordan Lee</span><span style="margin-left:auto">1h ago</span></div>
+      <div class="next" style="color:#a11">Next: Check parts · Promise overdue</div>
+      <div class="marks" aria-hidden="true">📦 📞</div>
+    </div></article>
+  </div>
+</body>
+</html>
