@@ -511,7 +511,7 @@ test('repair order index searches retrieval fields and paginates results', funct
 
     $this->get(route('operations.repair-orders.index'))
         ->assertOk()
-        ->assertSee('Pagination Navigation');
+        ->assertSee('class="pagination"', false);
 });
 
 test('operations home survives dense active queue without full estimate graph dependency', function () {

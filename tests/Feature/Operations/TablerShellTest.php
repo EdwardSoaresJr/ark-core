@@ -236,7 +236,7 @@ test('customer search uses Tabler pagination and keeps the filters in page links
         ->assertSee('class="pagination"', false)
         ->assertSee('page-link', false)
         ->assertSee('q=Page&amp;page=2', false)
-        ->assertSee('25 total');
+        ->assertSee('Showing 1–24 of 25', false);
 });
 
 test('customer search shows a Tabler empty state with a way back', function (): void {

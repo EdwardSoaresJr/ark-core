@@ -30,6 +30,7 @@ import { arkPortalEstimateForm } from './ark-portal-estimate-authorization';
 import { arkPortalSignature } from './ark-portal-signature';
 import { initWorkspaceTabs } from './ark-workspace-tabs';
 import { initJobBoardLayout } from './ark-job-board-layout';
+import { initCollectionLayout } from './ark-collection-layout';
 import { initWorkspaceDirtyBindings } from './ark-workspace-dirty-bindings';
 import { initRoWorkspaceMemory } from './ark-ro-workspace-memory';
 import { initIntakeWorkspaceMemory } from './ark-intake-workspace-memory';
@@ -152,6 +153,7 @@ Alpine.start();
 
 initWorkspaceTabs();
 initJobBoardLayout();
+initCollectionLayout();
 initWorkspaceDirtyBindings();
 initRoWorkspaceMemory();
 initIntakeWorkspaceMemory();

@@ -3,6 +3,9 @@
 namespace App\Ark\Operations\Customers;
 
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Runtime\Preferences\CollectionLayoutModule;
+use App\Ark\Runtime\Preferences\CollectionLayoutPreference;
+use App\Ark\Ui\Collection\CollectionSortState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -26,8 +29,35 @@ class CustomerSearchController
         $createdFrom = $request->date('created_from');
         $createdTo = $request->date('created_to');
         $hasFilters = $query !== '' || $type !== '' || $createdFrom !== null || $createdTo !== null;
+        $intakeMode = $request->boolean('intake');
+        $layoutPreference = CollectionLayoutPreference::resolve($request, CollectionLayoutModule::Customers);
+
+        $sort = CollectionSortState::fromRequest(
+            $request,
+            allowed: ['name', 'phone', 'email', 'type', 'vehicles', 'updated'],
+            defaultKey: 'name',
+            defaultDirs: [
+                'name' => 'asc',
+                'phone' => 'asc',
+                'email' => 'asc',
+                'type' => 'asc',
+                'vehicles' => 'desc',
+                'updated' => 'desc',
+            ],
+            columnMap: [
+                'name' => static function (Builder $customers, string $dir): void {
+                    $customers->orderBy('last_name', $dir)->orderBy('first_name', $dir);
+                },
+                'phone' => static fn (Builder $customers, string $dir): Builder => $customers->orderBy('phone', $dir),
+                'email' => static fn (Builder $customers, string $dir): Builder => $customers->orderBy('email', $dir),
+                'type' => static fn (Builder $customers, string $dir): Builder => $customers->orderBy('customer_type', $dir),
+                'vehicles' => static fn (Builder $customers, string $dir): Builder => $customers->orderBy('vehicles_count', $dir),
+                'updated' => static fn (Builder $customers, string $dir): Builder => $customers->orderBy('updated_at', $dir),
+            ],
+        );
 
         $customers = Customer::query()
+            ->withCount('vehicles')
             ->tap(fn (Builder $customers) => CustomerSearchQuery::withOperationalContext($customers))
             ->when(
                 $query !== '',
@@ -44,10 +74,18 @@ class CustomerSearchController
                 $createdTo instanceof Carbon,
                 fn (Builder $customers): Builder => $customers->whereDate('created_at', '<=', $createdTo),
             )
-            ->orderBy('last_name')
-            ->orderBy('first_name')
+            ->tap(fn (Builder $customers) => $sort->apply($customers))
             ->paginate(24)
             ->withQueryString();
+
+        $filterQuery = array_filter([
+            'q' => $query !== '' ? $query : null,
+            'type' => $type !== '' ? $type : null,
+            'created_from' => $createdFrom?->toDateString(),
+            'created_to' => $createdTo?->toDateString(),
+            'intake' => $intakeMode ? 1 : null,
+            'view' => $layoutPreference['explicit'] ? $layoutPreference['mode'] : null,
+        ], static fn ($value) => $value !== null && $value !== '');
 
         return view('operations.customers.search', [
             'customers' => $customers,
@@ -56,8 +94,13 @@ class CustomerSearchController
             'createdFrom' => $createdFrom?->toDateString(),
             'createdTo' => $createdTo?->toDateString(),
             'hasFilters' => $hasFilters,
-            'intakeMode' => $request->boolean('intake'),
+            'intakeMode' => $intakeMode,
             'customerTypes' => $customerTypes,
+            'collectionSort' => $sort,
+            'collectionFilterQuery' => $filterQuery,
+            'collectionLayoutMode' => $layoutPreference['mode'],
+            'collectionLayoutExplicit' => $layoutPreference['explicit'],
+            'collectionLayoutModule' => CollectionLayoutModule::Customers,
         ]);
     }
 }

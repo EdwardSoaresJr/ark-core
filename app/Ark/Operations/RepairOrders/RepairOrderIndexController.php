@@ -2,11 +2,16 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Today\TodayPipelineInventoryQuery;
+use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Workboard\WorkboardAttentionInventoryQuery;
 use App\Ark\Operations\Workboard\WorkboardInventoryContext;
 use App\Ark\Operations\Workboard\WorkboardSwimlaneCatalog;
+use App\Ark\Runtime\Preferences\CollectionLayoutModule;
+use App\Ark\Runtime\Preferences\CollectionLayoutPreference;
+use App\Ark\Ui\Collection\CollectionSortState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -28,6 +33,65 @@ class RepairOrderIndexController
         $createdTo = $request->date('created_to');
         $collectedFrom = $request->date('collected_from');
         $collectedTo = $request->date('collected_to');
+        $layoutPreference = CollectionLayoutPreference::resolve($request, CollectionLayoutModule::RepairOrders);
+
+        $sort = CollectionSortState::fromRequest(
+            $request,
+            allowed: ['ro', 'customer', 'vehicle', 'status', 'opened', 'updated'],
+            defaultKey: 'updated',
+            defaultDirs: [
+                'ro' => 'desc',
+                'customer' => 'asc',
+                'vehicle' => 'asc',
+                'status' => 'asc',
+                'opened' => 'desc',
+                'updated' => 'desc',
+            ],
+            columnMap: [
+                'ro' => static fn (Builder $repairOrders, string $dir): Builder => $repairOrders->orderBy('repair_order_id', $dir),
+                'customer' => static function (Builder $repairOrders, string $dir): void {
+                    $repairOrders->orderBy(
+                        Customer::query()
+                            ->select('last_name')
+                            ->whereColumn('customers.id', 'repair_orders.customer_id')
+                            ->limit(1),
+                        $dir,
+                    )->orderBy(
+                        Customer::query()
+                            ->select('first_name')
+                            ->whereColumn('customers.id', 'repair_orders.customer_id')
+                            ->limit(1),
+                        $dir,
+                    );
+                },
+                'vehicle' => static function (Builder $repairOrders, string $dir): void {
+                    $repairOrders->orderBy(
+                        Vehicle::query()
+                            ->select('year')
+                            ->whereColumn('vehicles.id', 'repair_orders.vehicle_id')
+                            ->limit(1),
+                        $dir,
+                    )->orderBy(
+                        Vehicle::query()
+                            ->select('make')
+                            ->whereColumn('vehicles.id', 'repair_orders.vehicle_id')
+                            ->limit(1),
+                        $dir,
+                    )->orderBy(
+                        Vehicle::query()
+                            ->select('model')
+                            ->whereColumn('vehicles.id', 'repair_orders.vehicle_id')
+                            ->limit(1),
+                        $dir,
+                    );
+                },
+                'status' => static fn (Builder $repairOrders, string $dir): Builder => $repairOrders->orderBy('status', $dir),
+                'opened' => static fn (Builder $repairOrders, string $dir): Builder => $repairOrders->orderBy('created_at', $dir),
+                'updated' => static function (Builder $repairOrders, string $dir): void {
+                    $repairOrders->orderBy('updated_at', $dir)->orderBy('id', $dir);
+                },
+            ],
+        );
 
         $repairOrders = RepairOrder::query()
             ->with(['customer', 'vehicle'])
@@ -107,10 +171,26 @@ class RepairOrderIndexController
             )
             ->when($createdFrom, fn (Builder $repairOrders): Builder => $repairOrders->whereDate('created_at', '>=', $createdFrom))
             ->when($createdTo, fn (Builder $repairOrders): Builder => $repairOrders->whereDate('created_at', '<=', $createdTo))
-            ->latest('updated_at')
-            ->latest('id')
+            ->tap(fn (Builder $repairOrders) => $sort->apply($repairOrders))
             ->paginate(24)
             ->withQueryString();
+
+        $filterQuery = array_filter([
+            'q' => $search !== '' ? $search : null,
+            'status' => $status?->value,
+            'disposition' => $dispositionFilter?->value,
+            'open' => $openQueueFilter ? '1' : null,
+            'pickup' => $pickupFilter !== '' ? $pickupFilter : null,
+            'lane' => $laneFilter !== '' ? $laneFilter : null,
+            'attention' => WorkboardAttentionInventoryQuery::label($attentionFilter) !== null ? $attentionFilter : null,
+            'pipeline' => TodayPipelineInventoryQuery::label($pipelineFilter) !== null ? $pipelineFilter : null,
+            'unassigned' => $unassignedFilter ? '1' : null,
+            'created_from' => $createdFrom?->toDateString(),
+            'created_to' => $createdTo?->toDateString(),
+            'collected_from' => $collectedFrom?->toDateString(),
+            'collected_to' => $collectedTo?->toDateString(),
+            'view' => $layoutPreference['explicit'] ? $layoutPreference['mode'] : null,
+        ], static fn ($value) => $value !== null && $value !== '');
 
         return view('operations.repair-orders.index', [
             'createdFrom' => $createdFrom?->toDateString(),
@@ -133,6 +213,11 @@ class RepairOrderIndexController
             'dispositionFilter' => $dispositionFilter?->value,
             'openQueueFilter' => $openQueueFilter,
             'statusFilterOptions' => app(RepairOrderStatusCatalog::class)->filterOptions(),
+            'collectionSort' => $sort,
+            'collectionFilterQuery' => $filterQuery,
+            'collectionLayoutMode' => $layoutPreference['mode'],
+            'collectionLayoutExplicit' => $layoutPreference['explicit'],
+            'collectionLayoutModule' => CollectionLayoutModule::RepairOrders,
         ]);
     }
 }
