@@ -10,7 +10,7 @@
 | Production Core baseline / `origin/main` | main | `9cc852899b2ab9754185675b7d83d656978b2b33` |
 | PR #254 List UX (OPEN, independent) | `feat/job-board-list-ux-audit` | `f10b70f5d42f988361c9dd9697d2efa5cbde3106` |
 | PR #255 DataTables eval (DRAFT — do not merge) | `eval/tabler-datatables-job-board` | `3b614614ba4212af258d6d216134b7e60871204f` |
-| PR #256 Card hierarchy (OPEN, stacked on #254) | `feat/job-board-card-hierarchy` | *(this tip after push)* |
+| PR #256 Card hierarchy (OPEN, stacked on #254) | `feat/job-board-card-hierarchy` | `ff566ccc815f3c7f16c38ef0912668cae538750d` |
 | SaaS `origin/main` (production pin) | pins Core `9cc85289` | `df735e4096e94eb8f0440f5124794ea924a88d2a` |
 
 Merge order if accepted: **#254 → #256**. Never productize #255.
