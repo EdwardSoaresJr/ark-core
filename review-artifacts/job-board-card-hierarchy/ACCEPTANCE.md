@@ -10,7 +10,7 @@
 | Production Core baseline / `origin/main` | `9cc852899b2ab9754185675b7d83d656978b2b33` |
 | PR #254 List UX (OPEN, not merged) | `f10b70f5d42f988361c9dd9697d2efa5cbde3106` |
 | PR #255 DataTables eval (DRAFT, do not merge) | `3b614614ba4212af258d6d216134b7e60871204f` |
-| Card hierarchy branch tip | *(this PR tip — see GitHub)* |
+| Card hierarchy branch tip | `d9a0431a83f1241f0f63a1bb8a219ac9f9ab3a65` |
 | SaaS `origin/main` (production pin) | `df735e4096e94eb8f0440f5124794ea924a88d2a` pins Core `9cc85289` |
 
 ## 2. Environment parity
