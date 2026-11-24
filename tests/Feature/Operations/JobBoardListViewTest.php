@@ -15,7 +15,7 @@ beforeEach(function () {
     $this->seed(RepairOrderStatusCatalogSeeder::class);
 });
 
-test('job board is table-first by default without kanban or layout toggle', function () {
+test('job board defaults to auto layout with list and cards over the same result set', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Table Default');
 
@@ -28,32 +28,132 @@ test('job board is table-first by default without kanban or layout toggle', func
     $board = $xpath->query('//*[@data-job-board]')->item(0);
 
     expect($board)->toBeInstanceOf(DOMElement::class)
-        ->and($board->getAttribute('data-job-board-layout'))->toBe('list')
-        ->and($xpath->query('.//*[@data-job-board-layout-toggle]', $board)->length)->toBe(0)
+        ->and($board->getAttribute('data-job-board-layout'))->toBe('auto')
+        ->and($board->getAttribute('data-job-board-layout-explicit'))->toBe('0')
+        ->and($xpath->query('.//*[@data-job-board-layout-toggle]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-layout-option="list"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-layout-option="cards"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-lanes]', $board)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-list]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-cards]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-lane-tabs]//*[@data-job-board-lane-tab]', $board)->length)->toBeGreaterThanOrEqual(6)
         ->and($xpath->query('.//*[@data-job-board-lane-tab="all"][@aria-current="page"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1)
-        ->and($xpath->query('.//*[@data-job-card]', $board)->length)->toBeGreaterThanOrEqual(1)
+        ->and($xpath->query('.//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1)
         ->and($html)->not->toContain('ops-home-col-');
 });
 
-test('legacy view=board and view=list both serve the unified table job board', function () {
+test('view=list and view=cards persist cookie and keep shared board chrome', function () {
     $advisor = actingAsLearnCurrentAdvisor();
-    repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Legacy View');
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Legacy View');
 
-    foreach (['board', 'list'] as $view) {
-        $html = $this->actingAs($advisor)
-            ->get(route('operations.index', ['view' => $view]))
-            ->assertOk()
-            ->assertCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::List->value)
-            ->getContent();
+    $listHtml = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'list']))
+        ->assertOk()
+        ->assertCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::List->value)
+        ->getContent();
 
-        expect($html)->toContain('data-job-board-layout="list"')
-            ->and($html)->toContain('data-job-board-list')
-            ->and($html)->not->toContain('data-job-board-lanes')
-            ->and($html)->not->toContain('data-job-board-layout-toggle');
+    expect($listHtml)->toContain('data-job-board-layout="list"')
+        ->and($listHtml)->toContain('data-job-board-layout-toggle')
+        ->and($listHtml)->toContain('data-job-board-list')
+        ->and($listHtml)->toContain('data-job-board-cards')
+        ->and($listHtml)->not->toContain('data-job-board-lanes');
+
+    $cardsHtml = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'cards']))
+        ->assertOk()
+        ->assertCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($cardsHtml);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $board = $xpath->query('//*[@data-job-board]')->item(0);
+
+    expect($board?->getAttribute('data-job-board-layout'))->toBe('cards')
+        ->and($xpath->query('.//*[@data-job-board-layout-option="cards"][@aria-current="true"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@id="ops-list-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1);
+});
+
+test('legacy view=board maps to cards preference', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Board Alias');
+
+    $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'board']))
+        ->assertOk()
+        ->assertCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
+        ->assertSee('data-job-board-layout="cards"', false);
+});
+
+test('job board cookie preference selects cards without a user settings column', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Cookie Pref');
+
+    expect(\Illuminate\Support\Facades\Schema::hasColumn('users', 'job_board_layout'))->toBeFalse();
+
+    $this->actingAs($advisor)
+        ->withCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
+        ->get(route('operations.index'))
+        ->assertOk()
+        ->assertSee('data-job-board-layout="cards"', false)
+        ->assertSee('data-job-board-layout-explicit="1"', false);
+});
+
+test('list and cards views render the same filtered repair order ids', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $match = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Shared Match');
+    $match->update(['concern_summary' => 'SHARED-VIEW-TOKEN']);
+    repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Other Lane');
+
+    $params = ['q' => 'SHARED-VIEW-TOKEN', 'lane' => 'waiting_approval'];
+
+    $listHtml = $this->actingAs($advisor)->get(route('operations.index', $params + ['view' => 'list']))->assertOk()->getContent();
+    $cardsHtml = $this->actingAs($advisor)->get(route('operations.index', $params + ['view' => 'cards']))->assertOk()->getContent();
+
+    foreach ([$listHtml, $cardsHtml] as $html) {
+        $document = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $document->loadHTML($html);
+        libxml_clear_errors();
+        $xpath = new DOMXPath($document);
+        $board = $xpath->query('//*[@data-job-board]')->item(0);
+
+        expect($board?->getAttribute('data-job-board-list-filtered-total'))->toBe('1')
+            ->and($xpath->query('.//*[@id="ops-list-ro-'.$match->repair_order_id.'"]', $board)->length)->toBe(1)
+            ->and($xpath->query('.//*[@id="ops-card-ro-'.$match->repair_order_id.'"]', $board)->length)->toBe(1)
+            ->and($xpath->query('.//*[@data-job-board-lane-tab="waiting_approval"][@aria-current="page"]', $board)->length)->toBe(1);
+    }
+});
+
+test('cards view preserves activity deep links and concern', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Card Links');
+    $repairOrder->update(['concern_summary' => 'Card concern line']);
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'cards']))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $card = $xpath->query('//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]')->item(0);
+
+    expect($card)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//*[@data-job-board-row-concern]', $card)->length)->toBe(1)
+        ->and($html)->toContain('Card concern line');
+
+    $estimate = $xpath->query('.//*[@data-job-card-mark="estimate"][@data-job-board-activity-link]', $card)->item(0);
+    if ($estimate instanceof DOMElement) {
+        expect((string) $estimate->getAttribute('href'))->toContain('#builder')
+            ->and($estimate->getAttribute('data-bs-toggle'))->not->toBe('tooltip');
     }
 });
 
@@ -72,17 +172,23 @@ test('job board table renders dense columns including total and activity marks',
     $xpath = new DOMXPath($document);
     $board = $xpath->query('//*[@data-job-board]')->item(0);
 
-    expect($xpath->query('.//*[@data-job-board-list-body]//tr[@data-job-board-row]', $board)->length)->toBe(2)
-        ->and($xpath->query('.//*[@id="ops-list-ro-'.$waiting->repair_order_id.'"]', $board)->length)->toBe(1)
-        ->and($xpath->query('.//*[@id="ops-list-ro-'.$parts->repair_order_id.'"]', $board)->length)->toBe(1)
-        ->and($xpath->query('.//*[@id="ops-list-ro-'.$closed->repair_order_id.'"]', $board)->length)->toBe(0)
+    $list = $xpath->query('.//*[@data-job-board-view="list"]', $board)->item(0);
+    $cards = $xpath->query('.//*[@data-job-board-view="cards"]', $board)->item(0);
+
+    expect($list)->toBeInstanceOf(DOMElement::class)
+        ->and($cards)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//*[@data-job-board-list-body]//tr[@data-job-board-row]', $list)->length)->toBe(2)
+        ->and($xpath->query('.//*[@id="ops-list-ro-'.$waiting->repair_order_id.'"]', $list)->length)->toBe(1)
+        ->and($xpath->query('.//*[@id="ops-list-ro-'.$parts->repair_order_id.'"]', $list)->length)->toBe(1)
+        ->and($xpath->query('.//*[@id="ops-list-ro-'.$closed->repair_order_id.'"]', $list)->length)->toBe(0)
+        ->and($xpath->query('.//*[@id="ops-card-ro-'.$waiting->repair_order_id.'"]', $cards)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-sort="ro"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-sort="customer"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-sort="vehicle"]', $board)->length)->toBe(1)
-        ->and($xpath->query('.//*[@data-job-board-col="customer-vehicle"]', $board)->length)->toBe(1)
-        ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $board)->length)->toBe(2)
-        ->and($xpath->query('.//*[@data-job-board-row-total]', $board)->length)->toBe(2)
-        ->and($xpath->query('.//*[@data-job-board-row-activity]', $board)->length)->toBe(2)
+        ->and($xpath->query('.//*[@data-job-board-col="customer-vehicle"]', $list)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $list)->length)->toBe(2)
+        ->and($xpath->query('.//*[@data-job-board-row-total]', $list)->length)->toBe(2)
+        ->and($xpath->query('.//*[@data-job-board-row-activity]', $list)->length)->toBe(2)
         ->and($xpath->query('.//*[@data-job-board-row-promised]', $board)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-row-parts]', $board)->length)->toBe(0)
         ->and($html)->toContain('Brake noise diagnosis')

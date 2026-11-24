@@ -21,8 +21,7 @@ class OperationsHomeController
         AdvisorHomeCardSurfaceProjection $homeCardSurfaces,
         JobBoardListPageBuilder $listPageBuilder,
     ): View {
-        // Table-first Job Board. Legacy ?view=board|list and cookies normalize to list.
-        JobBoardLayoutPreference::resolve($request);
+        $layoutPreference = JobBoardLayoutPreference::resolve($request);
 
         $repairOrders = $repairOrderQuery->forAdvisor();
         $listPage = $listPageBuilder->build($request, $repairOrders);
@@ -46,6 +45,9 @@ class OperationsHomeController
             'jobBoardListPage' => $listPage,
             'jobBoardListRows' => $listPage->rows,
             'jobBoardLaneTabs' => $listPage->laneTabs,
+            'jobBoardLayoutMode' => $layoutPreference['mode'],
+            'jobBoardLayoutExplicit' => $layoutPreference['explicit'],
+            'jobBoardLayout' => $layoutPreference['layout'],
         ]);
     }
 }

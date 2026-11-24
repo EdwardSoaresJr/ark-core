@@ -45,6 +45,7 @@ final readonly class JobBoardListPage
         public array $rows,
         public array $pageColumns,
         public Collection $pageRepairOrders,
+        public ?string $view = null,
     ) {}
 
     public function from(): int
@@ -82,6 +83,7 @@ final readonly class JobBoardListPage
         $sort = array_key_exists('sort', $overrides) ? $overrides['sort'] : $this->sortKey;
         $dir = array_key_exists('dir', $overrides) ? $overrides['dir'] : $this->sortDir;
         $page = array_key_exists('page', $overrides) ? (int) $overrides['page'] : $this->page;
+        $view = array_key_exists('view', $overrides) ? $overrides['view'] : $this->view;
 
         $params = [];
 
@@ -103,6 +105,10 @@ final readonly class JobBoardListPage
 
         if (is_string($dir) && $dir === 'asc') {
             $params['dir'] = 'asc';
+        }
+
+        if (is_string($view) && in_array($view, [JobBoardLayout::List->value, JobBoardLayout::Cards->value], true)) {
+            $params['view'] = $view;
         }
 
         if ($page > 1) {

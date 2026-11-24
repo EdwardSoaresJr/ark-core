@@ -29,6 +29,7 @@ import { arkOperationalClock } from './ark-operational-clock';
 import { arkPortalEstimateForm } from './ark-portal-estimate-authorization';
 import { arkPortalSignature } from './ark-portal-signature';
 import { initWorkspaceTabs } from './ark-workspace-tabs';
+import { initJobBoardLayout } from './ark-job-board-layout';
 import { initWorkspaceDirtyBindings } from './ark-workspace-dirty-bindings';
 import { initRoWorkspaceMemory } from './ark-ro-workspace-memory';
 import { initIntakeWorkspaceMemory } from './ark-intake-workspace-memory';
@@ -150,6 +151,7 @@ Alpine.data('arkRoMention', (visits = []) => arkRoMention(visits));
 Alpine.start();
 
 initWorkspaceTabs();
+initJobBoardLayout();
 initWorkspaceDirtyBindings();
 initRoWorkspaceMemory();
 initIntakeWorkspaceMemory();

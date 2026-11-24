@@ -1,7 +1,9 @@
 # Job Board action preservation (Kanban → table)
 
-Kanban columns and the Board/List toggle are removed from the Job Board screen.
-Shared home-card / triage projections remain for other surfaces.
+Kanban swimlanes are removed from the Job Board screen. A compact **List | Cards**
+segmented control switches presentation over the same filtered/paginated result set
+(cookie preference; shop default is a follow-up). Shared home-card / triage projections
+remain the data source for both layouts.
 
 | Former card affordance | Was clickable on card? | Table-first replacement |
 | --- | --- | --- |

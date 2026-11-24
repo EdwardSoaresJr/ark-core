@@ -1,30 +1,11 @@
 @php
     /** @var list<\App\Ark\Operations\Workboard\JobBoardListRow> $jobBoardListRows */
     /** @var \App\Ark\Operations\Workboard\JobBoardListPage $jobBoardListPage */
-    $clearUrl = route('operations.index');
 @endphp
 
 <div data-job-board-list class="ark-job-board-list">
-    <div class="d-flex flex-wrap align-items-center gap-2 mb-2" data-job-board-list-summary>
-        <p class="mb-0 text-secondary small" data-job-board-list-range>
-            @if ($jobBoardListPage->filteredTotal === 0)
-                No matching repair orders
-            @else
-                Showing {{ $jobBoardListPage->from() }}–{{ $jobBoardListPage->to() }}
-                of {{ $jobBoardListPage->filteredTotal }}
-                @if ($jobBoardListPage->hasFilters())
-                    matching
-                @endif
-                · Queue total {{ $jobBoardListPage->queueTotal }}
-            @endif
-        </p>
-        @if ($jobBoardListPage->hasFilters())
-            <a href="{{ $clearUrl }}" class="btn btn-sm btn-ghost-secondary" data-job-board-list-clear>Clear filters</a>
-        @endif
-    </div>
-
     @if ($jobBoardListRows === [])
-        <x-tabler.empty-state icon="{{ $jobBoardListPage->hasFilters() ? 'search' : 'list' }}" :clear-url="$jobBoardListPage->hasFilters() ? $clearUrl : null">
+        <x-tabler.empty-state icon="{{ $jobBoardListPage->hasFilters() ? 'search' : 'list' }}" :clear-url="$jobBoardListPage->hasFilters() ? route('operations.index') : null">
             @if ($jobBoardListPage->hasFilters())
                 No repair orders match these filters.
             @else
@@ -96,21 +77,5 @@
                 @include('operations.workboard.partials.home-board-list-mobile-row', ['row' => $row])
             @endforeach
         </div>
-
-        @if ($jobBoardListPage->lastPage > 1)
-            <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Job board list pages" data-job-board-list-pagination>
-                @if ($jobBoardListPage->page > 1)
-                    <a class="btn btn-outline-secondary" href="{{ route('operations.index', $jobBoardListPage->queryParams(['page' => $jobBoardListPage->page - 1])) }}" data-job-board-list-prev>Previous</a>
-                @else
-                    <span class="btn btn-outline-secondary disabled" aria-disabled="true">Previous</span>
-                @endif
-                <span class="text-secondary small">Page {{ $jobBoardListPage->page }} of {{ $jobBoardListPage->lastPage }}</span>
-                @if ($jobBoardListPage->page < $jobBoardListPage->lastPage)
-                    <a class="btn btn-outline-secondary" href="{{ route('operations.index', $jobBoardListPage->queryParams(['page' => $jobBoardListPage->page + 1])) }}" data-job-board-list-next>Next</a>
-                @else
-                    <span class="btn btn-outline-secondary disabled" aria-disabled="true">Next</span>
-                @endif
-            </nav>
-        @endif
     @endif
 </div>
