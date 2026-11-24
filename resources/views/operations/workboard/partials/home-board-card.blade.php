@@ -22,20 +22,7 @@
         }
     }
     $concernFull = $concernLines !== [] ? implode("\n", $concernLines) : '';
-    $attentionLabel = match ($surface->attention) {
-        'critical' => $surface->exceptionLabel ?: 'Critical',
-        'attention' => $surface->exceptionLabel ?: 'Needs attention',
-        'watch' => $surface->exceptionLabel ?: 'Watch',
-        default => $surface->exceptionLabel,
-    };
-    // Actionable next step only from existing projection fields — never invent copy.
-    $nextStepLabel = filled($surface->nextMoveLabel)
-        ? trim((string) $surface->nextMoveLabel)
-        : null;
-    if ($nextStepLabel === null && in_array($surface->attention, ['attention', 'critical'], true) && filled($attentionLabel)) {
-        $nextStepLabel = $attentionLabel;
-    }
-    $showWatchMeta = $surface->attention === 'watch' && filled($attentionLabel);
+    $nextPresentation = \App\Ark\Operations\Workboard\JobBoardCardNextPresentation::forSurface($surface);
     $activityStrip = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::forList($row->activityMarks);
     $attentionColor = match ($surface->attention) {
         'attention' => 'yellow',
@@ -71,14 +58,17 @@
             </span>
         </div>
 
-        <div class="ark-job-board-card-band ark-job-board-card-band--party small text-secondary text-truncate" data-job-board-row-customer-vehicle>
-            @if ($surface->customerHubUrl)
-                <a href="{{ $surface->customerHubUrl }}" class="text-reset" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
-            @else
-                <span data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</span>
-            @endif
-            <span aria-hidden="true"> · </span>
-            <a href="{{ $builderUrl }}" class="text-secondary text-decoration-none" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
+        <div class="ark-job-board-card-band ark-job-board-card-band--party" data-job-board-row-customer-vehicle>
+            <div class="ark-job-board-card-vehicle text-truncate">
+                <a href="{{ $builderUrl }}" class="text-reset fw-semibold text-decoration-none" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
+            </div>
+            <div class="small text-secondary text-truncate">
+                @if ($surface->customerHubUrl)
+                    <a href="{{ $surface->customerHubUrl }}" class="text-secondary" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
+                @else
+                    <span data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</span>
+                @endif
+            </div>
         </div>
 
         <div
@@ -107,29 +97,33 @@
         </div>
 
         <div class="ark-job-board-card-band ark-job-board-card-band--next" data-job-board-row-attention data-attention="{{ $surface->attention }}">
-            @if ($nextStepLabel !== null)
+            @if ($nextPresentation['kind'] === 'action')
+                <span
+                    class="ark-job-board-card-next text-body"
+                    data-job-board-card-next
+                    data-next-kind="action"
+                >
+                    <span class="text-secondary fw-normal">Next</span>
+                    {{ $nextPresentation['label'] }}
+                </span>
+            @elseif ($nextPresentation['kind'] === 'warning')
                 <span
                     @class([
-                        'ark-job-board-card-next',
-                        'ark-job-board-attention',
-                        'text-danger fw-semibold' => $surface->attention === 'critical',
-                        'text-warning fw-semibold' => $surface->attention === 'attention',
-                        'text-secondary' => $surface->attention === 'watch' || ! in_array($surface->attention, ['attention', 'critical', 'watch'], true),
+                        'ark-job-board-attention fw-semibold',
+                        'text-danger' => $surface->attention === 'critical',
+                        'text-warning' => $surface->attention === 'attention',
                     ])
                     data-attention-tone="{{ $surface->attention }}"
-                    data-job-board-card-next
-                >
-                    <span class="fw-normal opacity-75">Next</span>
-                    {{ $nextStepLabel }}
-                </span>
-            @elseif ($showWatchMeta)
-                <span class="ark-job-board-attention text-secondary" data-attention-tone="watch">{{ $attentionLabel }}</span>
+                    data-next-kind="warning"
+                >{{ $nextPresentation['label'] }}</span>
+            @elseif ($nextPresentation['kind'] === 'watch')
+                <span class="ark-job-board-attention text-secondary" data-attention-tone="watch" data-next-kind="watch">{{ $nextPresentation['label'] }}</span>
             @else
-                <span class="text-secondary">—</span>
+                <span class="text-secondary" data-next-kind="none">—</span>
             @endif
         </div>
 
-        <div class="ark-job-board-card-band ark-job-board-card-band--footer mt-auto pt-1 d-flex align-items-center gap-2">
+        <div class="ark-job-board-card-band ark-job-board-card-band--footer mt-auto d-flex align-items-center gap-2">
             <div class="min-w-0" data-job-board-row-activity data-job-card-activity>
                 @if ($activityStrip['visible'] === [])
                     <span class="text-secondary small" data-job-board-activity-empty>—</span>

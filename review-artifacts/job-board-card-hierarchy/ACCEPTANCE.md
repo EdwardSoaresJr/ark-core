@@ -1,79 +1,88 @@
-# Job Board UX completion — acceptance package
+# Job Board UX finalization — visual acceptance
 
 **Date:** 2026-11-24  
 **Stopped for owner/Carlos visual acceptance.** No merge, staging, production, or SaaS Core-pin.
 
-## 1. Exact SHAs
+## 1. Exact revisions
 
-| Role | SHA |
-|------|-----|
-| Production Core baseline / `origin/main` | `9cc852899b2ab9754185675b7d83d656978b2b33` |
-| PR #254 List UX (OPEN, not merged) | `f10b70f5d42f988361c9dd9697d2efa5cbde3106` |
-| PR #255 DataTables eval (DRAFT, do not merge) | `3b614614ba4212af258d6d216134b7e60871204f` |
-| Card hierarchy branch tip | `d9a0431a83f1241f0f63a1bb8a219ac9f9ab3a65` |
-| SaaS `origin/main` (production pin) | `df735e4096e94eb8f0440f5124794ea924a88d2a` pins Core `9cc85289` |
+| Role | Ref | SHA |
+|------|-----|-----|
+| Production Core baseline / `origin/main` | main | `9cc852899b2ab9754185675b7d83d656978b2b33` |
+| PR #254 List UX (OPEN, independent) | `feat/job-board-list-ux-audit` | `f10b70f5d42f988361c9dd9697d2efa5cbde3106` |
+| PR #255 DataTables eval (DRAFT — do not merge) | `eval/tabler-datatables-job-board` | `3b614614ba4212af258d6d216134b7e60871204f` |
+| PR #256 Card hierarchy (OPEN, stacked on #254) | `feat/job-board-card-hierarchy` | *(this tip after push)* |
+| SaaS `origin/main` (production pin) | pins Core `9cc85289` | `df735e4096e94eb8f0440f5124794ea924a88d2a` |
 
-## 2. Environment parity
+Merge order if accepted: **#254 → #256**. Never productize #255.
+
+## 2. Local environment & assets
 
 | Check | Result |
 |-------|--------|
-| Local Core branch for Card work | `feat/job-board-card-hierarchy` based on #254 tip |
-| Uncommitted unrelated artifacts | Left untracked; not committed |
-| `public/hot` | Removed for acceptance; served `public/build` |
-| Compiled Tabler CSS (Card tip) | `assets/tabler-BYHBbn9Y.css` |
-| Synthetic dataset | Local demo shop (~21 open ROs with concerns/status/comms) — not production customers |
-| SaaS Core pin | Still production `9cc85289` — Cards/List not on SaaS |
+| Local Core branch | `feat/job-board-card-hierarchy` (includes #254 tip) |
+| Unrelated untracked review-artifacts | Left untracked; not committed |
+| `public/hot` | Absent for acceptance; served `public/build` |
+| Compiled Tabler CSS | `assets/tabler-pQ95JiqO.css` |
+| Synthetic dataset | Local demo shop (~21 open ROs: Building Estimate, Waiting Approval, Waiting Parts, In Progress, Ready for Pickup, Draft) |
+| SaaS Core pin | Still production `9cc85289` — Cards/List UX not on SaaS |
 
-**Not BLOCKED:** local Herd serves expected #254+#Cards combination with rebuilt assets.
+## 3. Next-action semantics (root cause + fix)
 
-## 3. PR #254 acceptance findings
+**Root cause:** `WorkboardTriageCard::nextMoveLabel()` / glance projection treated any `Vehicle ID` signal as **Confirm vehicle**, including Ready for Pickup. Generic column defaults (`Review`, `Work active`, `Close or collect`) and attention copy (`Needs attention`) were also presented as Next.
 
-Browser-validated on #254 tip before Card edits:
+**Correction (presentation only — no RO workflow/billing rule changes):**
 
-- Eight sortable headers present; `sort=total` yields numeric order (RO #93 $1,066 first).
-- Concern cells show real text (concern-row fallback), not mass `—`.
-- Active lane styling from #254 retained.
-- Activity deep links present on list rows.
-- Kept independent; not combined with #255.
+- `vehicleIdentityNextMove()` only for Draft / Estimate / Waiting Approval.
+- Glance `next()` omits generic column invents; Ready for Pickup with Vehicle ID → `null`.
+- `JobBoardCardNextPresentation` classifies `action` | `warning` | `watch` | `none`; prefers omission over a false instruction.
+- Cards/mobile compact rows use that presentation; List Attention column still shows severity labels (Watch / exception), not invented Next verbs.
 
-Screenshot: `screenshots/phase1-list-254-total-sort-1440.png`
+**Verified on local board (RO #95 Ready for Pickup):** `Promise overdue` warning — not “Confirm vehicle”. RO #88 Ready for Pickup: understated `Watch`. Building Estimate + Vehicle ID: `Next Confirm vehicle` remains valid.
 
-## 4. Card View PR
+## 4. Desktop density
 
-Focused PR stacks on #254. Changes:
+| Width | Columns (`--ark-card-min-width: 21rem`) |
+|-------|----------------------------------------|
+| 1024 | 2 |
+| 1366–1440 | 3 |
+| 1920 | 4 |
 
-- Tabler band hierarchy: identity+money → party → concern → status/tech → Next (from `nextMoveLabel` / actionable attention only) → activity+updated.
-- `.ark-card-grid` for responsive equal-height cards.
-- Watch understated; Attention/Critical keep status strip + weight.
-- No Yajra/DataTables; no business-logic duplication.
+Chose 21rem after 19rem produced five skinny columns at 1920. Hierarchy: RO+money → vehicle→customer → concern → status/tech → Next/warning → activity+clock.
 
-## 5. Screenshots
+## 5. Mobile toolbar
+
+- Visible **Employee** label below `lg`; stacked search / tech / Search+List·Cards / Check In.
+- No horizontal page overflow at 320 / 390 / 768.
+- Lane tabs remain horizontally scrollable; Cards default on small screens with saved `view=` honored (`list` explicit works).
+
+## 6. Activity
+
+Six categories unchanged (`estimate`, `sms`, `email`, `phone`, `dvi`, `scheduled`). Larger hit targets + Tabler theme colors for engaged/attention; deep links intact. No new legend.
+
+## 7. List/Card consistency
+
+Shared `JobBoardListPageBuilder` / `JobBoardListRow` / glance surface. Same filtered 21 ROs, totals, tech, concerns, activity marks, pagination. Layout toggle only changes projection chrome.
+
+## 8. Screenshots
+
+Under `review-artifacts/job-board-card-hierarchy/screenshots/`:
 
 | File | Note |
 |------|------|
-| `before-cards-1440.png` | #254 cards composition |
-| `after-cards-1440.png` | Hierarchy redesign |
-| `after-cards-390.png` | Mobile cards |
-| `phase1-list-254-total-sort-1440.png` | List sort + concerns |
+| `before-cards-1440.png` | Pre-hierarchy (#254 cards) |
+| `mid-cards-*-pre-finalization.png` | Mid #256 before Next/toolbar polish |
+| `after-cards-{1366,1440,1920,390}.png` | Canonical after |
+| `final/cards-*-{light,dark}.png` | Full matrix incl. 320/768/1024 + dark |
+| `final/list-390-light.png` | Explicit List on phone |
+| `phase1-list-254-total-sort-1440.png` | #254 list sort evidence |
 
-Also exercised 1366/1920 desktop; light theme primary. Dark theme uses same Tabler variables (visual owner check remaining).
+## 9. Tests
 
-## 6–9. Architecture docs
+Focused: `JobBoardCardNextPresentationTest|WorkboardCardGlanceTest|JobBoardListViewTest|AdvisorHomeCardSurfaceTest` → **42 passed**.
 
-- `docs/engineering/TABLER_SHARED_LIST_CARD_CONVENTIONS.md`
-- `docs/engineering/TABLER_LAYOUT_PREFERENCE_MIGRATION.md`
-- `docs/engineering/TABLER_LEGACY_ASSET_RETIREMENT.md`
+## 10. Remaining / owner decisions
 
-## 10. Tests
-
-- `JobBoardListViewTest`: 24 passed
-- CustomerSearch|VehicleSearch|RepairOrderIndex filter: 16 passed
-- CI: see Card PR checks after push
-
-## 11. Remaining / owner decisions
-
-- Visual accept Cards hierarchy (Next line density, min-height).
-- Merge order: #254 first, then Cards PR; never #255 as product.
-- Preference migration and Customers/Vehicles List not implemented (documented only).
+- Visual accept Cards hierarchy, Next omission, mobile Employee stack, density at 3/4 columns.
 - Dark-theme Cards pass for Carlos.
-- No production deploy authorized.
+- Preference migration / Customers·Vehicles List conventions documented only.
+- **Do not merge or deploy** until owner acceptance.

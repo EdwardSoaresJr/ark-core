@@ -200,6 +200,67 @@ test('estimate viewed on shop-floor work is not a customer-decision status', fun
         ->and($glance->moneyCaption)->toBeNull();
 });
 
+test('ready for pickup with stale vehicle-id signal does not recommend confirm vehicle', function () {
+    $repairOrder = glanceRepairOrder(RepairOrderStatus::ReadyPickup);
+
+    $glance = (new WorkboardCardGlanceProjection)->forCard(
+        glanceTriageCard($repairOrder, 'Vehicle ID Needed'),
+        'completed',
+        glanceTotals(42_500),
+        null,
+        now()->subHours(2),
+        false,
+    );
+
+    expect($glance->operationalStatus)->toBe('Ready for Pickup')
+        ->and($glance->nextLabel)->toBeNull();
+});
+
+test('building estimate can still recommend confirm vehicle from identity pressure', function () {
+    $repairOrder = glanceRepairOrder(RepairOrderStatus::Estimate);
+
+    $glance = (new WorkboardCardGlanceProjection)->forCard(
+        glanceTriageCard($repairOrder, 'Vehicle ID Needed'),
+        'estimates',
+        glanceTotals(0),
+        null,
+        now()->subHours(1),
+        false,
+    );
+
+    expect($glance->nextLabel)->toBe('Confirm vehicle');
+});
+
+test('waiting parts recommends check parts', function () {
+    $repairOrder = glanceRepairOrder(RepairOrderStatus::WaitingParts);
+
+    $glance = (new WorkboardCardGlanceProjection)->forCard(
+        glanceTriageCard($repairOrder, 'Waiting on Parts'),
+        'parts',
+        glanceTotals(50_000),
+        null,
+        now()->subHours(3),
+        false,
+    );
+
+    expect($glance->nextLabel)->toBe('Check parts');
+});
+
+test('in progress without a concrete signal omits a generic next action', function () {
+    $repairOrder = glanceRepairOrder(RepairOrderStatus::InProgress);
+
+    $glance = (new WorkboardCardGlanceProjection)->forCard(
+        glanceTriageCard($repairOrder),
+        'work_in_progress',
+        glanceTotals(20_000),
+        null,
+        now()->subHours(4),
+        false,
+    );
+
+    expect($glance->nextLabel)->toBeNull();
+});
+
 test('deferred recommendation follow-up is why without changing RO status', function () {
     $repairOrder = glanceRepairOrder(RepairOrderStatus::InProgress);
 
