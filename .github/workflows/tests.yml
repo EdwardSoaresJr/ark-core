@@ -22,7 +22,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -71,7 +71,7 @@ jobs:
     # Authentication, permissions, sessions, signed access, isolation between records and test databases: on every
     # change, whatever it touches. Payment tests join when the change touches payments or billing.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     # Repair-order cache checks and the needs-attention regressions, on every change.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -159,7 +159,7 @@ jobs:
     runs-on: ubuntu-latest
     # The tests relevant to what changed (scripts/ci-focused-tests.sh), not the whole suite.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -212,7 +212,7 @@ jobs:
     runs-on: ubuntu-latest
     # Public Core must not grow communications code (docs/PRODUCT_BOUNDARY.md). A missing route list or baseline fails.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
