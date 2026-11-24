@@ -6,8 +6,7 @@ use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Today\AdvisorHomeCardSurfaceProjection;
 use App\Ark\Operations\Today\AdvisorHomeCockpitProjection;
-use App\Ark\Operations\Workboard\JobBoardLayout;
-use App\Ark\Operations\Workboard\JobBoardListRowProjection;
+use App\Ark\Operations\Workboard\JobBoardListPageBuilder;
 use App\Ark\Operations\Workboard\WorkboardTriageCard;
 use App\Ark\Operations\Workboard\WorkboardTriageLaneProjection;
 use App\Ark\Operations\Workboard\WorkboardTriageProjection;
@@ -25,14 +24,38 @@ class OperationsHomeController
         WorkboardTriageProjection $workboardTriage,
         EstimateTotalsCalculator $totalsCalculator,
         AdvisorHomeCardSurfaceProjection $homeCardSurfaces,
-        JobBoardListRowProjection $listRows,
+        JobBoardListPageBuilder $listPageBuilder,
     ): View {
         $layout = JobBoardLayoutPreference::resolve($request);
         $repairOrders = $repairOrderQuery->forAdvisor();
-        $homeBoardColumns = $workboardTriage->forAdvisorHomeBoard(
-            $repairOrders,
-            uncapped: $layout->isList(),
-        );
+
+        if ($layout->isList()) {
+            $listPage = $listPageBuilder->build($request, $repairOrders);
+            $pageRepairOrders = new \Illuminate\Database\Eloquent\Collection($listPage->pageRepairOrders->all());
+            $repairOrderTotals = $pageRepairOrders->mapWithKeys(fn (RepairOrder $repairOrder): array => [
+                $repairOrder->id => $totalsCalculator->totalsFor($repairOrder),
+            ]);
+
+            return view('operations.home', [
+                'cockpit' => AdvisorHomeCockpitProjection::forJobBoard(
+                    $listPage->pageColumns,
+                    $repairOrderTotals,
+                    $repairOrders->count(),
+                ),
+                'attentionZones' => [],
+                'homeBoardColumns' => $listPage->pageColumns,
+                'homeCardSurfaces' => [],
+                'homeBoardTechnicians' => $homeCardSurfaces->technicianOptions($repairOrders),
+                'repairOrderTotals' => $repairOrderTotals,
+                'activeRepairOrderCount' => $repairOrders->count(),
+                'jobBoardLayout' => $layout,
+                'jobBoardListPage' => $listPage,
+                'jobBoardListRows' => $listPage->rows,
+                'jobBoardLaneTabs' => $listPage->laneTabs,
+            ]);
+        }
+
+        $homeBoardColumns = $workboardTriage->forAdvisorHomeBoard($repairOrders);
         $visibleRepairOrders = new \Illuminate\Database\Eloquent\Collection(
             $this->visibleRepairOrders($homeBoardColumns)->all(),
         );
@@ -42,9 +65,6 @@ class OperationsHomeController
         ]);
 
         $cardSurfaces = $homeCardSurfaces->mapForHomeBoard($visibleRepairOrders, $homeBoardColumns, $repairOrderTotals);
-        $listRowModels = $layout->isList()
-            ? $listRows->fromHomeBoard($homeBoardColumns, $cardSurfaces)
-            : [];
 
         return view('operations.home', [
             'cockpit' => AdvisorHomeCockpitProjection::forJobBoard(
@@ -59,9 +79,39 @@ class OperationsHomeController
             'repairOrderTotals' => $repairOrderTotals,
             'activeRepairOrderCount' => $repairOrders->count(),
             'jobBoardLayout' => $layout,
-            'jobBoardListRows' => $listRowModels,
-            'jobBoardLaneTabs' => $listRows->laneTabs($homeBoardColumns),
+            'jobBoardListPage' => null,
+            'jobBoardListRows' => [],
+            'jobBoardLaneTabs' => $this->boardLaneTabs($homeBoardColumns),
         ]);
+    }
+
+    /**
+     * @param  list<WorkboardTriageLaneProjection>  $homeBoardColumns
+     * @return list<array{key: string, label: string, color: string, count: int}>
+     */
+    private function boardLaneTabs(array $homeBoardColumns): array
+    {
+        $laneTotal = collect($homeBoardColumns)->sum(
+            fn (WorkboardTriageLaneProjection $column): int => $column->totalCount,
+        );
+
+        $tabs = [[
+            'key' => 'all',
+            'label' => 'All',
+            'color' => 'secondary',
+            'count' => $laneTotal,
+        ]];
+
+        foreach ($homeBoardColumns as $column) {
+            $tabs[] = [
+                'key' => $column->key,
+                'label' => $column->label,
+                'color' => $column->color,
+                'count' => $column->totalCount,
+            ];
+        }
+
+        return $tabs;
     }
 
     /**

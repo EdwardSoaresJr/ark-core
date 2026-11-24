@@ -4,6 +4,7 @@
     /** @var \App\Ark\Operations\Workboard\JobBoardLayout $jobBoardLayout */
     /** @var list<\App\Ark\Operations\Workboard\JobBoardListRow> $jobBoardListRows */
     /** @var list<array{key: string, label: string, color: string, count: int}> $jobBoardLaneTabs */
+    /** @var \App\Ark\Operations\Workboard\JobBoardListPage|null $jobBoardListPage */
     $isListLayout = $jobBoardLayout->isList();
 @endphp
 
@@ -13,7 +14,20 @@
             class="d-flex flex-column gap-3"
             data-job-board
             data-job-board-layout="{{ $jobBoardLayout->value }}"
-            x-data="jobBoardFilters()"
+            @if ($isListLayout)
+                data-job-board-list-page="{{ $jobBoardListPage?->page }}"
+                data-job-board-list-per-page="{{ $jobBoardListPage?->perPage }}"
+                data-job-board-list-filtered-total="{{ $jobBoardListPage?->filteredTotal }}"
+                data-job-board-list-queue-total="{{ $jobBoardListPage?->queueTotal }}"
+            @endif
+            x-data="jobBoardFilters(@js([
+                'layout' => $jobBoardLayout->value,
+                'laneKey' => $isListLayout ? ($jobBoardListPage?->laneKey ?? 'all') : 'all',
+                'query' => $isListLayout ? ($jobBoardListPage?->query ?? '') : '',
+                'techId' => $isListLayout ? ($jobBoardListPage?->techId ?? '') : '',
+                'sortKey' => $isListLayout ? ($jobBoardListPage?->sortKey ?? 'updated') : 'updated',
+                'sortDir' => $isListLayout ? ($jobBoardListPage?->sortDir ?? 'desc') : 'desc',
+            ]))"
         >
             @if ($errors->has('lifecycle'))
                 <div class="alert alert-danger mb-0" role="alert">{{ $errors->first('lifecycle') }}</div>
@@ -27,18 +41,20 @@
                     'homeBoardTechnicians' => $homeBoardTechnicians,
                     'activeRepairOrderCount' => $activeRepairOrderCount,
                     'jobBoardLayout' => $jobBoardLayout,
+                    'jobBoardListPage' => $jobBoardListPage,
                 ])
 
                 @include('operations.workboard.partials.home-board-lane-tabs', [
                     'jobBoardLaneTabs' => $jobBoardLaneTabs,
                     'isListLayout' => $isListLayout,
+                    'jobBoardListPage' => $jobBoardListPage,
                 ])
             </div>
 
             @if ($isListLayout)
                 @include('operations.workboard.partials.home-board-list', [
                     'jobBoardListRows' => $jobBoardListRows,
-                    'homeCardSurfaces' => $homeCardSurfaces,
+                    'jobBoardListPage' => $jobBoardListPage,
                 ])
             @else
                 <div class="ark-board pb-2" data-job-board-lanes>
@@ -55,14 +71,22 @@
         </section>
 
         <script>
-            function jobBoardFilters() {
+            function jobBoardFilters(initial = {}) {
                 return {
-                    query: '',
-                    techId: '',
-                    laneKey: 'all',
-                    sortKey: 'pressure',
-                    sortDir: 'desc',
+                    layout: initial.layout || 'board',
+                    query: initial.query || '',
+                    techId: initial.techId || '',
+                    laneKey: initial.laneKey || 'all',
+                    sortKey: initial.sortKey || 'updated',
+                    sortDir: initial.sortDir || 'desc',
+                    isList() {
+                        return this.layout === 'list';
+                    },
                     cardMatches(el) {
+                        if (this.isList()) {
+                            return true;
+                        }
+
                         if (this.techId !== '' && (el.dataset.homeTechId ?? '') !== this.techId) {
                             return false;
                         }
@@ -100,87 +124,6 @@
                                 return needle === '' || (el.dataset.homeSearch ?? '').includes(needle);
                             })
                             .length;
-                    },
-                    filteredLaneCount(tabKey) {
-                        void this.query;
-                        void this.techId;
-
-                        const rows = [...this.$root.querySelectorAll('[data-job-board-list-body] [data-job-board-row]')];
-
-                        return rows.filter((el) => {
-                            if (tabKey !== 'all' && (el.dataset.homeLaneKey ?? '') !== tabKey) {
-                                return false;
-                            }
-
-                            if (this.techId !== '' && (el.dataset.homeTechId ?? '') !== this.techId) {
-                                return false;
-                            }
-
-                            const needle = this.query.trim().toLowerCase();
-
-                            return needle === '' || (el.dataset.homeSearch ?? '').includes(needle);
-                        }).length;
-                    },
-                    visibleRowCount() {
-                        void this.query;
-                        void this.techId;
-                        void this.laneKey;
-
-                        return [...this.$root.querySelectorAll('[data-job-board-list-body] [data-job-board-row]')]
-                            .filter((el) => this.cardMatches(el))
-                            .length;
-                    },
-                    sortValue(el, key) {
-                        return el.getAttribute('data-sort-' + key) ?? '';
-                    },
-                    setSort(key) {
-                        if (this.sortKey === key) {
-                            this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-                        } else {
-                            this.sortKey = key;
-                            this.sortDir = ['ro', 'customer', 'vehicle', 'status', 'technician'].includes(key) ? 'asc' : 'desc';
-                        }
-
-                        this.$nextTick(() => this.applySort());
-                    },
-                    applySort() {
-                        const tbody = this.$root.querySelector('[data-job-board-list-body]');
-                        const mobile = this.$root.querySelector('[data-job-board-list-mobile]');
-
-                        if (! tbody) {
-                            return;
-                        }
-
-                        const dir = this.sortDir === 'asc' ? 1 : -1;
-                        const key = this.sortKey;
-                        const rows = [...tbody.querySelectorAll(':scope > [data-job-board-row]')];
-
-                        rows.sort((a, b) => {
-                            const av = this.sortValue(a, key);
-                            const bv = this.sortValue(b, key);
-                            const an = Number(av);
-                            const bn = Number(bv);
-
-                            if (av !== '' && bv !== '' && ! Number.isNaN(an) && ! Number.isNaN(bn)) {
-                                return (an - bn) * dir;
-                            }
-
-                            return String(av).localeCompare(String(bv), undefined, { sensitivity: 'base', numeric: true }) * dir;
-                        });
-
-                        rows.forEach((row) => {
-                            tbody.appendChild(row);
-
-                            if (! mobile) {
-                                return;
-                            }
-
-                            const mobileRow = mobile.querySelector('[data-job-board-mobile-for="' + row.dataset.roId + '"]');
-
-                            if (mobileRow) {
-                                mobile.appendChild(mobileRow);
-                            }
-                        });
                     },
                 };
             }

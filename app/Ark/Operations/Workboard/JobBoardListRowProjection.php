@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Workboard;
 
 use App\Ark\Operations\RepairOrders\PartsPressure;
+use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Today\AdvisorHomeCardSurface;
 use Illuminate\Support\Collection;
@@ -72,24 +73,20 @@ final class JobBoardListRowProjection
             }
         }
 
-        return collect($rows)
-            ->sortBy([
-                fn (JobBoardListRow $row): int => -($row->card->pressureScore),
-                fn (JobBoardListRow $row): int => -$row->card->ageMinutes,
-            ])
-            ->values()
-            ->all();
+        // Preserve the page order chosen by JobBoardListPageBuilder (already sorted).
+        return array_values($rows);
     }
 
     /**
-     * Tab counts use the same lane totals as the board columns (not raw triage queue size).
+     * Exact queue totals per lane (independent of the current page / search filter).
      *
-     * @param  list<WorkboardTriageLaneProjection>  $homeBoardColumns
+     * @param  list<array{key: string, label: string, color?: string, tone?: string}>  $laneMeta
+     * @param  Collection<string, Collection<int, RepairOrder>>  $byLane
      * @return list<array{key: string, label: string, color: string, count: int}>
      */
-    public function laneTabs(array $homeBoardColumns): array
+    public function laneTabsFromCounts(array $laneMeta, Collection $byLane): array
     {
-        $laneTotal = collect($homeBoardColumns)->sum(fn (WorkboardTriageLaneProjection $column): int => $column->totalCount);
+        $laneTotal = $byLane->sum(fn (Collection $orders): int => $orders->count());
 
         $tabs = [[
             'key' => 'all',
@@ -98,12 +95,13 @@ final class JobBoardListRowProjection
             'count' => $laneTotal,
         ]];
 
-        foreach ($homeBoardColumns as $column) {
+        foreach ($laneMeta as $column) {
+            $key = $column['key'];
             $tabs[] = [
-                'key' => $column->key,
-                'label' => $column->label,
-                'color' => $column->color,
-                'count' => $column->totalCount,
+                'key' => $key,
+                'label' => $column['label'],
+                'color' => $column['color'] ?? 'secondary',
+                'count' => ($byLane->get($key) ?? collect())->count(),
             ];
         }
 

@@ -20,8 +20,6 @@
     data-home-search="{{ $row->searchHaystack }}"
     data-home-tech-id="{{ $row->technicianId ?? '' }}"
     data-home-lane-key="{{ $row->laneKey }}"
-    x-show="cardMatches($el)"
-    x-cloak
 >
     <a href="{{ $builderUrl }}" class="card-body p-2 text-reset text-decoration-none">
         <div class="d-flex align-items-baseline gap-2">

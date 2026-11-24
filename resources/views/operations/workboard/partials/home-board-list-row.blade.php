@@ -44,8 +44,6 @@
     data-sort-attention="{{ $attentionRank }}"
     data-sort-updated="{{ $row->updatedAtTimestamp }}"
     data-sort-pressure="{{ $card->pressureScore }}"
-    x-show="cardMatches($el)"
-    x-cloak
 >
     <td>
         <a href="{{ $builderUrl }}" class="fw-bold text-reset text-nowrap" data-job-board-row-ro>RO #{{ $repairOrder->repair_order_id }}</a>

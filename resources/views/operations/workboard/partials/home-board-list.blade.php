@@ -1,54 +1,64 @@
 @php
     /** @var list<\App\Ark\Operations\Workboard\JobBoardListRow> $jobBoardListRows */
+    /** @var \App\Ark\Operations\Workboard\JobBoardListPage $jobBoardListPage */
+    $clearUrl = route('operations.index', ['view' => 'list']);
 @endphp
 
 <div data-job-board-list>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2" data-job-board-list-summary>
+        <p class="mb-0 text-secondary small" data-job-board-list-range>
+            @if ($jobBoardListPage->filteredTotal === 0)
+                No matching repair orders
+            @else
+                Showing {{ $jobBoardListPage->from() }}–{{ $jobBoardListPage->to() }}
+                of {{ $jobBoardListPage->filteredTotal }}
+                @if ($jobBoardListPage->hasFilters())
+                    matching
+                @endif
+                · Queue total {{ $jobBoardListPage->queueTotal }}
+            @endif
+        </p>
+        @if ($jobBoardListPage->hasFilters())
+            <a href="{{ $clearUrl }}" class="btn btn-sm btn-ghost-secondary" data-job-board-list-clear>Clear filters</a>
+        @endif
+    </div>
+
     @if ($jobBoardListRows === [])
-        <x-tabler.empty-state icon="list">
-            No open repair orders on the job board.
+        <x-tabler.empty-state icon="{{ $jobBoardListPage->hasFilters() ? 'search' : 'list' }}" :clear-url="$jobBoardListPage->hasFilters() ? $clearUrl : null">
+            @if ($jobBoardListPage->hasFilters())
+                No repair orders match these filters.
+            @else
+                No open repair orders on the job board.
+            @endif
         </x-tabler.empty-state>
     @else
-        <div
-            x-show="visibleRowCount() === 0"
-            x-cloak
-            data-job-board-list-empty
-        >
-            <x-tabler.empty-state icon="search">
-                No repair orders match these filters.
-            </x-tabler.empty-state>
-        </div>
-
         {{-- Dense desktop/tablet table --}}
-        <div class="card d-none d-md-block" data-job-board-list-desktop x-show="visibleRowCount() > 0" x-cloak>
+        <div class="card d-none d-md-block" data-job-board-list-desktop>
             <div class="table-responsive">
                 <table class="table table-vcenter table-hover card-table table-sm mb-0 ark-job-board-table">
                     <thead>
                         <tr>
-                            <th scope="col">
-                                <button type="button" class="btn btn-ghost-secondary btn-sm px-1" @click="setSort('ro')" data-job-board-sort="ro">RO #</button>
-                            </th>
-                            <th scope="col">
-                                <button type="button" class="btn btn-ghost-secondary btn-sm px-1" @click="setSort('customer')" data-job-board-sort="customer">Customer</button>
-                            </th>
-                            <th scope="col">
-                                <button type="button" class="btn btn-ghost-secondary btn-sm px-1" @click="setSort('vehicle')" data-job-board-sort="vehicle">Vehicle</button>
-                            </th>
+                            @foreach ([
+                                'ro' => 'RO #',
+                                'customer' => 'Customer',
+                                'vehicle' => 'Vehicle',
+                            ] as $sortKey => $label)
+                                <th scope="col" @if ($jobBoardListPage->ariaSort($sortKey)) aria-sort="{{ $jobBoardListPage->ariaSort($sortKey) }}" @endif>
+                                    <a href="{{ $jobBoardListPage->sortUrl($sortKey) }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="{{ $sortKey }}">{{ $label }}</a>
+                                </th>
+                            @endforeach
                             <th scope="col">Concern / Job</th>
-                            <th scope="col">
-                                <button type="button" class="btn btn-ghost-secondary btn-sm px-1" @click="setSort('status')" data-job-board-sort="status">Status</button>
+                            <th scope="col" @if ($jobBoardListPage->ariaSort('status')) aria-sort="{{ $jobBoardListPage->ariaSort('status') }}" @endif>
+                                <a href="{{ $jobBoardListPage->sortUrl('status') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="status">Status</a>
                             </th>
-                            <th scope="col">
-                                <button type="button" class="btn btn-ghost-secondary btn-sm px-1" @click="setSort('technician')" data-job-board-sort="technician">Technician</button>
-                            </th>
-                            <th scope="col">
-                                <button type="button" class="btn btn-ghost-secondary btn-sm px-1" @click="setSort('promised')" data-job-board-sort="promised">Promised</button>
-                            </th>
+                            <th scope="col">Technician</th>
+                            <th scope="col">Promised</th>
                             <th scope="col">Parts</th>
                             <th scope="col">
-                                <button type="button" class="btn btn-ghost-secondary btn-sm px-1" @click="setSort('attention')" data-job-board-sort="attention">Priority</button>
+                                <span class="btn btn-ghost-secondary btn-sm px-1 disabled" aria-disabled="true" title="ARK attention signal, not a user-entered priority" data-job-board-sort="attention">Attention</span>
                             </th>
-                            <th scope="col">
-                                <button type="button" class="btn btn-ghost-secondary btn-sm px-1" @click="setSort('updated')" data-job-board-sort="updated">Updated</button>
+                            <th scope="col" @if ($jobBoardListPage->ariaSort('updated')) aria-sort="{{ $jobBoardListPage->ariaSort('updated') }}" @endif>
+                                <a href="{{ $jobBoardListPage->sortUrl('updated') }}" class="btn btn-ghost-secondary btn-sm px-1" data-job-board-sort="updated">Updated</a>
                             </th>
                             <th scope="col" class="w-1"><span class="visually-hidden">Open</span></th>
                         </tr>
@@ -63,10 +73,26 @@
         </div>
 
         {{-- Narrow mobile list --}}
-        <div class="d-md-none d-flex flex-column gap-2" data-job-board-list-mobile x-show="visibleRowCount() > 0">
+        <div class="d-md-none d-flex flex-column gap-2" data-job-board-list-mobile>
             @foreach ($jobBoardListRows as $row)
                 @include('operations.workboard.partials.home-board-list-mobile-row', ['row' => $row])
             @endforeach
         </div>
+
+        @if ($jobBoardListPage->lastPage > 1)
+            <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Job board list pages" data-job-board-list-pagination>
+                @if ($jobBoardListPage->page > 1)
+                    <a class="btn btn-outline-secondary" href="{{ route('operations.index', $jobBoardListPage->queryParams(['page' => $jobBoardListPage->page - 1])) }}" data-job-board-list-prev>Previous</a>
+                @else
+                    <span class="btn btn-outline-secondary disabled" aria-disabled="true">Previous</span>
+                @endif
+                <span class="text-secondary small">Page {{ $jobBoardListPage->page }} of {{ $jobBoardListPage->lastPage }}</span>
+                @if ($jobBoardListPage->page < $jobBoardListPage->lastPage)
+                    <a class="btn btn-outline-secondary" href="{{ route('operations.index', $jobBoardListPage->queryParams(['page' => $jobBoardListPage->page + 1])) }}" data-job-board-list-next>Next</a>
+                @else
+                    <span class="btn btn-outline-secondary disabled" aria-disabled="true">Next</span>
+                @endif
+            </nav>
+        @endif
     @endif
 </div>
