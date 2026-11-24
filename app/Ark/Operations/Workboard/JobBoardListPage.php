@@ -89,7 +89,6 @@ final readonly class JobBoardListPage
         $sort = array_key_exists('sort', $overrides) ? $overrides['sort'] : $this->sortKey;
         $dir = array_key_exists('dir', $overrides) ? $overrides['dir'] : $this->sortDir;
         $page = array_key_exists('page', $overrides) ? (int) $overrides['page'] : $this->page;
-        $view = array_key_exists('view', $overrides) ? $overrides['view'] : $this->view;
 
         $params = [];
 
@@ -113,9 +112,8 @@ final readonly class JobBoardListPage
             $params['dir'] = 'asc';
         }
 
-        if (is_string($view) && in_array($view, [JobBoardLayout::List->value, JobBoardLayout::Cards->value], true)) {
-            $params['view'] = $view;
-        }
+        // Layout preference is browser-local — never append ?view= to navigation.
+        // Bookmarked ?view= is still accepted by JobBoardLayoutPreference / UiLayoutPreference.
 
         if ($page > 1) {
             $params['page'] = $page;

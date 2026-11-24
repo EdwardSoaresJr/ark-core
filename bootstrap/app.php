@@ -10,6 +10,7 @@ use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Exceptions\ExceptionReporter;
 use App\Ark\Runtime\Preferences\EcosystemDisplayTheme;
 use App\Ark\Runtime\Preferences\JobBoardLayoutPreference;
+use App\Ark\Runtime\Preferences\UiLayoutPreference;
 use App\Http\Middleware\ApplyDevRolePretend;
 use App\Http\Middleware\CommitRepairOrderEstimateLock;
 use App\Http\Middleware\ConfigureSessionCookieDomain;
@@ -84,6 +85,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: [
             EcosystemDisplayTheme::COOKIE_NAME,
             JobBoardLayoutPreference::COOKIE_NAME,
+            ...UiLayoutPreference::legacyCookieNames(),
             WorkstationPresence::BINDING_COOKIE,
             WorkstationPresence::DISMISS_COOKIE,
         ]);

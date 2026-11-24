@@ -53,6 +53,8 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="ark-ui-tenant-key" content="{{ \App\Ark\Runtime\Preferences\UiPreferenceScope::tenantKey(request()) }}">
+        @include('partials.operations.display-theme-boot', ['displayTheme' => $displayTheme])
         @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
             <meta name="ark-comms-interrupt-url" content="{{ route('operations.comms.interrupts') }}">
             <meta name="ark-staff-presence-heartbeat-url" content="{{ route('operations.staff.presence.heartbeat') }}">
@@ -93,56 +95,6 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         @if (\App\Ark\Runtime\DemoInstall::isDemo())
             @include('demo.bar')
         @endif
-        <script>
-            (() => {
-                const serverTheme = @json($displayTheme);
-                const legacyTheme = localStorage.getItem('ark_theme') || localStorage.getItem('hs_theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const resolvedTheme = (() => {
-                    if (serverTheme === 'dark') return 'dark';
-                    if (serverTheme === 'light') return 'light';
-                    if (serverTheme === 'system') {
-                        return prefersDark ? 'dark' : 'light';
-                    }
-
-                    return legacyTheme === 'dark' || (!legacyTheme && prefersDark) ? 'dark' : 'light';
-                })();
-
-                const applyTheme = (theme) => {
-                    const isDark = theme === 'dark';
-                    document.documentElement.classList.toggle('dark', isDark);
-                    document.documentElement.setAttribute('data-bs-theme', theme);
-                    localStorage.setItem('ark_theme', theme);
-                    localStorage.removeItem('hs_theme');
-                };
-
-                applyTheme(resolvedTheme);
-
-                window.arkToggleTheme = () => {
-                    const nextTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-                    applyTheme(nextTheme);
-
-                    const token = document.querySelector('meta[name="csrf-token"]')?.content;
-                    const url = @json(route('profile.display-theme.update'));
-
-                    if (!token || !url) {
-                        return;
-                    }
-
-                    fetch(url, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Accept: 'application/json',
-                            'X-CSRF-TOKEN': token,
-                        },
-                        body: JSON.stringify({ display_theme: nextTheme }),
-                        credentials: 'same-origin',
-                    }).catch(() => {});
-                };
-            })();
-        </script>
-
         @if ($usesTabler)
             @include('components.operations.shell.tabler')
         @else

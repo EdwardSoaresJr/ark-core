@@ -1,60 +1,28 @@
 /**
- * Job Board List | Cards switcher: client toggle without reload, cookie persistence.
+ * Job Board List | Cards switcher.
+ * Uses shared ark-ui-layout-preference (tenant + user + job_board).
+ * Does not rewrite ?view= into the URL.
  */
-const COOKIE_NAME = 'ark_job_board_layout';
-const MD_UP = '(min-width: 768px)';
+import {
+    MD_UP,
+    UiLayoutModule,
+    normalizeLayout,
+    readExplicitLayout,
+    readViewQueryParam,
+    scopeFromDocument,
+    stripViewQueryParam,
+    viewportDefault,
+    writeExplicitLayout,
+} from './ark-ui-layout-preference';
 
-function readCookie(name) {
-    const prefix = `${name}=`;
-    const parts = document.cookie.split(';');
-    for (const part of parts) {
-        const trimmed = part.trim();
-        if (trimmed.startsWith(prefix)) {
-            return decodeURIComponent(trimmed.slice(prefix.length));
-        }
-    }
-    return null;
-}
-
-function writeCookie(name, value, domain) {
-    const maxAge = 60 * 60 * 24 * 365;
-    let cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; samesite=lax`;
-    if (window.location.protocol === 'https:') {
-        cookie += '; secure';
-    }
-    if (domain) {
-        cookie += `; domain=${domain}`;
-    }
-    document.cookie = cookie;
-}
-
-function viewportDefault() {
-    return window.matchMedia(MD_UP).matches ? 'list' : 'cards';
-}
-
-function normalizeLayout(value) {
-    if (value === 'cards' || value === 'board') {
-        return 'cards';
-    }
-    if (value === 'list') {
-        return 'list';
-    }
-    return null;
-}
-
-function effectiveLayout(board) {
-    const mode = board.getAttribute('data-job-board-layout') || 'auto';
-    if (mode === 'list' || mode === 'cards') {
-        return mode;
-    }
-    return viewportDefault();
-}
-
-function syncHiddenInputs(board, layout) {
-    board.querySelectorAll('[data-job-board-view-input]').forEach((input) => {
-        input.value = layout;
-        input.disabled = false;
-    });
+function boardScope(board) {
+    const docScope = scopeFromDocument(document);
+    return {
+        tenant: board.getAttribute('data-ark-ui-tenant') || docScope.tenant,
+        userId: board.getAttribute('data-ark-ui-user') || docScope.userId,
+        module: UiLayoutModule.JobBoard,
+        cookieDomain: board.getAttribute('data-job-board-cookie-domain') || null,
+    };
 }
 
 function syncToggle(board, layout) {
@@ -71,29 +39,17 @@ function syncToggle(board, layout) {
     });
 }
 
-function syncUrlView(layout) {
-    try {
-        const url = new URL(window.location.href);
-        url.searchParams.set('view', layout);
-        window.history.replaceState(window.history.state, '', url.toString());
-    } catch (error) {
-        // History API unavailable; cookie + hidden input still persist the choice.
-    }
-}
-
-function applyLayout(board, layout, { persist = false, mode = null } = {}) {
-    if (persist) {
+function applyLayout(board, layout, { persist = false, mode = null, scope = null } = {}) {
+    if (persist && scope) {
+        writeExplicitLayout(scope, layout, { cookieDomain: scope.cookieDomain });
         board.setAttribute('data-job-board-layout', layout);
         board.setAttribute('data-job-board-layout-explicit', '1');
-        writeCookie(COOKIE_NAME, layout, board.getAttribute('data-job-board-cookie-domain') || undefined);
-        syncUrlView(layout);
     } else if (mode) {
         board.setAttribute('data-job-board-layout', mode);
     }
 
     board.setAttribute('data-job-board-effective-layout', layout);
     syncToggle(board, layout);
-    syncHiddenInputs(board, layout);
 }
 
 function initBoard(board) {
@@ -102,14 +58,32 @@ function initBoard(board) {
     }
     board.dataset.jobBoardLayoutReady = '1';
 
-    const cookieLayout = normalizeLayout(readCookie(COOKIE_NAME));
+    const scope = boardScope(board);
+    const fromQuery = readViewQueryParam();
+    const fromStore = readExplicitLayout(scope);
     const modeAttr = board.getAttribute('data-job-board-layout') || 'auto';
-    const explicitMode = normalizeLayout(modeAttr);
-    const mode = explicitMode ? explicitMode : (cookieLayout ? cookieLayout : 'auto');
-    const layout = explicitMode || cookieLayout || viewportDefault();
+    const serverExplicit = normalizeLayout(modeAttr);
 
-    board.setAttribute('data-job-board-layout-explicit', explicitMode || cookieLayout ? '1' : '0');
-    applyLayout(board, layout, { persist: false, mode: explicitMode || cookieLayout || 'auto' });
+    let mode = 'auto';
+    let layout = viewportDefault();
+
+    if (fromQuery) {
+        writeExplicitLayout(scope, fromQuery, { cookieDomain: scope.cookieDomain });
+        mode = fromQuery;
+        layout = fromQuery;
+        stripViewQueryParam();
+    } else if (fromStore) {
+        mode = fromStore;
+        layout = fromStore;
+    } else if (serverExplicit) {
+        mode = serverExplicit;
+        layout = serverExplicit;
+        // Migrate SSR/cookie-only preference into the scoped store.
+        writeExplicitLayout(scope, serverExplicit, { cookieDomain: scope.cookieDomain });
+    }
+
+    board.setAttribute('data-job-board-layout-explicit', mode === 'auto' ? '0' : '1');
+    applyLayout(board, layout, { persist: false, mode });
 
     board.querySelectorAll('[data-job-board-layout-option]').forEach((btn) => {
         btn.addEventListener('click', (event) => {
@@ -118,13 +92,18 @@ function initBoard(board) {
             if (!next) {
                 return;
             }
-            applyLayout(board, next, { persist: true });
+            applyLayout(board, next, { persist: true, scope });
         });
     });
 
     const media = window.matchMedia(MD_UP);
     const onViewportChange = () => {
         if (board.getAttribute('data-job-board-layout-explicit') === '1') {
+            // Explicit List on a phone keeps compact mobile List — never force Cards.
+            applyLayout(board, board.getAttribute('data-job-board-layout') === 'cards' ? 'cards' : 'list', {
+                persist: false,
+                mode: board.getAttribute('data-job-board-layout'),
+            });
             return;
         }
         applyLayout(board, viewportDefault(), { persist: false, mode: 'auto' });

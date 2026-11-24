@@ -23,13 +23,6 @@
     @if ($jobBoardListPage->sortDir !== 'desc')
         <input type="hidden" name="dir" value="{{ $jobBoardListPage->sortDir }}">
     @endif
-    <input
-        type="hidden"
-        name="view"
-        value="{{ $jobBoardLayoutMode === 'auto' ? '' : $jobBoardLayoutMode }}"
-        data-job-board-view-input
-        @if ($jobBoardLayoutMode === 'auto') disabled @endif
-    >
 
     <div class="col-12 col-lg">
         <label class="form-label visually-hidden" for="job-board-search">Search job board</label>

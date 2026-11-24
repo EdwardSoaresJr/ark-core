@@ -6,7 +6,9 @@
     /** @var \App\Ark\Operations\Workboard\JobBoardListPage $jobBoardListPage */
     /** @var string $jobBoardLayoutMode */
     /** @var bool $jobBoardLayoutExplicit */
+    /** @var array{tenant: string, user: string} $uiPreferenceScope */
     $cookieDomain = \App\Ark\Runtime\Preferences\EcosystemDisplayTheme::cookieDomain();
+    $uiPreferenceScope ??= ['tenant' => 'local', 'user' => 'anon'];
 @endphp
 
 <x-operations.app title="Job Board" ui="tabler">
@@ -17,6 +19,8 @@
             data-job-board-layout="{{ $jobBoardLayoutMode }}"
             data-job-board-layout-explicit="{{ $jobBoardLayoutExplicit ? '1' : '0' }}"
             data-job-board-cookie-domain="{{ $cookieDomain }}"
+            data-ark-ui-tenant="{{ $uiPreferenceScope['tenant'] }}"
+            data-ark-ui-user="{{ $uiPreferenceScope['user'] }}"
             data-job-board-list-page="{{ $jobBoardListPage->page }}"
             data-job-board-list-per-page="{{ $jobBoardListPage->perPage }}"
             data-job-board-list-filtered-total="{{ $jobBoardListPage->filteredTotal }}"

@@ -8,7 +8,9 @@ use App\Ark\Operations\Today\AdvisorHomeCardSurfaceProjection;
 use App\Ark\Operations\Today\AdvisorHomeCockpitProjection;
 use App\Ark\Operations\Workboard\JobBoardListPageBuilder;
 use App\Ark\Operations\Workboard\WorkboardTriageRepairOrderQuery;
-use App\Ark\Runtime\Preferences\JobBoardLayoutPreference;
+use App\Ark\Runtime\Preferences\UiLayoutModule;
+use App\Ark\Runtime\Preferences\UiLayoutPreference;
+use App\Ark\Runtime\Preferences\UiPreferenceScope;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -21,7 +23,8 @@ class OperationsHomeController
         AdvisorHomeCardSurfaceProjection $homeCardSurfaces,
         JobBoardListPageBuilder $listPageBuilder,
     ): View {
-        $layoutPreference = JobBoardLayoutPreference::resolve($request);
+        $layoutPreference = UiLayoutPreference::resolve($request, UiLayoutModule::JobBoard);
+        $preferenceScope = UiPreferenceScope::forRequest($request);
 
         $repairOrders = $repairOrderQuery->forAdvisor();
         $listPage = $listPageBuilder->build($request, $repairOrders);
@@ -48,6 +51,7 @@ class OperationsHomeController
             'jobBoardLayoutMode' => $layoutPreference['mode'],
             'jobBoardLayoutExplicit' => $layoutPreference['explicit'],
             'jobBoardLayout' => $layoutPreference['layout'],
+            'uiPreferenceScope' => $preferenceScope,
         ]);
     }
 }

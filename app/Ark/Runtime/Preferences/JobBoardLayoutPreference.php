@@ -4,66 +4,36 @@ namespace App\Ark\Runtime\Preferences;
 
 use App\Ark\Operations\Workboard\JobBoardLayout;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
 
 /**
- * Per-browser Job Board List/Cards preference (cookie).
- * Shop-default storage is a follow-up; no migration in this pass.
+ * Job Board List/Cards preference.
  *
- * Resolution: ?view= → cookie → auto (List on desktop, Cards on mobile in the UI).
+ * Delegates to {@see UiLayoutPreference}. Browser-local storage (tenant + user +
+ * module) is the runtime authority; this class remains for SSR / bookmark compat
+ * and EncryptCookies registration of the legacy cookie name.
  */
 final class JobBoardLayoutPreference
 {
     public const COOKIE_NAME = 'ark_job_board_layout';
 
-    public const MODE_AUTO = 'auto';
+    public const MODE_AUTO = UiLayoutPreference::MODE_AUTO;
 
     /**
      * @return array{mode: string, layout: JobBoardLayout|null, explicit: bool}
      */
     public static function resolve(Request $request): array
     {
-        if ($request->filled('view')) {
-            $layout = JobBoardLayout::parse((string) $request->string('view'));
-            self::queue($layout);
-
-            return [
-                'mode' => $layout->value,
-                'layout' => $layout,
-                'explicit' => true,
-            ];
-        }
-
-        $cookie = $request->cookie(self::COOKIE_NAME);
-        $fromCookie = is_string($cookie) ? JobBoardLayout::tryParse($cookie) : null;
-
-        if ($fromCookie instanceof JobBoardLayout) {
-            return [
-                'mode' => $fromCookie->value,
-                'layout' => $fromCookie,
-                'explicit' => true,
-            ];
-        }
+        $resolved = UiLayoutPreference::resolve($request, UiLayoutModule::JobBoard);
 
         return [
-            'mode' => self::MODE_AUTO,
-            'layout' => null,
-            'explicit' => false,
+            'mode' => $resolved['mode'],
+            'layout' => $resolved['layout'],
+            'explicit' => $resolved['explicit'],
         ];
     }
 
     public static function queue(JobBoardLayout $layout): void
     {
-        Cookie::queue(cookie(
-            self::COOKIE_NAME,
-            $layout->value,
-            minutes: 60 * 24 * 365,
-            path: '/',
-            domain: EcosystemDisplayTheme::cookieDomain(),
-            secure: (bool) config('session.secure', false),
-            httpOnly: false,
-            raw: false,
-            sameSite: 'lax',
-        ));
+        UiLayoutPreference::queueLegacyCookie(UiLayoutModule::JobBoard, $layout);
     }
 }
