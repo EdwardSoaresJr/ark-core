@@ -10,7 +10,9 @@ export default {
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
         './resources/js/**/*.js',
-        './node_modules/preline/dist/*.js',
+        // Preline is not a runtime dependency of staff Tabler pages (see
+        // docs/engineering/TABLER_LEGACY_ASSET_RETIREMENT.md). Keep it out of
+        // the Tailwind content scan so its utilities do not inflate app.css.
     ],
 
     theme: {
