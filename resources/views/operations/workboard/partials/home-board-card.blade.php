@@ -12,7 +12,7 @@
     $moneyLabel = filled($row->moneyLabel) ? $row->moneyLabel : '$0';
     $isBalanceDue = $row->moneyCaption === 'due';
     $concernFull = trim((string) (
-        $repairOrder->concern_summary
+        \App\Ark\Operations\RepairOrders\RepairOrderConcernText::primary($repairOrder)
         ?: $surface->concernLabel
         ?: ($card->concernHeadline !== 'No concern recorded' ? $card->concernHeadline : '')
     ));

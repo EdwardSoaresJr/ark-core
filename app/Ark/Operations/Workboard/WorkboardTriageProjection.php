@@ -9,6 +9,7 @@ use App\Ark\Operations\Observations\OperationalObservationResolver;
 use App\Ark\Operations\Observations\OperationalObservationSeverity;
 use App\Ark\Operations\Observations\OperationalObservationType;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderConcernText;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Timeline\Mappers\CommunicationEventMapper;
 use App\Ark\Operations\Timeline\OperationalEventEntry;
@@ -657,7 +658,8 @@ final class WorkboardTriageProjection
             || ($signal['tone'] ?? '') === 'alert'
             || ($signal['tone'] ?? '') === 'warn';
 
-        $concernSummary = trim((string) $repairOrder->concern_summary) ?: 'No concern recorded';
+        $concernSummary = RepairOrderConcernText::primary($repairOrder);
+        $concernSummary = $concernSummary !== '' ? $concernSummary : 'No concern recorded';
 
         return new WorkboardTriageCard(
             repairOrder: $repairOrder,
