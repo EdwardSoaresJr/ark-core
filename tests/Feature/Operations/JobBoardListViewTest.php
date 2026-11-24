@@ -89,6 +89,42 @@ test('legacy view=board maps to cards preference', function () {
         ->assertSee('data-job-board-layout="cards"', false);
 });
 
+test('job board navigation stays free of view query and exposes preference scope', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Clean Url');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'list', 'lane' => 'waiting_approval', 'page' => 1]))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $board = $xpath->query('//*[@data-job-board]')->item(0);
+
+    expect($board)->toBeInstanceOf(DOMElement::class)
+        ->and($board->getAttribute('data-ark-ui-tenant'))->not->toBe('')
+        ->and($board->getAttribute('data-ark-ui-user'))->toBe((string) $advisor->id)
+        ->and($html)->toContain('name="ark-display-theme"')
+        ->and($html)->toContain('name="ark-ui-tenant-key"')
+        ->and($html)->not->toContain('data-job-board-view-input')
+        ->and($html)->not->toContain('name="view"');
+
+    foreach ($xpath->query('//*[@data-job-board-lane-tab]|//*[@data-job-board-sort]|//*[@data-job-board-list-next]|//*[@data-job-board-list-prev]') as $node) {
+        if (! $node instanceof DOMElement) {
+            continue;
+        }
+        $href = (string) $node->getAttribute('href');
+        if ($href === '') {
+            continue;
+        }
+        expect($href)->not->toContain('view=');
+    }
+});
+
 test('job board cookie preference selects cards without a user settings column', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Cookie Pref');

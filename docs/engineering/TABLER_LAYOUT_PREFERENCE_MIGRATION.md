@@ -1,53 +1,71 @@
-# Layout & appearance preference migration
+# Tabler layout preference migration
 
-**Status:** Recommendation only — do not implement the full migration in the Card View PR.  
-**Related:** `JobBoardLayoutPreference`, cookie `ark_job_board_layout`, URL `?view=`.
+## Goal
 
-## Desired end state
+One preference contract for List/Cards across Job Board and (later) Customers, Vehicles, and Repair Orders indexes, plus Light / Dark / System appearance — without competing stores or dirty `?view=` navigation URLs.
 
-1. Clean URLs without automatically appending `?view=`.
-2. Layout preference scoped by **authenticated user + tenant + module**.
-3. Responsive defaults (`auto`) until the user chooses List or Cards.
-4. Appearance: Light / Dark / System; System tracks OS changes.
-5. Existing explicit selections preserved across devices only when a durable store is introduced — until then, browser-local is acceptable if clearly scoped.
+## Authorities (do not invent a second)
 
-## Current authorities (compete today)
+| Setting | Authority | Notes |
+|---------|-----------|--------|
+| Job Board List/Cards | Browser `localStorage` scoped by **tenant + user + module** | Dual-writes legacy `ark_job_board_layout` cookie for SSR |
+| Customers / Vehicles / RO List/Cards | Same browser API (`UiLayoutModule::*`) | **Not wired in this PR** — reserved keys only; integrate in a later slice |
+| Appearance Light/Dark/System | `users.display_theme` (DB) | Synced to `ark_display_theme` cookie via `SyncEcosystemDisplayThemeCookie` |
 
-| Authority | What | Problem |
-|-----------|------|---------|
-| Query `view=` | Explicit layout for a request | Pollutes URLs; shareable links bake layout |
-| Cookie `ark_job_board_layout` | Cross-request persistence | Not user/tenant/module keyed; SaaS EncryptCookies needed except (#348) |
-| `localStorage` theme keys | Appearance (`ark_theme` / legacy `hs_theme`) | Parallel to server user display theme |
-| User model display theme | Server-resolved appearance | Must stay single source for theme |
+## Layout precedence
 
-## Cleanest next slice
+Effective layout for a module:
 
-**Slice A — Job Board only (recommended next PR after Cards):**
+1. Explicit browser store for `ark.ui.layout.v1:{tenant}:{user}:{module}`
+2. Legacy unscoped cookie for that module (migrated into the store on first read)
+3. Server `data-*-layout` when request had `?view=` or a legacy cookie (first paint)
+4. **Auto**: List at `min-width: 768px`, Cards below
 
-1. Keep reading `view=` when present (compat).
-2. Stop *writing* `view=` into history for toggle clicks (`ark-job-board-layout.js` already uses `replaceState` — ensure clear-filters / lane links omit `view` unless explicit).
-3. Persist layout in one cookie **or** `localStorage` key:  
-   `ark.layout.v1:{tenantId}:{userId}:job_board` → `list|cards|auto`.
-4. Document that DB sync is a later slice; do not add a second cookie and localStorage for the same fact.
+Manual List or Cards always wins over the responsive default. Explicit List on a phone keeps the compact mobile List presentation — Cards are never forced.
 
-**Slice B — Appearance:**
+### Clean URLs
 
-1. Treat user `displayTheme` as source of truth on authenticated pages.
-2. System mode: listen to `prefers-color-scheme` and update `data-bs-theme` + legacy `html.dark` together (shell already dual-writes).
-3. Retire duplicate `localStorage` writes once server theme always hydrates first.
+- Accept bookmarked `?view=list|cards|board` once, persist, then **strip** `view` from the address bar.
+- Pagination, sort, lane, and filter links **must not** append `view`.
+- Filter forms must not submit a hidden `view` field.
 
-**Slice C — Module generalization:**
+## Appearance precedence
 
-1. Extract preference helper used by Job Board.
-2. Customers / Vehicles / RO indexes adopt the same helper when they gain List/Cards.
+1. Authenticated `User::displayTheme()` (default **Light** for fresh users)
+2. Ecosystem cookie mirrors the user preference for cross-surface paint
+3. **System** resolves with `prefers-color-scheme` and listens for OS changes
+4. `arkToggleTheme` remains an explicit Light ↔ Dark shortcut that PATCHes the profile API
+
+Blocking boot runs in `<head>` before CSS (`partials/operations/display-theme-boot`) to avoid light/dark flashes. `localStorage.ark_theme` is a last-resolved paint hint only, not the preference authority.
+
+## Helper / API contract
+
+| Layer | Symbol |
+|-------|--------|
+| PHP modules | `UiLayoutModule` |
+| PHP scope | `UiPreferenceScope::forRequest()` |
+| PHP resolve / legacy cookies | `UiLayoutPreference` |
+| Job Board façade | `JobBoardLayoutPreference` (delegates) |
+| JS store | `resources/js/ark-ui-layout-preference.js` |
+| Job Board UI | `resources/js/ark-job-board-layout.js` |
+
+Collection indexes (#257) should call the same JS helper with `UiLayoutModule.Customers|Vehicles|RepairOrders` instead of maintaining a parallel cookie-only path.
 
 ## Compatibility
 
-- Old cookie values continue to resolve for one release.
-- Bookmarks with `?view=cards` still work.
-- No SaaS pin required for Core-only preference JS; cookie encrypt except remains SaaS concern if cookies stay.
+- Legacy Job Board cookie remains readable and EncryptCookies-excepted.
+- Reserved collection cookie names are excepted so a later merge does not brick first-party JS.
+- `view=board` continues to map to Cards.
 
-## Non-goals
+## SaaS integration risks
 
-- Competing DB + cookie + localStorage for the same layout key.
-- Forcing `?view=` on every Job Board navigation.
+- Hosted shops must keep EncryptCookies exceptions for `ark_display_theme`, `ark_job_board_layout`, and (when collections ship) `ark_collection_layout_*`.
+- Tenant key uses `ShopChannelScope` when bound; otherwise the request/app host. SaaS must bind a stable shop id so preferences do not collide across tenants on a shared browser profile.
+- Do not change the SaaS Core pin in this workstream.
+- Appearance remains user-row authority — do not move it solely into localStorage.
+
+## Out of scope here
+
+- Wiring Customers / Vehicles / Repair Orders blades to the new store (owned by the collection List/Cards PR).
+- Job Board Card visual hierarchy / List UX PRs (#254–#256).
+- DB-backed layout preferences / shop defaults.
