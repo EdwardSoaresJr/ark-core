@@ -79,6 +79,11 @@ Projection categories and `ready` / `sent` / `engaged` / `attention` semantics w
 - **Appointment / scheduled** — no verified stable RO hash; remains tooltip-only.
 - Mobile cards — activity strip not added (preserve primary hierarchy).
 
+## CI / navigation follow-up
+
+- Synthetic activity seeding for communications events lives in baseline-allowed `WorkboardCardActivityTest` (not a new Support file) so the communications boundary gate stays intact.
+- Workspace-tab link intercept now preserves RO fragments; Job Board activity clicks land on `#builder` / `#comms` / `#inspect` with Alpine tab selected. Anonymous users are redirected to login.
+
 ## Remaining owner/Carlos items
 
 1. Default Watch volume (Attention classifier unchanged).

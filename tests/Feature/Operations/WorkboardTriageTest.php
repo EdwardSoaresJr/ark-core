@@ -51,8 +51,30 @@ test('job board renders on tabler with filterable table rows', function () {
         ->and($row->getAttribute('data-home-search'))->toContain('tabler lane')
         ->and($xpath->query('.//*[@data-job-board-row-ro]', $row)->length)->toBe(1)
         ->and($xpath->query('.//*['.$hasClass('badge').']', $row)->length)->toBeGreaterThanOrEqual(1)
-        ->and($xpath->query('.//*[@data-job-card-mark]', $row)->length)->toBeGreaterThanOrEqual(1)
-        ->and($xpath->query('.//*[@data-job-card-mark][not(@role="img") or not(@tabindex="-1") or not(@data-bs-toggle="tooltip") or not(contains(@data-bs-trigger, "focus")) or @aria-label=""]', $row)->length)->toBe(0);
+        ->and($xpath->query('.//*[@data-job-card-mark]', $row)->length)->toBeGreaterThanOrEqual(1);
+
+    $marks = $xpath->query('.//*[@data-job-card-mark]', $row);
+    for ($index = 0; $index < $marks->length; $index++) {
+        /** @var DOMElement $mark */
+        $mark = $marks->item($index);
+        $role = $mark->getAttribute('role');
+        $ariaLabel = $mark->getAttribute('aria-label');
+
+        expect($ariaLabel)->not->toBe('')
+            ->and($mark->getAttribute('title'))->not->toBe('');
+
+        if ($role === 'link') {
+            expect($mark->hasAttribute('href'))->toBeTrue()
+                ->and($mark->getAttribute('href'))->not->toBe('')
+                ->and($mark->hasAttribute('tabindex'))->toBeFalse()
+                ->and($mark->getAttribute('data-bs-toggle'))->not->toBe('tooltip');
+        } else {
+            expect($role)->toBe('img')
+                ->and($mark->getAttribute('tabindex'))->toBe('-1')
+                ->and($mark->getAttribute('data-bs-toggle'))->toBe('tooltip')
+                ->and($mark->getAttribute('data-bs-trigger'))->toContain('focus');
+        }
+    }
 });
 
 test('advisor home board renders table with shop lane tabs', function () {

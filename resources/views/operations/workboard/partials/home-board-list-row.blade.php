@@ -96,28 +96,46 @@
                 @foreach ($activityStrip['visible'] as $mark)
                     @php
                         $markHref = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::destinationFor($mark->key, $card->href);
-                        $markTag = $markHref ? 'a' : 'span';
                     @endphp
-                    <{{ $markTag }}
-                        @if ($markHref) href="{{ $markHref }}" @endif
-                        class="ark-job-board-activity-mark"
-                        data-job-card-mark="{{ $mark->key }}"
-                        data-job-card-mark-state="{{ $mark->state->value }}"
-                        data-job-board-activity-mark
-                        @if ($markHref) data-job-board-activity-link @endif
-                        role="{{ $markHref ? 'link' : 'img' }}"
-                        @if (! $markHref) tabindex="-1" @endif
-                        title="{{ $mark->tooltip }}"
-                        aria-label="{{ $mark->tooltip }}"
-                        data-bs-toggle="tooltip"
-                        data-bs-trigger="hover focus"
-                    >
-                        @include('operations.workboard.partials.activity-mark-icon', [
-                            'key' => $mark->key,
-                            'filled' => true,
-                            'badge' => $mark->badge,
-                        ])
-                    </{{ $markTag }}>
+                    @if ($markHref)
+                        {{-- Keep Bootstrap tooltip off the <a>; data-bs-toggle on anchors can swallow hash navigation. --}}
+                        <a
+                            href="{{ $markHref }}"
+                            class="ark-job-board-activity-mark"
+                            data-job-card-mark="{{ $mark->key }}"
+                            data-job-card-mark-state="{{ $mark->state->value }}"
+                            data-job-board-activity-mark
+                            data-job-board-activity-link
+                            role="link"
+                            title="{{ $mark->tooltip }}"
+                            aria-label="{{ $mark->tooltip }}"
+                        >
+                            @include('operations.workboard.partials.activity-mark-icon', [
+                                'key' => $mark->key,
+                                'filled' => true,
+                                'badge' => $mark->badge,
+                            ])
+                        </a>
+                    @else
+                        <span
+                            class="ark-job-board-activity-mark"
+                            data-job-card-mark="{{ $mark->key }}"
+                            data-job-card-mark-state="{{ $mark->state->value }}"
+                            data-job-board-activity-mark
+                            role="img"
+                            tabindex="-1"
+                            title="{{ $mark->tooltip }}"
+                            aria-label="{{ $mark->tooltip }}"
+                            data-bs-toggle="tooltip"
+                            data-bs-trigger="hover focus"
+                        >
+                            @include('operations.workboard.partials.activity-mark-icon', [
+                                'key' => $mark->key,
+                                'filled' => true,
+                                'badge' => $mark->badge,
+                            ])
+                        </span>
+                    @endif
                 @endforeach
                 @if ($activityStrip['overflowCount'] > 0)
                     <span
