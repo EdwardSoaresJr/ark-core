@@ -22,7 +22,7 @@
     <div class="alert alert-info" role="status">
         <div class="fw-medium mb-1">How hours relate</div>
         <ul class="mb-0 small">
-            <li><strong>Business Hours</strong> (this page) — public open/closed schedule and shop timezone for customer-facing display and shop open status.</li>
+            <li><strong>Business Hours</strong> (this page) — shop-owned public open/closed schedule and timezone. Phone open/closed routing follows these hours when voice is configured.</li>
             <li><strong>Appointment scheduling</strong> — follows Business Hours by default; override under Appointments &amp; Setup when booking windows should differ.</li>
             <li><strong>Staff / technician schedules</strong> — individual availability stays under Staff and scheduling tools, not here.</li>
         </ul>

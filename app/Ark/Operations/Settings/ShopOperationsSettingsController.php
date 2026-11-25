@@ -175,7 +175,7 @@ public function updateWorkflow(Request $request): RedirectResponse
             if ($followShopHours) {
                 $payload['scheduling_hours'] = null;
                 $effectiveSchedulingHours = \App\Ark\Operations\Appointments\SchedulingHours::fromBusinessHours(
-                    \App\Ark\Operations\Telephony\TelephonyCallFlowSettings::fromShopSettings($settings)->weeklyHours(),
+                    $settings->businessHoursSnapshot()['weekly'],
                 );
             } else {
                 $weeklyInput = is_array($request->input('scheduling_hours')) ? $request->input('scheduling_hours') : [];

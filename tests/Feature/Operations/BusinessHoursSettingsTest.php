@@ -74,20 +74,49 @@ test('admin can save reload and persist business hours', function () {
     ShopSettings::forgetCurrent();
     $settings = ShopSettings::current()->fresh();
     $snapshot = $settings->businessHoursSnapshot();
+    $owned = is_array($settings->business_hours) ? $settings->business_hours : [];
 
     expect($settings->shop_timezone)->toBe('America/Chicago')
+        ->and($owned)->not->toBe([])
         ->and($snapshot['weekly']['monday']['open'])->toBe('08:00')
         ->and($snapshot['weekly']['monday']['close'])->toBe('17:00')
         ->and((bool) $snapshot['weekly']['saturday']['enabled'])->toBeTrue()
         ->and($snapshot['weekly']['saturday']['open'])->toBe('09:00')
         ->and((bool) $snapshot['weekly']['sunday']['enabled'])->toBeFalse()
-        ->and($snapshot['closed_dates'])->toBe(['2026-07-04', '2026-12-25']);
+        ->and($snapshot['closed_dates'])->toBe(['2026-07-04', '2026-12-25'])
+        ->and($owned['weekly']['monday']['open'] ?? null)->toBe('08:00');
 
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', ['section' => 'hours']))
         ->assertOk()
         ->assertSee('value="08:00"', false)
         ->assertSee('value="America/Chicago"', false);
+});
+
+test('hosted settings nav hides stations and phones', function () {
+    $catalog = tempnam(sys_get_temp_dir(), 'ark-hosted-');
+    file_put_contents($catalog, '{}');
+    putenv('ARK_HOSTED_TENANTS='.$catalog);
+    $_ENV['ARK_HOSTED_TENANTS'] = $catalog;
+    $_SERVER['ARK_HOSTED_TENANTS'] = $catalog;
+
+    try {
+        expect(\App\Ark\Runtime\HostedRuntime::isHostedProduct())->toBeTrue();
+
+        $html = $this->actingAs($this->admin)
+            ->get(route('operations.settings.shop.edit'))
+            ->assertOk()
+            ->assertSee('Business Hours', false)
+            ->getContent();
+
+        expect($html)
+            ->not->toContain('Stations & Phones')
+            ->and($html)->not->toContain('Stations &amp; Phones');
+    } finally {
+        putenv('ARK_HOSTED_TENANTS');
+        unset($_ENV['ARK_HOSTED_TENANTS'], $_SERVER['ARK_HOSTED_TENANTS']);
+        @unlink($catalog);
+    }
 });
 
 test('saving shop identity does not wipe business hours', function () {

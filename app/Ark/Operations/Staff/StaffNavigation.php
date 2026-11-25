@@ -92,7 +92,14 @@ final class StaffNavigation
                 'visible' => true,
                 'items' => [
                     self::item('learn', Branding::learnName(), 'school', ArkademyUrls::staffNavUrl(), ['operations.learn.*'], $showsArkademy),
-                    self::item('stations', 'Stations & Phones', 'device-desktop', route('operations.shop.communications'), ['operations.shop.*'], $managesSettings),
+                    self::item(
+                        'stations',
+                        'Stations & Phones',
+                        'device-desktop',
+                        route('operations.shop.communications'),
+                        ['operations.shop.*'],
+                        $managesSettings && ! \App\Ark\Runtime\HostedRuntime::isHostedProduct(),
+                    ),
                     self::item('settings', 'Settings', 'settings', route('operations.settings.shop.edit'), ['operations.settings.*'], $managesSettings),
                 ],
             ],
