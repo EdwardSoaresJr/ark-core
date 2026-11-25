@@ -66,7 +66,7 @@ final class InspectionCoverageProjection
             'posture_detail' => $posture->detail,
             'posture_percent' => $posture->percentComplete,
             'attention_count' => $posture->attentionCount,
-            'cta_label' => self::ctaLabel($posture),
+            'cta_label' => self::ctaLabel($posture, app(InspectionRequirementResolver::class)->forRepairOrder($repairOrder)),
             'walk_url' => $capture['desktop_walk_url'],
             'tablet_url' => $capture['tablet_url'],
             'capture_surface' => $capture['surface'],
@@ -85,10 +85,12 @@ final class InspectionCoverageProjection
         ];
     }
 
-    private static function ctaLabel(InspectionPosture $posture): string
+    private static function ctaLabel(InspectionPosture $posture, InspectionRequirementDecision $decision): string
     {
         if (! $posture->started) {
-            return 'Open Inspection';
+            return $decision->blocksLifecycleOnIncomplete()
+                ? 'Open Required Inspection'
+                : 'Open Inspection';
         }
 
         if ($posture->key === InspectionPosture::COMPLETE || $posture->key === InspectionPosture::NEEDS_REVIEW) {
@@ -96,9 +98,19 @@ final class InspectionCoverageProjection
         }
 
         if ($posture->remaining > 0) {
-            return 'Continue Inspection - '.$posture->remaining.' points remaining';
+            if ($decision->blocksLifecycleOnIncomplete()) {
+                return 'Finish Required Inspection - '.$posture->remaining.' points remaining';
+            }
+
+            if ($decision->requirement === InspectionRequirement::Recommended) {
+                return 'Continue Inspection (recommended) - '.$posture->remaining.' points remaining';
+            }
+
+            return 'Continue Inspection (optional) - '.$posture->remaining.' points remaining';
         }
 
-        return 'Continue Inspection';
+        return $decision->blocksLifecycleOnIncomplete()
+            ? 'Finish Required Inspection'
+            : 'Continue Inspection';
     }
 }

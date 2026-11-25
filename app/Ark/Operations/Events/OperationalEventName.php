@@ -66,4 +66,8 @@ enum OperationalEventName: string
     case AppointmentCanceled = 'appointment_canceled';
     case AppointmentNoShow = 'appointment_no_show';
     case AppointmentCompleted = 'appointment_completed';
+    case InspectionRequirementOverridden = 'inspection_requirement_overridden';
+    case InspectionRequirementWaived = 'inspection_requirement_waived';
+    case InspectionWaiverCleared = 'inspection_waiver_cleared';
+    case InspectionWalkRestarted = 'inspection_walk_restarted';
 }

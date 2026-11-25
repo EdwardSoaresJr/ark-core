@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Inspections;
 
+use App\Ark\Operations\Events\OperationalEventName;
+use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -13,6 +15,10 @@ use Illuminate\Validation\ValidationException;
  */
 final class WaiveRepairOrderInspectionAction
 {
+    public function __construct(
+        private readonly OperationalEventRecorder $events,
+    ) {}
+
     public static function canWaive(?User $user): bool
     {
         if ($user === null) {
@@ -51,6 +57,16 @@ final class WaiveRepairOrderInspectionAction
             'inspection_waived_reason' => $trimmed,
         ])->save();
 
+        $this->events->record(
+            OperationalEventName::InspectionRequirementWaived,
+            $repairOrder,
+            actor: $actor,
+            payload: [
+                'reason' => $trimmed,
+                'requirement' => InspectionRequirement::Required->value,
+            ],
+        );
+
         return $repairOrder->fresh();
     }
 
@@ -59,11 +75,22 @@ final class WaiveRepairOrderInspectionAction
         abort_unless(self::canWaive($actor), 403);
         $repairOrder->ensureOpenForEditing();
 
+        $priorReason = $repairOrder->getAttribute('inspection_waived_reason');
+
         $repairOrder->forceFill([
             'inspection_waived_at' => null,
             'inspection_waived_by' => null,
             'inspection_waived_reason' => null,
         ])->save();
+
+        $this->events->record(
+            OperationalEventName::InspectionWaiverCleared,
+            $repairOrder,
+            actor: $actor,
+            payload: [
+                'previous_reason' => is_string($priorReason) && $priorReason !== '' ? $priorReason : null,
+            ],
+        );
 
         return $repairOrder->fresh();
     }
