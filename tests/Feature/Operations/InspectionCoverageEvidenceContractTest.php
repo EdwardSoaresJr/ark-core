@@ -364,7 +364,7 @@ test('four yellow brake pads with facts yield full coverage posture and evidence
         ->toBeEmpty();
 });
 
-test('truly unfinished inspection still blocks completed without acknowledgment', function () {
+test('optional unfinished inspection does not block completed', function () {
     $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
     $this->actingAs($technician);
     $repairOrder = coverageEvidenceRepairOrder($technician);
@@ -374,6 +374,19 @@ test('truly unfinished inspection still blocks completed without acknowledgment'
     $posture = app(InspectionPostureProjection::class)->forRepairOrder($repairOrder->fresh());
     expect($posture->key)->toBe(InspectionPosture::IN_PROGRESS)
         ->and($posture->remaining)->toBeGreaterThan(0);
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => RepairOrderStatus::Completed->value,
+    ])->assertRedirect()->assertSessionDoesntHaveErrors('lifecycle');
+});
+
+test('required unfinished inspection still blocks completed without acknowledgment', function () {
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $this->actingAs($technician);
+    $repairOrder = coverageEvidenceRepairOrder($technician);
+    $repairOrder->forceFill(['inspection_lifecycle_policy' => 'required'])->save();
+    $inspection = coverageEvidenceInspection($repairOrder, $technician);
+    yellowBrakePadWithoutPhoto($repairOrder, $inspection, $technician);
 
     $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
         'status' => RepairOrderStatus::Completed->value,

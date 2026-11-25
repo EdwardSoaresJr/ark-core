@@ -222,9 +222,32 @@ test('mobile lifecycle API returns operational closeout challenge for unfinished
             ->count())->toBe(1);
 });
 
-test('partially completed inspection requires reason before completed', function () {
+test('optional partially completed inspection does not require closeout acknowledgment', function () {
     $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
     $repairOrder->forceFill(['mileage_in' => 10000, 'mileage_out' => 10001])->save();
+    startIncompleteInspection($repairOrder);
+
+    $outstanding = app(RepairOrderOperationalOutstandingWork::class)->items($repairOrder->fresh());
+    expect(collect($outstanding)->where('kind', RepairOrderOperationalOutstandingWork::KIND_INSPECTION_IN_PROGRESS))
+        ->toBeEmpty();
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => RepairOrderStatus::Completed->value,
+    ])->assertRedirect()->assertSessionDoesntHaveErrors('lifecycle');
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::Completed))->toBeTrue();
+
+    $inspection = Inspection::query()->where('repair_order_id', $repairOrder->id)->first();
+    expect($inspection?->completed_at)->toBeNull();
+});
+
+test('required partially completed inspection still requires reason before completed', function () {
+    $repairOrder = operationalCloseoutRepairOrder(RepairOrderStatus::QualityCheck);
+    $repairOrder->forceFill([
+        'mileage_in' => 10000,
+        'mileage_out' => 10001,
+        'inspection_lifecycle_policy' => 'required',
+    ])->save();
     startIncompleteInspection($repairOrder);
 
     $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
@@ -248,9 +271,6 @@ test('partially completed inspection requires reason before completed', function
         ->and(OperationalEvent::query()
             ->where('event_name', OperationalEventName::RepairOrderOperationalCloseoutAcknowledged->value)
             ->count())->toBe(1);
-
-    $inspection = Inspection::query()->where('repair_order_id', $repairOrder->id)->first();
-    expect($inspection?->completed_at)->toBeNull();
 });
 
 test('ordered approved part not received requires reason', function () {

@@ -36,14 +36,19 @@ final class InspectionPostureProjection
                 $inspection,
                 InspectionChecklistItems::orderedChecklistItems($inspection),
             );
-            $total = $ordered->count();
+
+            // Template checklist only — freeform / Other Findings are not coverage points.
+            $checklist = $ordered->filter(
+                fn (InspectionItem $item): bool => $item->inspection_template_item_id !== null,
+            )->values();
+            $total = $checklist->count();
 
             $templateItems = InspectionTemplateItem::query()
-                ->whereIn('id', $ordered->pluck('inspection_template_item_id')->filter()->all())
+                ->whereIn('id', $checklist->pluck('inspection_template_item_id')->filter()->all())
                 ->get()
                 ->keyBy('id');
 
-            foreach ($ordered as $item) {
+            foreach ($checklist as $item) {
                 $templateItem = $templateItems->get($item->inspection_template_item_id);
                 $resolvedTemplate = $templateItem instanceof InspectionTemplateItem ? $templateItem : null;
 
@@ -60,9 +65,11 @@ final class InspectionPostureProjection
             }
         }
 
+        // Checklist coverage start only — freeform findings must not force In Progress.
         $started = $checked > 0
             || ($inspection instanceof Inspection && $inspection->items()
                 ->whereNull('superseded_at')
+                ->whereNotNull('inspection_template_item_id')
                 ->where('observed_state', '!=', InspectionObservedState::NotChecked->value)
                 ->exists());
 
