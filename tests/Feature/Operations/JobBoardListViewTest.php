@@ -636,6 +636,11 @@ test('cards view uses hierarchical Tabler bands inside Kanban columns', function
     expect($css)
         ->toContain('.ark-job-board-kanban-column .ark-job-board-card')
         ->toContain('height: auto')
+        ->toContain('container-type: inline-size')
+        ->toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
+        ->toContain('max-height: none')
+        ->not->toContain('max-height: min(70vh, 44rem)')
+        ->not->toContain('--ark-kanban-column-width: 20rem')
         ->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*0\s+0\s+auto/s')
         ->not->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*1\s+1\s+auto/s');
 });
@@ -865,34 +870,41 @@ test('kanban cards stay content-height instead of filling the column', function 
     $sourceCss = (string) file_get_contents(resource_path('css/tabler.css'));
     expect($sourceCss)
         ->toMatch('/\.ark-job-board-kanban-column\s+\.ark-job-board-card\s*\{[^}]*flex:\s*0\s+0\s+auto[^}]*height:\s*auto/s')
-        ->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*0\s+0\s+auto/s');
+        ->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*0\s+0\s+auto/s')
+        ->toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
+        ->not->toContain('max-height: min(70vh, 44rem)');
 
-    // Mirror the production Kanban + card sizing rules for a hermetic layout measurement.
+    // Mirror compact card + fluid column sizing for a hermetic layout measurement.
     $html = <<<'HTML'
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
 <style>
-.ark-job-board-kanban-scroller { --ark-kanban-column-width: 20rem; overflow-x: auto; }
-.ark-job-board-kanban-track { display: flex; align-items: stretch; gap: 0.75rem; min-height: 18rem; width: max-content; }
+.ark-job-board-kanban { --ark-kanban-gap: 0.35rem; --ark-kanban-card-gap: 0.5rem; container-type: inline-size; }
+.ark-job-board-kanban-scroller { overflow-x: visible; overflow-y: visible; }
+.ark-job-board-kanban-track {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--ark-kanban-gap);
+    width: 100%;
+}
 .ark-job-board-kanban-column {
-    flex: 0 0 var(--ark-kanban-column-width);
-    width: var(--ark-kanban-column-width);
     display: flex;
     flex-direction: column;
-    min-height: 16rem;
-    max-height: min(70vh, 44rem);
+    min-width: 0;
+    max-height: none;
 }
 .ark-job-board-kanban-column-body {
-    flex: 1 1 auto;
-    overflow-y: auto;
+    flex: 0 0 auto;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 0.65rem;
-    padding-top: 0.65rem;
+    gap: var(--ark-kanban-card-gap);
+    padding: 0.45rem;
 }
 .ark-job-board-kanban-column .ark-job-board-card {
     flex: 0 0 auto;
@@ -904,9 +916,9 @@ test('kanban cards stay content-height instead of filling the column', function 
     min-height: 0;
 }
 .card { display: flex; flex-direction: column; background: #fff; border: 1px solid #ddd; }
-.card-body { flex: 1 1 auto; }
-.card-header { padding: 0.65rem; }
-.ark-job-board-card-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.7rem 0.8rem; min-height: 0; }
+.card-body { flex: 0 0 auto; }
+.card-header { padding: 0.45rem; }
+.ark-job-board-card-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.55rem 0.6rem; min-height: 0; }
 .ark-job-board-card-band--identity { display: flex; align-items: baseline; gap: 0.5rem; }
 .ark-job-board-card-band--footer { border-top: 1px solid #ddd; margin-top: 0.15rem; padding-top: 0.45rem; }
 .fw-bold { font-weight: 700; }
@@ -916,10 +928,10 @@ test('kanban cards stay content-height instead of filling the column', function 
 </style>
 </head>
 <body style="margin:0;font-family:system-ui,sans-serif">
-<div class="ark-job-board-cards ark-job-board-kanban">
+<div class="ark-job-board-cards ark-job-board-kanban" style="width:1200px">
   <div class="ark-job-board-kanban-scroller">
     <div class="ark-job-board-kanban-track">
-      <section class="ark-job-board-kanban-column card" style="height: min(70vh, 44rem);">
+      <section class="ark-job-board-kanban-column card">
         <header class="ark-job-board-kanban-column-head card-header"><h2 class="card-title mb-0">Estimates <span>3</span></h2></header>
         <div class="ark-job-board-kanban-column-body card-body" data-job-board-kanban-column-body>
           <article class="card ark-job-board-card" data-job-board-card data-measure-card="short">
@@ -954,6 +966,10 @@ test('kanban cards stay content-height instead of filling the column', function 
           </article>
         </div>
       </section>
+      <section class="ark-job-board-kanban-column card" data-extra-col="1"><header class="card-header">Waiting Approval</header><div class="ark-job-board-kanban-column-body card-body"></div></section>
+      <section class="ark-job-board-kanban-column card" data-extra-col="2"><header class="card-header">Waiting Parts</header><div class="ark-job-board-kanban-column-body card-body"></div></section>
+      <section class="ark-job-board-kanban-column card" data-extra-col="3"><header class="card-header">Work in Progress</header><div class="ark-job-board-kanban-column-body card-body"></div></section>
+      <section class="ark-job-board-kanban-column card" data-extra-col="4"><header class="card-header">Completed</header><div class="ark-job-board-kanban-column-body card-body"></div></section>
     </div>
   </div>
 </div>
@@ -977,8 +993,11 @@ HTML;
 
     $payload = json_decode($browser->evaluate(<<<'JS'
 (() => {
+  const board = document.querySelector('.ark-job-board-kanban');
+  const track = document.querySelector('.ark-job-board-kanban-track');
   const body = document.querySelector('[data-job-board-kanban-column-body]');
   const cards = [...document.querySelectorAll('[data-job-board-card]')];
+  const columns = [...document.querySelectorAll('.ark-job-board-kanban-column')];
   const measure = (card) => {
     const concern = card.querySelector('[data-measure-concern]');
     const state = card.querySelector('[data-measure-state]');
@@ -996,37 +1015,54 @@ HTML;
     };
   };
   const heights = cards.map((card) => card.getBoundingClientRect().height);
-  const visibleCount = cards.filter((card) => {
-    const rect = card.getBoundingClientRect();
-    const bodyRect = body.getBoundingClientRect();
-    return rect.top < bodyRect.bottom && rect.bottom > bodyRect.top;
-  }).length;
+  const colWidths = columns.map((col) => Math.round(col.getBoundingClientRect().width));
+  const trackStyle = getComputedStyle(track);
+  const bodyStyle = getComputedStyle(body);
   return JSON.stringify({
     bodyHeight: body.getBoundingClientRect().height,
+    bodyOverflowY: bodyStyle.overflowY,
     cards: cards.map(measure),
     maxCardHeight: Math.max(...heights),
     sumCardHeights: heights.reduce((a, b) => a + b, 0),
-    visibleCount,
+    cardCount: cards.length,
     viewport: window.innerWidth,
+    boardWidth: Math.round(board.getBoundingClientRect().width),
+    trackWidth: Math.round(track.getBoundingClientRect().width),
+    trackDisplay: trackStyle.display,
+    trackColumns: trackStyle.gridTemplateColumns,
+    columnCount: columns.length,
+    columnWidths: colWidths,
+    documentScrollWidth: document.documentElement.scrollWidth,
+    documentClientWidth: document.documentElement.clientWidth,
   });
 })()
 JS), true);
 
     expect($payload)->toBeArray()
         ->and($payload['viewport'])->toBe(1366)
-        ->and($payload['visibleCount'])->toBeGreaterThanOrEqual(2)
-        ->and(count($payload['cards']))->toBe(3)
-        // A single stretched card would approach column body height; compact cards stay well below.
-        ->and($payload['maxCardHeight'])->toBeLessThan($payload['bodyHeight'] * 0.55)
-        // Three content-sized cards plus gaps should still exceed one body viewport (scroll required).
-        ->and($payload['sumCardHeights'])->toBeGreaterThan($payload['bodyHeight'] * 0.75);
+        ->and($payload['cardCount'])->toBe(3)
+        ->and($payload['columnCount'])->toBe(5)
+        ->and($payload['trackDisplay'])->toBe('grid')
+        ->and($payload['bodyOverflowY'])->toBe('visible')
+        ->and($payload['trackWidth'])->toBeLessThanOrEqual($payload['boardWidth'] + 1)
+        ->and($payload['documentScrollWidth'])->toBeLessThanOrEqual($payload['documentClientWidth'] + 1)
+        ->and($payload['maxCardHeight'])->toBeLessThan(320.0);
+
+    // Five fluid columns should share ~1200px board width (~240px each, ±20).
+    foreach ($payload['columnWidths'] as $width) {
+        expect($width)->toBeGreaterThan(200)
+            ->and($width)->toBeLessThan(280);
+    }
+
+    // Body grows with cards (no nested viewport); card heights stay content-driven.
+    expect($payload['sumCardHeights'])->toBeLessThanOrEqual($payload['bodyHeight'] + 1)
+        ->and($payload['bodyHeight'])->toBeLessThan($payload['sumCardHeights'] + 40);
 
     foreach ($payload['cards'] as $card) {
         expect($card['flexGrow'])->toBe('0')
             ->and($card['concernFlex'])->toBe('0')
             ->and($card['gapConcernToState'])->toBeLessThan(24.0)
             ->and($card['gapConcernToFooter'])->toBeLessThan(120.0)
-            ->and($card['height'])->toBeLessThan(280.0)
-            ->and($card['height'])->toBeLessThan($payload['bodyHeight'] * 0.5);
+            ->and($card['height'])->toBeLessThan(320.0);
     }
 });
