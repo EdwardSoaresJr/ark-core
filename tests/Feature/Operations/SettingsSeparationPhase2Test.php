@@ -41,20 +41,24 @@ test('platform connection without voice service still saves call hours', functio
     enablePlatformConnection();
     fakePlatformVoiceStatus('not_enabled');
 
+    // Weekly open/closed is shop-owned Business Hours; Communications consumes it.
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.telephony.update'), [
-            'communications_tab' => 'hours',
-            'telephony_call_flow' => [
-                'weekly_hours' => [
+        ->patch(route('operations.settings.shop.business-hours.update'), [
+            'shop_timezone' => 'America/Denver',
+            'business_hours' => [
+                'weekly' => [
                     'monday' => ['enabled' => '1', 'open' => '09:00', 'close' => '20:00'],
+                    'tuesday' => ['enabled' => '1', 'open' => '09:00', 'close' => '18:00'],
+                    'wednesday' => ['enabled' => '1', 'open' => '09:00', 'close' => '18:00'],
+                    'thursday' => ['enabled' => '1', 'open' => '09:00', 'close' => '18:00'],
+                    'friday' => ['enabled' => '1', 'open' => '09:00', 'close' => '18:00'],
+                    'saturday' => ['enabled' => '0', 'open' => '09:00', 'close' => '18:00'],
+                    'sunday' => ['enabled' => '0', 'open' => '09:00', 'close' => '18:00'],
                 ],
             ],
         ])
-        ->assertRedirect(route('operations.settings.shop.edit', [
-            'section' => 'communications',
-            'communications-tab' => 'hours',
-        ]))
-        ->assertSessionHas('status', 'Telephony settings saved.');
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'hours']))
+        ->assertSessionHas('status', 'Business hours saved.');
 
     expect(TelephonyCallFlowSettings::fromShopSettings(ShopSettings::current())->weeklyHours()['monday']['close'] ?? null)
         ->toBe('20:00');
@@ -85,7 +89,9 @@ test('entitled voice without runtime ownership keeps core hours settings', funct
         ]))
         ->assertOk()
         ->assertSee('Call hours')
-        ->assertSee('name="telephony_call_flow[weekly_hours][monday][open]"', false)
+        ->assertSee('Weekly open/closed comes from Business Hours', false)
+        ->assertSee(route('operations.settings.shop.edit', ['section' => 'hours']), false)
+        ->assertDontSee('name="telephony_call_flow[weekly_hours][monday][open]"', false)
         ->assertDontSee('This phone control moved to ARK Cloud', false)
         ->assertDontSee('Phone settings are managed in ARK Cloud', false);
 });
@@ -95,19 +101,22 @@ test('configured voice without runtime ownership still saves call hours', functi
     fakePlatformVoiceStatus('active', 'Active', 'core');
 
     $this->actingAs($this->admin)
-        ->patch(route('operations.settings.shop.telephony.update'), [
-            'communications_tab' => 'hours',
-            'telephony_call_flow' => [
-                'weekly_hours' => [
+        ->patch(route('operations.settings.shop.business-hours.update'), [
+            'shop_timezone' => 'America/Denver',
+            'business_hours' => [
+                'weekly' => [
                     'monday' => ['enabled' => '1', 'open' => '09:00', 'close' => '20:00'],
+                    'tuesday' => ['enabled' => '1', 'open' => '09:00', 'close' => '18:00'],
+                    'wednesday' => ['enabled' => '1', 'open' => '09:00', 'close' => '18:00'],
+                    'thursday' => ['enabled' => '1', 'open' => '09:00', 'close' => '18:00'],
+                    'friday' => ['enabled' => '1', 'open' => '09:00', 'close' => '18:00'],
+                    'saturday' => ['enabled' => '0', 'open' => '09:00', 'close' => '18:00'],
+                    'sunday' => ['enabled' => '0', 'open' => '09:00', 'close' => '18:00'],
                 ],
             ],
         ])
-        ->assertRedirect(route('operations.settings.shop.edit', [
-            'section' => 'communications',
-            'communications-tab' => 'hours',
-        ]))
-        ->assertSessionHas('status', 'Telephony settings saved.');
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'hours']))
+        ->assertSessionHas('status', 'Business hours saved.');
 
     expect(TelephonyCallFlowSettings::fromShopSettings(ShopSettings::current())->weeklyHours()['monday']['close'] ?? null)
         ->toBe('20:00');

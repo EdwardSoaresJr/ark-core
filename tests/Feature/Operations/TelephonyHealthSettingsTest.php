@@ -164,16 +164,19 @@ test('saving communications hours tab preserves call flow settings', function ()
         'telephony_provider' => TelephonyProviderType::Twilio->value,
     ]);
 
+    // Weekly schedule is owned by Business Hours; open/closed consumers still see it.
     $this->actingAs($admin)
-        ->patch(route('operations.settings.shop.telephony.update'), [
-            'communications_tab' => 'hours',
-            'telephony_call_flow' => [
-                'weekly_hours' => [
+        ->patch(route('operations.settings.shop.business-hours.update'), [
+            'shop_timezone' => 'America/Denver',
+            'business_hours' => [
+                'weekly' => [
                     'monday' => ['enabled' => '1', 'open' => '09:00', 'close' => '20:00'],
                     'tuesday' => ['enabled' => '1', 'open' => '09:00', 'close' => '20:00'],
                     'wednesday' => ['enabled' => '1', 'open' => '09:00', 'close' => '20:00'],
                     'thursday' => ['enabled' => '1', 'open' => '09:00', 'close' => '20:00'],
                     'friday' => ['enabled' => '1', 'open' => '09:00', 'close' => '20:00'],
+                    'saturday' => ['enabled' => '0', 'open' => '09:00', 'close' => '18:00'],
+                    'sunday' => ['enabled' => '0', 'open' => '09:00', 'close' => '18:00'],
                 ],
             ],
         ])

@@ -8,10 +8,12 @@
     $current ??= null;
     $productUrl = fn (string $route): ?string => \Illuminate\Support\Facades\Route::has($route) ? route($route) : null;
     $saasProviderSettings = \App\Ark\Platform\SaasProviderConfigurationGate::allowsCommunicationsProviderSettings();
+    $hostedShop = \App\Ark\Runtime\HostedRuntime::isHostedProduct();
     // Lightweight Basic / Optional / Advanced grouping. Keys, routes, and permissions are unchanged.
     $settingsNav = [
         'Basic' => [
             ['key' => 'general', 'label' => 'Shop Identity'],
+            ['key' => 'hours', 'label' => 'Business Hours'],
             ['key' => 'operations', 'label' => 'Appointments & Setup'],
             ['key' => 'staff', 'label' => 'Staff', 'can' => App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value],
             ['key' => 'financial', 'label' => 'Financial Rules'],
@@ -30,7 +32,8 @@
             ['key' => 'excellence', 'label' => 'Owner Targets & Reporting'],
             ['key' => 'workflow', 'label' => 'Workflow Defaults'],
             ['key' => 'printing', 'label' => 'Label Printing'],
-            ['key' => 'stations', 'label' => 'Stations & Phones', 'href' => route('operations.shop.communications')],
+            // Hosted shops configure phones in ARK Shop / Communications — not a Core Stations hub.
+            ['key' => 'stations', 'label' => 'Stations & Phones', 'href' => route('operations.shop.communications'), 'hidden' => $hostedShop],
         ],
     ];
     $settingsNav = array_map(fn (array $items): array => array_values(array_filter(

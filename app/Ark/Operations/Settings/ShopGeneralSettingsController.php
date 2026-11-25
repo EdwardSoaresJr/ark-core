@@ -6,6 +6,7 @@ use App\Ark\Operations\Documents\DocumentTypography;
 use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Settings\BusinessHours;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
 use App\Ark\Operations\Telephony\TelephonyCallFlowSettings;
 use Illuminate\Http\RedirectResponse;
@@ -49,12 +50,6 @@ class ShopGeneralSettingsController
             'postal_code' => ['nullable', 'string', 'max:32'],
             'document_typography' => ['nullable', 'string', Rule::in(array_column(DocumentTypography::cases(), 'value'))],
             'shop_timezone' => ['required', 'string', Rule::in(timezone_identifiers_list())],
-            'telephony_call_flow' => ['nullable', 'array'],
-            'telephony_call_flow.weekly_hours' => ['nullable', 'array'],
-            'telephony_call_flow.weekly_hours.*.enabled' => ['nullable', 'boolean'],
-            'telephony_call_flow.weekly_hours.*.open' => ['nullable', 'date_format:H:i'],
-            'telephony_call_flow.weekly_hours.*.close' => ['nullable', 'date_format:H:i'],
-            'telephony_call_flow.closed_dates' => ['nullable', 'string'],
         ]);
 
         $settings = ShopSettings::current();
@@ -72,31 +67,9 @@ class ShopGeneralSettingsController
             $logoPath = $request->file('logo')->store('shop-logos', 'public');
         }
 
-        $callFlowInput = is_array($data['telephony_call_flow'] ?? null) ? $data['telephony_call_flow'] : [];
+        // Identity may update timezone display; weekly open/closed stays on Business Hours.
         $existingFlow = TelephonyCallFlowSettings::fromShopSettings($settings)->toArray();
-        $weeklyInput = is_array($callFlowInput['weekly_hours'] ?? null) ? $callFlowInput['weekly_hours'] : [];
-
-        foreach (TelephonyCallFlowSettings::WEEKDAYS as $day) {
-            $dayInput = is_array($weeklyInput[$day] ?? null) ? $weeklyInput[$day] : [];
-            $existingFlow['weekly_hours'][$day] = [
-                'enabled' => filter_var($dayInput['enabled'] ?? $existingFlow['weekly_hours'][$day]['enabled'] ?? false, FILTER_VALIDATE_BOOL),
-                'open' => $dayInput['open'] ?? $existingFlow['weekly_hours'][$day]['open'] ?? '09:00',
-                'close' => $dayInput['close'] ?? $existingFlow['weekly_hours'][$day]['close'] ?? '18:00',
-            ];
-        }
-
-        $closedDates = array_key_exists('closed_dates', $callFlowInput)
-            ? collect(preg_split('/\r\n|\r|\n/', (string) $callFlowInput['closed_dates']) ?: [])
-                ->map(fn (string $date): string => trim($date))
-                ->filter(fn (string $date): bool => preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1)
-                ->unique()
-                ->sort()
-                ->values()
-                ->all()
-            : ($existingFlow['closed_dates'] ?? []);
-
         $existingFlow['timezone'] = $data['shop_timezone'];
-        $existingFlow['closed_dates'] = $closedDates;
 
         $settings->update([
             'shop_name' => $data['shop_name'] ?? $settings->shop_name,
@@ -120,6 +93,60 @@ class ShopGeneralSettingsController
         ShopDisplayTimezone::apply();
 
         return $this->redirectWithStatus('Shop identity saved.');
+    }
+
+    /**
+     * Public business hours and shop timezone. Writes shop-owned `business_hours` and mirrors
+     * weekly/closed into telephony_call_flow for open/closed consumers. Does not touch
+     * appointment scheduling overrides or staff schedules.
+     */
+    public function updateBusinessHours(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'shop_timezone' => ['required', 'string', Rule::in(timezone_identifiers_list())],
+            'business_hours' => ['nullable', 'array'],
+            'business_hours.weekly' => ['nullable', 'array'],
+            'business_hours.weekly.*.enabled' => ['nullable', 'boolean'],
+            'business_hours.weekly.*.open' => ['nullable', 'date_format:H:i'],
+            'business_hours.weekly.*.close' => ['nullable', 'date_format:H:i'],
+            'business_hours.closed_dates' => ['nullable', 'string'],
+        ]);
+
+        $settings = ShopSettings::current();
+        $hoursInput = is_array($data['business_hours'] ?? null) ? $data['business_hours'] : [];
+        $current = $settings->businessHoursSnapshot();
+        $weeklyInput = is_array($hoursInput['weekly'] ?? null) ? $hoursInput['weekly'] : [];
+        $weekly = $current['weekly'];
+
+        foreach (BusinessHours::WEEKDAYS as $day) {
+            $dayInput = is_array($weeklyInput[$day] ?? null) ? $weeklyInput[$day] : [];
+            $weekly[$day] = [
+                'enabled' => filter_var($dayInput['enabled'] ?? $weekly[$day]['enabled'] ?? false, FILTER_VALIDATE_BOOL),
+                'open' => $dayInput['open'] ?? $weekly[$day]['open'] ?? '09:00',
+                'close' => $dayInput['close'] ?? $weekly[$day]['close'] ?? '18:00',
+            ];
+        }
+
+        $closedDates = array_key_exists('closed_dates', $hoursInput)
+            ? collect(preg_split('/\r\n|\r|\n/', (string) $hoursInput['closed_dates']) ?: [])
+                ->map(fn (string $date): string => trim($date))
+                ->filter(fn (string $date): bool => preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1)
+                ->unique()
+                ->sort()
+                ->values()
+                ->all()
+            : $current['closed_dates'];
+
+        $settings->persistBusinessHours([
+            'weekly' => $weekly,
+            'closed_dates' => $closedDates,
+        ], $data['shop_timezone']);
+
+        ShopDisplayTimezone::apply();
+
+        return redirect()
+            ->route('operations.settings.shop.edit', ['section' => 'hours'])
+            ->with('status', 'Business hours saved.');
     }
 
     /**

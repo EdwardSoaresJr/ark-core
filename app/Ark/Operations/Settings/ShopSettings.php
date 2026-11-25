@@ -158,6 +158,7 @@ use InvalidArgumentException;
     'appointment_scheduling_target_percent',
     'appointment_capacity_enforcement',
     'operational_profile',
+    'business_hours',
     'scheduling_hours',
     'appointment_request_availability',
     'online_booking',
@@ -435,6 +436,7 @@ TEXT;
         'square_enabled' => 'boolean',
         'telephony_enabled' => 'boolean',
         'telephony_call_flow' => 'array',
+        'business_hours' => 'array',
         'asterisk_voice' => 'array',
         'mobile_push' => 'array',
         'mobile_push_firebase_service_account' => 'encrypted',
@@ -724,6 +726,61 @@ TEXT;
     }
 
     /**
+     * Public business hours for Shop Settings forms (weekly open/closed + holiday closures).
+     * Shop-owned `business_hours` is authoritative; older embedded weekly JSON is a fallback only.
+     *
+     * @return array{
+     *     weekly: array<string, array{enabled: bool, open: string, close: string}>,
+     *     closed_dates: list<string>
+     * }
+     */
+    public function businessHoursSnapshot(): array
+    {
+        $owned = is_array($this->business_hours) ? $this->business_hours : null;
+        if ($owned !== null && $owned !== []) {
+            return BusinessHours::normalize($owned);
+        }
+
+        return BusinessHours::fromLegacyDocument(
+            is_array($this->telephony_call_flow) ? $this->telephony_call_flow : null,
+        );
+    }
+
+    /**
+     * Persist shop-owned Business Hours and mirror weekly/closed for open/closed consumers
+     * that still read the embedded schedule mirror.
+     *
+     * @param  array{
+     *     weekly?: array<string, mixed>,
+     *     closed_dates?: list<string>|string
+     * }  $hours
+     */
+    public function persistBusinessHours(array $hours, ?string $timezone = null): void
+    {
+        $normalized = BusinessHours::normalize([
+            'weekly' => $hours['weekly'] ?? null,
+            'closed_dates' => $hours['closed_dates'] ?? [],
+        ]);
+
+        $flow = is_array($this->telephony_call_flow) ? $this->telephony_call_flow : [];
+        $flow['weekly_hours'] = $normalized['weekly'];
+        $flow['closed_dates'] = $normalized['closed_dates'];
+        if ($timezone !== null && $timezone !== '') {
+            $flow['timezone'] = $timezone;
+        }
+
+        $payload = [
+            'business_hours' => $normalized,
+            'telephony_call_flow' => $flow,
+        ];
+        if ($timezone !== null && $timezone !== '') {
+            $payload['shop_timezone'] = $timezone;
+        }
+
+        $this->update($payload);
+    }
+
+    /**
      * Effective staff booking windows: custom overrides, else Business Hours.
      *
      * @return array<string, array{enabled: bool, open: string, close: string}>
@@ -734,9 +791,7 @@ TEXT;
             return SchedulingHours::normalize($this->scheduling_hours);
         }
 
-        return SchedulingHours::fromBusinessHours(
-            \App\Ark\Operations\Telephony\TelephonyCallFlowSettings::fromShopSettings($this)->weeklyHours(),
-        );
+        return SchedulingHours::fromBusinessHours($this->businessHoursSnapshot()['weekly']);
     }
 
     /**

@@ -20,12 +20,7 @@ final class ShopCustomerHoursPresentation
 
     public static function summaryForCurrentShop(): ?string
     {
-        $settings = ShopSettings::current();
-        $callFlow = is_array($settings->telephony_call_flow) ? $settings->telephony_call_flow : [];
-
-        return self::summary(
-            is_array($callFlow['weekly_hours'] ?? null) ? $callFlow['weekly_hours'] : [],
-        );
+        return self::summaryForShop(ShopSettings::current());
     }
 
     /**
@@ -33,11 +28,7 @@ final class ShopCustomerHoursPresentation
      */
     public static function summaryForShop(ShopSettings $settings): ?string
     {
-        $callFlow = is_array($settings->telephony_call_flow) ? $settings->telephony_call_flow : [];
-
-        return self::summary(
-            is_array($callFlow['weekly_hours'] ?? null) ? $callFlow['weekly_hours'] : [],
-        );
+        return self::summary($settings->businessHoursSnapshot()['weekly']);
     }
 
     /**

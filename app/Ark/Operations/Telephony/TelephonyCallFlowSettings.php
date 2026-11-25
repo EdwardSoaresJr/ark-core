@@ -31,33 +31,14 @@ class TelephonyCallFlowSettings
         $stored = $settings->telephony_call_flow;
         $defaults = ShopSettings::defaultTelephonyCallFlow();
 
-        if (! is_array($stored) || $stored === []) {
-            return new self($defaults);
-        }
+        $merged = (! is_array($stored) || $stored === [])
+            ? $defaults
+            : array_merge($defaults, $stored);
 
-        $merged = array_merge($defaults, $stored);
-        $storedWeekly = is_array($stored['weekly_hours'] ?? null) ? $stored['weekly_hours'] : [];
-
-        if ($storedWeekly === []) {
-            $merged['weekly_hours'] = $defaults['weekly_hours'];
-        } else {
-            $weekly = $defaults['weekly_hours'];
-            foreach (self::WEEKDAYS as $day) {
-                if (! isset($storedWeekly[$day]) || ! is_array($storedWeekly[$day])) {
-                    continue;
-                }
-
-                $weekly[$day] = [
-                    'enabled' => filter_var(
-                        $storedWeekly[$day]['enabled'] ?? $weekly[$day]['enabled'],
-                        FILTER_VALIDATE_BOOL,
-                    ),
-                    'open' => (string) ($storedWeekly[$day]['open'] ?? $weekly[$day]['open']),
-                    'close' => (string) ($storedWeekly[$day]['close'] ?? $weekly[$day]['close']),
-                ];
-            }
-            $merged['weekly_hours'] = $weekly;
-        }
+        // Open/closed evaluation consumes shop-owned Business Hours, not telephony as authority.
+        $business = $settings->businessHoursSnapshot();
+        $merged['weekly_hours'] = $business['weekly'];
+        $merged['closed_dates'] = $business['closed_dates'];
 
         return new self($merged);
     }

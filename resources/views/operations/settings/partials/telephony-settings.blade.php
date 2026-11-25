@@ -122,7 +122,9 @@
             <div class="fw-medium">This phone control moved to ARK Cloud</div>
             <div class="mt-1">
                 @if ($communicationsTab === 'hours')
-                    Voice open/closed schedule is configured under Phone settings in ARK Cloud. Shop hours for appointments stay in Operations settings where needed - they do not drive live call routing for Hosted Voice.
+                    Voice open/closed schedule is configured under Phone settings in ARK Cloud. Public shop Business Hours (customer-facing and appointment defaults) are edited under
+                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'hours']) }}">Shop Settings → Business Hours</a>
+                    and do not drive live Hosted Voice call routing.
                 @elseif ($communicationsTab === 'recording')
                     Recording, disclosure, and greetings for inbound calls are configured in ARK Cloud Phone settings. Call-intelligence API keys below remain shop operational tooling when used.
                 @else
@@ -519,62 +521,14 @@
                 <p class="text-secondary small mb-0">Tokens: <code>@{{business.name}}</code> <code>@{{caller.number}}</code>. Empty templates use shop defaults. Skips opted-out customers and cooldown duplicates.</p>
             </div>
 
-            <div>
-                <div class="subheader mb-2">Weekly hours</div>
-                <div class="list-group">
-                    @foreach ($weekdayLabels as $dayKey => $dayLabel)
-                        @php $dayHours = $callFlowConfig['weekly_hours'][$dayKey] ?? ['enabled' => false, 'open' => '09:00', 'close' => '18:00']; @endphp
-                        <div class="list-group-item py-2">
-                            <div class="row g-2 align-items-center">
-                                <div class="col-12 col-sm-3">
-                                    <label class="form-check mb-0">
-                                        <input type="hidden" name="telephony_call_flow[weekly_hours][{{ $dayKey }}][enabled]" value="0">
-                                        <input
-                                            type="checkbox"
-                                            name="telephony_call_flow[weekly_hours][{{ $dayKey }}][enabled]"
-                                            value="1"
-                                            @checked(old("telephony_call_flow.weekly_hours.{$dayKey}.enabled", $dayHours['enabled']))
-                                            class="form-check-input"
-                                        >
-                                        <span class="form-check-label fw-medium">{{ $dayLabel }}</span>
-                                    </label>
-                                </div>
-                                <div class="col-sm-2 d-none d-sm-block small text-secondary">Open hours</div>
-                                <div class="col-6 col-sm-3">
-                                    <input
-                                        type="time"
-                                        step="60"
-                                        name="telephony_call_flow[weekly_hours][{{ $dayKey }}][open]"
-                                        value="{{ old("telephony_call_flow.weekly_hours.{$dayKey}.open", $dayHours['open']) }}"
-                                        class="form-control"
-                                        aria-label="{{ $dayLabel }} open"
-                                    >
-                                </div>
-                                <div class="col-6 col-sm-3">
-                                    <input
-                                        type="time"
-                                        step="60"
-                                        name="telephony_call_flow[weekly_hours][{{ $dayKey }}][close]"
-                                        value="{{ old("telephony_call_flow.weekly_hours.{$dayKey}.close", $dayHours['close']) }}"
-                                        class="form-control"
-                                        aria-label="{{ $dayLabel }} close"
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <div>
-                <label for="settings-closed-dates" class="form-label">Holiday closures (one YYYY-MM-DD per line)</label>
-                <textarea
-                    id="settings-closed-dates"
-                    name="telephony_call_flow[closed_dates]"
-                    rows="3"
-                    class="form-control"
-                    placeholder="2026-12-25&#10;2026-11-27"
-                >{{ old('telephony_call_flow.closed_dates', implode("\n", $callFlowConfig['closed_dates'])) }}</textarea>
+            <div class="alert alert-info mb-0" role="status">
+                <div class="fw-medium mb-1">Weekly open/closed comes from Business Hours</div>
+                <p class="small mb-2">
+                    Public shop hours and holiday closures are owned under
+                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'hours']) }}">Shop Settings → Business Hours</a>.
+                    Phone open/closed routing follows that schedule; it does not store a second copy as authority.
+                </p>
+                <p class="small mb-0 text-secondary">{{ \App\Ark\Operations\Settings\ShopCustomerHoursPresentation::summary($callFlowConfig['weekly_hours'] ?? []) ?? 'No open days configured yet.' }}</p>
             </div>
 
             <div>

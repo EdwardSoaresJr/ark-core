@@ -58,7 +58,7 @@ class ShopSettingsPageController
         if (DemoInstall::isDemo() && $initialSection === 'ark-cloud') {
             $initialSection = null;
         }
-        $allowedSections = ['general', 'financial', 'payments', 'partstech', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'runtime-health'];
+        $allowedSections = ['general', 'hours', 'financial', 'payments', 'partstech', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'runtime-health'];
         if (SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()) {
             $allowedSections[] = 'communications';
         }

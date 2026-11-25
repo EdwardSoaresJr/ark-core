@@ -112,7 +112,7 @@
             ! $settings->usesCustomSchedulingHours(),
         );
         $followShopHours = filter_var($followShopHours, FILTER_VALIDATE_BOOL);
-        $businessHoursWeekly = \App\Ark\Operations\Telephony\TelephonyCallFlowSettings::fromShopSettings($settings)->weeklyHours();
+        $businessHoursWeekly = $settings->businessHoursSnapshot()['weekly'];
         $customSchedulingHours = old(
             'scheduling_hours',
             $settings->usesCustomSchedulingHours()
@@ -147,7 +147,7 @@
                 {{ $businessHoursSummary }}
                 ·
                 <a
-                    href="{{ route('operations.settings.shop.edit', ['section' => 'general']) }}"
+                    href="{{ route('operations.settings.shop.edit', ['section' => 'hours']) }}"
                 >Edit Business Hours</a>
             </span>
         </label>
@@ -393,7 +393,7 @@
 <div class="border-top pt-4 mt-4" style="max-width: 48rem" data-settings-bays>
     <h4 class="mb-1">Bays</h4>
     <p class="text-secondary small">
-        Operational work locations. They may contribute to schedule-capacity planning. Appointments do not require a bay assignment. Front Counter and phone places stay under Communications → Stations.
+        Operational work locations. They may contribute to schedule-capacity planning. Appointments do not require a bay assignment.
     </p>
 
     <div class="list-group mb-3">

@@ -259,26 +259,10 @@ class ShopCommunicationsSettingsController
                 ->with('status', 'Phone settings are managed in ARK Cloud.');
         }
 
-        $weeklyInput = is_array($callFlowInput['weekly_hours'] ?? null) ? $callFlowInput['weekly_hours'] : [];
-
-        foreach (TelephonyCallFlowSettings::WEEKDAYS as $day) {
-            $dayInput = is_array($weeklyInput[$day] ?? null) ? $weeklyInput[$day] : [];
-            $existingFlow['weekly_hours'][$day] = [
-                'enabled' => filter_var($dayInput['enabled'] ?? $existingFlow['weekly_hours'][$day]['enabled'] ?? false, FILTER_VALIDATE_BOOL),
-                'open' => $dayInput['open'] ?? $existingFlow['weekly_hours'][$day]['open'] ?? '09:00',
-                'close' => $dayInput['close'] ?? $existingFlow['weekly_hours'][$day]['close'] ?? '18:00',
-            ];
-        }
-
-        $closedDates = array_key_exists('closed_dates', $callFlowInput)
-            ? collect(preg_split('/\r\n|\r|\n/', (string) $callFlowInput['closed_dates']) ?: [])
-                ->map(fn (string $date): string => trim($date))
-                ->filter(fn (string $date): bool => preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1)
-                ->unique()
-                ->sort()
-                ->values()
-                ->all()
-            : ($existingFlow['closed_dates'] ?? []);
+        // Weekly open/closed and holiday closures are shop-owned Business Hours — not edited here.
+        $businessHours = ShopSettings::current()->businessHoursSnapshot();
+        $existingFlow['weekly_hours'] = $businessHours['weekly'];
+        $closedDates = $businessHours['closed_dates'];
 
         $hoursBypassNumbers = array_key_exists('hours_bypass_numbers', $callFlowInput)
             ? collect(preg_split('/\r\n|\r|\n/', (string) $callFlowInput['hours_bypass_numbers']) ?: [])
