@@ -52,12 +52,16 @@ final class ResetInspectionWalkAction
                 $item->forceFill([
                     'observed_state' => InspectionObservedState::NotChecked->value,
                     'notes' => null,
+                    'selected_observations' => null,
                 ])->save();
             }
 
+            // Checklist walk abandoned — clear session completion markers.
+            // Freeform / Other Findings (no template point) are retained by design.
             $inspection->forceFill([
                 'completed_at' => null,
                 'recorded_by_user_id' => null,
+                'started_at' => null,
             ])->save();
         });
     }

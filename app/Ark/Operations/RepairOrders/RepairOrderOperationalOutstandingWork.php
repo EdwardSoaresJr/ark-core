@@ -4,6 +4,7 @@ namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Inspections\InspectionPosture;
 use App\Ark\Operations\Inspections\InspectionPostureProjection;
+use App\Ark\Operations\Inspections\InspectionRequirementResolver;
 
 /**
  * Operational unfinished work for finish / pickup / paid-close accountability.
@@ -32,6 +33,7 @@ final class RepairOrderOperationalOutstandingWork
 
     public function __construct(
         private readonly InspectionPostureProjection $inspectionPosture,
+        private readonly InspectionRequirementResolver $inspectionRequirement,
     ) {}
 
     public function appliesTo(string $toStatusSlug, ?string $closeVariantKey = null): bool
@@ -94,22 +96,44 @@ final class RepairOrderOperationalOutstandingWork
      */
     private function inspectionItem(RepairOrder $repairOrder): ?array
     {
+        $decision = $this->inspectionRequirement->forRepairOrder($repairOrder);
+
+        // Optional / Recommended / waived: never a closeout unfinished-work item.
+        // Required incomplete coverage (never started or in progress) remains a controlled gate.
+        if (! $decision->blocksLifecycleOnIncomplete()) {
+            return null;
+        }
+
         $posture = $this->inspectionPosture->forRepairOrder($repairOrder);
 
-        // Coverage-based only. Supporting evidence gaps do not count as unfinished inspection work.
-        // Never started / complete / needs review: no outstanding inspection item.
-        if (! $posture->started || $posture->key !== InspectionPosture::IN_PROGRESS) {
+        if ($posture->key === InspectionPosture::COMPLETE
+            || $posture->key === InspectionPosture::NEEDS_REVIEW) {
             return null;
         }
 
         $template = $posture->templateName ?: 'Inspection';
+
+        if (! $posture->started || $posture->key === InspectionPosture::NOT_STARTED) {
+            return [
+                'key' => 'inspection:required_not_started',
+                'kind' => self::KIND_INSPECTION_IN_PROGRESS,
+                'title' => 'Inspection required',
+                'detail' => $template.' — required by '.$decision->requirement->label()
+                    .' policy; not started. '.$decision->detail,
+            ];
+        }
+
+        if ($posture->key !== InspectionPosture::IN_PROGRESS) {
+            return null;
+        }
+
         $detail = $posture->detail ?: ($posture->checked.' of '.$posture->total.' items covered');
 
         return [
             'key' => 'inspection:in_progress',
             'kind' => self::KIND_INSPECTION_IN_PROGRESS,
-            'title' => 'Inspection in progress',
-            'detail' => $template.' — '.$detail,
+            'title' => 'Inspection required',
+            'detail' => $template.' — '.$detail.'. Required by shop/RO policy.',
         ];
     }
 

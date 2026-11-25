@@ -5,6 +5,8 @@
 # Verified from Regression run 42326865474 (PR #149 on main baa625d, 2026-11-07): 4375 tests, 206 failing. The same
 # 206 failed in the Tests run on main at baa625d (42326193582); at 9a260d1 (42313908110) they failed together with
 # ScheduleWeekAllocationTest, which is intermittent and listed at the end.
+# Focused refresh from Tests run 45517041901 (PR #262): add 21 Communications* baseline drifts pulled in by
+# ShopSettings/RepairOrder fan-out; remove 4 now-passing entries (#147).
 # tests: 4375
 tests/Feature/Acceptance/RapidWorkflowAcceptanceTest.php::workflow communications saves settings and sends inspection through platform
 tests/Feature/Cloud/FabricIngressTest.php::fabric ingress accepts voice.incoming.started and broadcasts interrupts
@@ -23,16 +25,30 @@ tests/Feature/Communications/CommunicationsInboxFeatureCodeTest.php::communicati
 tests/Feature/Communications/CommunicationsInboxFeatureCodeTest.php::communications inbox threads one row per customer when conversation and calls overlap
 tests/Feature/Communications/CommunicationsQueueWorkspaceCutTest.php::explicit open loads the existing relationship workspace
 tests/Feature/Communications/CommunicationsQueueWorkspaceCutTest.php::waiting queue does not auto-open the relationship workspace
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::adding phone to legacy workstation without extension assigns extension automatically
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::adding phone to workstation opens device workspace without server error
 tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::assign extension rejects real conflict without mutating either workstation
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::creating workstation auto-assigns extension and advances to phone step
 tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::device projection preview stays hidden from non master admins
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::device provisioning controls stay hidden from non master admins
 tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::device provisioning generates downloadable config without exposing credentials in ui
 tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::device workspace surfaces provisioning observability for bench certification
 tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::device workspace tells operational truth without transport details
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::ensure extension reclaims legacy orphan extension row for same number
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::incoming routing updates ring targets by person not extension
 tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::person workspace lists assigned devices with name-only add form
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::settings manager can remove a communication device and return to voice setup
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::shop communications answers whether the shop can communicate
 tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::shop communications manual device entry is limited to master admin support
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::shop communications projects live calls in todays coverage
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::shop communications shows setup in progress when workstation lacks phone path
 tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::shop communications surfaces attention when a device is offline
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::store communication device persists normalized mac and resolved model
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::store communication device rejects duplicate mac with validation error
+tests/Feature/Communications/CommunicationsShopWorkspaceTest.php::store communication device rejects invalid mac with validation error
 tests/Feature/Communications/CommunicationsWorkspaceOutboundCallTest.php::handled call stays in inbox with full thread including outbound messages
 tests/Feature/Communications/CommunicationsWorkspaceShellTest.php::attention workspace thread renders inbound mms image attachments
+tests/Feature/Communications/CommunicationsWorkspaceShellTest.php::stations and phones pages render in the Tabler shell with their forms
 tests/Feature/Communications/CommunicationsWorkspaceSprintTest.php::advisor reply records first contact and keeps Needs attention until follow-up
 tests/Feature/Communications/CommunicationsWorkspaceSprintTest.php::conversation thread send payment records sms on the active conversation
 tests/Feature/Communications/CommunicationsWorkspaceSprintTest.php::customer inbound sms returns conversation to needs attention
@@ -43,10 +59,14 @@ tests/Feature/Communications/CommunicationsWorkspaceSprintTest.php::website lead
 tests/Feature/Communications/CommunicationsWorkspaceStabilizationTest.php::empty communications workspace keeps the three-column landmarks
 tests/Feature/Communications/CommunicationsWorkspaceStabilizationTest.php::empty fragment still returns the same workspace landmarks
 tests/Feature/Communications/CommunicationsWorkspaceStabilizationTest.php::fragment open returns thread and context without requiring a second queue architecture
+tests/Feature/Communications/DiscoveredDeviceAssignTest.php::assigning pending device to station provisions without manual mac entry
+tests/Feature/Communications/DiscoveredDeviceAssignTest.php::pending device appears under needs attention when shop is operating
+tests/Feature/Communications/EndpointArchitecturePr1Test.php::shop assign extension route completes first contact operator path
 tests/Feature/Communications/InboxThreadContextTest.php::a missed call appears once in the thread ahead of a later text
 tests/Feature/Communications/InboxThreadContextTest.php::an answered call shows authoritative talk time and its recording is not voicemail
 tests/Feature/Communications/InboxThreadContextTest.php::mark handled changes only that call
 tests/Feature/Communications/InboxThreadContextTest.php::the latest missed call is explained in the thread it labels
+tests/Feature/Communications/MissedCallRescueTest.php::admin can save missed call rescue settings on hours tab
 tests/Feature/Communications/MissedCallRescueTest.php::hosted missed call rescue sends through platform without a core sms row
 tests/Feature/Communications/MissedCallRescueTest.php::missed call rescue cooldown follows the shop setting
 tests/Feature/Communications/MissedCallRescueTest.php::missed call rescue respects cooldown after a prior rescue
@@ -83,10 +103,12 @@ tests/Feature/Operations/AppointmentSmsTest.php::scheduling an appointment flash
 tests/Feature/Operations/AppointmentTest.php::advisor can open schedule create from a repair order
 tests/Feature/Operations/ArkManagerTest.php::work page renders ark manager brief instead of coming soon
 tests/Feature/Operations/CommsPressureGateTest.php::comms escalation texts active advisors after delay
-tests/Feature/Operations/CommunicationTruthAuditTest.php::queued failed delivered recovery updates customer state and records both delivery facts
 tests/Feature/Operations/CommunicationsChannelSettingsTest.php::legacy messenger settings url redirects away from removed core transport ui
 tests/Feature/Operations/CommunicationsQueueTest.php::handled call disappears from needs attention
+tests/Feature/Operations/CommunicationsQueueTest.php::sidebar does not show retired intake queue nav
 tests/Feature/Operations/CommunicationsQueueTest.php::work home shows communications metric without queue sections
+tests/Feature/Operations/CommunicationsQuickReplyTemplatesTest.php::communications settings can add and delete canned responses
+tests/Feature/Operations/CommunicationTruthAuditTest.php::queued failed delivered recovery updates customer state and records both delivery facts
 tests/Feature/Operations/ConversationContextPanelTest.php::estimate review renders relationship context with fleet open ros
 tests/Feature/Operations/ConversationQuickReplyTest.php::customer hub shows reply affordance when conversation history exists
 tests/Feature/Operations/ConversationQuickReplyTest.php::customer hub shows text customer affordance when no conversation history
@@ -104,7 +126,6 @@ tests/Feature/Operations/CustomerVehicleRepairOrderDraftTest.php::plate decode s
 tests/Feature/Operations/CustomerVehicleRepairOrderDraftTest.php::the shop can decode a plate via partstech
 tests/Feature/Operations/CustomerVehicleRepairOrderDraftTest.php::the shop can edit customer and vehicle details from the customer page
 tests/Feature/Operations/DeferredWorkContinuityTest.php::current deferred work feeds queue pressure and document snapshots
-tests/Feature/Operations/EstimateDocumentSnapshotTest.php::terminal repair order statuses snapshot a final pdf that no longer auto refreshes
 tests/Feature/Operations/EstimateSentWithMissingVinTest.php::send estimate sms with missing vin override records operational fact
 tests/Feature/Operations/Financial/RepairOrderFinancialPresenterBalanceAxesTest.php::presenter with preloaded balance projection does not add BalanceDueCalculator queries
 tests/Feature/Operations/IndependentAppointmentOwnershipTest.php::brand-new caller confirmation creates conversation when none exists
@@ -120,6 +141,7 @@ tests/Feature/Operations/OperationalIdentityHeaderTest.php::repair order review 
 tests/Feature/Operations/OperatorAdoptionPassTest.php::it schedules without asking for a customer id
 tests/Feature/Operations/OutboundSmsVisibilityTest.php::mobile conversation send records on the viewed conversation thread
 tests/Feature/Operations/OutboundSmsVisibilityTest.php::outbound sms appears on customer hub timeline after send
+tests/Feature/Operations/OwnerCallIntelligenceTest.php::core settings no longer expose call intelligence provider configuration
 tests/Feature/Operations/PartsMatrixTuneTest.php::parts matrix tune assistant simulates markup changes on closed sample
 tests/Feature/Operations/PortalCustomerActivityInterruptTest.php::record portal estimate view action broadcasts interrupt once
 tests/Feature/Operations/PortalSearchIndexingTest.php::robots.txt disallows portal crawling
@@ -167,9 +189,6 @@ tests/Feature/Operations/ShopInternalMailerTest.php::disconnected shop keeps pos
 tests/Feature/Operations/TablerShellComponentsTest.php::an ARKademy page keeps the legacy shell components
 tests/Feature/Operations/TechRoProductionLandingTest.php::advisor and admin keep estimate review on show
 tests/Feature/Operations/TechRoProductionLandingTest.php::multi-role advisor technician keeps estimate review
-tests/Feature/Operations/TelephonyHealthSettingsTest.php::settings communications telephony page surfaces operational health on general tab
-tests/Feature/Operations/TelephonyHealthSettingsTest.php::settings managers can save primary telephony provider per shop
-tests/Feature/Operations/TelephonyHealthSettingsTest.php::settings managers can test incoming call from telephony page route
 tests/Feature/Operations/TodaySurfaceTest.php::technician lens still surfaces assigned work lanes
 tests/Feature/Operations/VehicleIntelligenceProviderTest.php::partstech and nhtsa payloads normalize to the same canonical key
 tests/Feature/Operations/VehicleIntelligenceProviderTest.php::vehicle intelligence decodes plate via partstech and enriches from vin when returned
@@ -187,14 +206,14 @@ tests/Feature/Platform/PublicWebsiteLegacySurfaceTest.php::useful legacy urls re
 tests/Feature/Platform/PublicWebsiteRoutePrecedenceTest.php::custom domain renders the website and does not serve staff routes
 tests/Feature/Runtime/PublicDemoGithubTest.php::a shop that is not the public demo keeps its own front door
 tests/Feature/Runtime/PublicRootUrlConfiguratorTest.php::a public https app url forces the https scheme
-tests/Feature/Station/AdvisorStationApiTest.php::Dragon unavailable returns 503 and the glass dashboard still loads
 tests/Feature/Station/AdvisorStationApiTest.php::advisor_tasks.query tool is read only
 tests/Feature/Station/AdvisorStationApiTest.php::dragon service principal cannot use station Ask Dragon
+tests/Feature/Station/AdvisorStationApiTest.php::Dragon unavailable returns 503 and the glass dashboard still loads
 tests/Feature/Station/AdvisorStationApiTest.php::staff Sanctum cannot use the station Dragon chat route
 tests/Feature/Station/AdvisorStationApiTest.php::station Ask Dragon can answer an open-RO count without a staff PAT
+tests/Feature/Station/AdvisorStationApiTest.php::station dashboard rejects Dragon machine tokens
 tests/Feature/Station/AdvisorStationApiTest.php::station Dragon conversation_id continues the same hosted thread
 tests/Feature/Station/AdvisorStationApiTest.php::station Dragon keeps the live Glass thread even without conversation_id
-tests/Feature/Station/AdvisorStationApiTest.php::station dashboard rejects Dragon machine tokens
 tests/Feature/Station/AdvisorStationApiTest.php::station token can start a hosted Dragon conversation without a staff PAT
 tests/Feature/Station/StationAttentionProjectionTest.php::hosted attention nudge uses snapshot only and failure does not break dashboard
 tests/Feature/Tech/TechApiTest.php::dragon rewrite failure leaves original text for manual dvi
