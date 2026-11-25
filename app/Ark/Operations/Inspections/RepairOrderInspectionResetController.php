@@ -26,6 +26,6 @@ class RepairOrderInspectionResetController
 
         return redirect()
             ->to(InspectionWorkspaceUrl::advisorReview($repairOrder))
-            ->with('status', 'Checklist walk restarted. Conditions, measurements, and walk photos were cleared. Other findings were kept.');
+            ->with('status', 'Checklist walk restarted. Prior checklist points were kept as history. Other findings remain active.');
     }
 }

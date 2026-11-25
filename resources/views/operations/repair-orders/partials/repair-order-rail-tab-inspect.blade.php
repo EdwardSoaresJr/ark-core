@@ -331,22 +331,19 @@
                     <summary class="card-body small fw-bold text-secondary">Restart checklist walk</summary>
                     <div class="card-body border-top">
                         <p class="small text-secondary mb-2">
-                            Clears checklist conditions, measurements, and walk photos so the shop can redo DVI.
-                            Other Findings (freeform) stay. Does not make an Optional inspection required.
+                            Starts a fresh checklist walk. Prior checklist points (with photos and measurements) stay on this inspection as history.
+                            Other Findings (freeform) stay active. Does not make an Optional inspection required.
                             Admin and Advisor only.
-                        </p>
-                        <p class="small text-secondary">
-                            Photo files for cleared checklist points are removed from storage today. Prefer finishing or abandoning coverage before restarting when evidence must be retained — a non-destructive history path is in Stage B follow-up.
                         </p>
                         <form
                             method="post"
                             action="{{ $actions['reset_url'] }}"
-                            onsubmit="return confirm('Restart this checklist walk? Conditions, measurements, and walk photos will be cleared. Other Findings stay.');"
+                            onsubmit="return confirm('Restart this checklist walk? Prior checklist evidence is kept as history. Other Findings stay active.');"
                         >
                             @csrf
                             <label class="form-check">
                                 <input type="checkbox" name="confirm" value="1" required class="form-check-input">
-                                <span class="form-check-label">I understand checklist walk evidence is cleared and cannot be undone from this screen.</span>
+                                <span class="form-check-label">I understand the active checklist will restart and prior checklist points become history.</span>
                             </label>
                             <button
                                 type="submit"

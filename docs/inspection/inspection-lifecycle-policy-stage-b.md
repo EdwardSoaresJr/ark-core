@@ -12,7 +12,7 @@
 | Visit / job categories | **Do not invent.** Existing models are `RepairOrderVisitMode` (Waiting / Drop Off / Shuttle / Tow / On-site) and `RecommendationIntent` (Maintenance / Diagnostic / Repair Verification). No PPI / “general repair” enum exists. Shop-wide policy only in this slice; per-intent maps deferred until product names a real authority. |
 | Historical ROs | Shop policy changes do not rewrite RO overrides or waivers |
 | Waiver | Admin only; reason ≥ 8 chars; stored on RO |
-| Reset | UX renamed “Restart checklist walk”; still clears checklist evidence (photos deleted from local disk). Non-destructive walk history is the next Stage B slice. |
+| Reset | **Restart checklist walk** supersedes active template points (photos/measurements retained on superseded rows), applies a fresh not_checked checklist, keeps freeform active. Uses existing `superseded_at` history (same authority as template change). |
 
 ## Shipped in this slice
 
@@ -20,15 +20,16 @@
 - `InspectionLifecyclePolicySettingsController`
 - RO Inspect rail: requirement badge, override form, admin waiver
 - Controllers/actions for requirement + waiver
-- Regression tests: `InspectionLifecyclePolicyStageBTest`
+- Non-destructive restart via `superseded_at` + re-apply template
+- Regression tests: `InspectionLifecyclePolicyStageBTest` + updated reset coverage
 
 ## Remaining Stage B
 
-1. Non-destructive restart / abandon / resume (retain photo history; avoid contradictory freeform+blank checklist without audit)
+1. Explicit “Abandon draft” vs “Resume” affordances (restart covers redo; abandon/resume UX still thin)
 2. Closeout UI copy for Optional vs Required (no red blocking chrome when Optional)
 3. Mobile parity for requirement badge / waiver affordances
 4. Optional: per-`RecommendationIntent` policy map if owner confirms product need
-5. Recoverability report for production RO #1842 deleted checklist photos (backup-only; no restore without auth)
+5. Recoverability report for production RO #1842 checklist photos deleted **before** this non-destructive restart (backup-only; no restore without auth)
 
 ## Migration impact
 

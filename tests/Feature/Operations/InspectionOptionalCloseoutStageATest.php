@@ -170,10 +170,12 @@ test('optional reset walk with freeform finding does not block closeout (RO1842 
     $posture = app(InspectionPostureProjection::class)->forRepairOrder($repairOrder->fresh());
     expect($posture->started)->toBeFalse()
         ->and($posture->key)->toBe(InspectionPosture::NOT_STARTED)
-        ->and($inspection->fresh()->items()->whereNull('inspection_template_item_id')->where('label', 'Bad Battery')->exists())
+        ->and($inspection->fresh()->items()->whereNull('superseded_at')->whereNull('inspection_template_item_id')->where('label', 'Bad Battery')->exists())
         ->toBeTrue()
-        ->and($inspection->fresh()->items()->whereNotNull('inspection_template_item_id')
-            ->where('observed_state', '!=', InspectionObservedState::NotChecked->value)->count())->toBe(0);
+        ->and($inspection->fresh()->items()->whereNull('superseded_at')->whereNotNull('inspection_template_item_id')
+            ->where('observed_state', '!=', InspectionObservedState::NotChecked->value)->count())->toBe(0)
+        ->and($inspection->fresh()->items()->whereNotNull('superseded_at')->whereNotNull('inspection_template_item_id')->count())
+        ->toBeGreaterThan(0);
 
     expect(collect(app(RepairOrderOperationalOutstandingWork::class)->items($repairOrder->fresh()))
         ->where('kind', RepairOrderOperationalOutstandingWork::KIND_INSPECTION_IN_PROGRESS))->toBeEmpty();
