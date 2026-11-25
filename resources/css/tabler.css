@@ -252,8 +252,11 @@
     }
 }
 
-/* ≥ ~1100px content: all five stages across the board with no horizontal scroll. */
-@container ark-job-board-kanban (min-width: 1100px) {
+/*
+ * ≥ ~980px content: all five stages across the board with no horizontal scroll.
+ * Sized for 1366px desktops where the Tabler shell + sidebar leave ~1070–1200px.
+ */
+@container ark-job-board-kanban (min-width: 980px) {
     .ark-job-board-kanban-track {
         grid-template-columns: repeat(5, minmax(0, 1fr));
     }
@@ -291,7 +294,7 @@
         }
     }
 
-    @media (min-width: 1400px) {
+    @media (min-width: 1280px) {
         .ark-job-board-kanban-track {
             grid-template-columns: repeat(5, minmax(0, 1fr));
         }
