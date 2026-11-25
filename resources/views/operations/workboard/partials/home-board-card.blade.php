@@ -33,7 +33,7 @@
 
 <article
     id="ops-card-ro-{{ $repairOrder->repair_order_id }}"
-    class="card ark-job-board-card h-100"
+    class="card ark-job-board-card"
     data-job-board-card
     data-job-card
     data-job-board-row
@@ -123,7 +123,7 @@
             @endif
         </div>
 
-        <div class="ark-job-board-card-band ark-job-board-card-band--footer mt-auto d-flex align-items-center gap-2">
+        <div class="ark-job-board-card-band ark-job-board-card-band--footer d-flex align-items-center gap-2">
             <div class="min-w-0" data-job-board-row-activity data-job-card-activity>
                 @if ($activityStrip['visible'] === [])
                     <span class="text-secondary small" data-job-board-activity-empty>—</span>

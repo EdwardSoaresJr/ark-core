@@ -181,13 +181,18 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
     gap: 0.65rem;
     padding-top: 0.65rem;
     overscroll-behavior: contain;
 }
 
 .ark-job-board-kanban-column .ark-job-board-card {
+    /* Content-driven height: never stretch to fill the column. */
     flex: 0 0 auto;
+    height: auto;
+    align-self: stretch;
 }
 
 @media (max-width: 767.98px) {
@@ -230,8 +235,9 @@
 }
 
 .ark-job-board-cards .ark-job-board-card-band--concern {
-    flex: 1 1 auto;
-    min-height: 2.4rem;
+    /* Content-sized: do not grow and push status/activity to the card bottom. */
+    flex: 0 0 auto;
+    min-height: 0;
 }
 
 .ark-job-board-cards .ark-job-board-card .ark-job-board-concern-stack {
