@@ -1,6 +1,9 @@
 <?php
 
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Events\OperationalEvent;
+use App\Ark\Operations\Events\OperationalEventName;
+use App\Ark\Operations\Inspections\GuardInspectionCustomerPublication;
 use App\Ark\Operations\Inspections\InspectionRequirement;
 use App\Ark\Operations\Inspections\InspectionRequirementResolver;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -162,4 +165,38 @@ test('inspection settings panel renders policy choices', function () {
         ->toContain('Recommended')
         ->toContain('Required')
         ->toContain('never block completing');
+});
+
+test('override and waiver record operational events', function () {
+    $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+    $this->actingAs($admin);
+
+    $repairOrder = stageBRo();
+
+    $this->patch(route('operations.repair-orders.inspection.requirement.update', $repairOrder), [
+        'inspection_lifecycle_policy' => InspectionRequirement::Required->value,
+    ])->assertRedirect();
+
+    expect(OperationalEvent::query()
+        ->where('event_name', OperationalEventName::InspectionRequirementOverridden->value)
+        ->where('aggregate_id', $repairOrder->id)
+        ->exists())->toBeTrue();
+
+    $this->post(route('operations.repair-orders.inspection.waiver.store', $repairOrder), [
+        'inspection_waived_reason' => 'Customer declined full inspection today.',
+    ])->assertRedirect();
+
+    expect(OperationalEvent::query()
+        ->where('event_name', OperationalEventName::InspectionRequirementWaived->value)
+        ->where('aggregate_id', $repairOrder->id)
+        ->exists())->toBeTrue();
+});
+
+test('customer publication copy does not say required for incomplete coverage', function () {
+    $repairOrder = stageBRo();
+
+    $reason = app(GuardInspectionCustomerPublication::class)->blockReason($repairOrder);
+
+    expect($reason)->toContain('Record at least one inspection finding')
+        ->and($reason)->not->toContain('Finish required inspection work');
 });

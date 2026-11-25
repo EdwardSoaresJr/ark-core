@@ -48,7 +48,9 @@ final class GuardInspectionCustomerPublication
         }
 
         if (! $state['coverage_complete']) {
-            return 'Inspection coverage is incomplete. Finish required inspection work before sharing with the customer.';
+            // Publication readiness is independent of lifecycle Optional/Required.
+            // Do not say "required" — that conflates customer-share completeness with closeout policy.
+            return 'Inspection checklist coverage is incomplete. Finish the checklist before sharing with the customer.';
         }
 
         if ($state['publication_blockers'] !== []) {

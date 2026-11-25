@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Inspections;
 
+use App\Ark\Operations\Events\OperationalEventName;
+use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -15,6 +17,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class ResetInspectionWalkAction
 {
+    public function __construct(
+        private readonly OperationalEventRecorder $events,
+    ) {}
+
     public static function canReset(?User $user): bool
     {
         if ($user === null) {
@@ -35,6 +41,11 @@ final class ResetInspectionWalkAction
 
         DB::transaction(function () use ($repairOrder, $inspection, $actor): void {
             $now = now();
+
+            $superseded = $inspection->items()
+                ->whereNull('superseded_at')
+                ->whereNotNull('inspection_template_item_id')
+                ->count();
 
             // Keep freeform / Other Findings active. Supersede checklist points only.
             $inspection->items()
@@ -63,6 +74,17 @@ final class ResetInspectionWalkAction
                 'started_at' => null,
                 'completed_at' => null,
             ])->save();
+
+            $this->events->record(
+                OperationalEventName::InspectionWalkRestarted,
+                $repairOrder,
+                actor: $actor,
+                payload: [
+                    'inspection_id' => $inspection->id,
+                    'superseded_checklist_points' => $superseded,
+                    'destructive' => false,
+                ],
+            );
         });
     }
 }

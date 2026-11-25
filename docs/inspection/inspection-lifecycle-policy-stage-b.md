@@ -23,13 +23,18 @@
 - Non-destructive restart via `superseded_at` + re-apply template
 - Regression tests: `InspectionLifecyclePolicyStageBTest` + updated reset coverage
 
+## Follow-up (this slice)
+
+- Operational events: `inspection_requirement_overridden`, `inspection_requirement_waived`, `inspection_waiver_cleared`, `inspection_walk_restarted`
+- CTA / publication copy no longer says “required” for Optional walks; Required CTAs are explicit
+- Publication completeness remains independent of lifecycle Optional/Required
+
 ## Remaining Stage B
 
 1. Explicit “Abandon draft” vs “Resume” affordances (restart covers redo; abandon/resume UX still thin)
-2. Closeout UI copy for Optional vs Required (no red blocking chrome when Optional)
-3. Mobile parity for requirement badge / waiver affordances
-4. Optional: per-`RecommendationIntent` policy map if owner confirms product need
-5. Recoverability report for production RO #1842 checklist photos deleted **before** this non-destructive restart (backup-only; no restore without auth)
+2. Mobile parity for requirement badge / waiver affordances
+3. Optional: per-template (Standard vs Pre-Purchase) or `RecommendationIntent` policy map if owner confirms product need — do not invent categories
+4. Recoverability report for production RO #1842 checklist photos deleted **before** non-destructive restart (backup-only; no restore without auth)
 
 ## Migration impact
 

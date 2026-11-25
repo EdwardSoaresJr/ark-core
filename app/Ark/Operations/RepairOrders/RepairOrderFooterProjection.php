@@ -77,7 +77,7 @@ final readonly class RepairOrderFooterProjection
                 label: (string) $coverage['cta_label'],
                 href: $coverage['capture_url'],
                 opensInNewTab: true,
-                title: 'Continue the vehicle inspection',
+                title: (string) $coverage['cta_label'],
             );
         }
 
