@@ -193,12 +193,83 @@
     padding-inline: var(--ark-kanban-pad-x);
 }
 
+.ark-job-board-kanban-column-focus {
+    display: block;
+    margin: -0.45rem calc(-1 * var(--ark-kanban-pad-x));
+    padding: 0.45rem var(--ark-kanban-pad-x);
+    border-radius: var(--tblr-border-radius);
+    cursor: pointer;
+}
+
+.ark-job-board-kanban-column-focus:hover {
+    background: var(--tblr-bg-surface-secondary, rgba(0, 0, 0, 0.03));
+}
+
+.ark-job-board-kanban-column-focus:focus-visible {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 2px;
+}
+
 .ark-job-board-kanban-column-head .card-title {
     font-size: 0.875rem;
     line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/*
+ * Focus View: single workflow stage across the available Job Board width.
+ * Reuses the same compact card; grid columns are content-width driven.
+ */
+.ark-job-board-focus {
+    --ark-focus-gap: 0.5rem;
+    --ark-focus-card-min: 16.5rem; /* ~264px */
+    container-type: inline-size;
+    container-name: ark-job-board-focus;
+}
+
+.ark-job-board-focus-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ark-focus-gap);
+    align-items: start;
+    width: 100%;
+}
+
+.ark-job-board-focus-cell {
+    min-width: 0;
+}
+
+.ark-job-board-focus-cell .ark-job-board-card {
+    height: auto;
+    max-width: 100%;
+}
+
+@container ark-job-board-focus (min-width: 520px) {
+    .ark-job-board-focus-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container ark-job-board-focus (min-width: 800px) {
+    .ark-job-board-focus-grid {
+        grid-template-columns: repeat(auto-fill, minmax(var(--ark-focus-card-min), 1fr));
+    }
+}
+
+@supports not (container-type: inline-size) {
+    @media (min-width: 576px) {
+        .ark-job-board-focus-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 992px) {
+        .ark-job-board-focus-grid {
+            grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
+        }
+    }
 }
 
 .ark-job-board-kanban-column-body {

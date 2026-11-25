@@ -19,5 +19,6 @@ final readonly class JobBoardKanbanColumn
         public array $rows,
         public int $hiddenCount,
         public ?string $listUrl,
+        public ?string $focusUrl = null,
     ) {}
 }

@@ -181,9 +181,33 @@ function initBoard(board) {
             const seq = Number(board.dataset.jobBoardLayoutPersistSeq || '0') + 1;
             board.dataset.jobBoardLayoutPersistSeq = String(seq);
             setStatus(board, 'Saving view…');
+
+            // Focus is Cards navigation state. Leaving for List clears it so List tabs
+            // stay authoritative and returning to Cards shows the full board.
+            const url = new URL(window.location.href);
+            const hadFocus = url.searchParams.has('focus');
+            if (next === 'list' && hadFocus) {
+                url.searchParams.delete('focus');
+                url.searchParams.delete('focus_limit');
+                void persistLayout(board, next, scope, seq).finally(() => {
+                    window.location.assign(url.pathname + url.search + url.hash);
+                });
+                return;
+            }
+
             void persistLayout(board, next, scope, seq);
         });
     });
+
+    // Focus entry: scroll the focused workspace into view for keyboard / SR users.
+    const focusRoot = board.querySelector('[data-job-board-focus]');
+    if (focusRoot) {
+        focusRoot.scrollIntoView({ behavior: 'auto', block: 'start' });
+        const back = focusRoot.querySelector('[data-job-board-focus-back]');
+        if (back instanceof HTMLElement) {
+            back.focus({ preventScroll: true });
+        }
+    }
 
     const columnSelect = board.querySelector('[data-job-board-kanban-column-select]');
     if (columnSelect) {
