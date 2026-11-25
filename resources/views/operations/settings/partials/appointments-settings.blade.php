@@ -147,7 +147,7 @@
                 {{ $businessHoursSummary }}
                 ·
                 <a
-                    href="{{ route('operations.settings.shop.edit', ['section' => 'general']) }}"
+                    href="{{ route('operations.settings.shop.edit', ['section' => 'hours']) }}"
                 >Edit Business Hours</a>
             </span>
         </label>

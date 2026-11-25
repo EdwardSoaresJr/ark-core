@@ -1,5 +1,5 @@
 @php
-    $messengerSettings = route('operations.settings.shop.edit', ['section' => 'ark-cloud']);
+    $messengerSettings = route('operations.settings.shop.edit', ['section' => 'communications']);
 @endphp
 
 <div class="ops-learn-prose">

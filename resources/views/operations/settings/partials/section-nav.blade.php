@@ -12,6 +12,7 @@
     $settingsNav = [
         'Basic' => [
             ['key' => 'general', 'label' => 'Shop Identity'],
+            ['key' => 'hours', 'label' => 'Business Hours'],
             ['key' => 'operations', 'label' => 'Appointments & Setup'],
             ['key' => 'staff', 'label' => 'Staff', 'can' => App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value],
             ['key' => 'financial', 'label' => 'Financial Rules'],

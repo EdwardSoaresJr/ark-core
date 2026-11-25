@@ -122,7 +122,9 @@
             <div class="fw-medium">This phone control moved to ARK Cloud</div>
             <div class="mt-1">
                 @if ($communicationsTab === 'hours')
-                    Voice open/closed schedule is configured under Phone settings in ARK Cloud. Shop hours for appointments stay in Operations settings where needed - they do not drive live call routing for Hosted Voice.
+                    Voice open/closed schedule is configured under Phone settings in ARK Cloud. Public shop Business Hours (customer-facing and appointment defaults) are edited under
+                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'hours']) }}">Shop Settings → Business Hours</a>
+                    and do not drive live Hosted Voice call routing.
                 @elseif ($communicationsTab === 'recording')
                     Recording, disclosure, and greetings for inbound calls are configured in ARK Cloud Phone settings. Call-intelligence API keys below remain shop operational tooling when used.
                 @else
@@ -520,7 +522,11 @@
             </div>
 
             <div>
-                <div class="subheader mb-2">Weekly hours</div>
+                <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-2">
+                    <div class="subheader mb-0">Weekly hours</div>
+                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'hours']) }}" class="small">Edit in Business Hours</a>
+                </div>
+                <p class="text-secondary small">Same schedule as Shop Settings → Business Hours. Changes here update public open/closed and phone routing together.</p>
                 <div class="list-group">
                     @foreach ($weekdayLabels as $dayKey => $dayLabel)
                         @php $dayHours = $callFlowConfig['weekly_hours'][$dayKey] ?? ['enabled' => false, 'open' => '09:00', 'close' => '18:00']; @endphp

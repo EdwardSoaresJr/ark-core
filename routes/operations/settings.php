@@ -49,6 +49,9 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/general', [ShopGeneralSettingsController::class, 'updateGeneral'])
         ->name('operations.settings.shop.general.update');
 
+    Route::patch('/app/settings/shop/business-hours', [ShopGeneralSettingsController::class, 'updateBusinessHours'])
+        ->name('operations.settings.shop.business-hours.update');
+
     Route::patch('/app/settings/shop/labor', [ShopFinancialSettingsController::class, 'updateLabor'])
         ->name('operations.settings.shop.labor.update');
 

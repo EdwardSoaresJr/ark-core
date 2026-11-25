@@ -270,6 +270,18 @@
                         </div>
                     </form>
                 </section>
+                <section class="card" x-show="active === 'hours'" x-cloak data-settings-section="hours">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Business Hours</div>
+                            <h2 class="card-title">Weekly schedule and timezone</h2>
+                            <div class="card-subtitle">Public open/closed hours for the shop. Appointment booking can follow these or use a custom schedule under Appointments &amp; Setup.</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @include('operations.settings.partials.business-hours-settings', ['settings' => $settings])
+                    </div>
+                </section>
                 <section class="card" x-show="active === 'estimates'" x-cloak data-settings-section="estimates">
                     <div class="card-header">
                         <div>
