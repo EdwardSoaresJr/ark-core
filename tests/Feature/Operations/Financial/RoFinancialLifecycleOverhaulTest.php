@@ -2,10 +2,12 @@
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\GenerateInvoiceSnapshotAction;
+use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
 use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use App\Ark\Operations\Financial\RepairOrderFinancialPresenter;
+use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleSelectProjection;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Runtime\Authorization\ArkRole;
@@ -176,4 +178,76 @@ test('over-collection beyond authorized owe today is still refused', function ()
 
     expect(fn () => $guard->validateAmount($repairOrder, $allowed + 1))
         ->toThrow(ValidationException::class);
+});
+
+test('workspace defaults suggested five hundred while allowing full twenty five hundred authorized advance', function () {
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    $repairOrder = repairOrderWithTwentyFiveHundredAuthorizedFiveHundredSuggested();
+    $guard = app(RepairOrderDepositRecordingGuard::class);
+    $presenter = app(RepairOrderFinancialPresenter::class)->for(
+        $repairOrder,
+        app(EstimateTotalsCalculator::class)->totalsFor($repairOrder),
+    );
+
+    expect($guard->remainingSuggestedDepositCents($repairOrder))->toBe(50000)
+        ->and($guard->remainingAllowedDepositCents($repairOrder))->toBe(250000)
+        ->and($presenter['remainingSuggestedDepositDecimal'])->toBe('500.00')
+        ->and($presenter['remainingCollectableDepositDecimal'])->toBe('2500.00')
+        ->and($presenter['canRecordManualDeposit'])->toBeTrue()
+        ->and($presenter['hasIssuedInvoice'])->toBeFalse();
+
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Collect deposit / advance', false)
+        ->assertSee('data-payment-workspace-suggested="500.00"', false)
+        ->assertSee('data-payment-workspace-max="2500.00"', false)
+        ->assertSee('Suggested deposit remaining: $500.00 (default only — full authorized amount is allowed).', false)
+        ->getContent();
+
+    expect($html)->toContain('Up to $2500.00 remaining on authorized work.');
+
+    $entry = app(RecordLedgerEntryAction::class)->recordDeposit(
+        $repairOrder,
+        250000,
+        PaymentMethod::Cash,
+    );
+    $repairOrder = $repairOrder->fresh();
+    $presenter = app(RepairOrderFinancialPresenter::class)->for(
+        $repairOrder,
+        app(EstimateTotalsCalculator::class)->totalsFor($repairOrder),
+    );
+
+    expect($entry->amount_cents)->toBe(250000)
+        ->and($entry->entry_type->value)->toBe('deposit')
+        ->and($presenter['oweTodayCents'])->toBe(0)
+        ->and($presenter['canRecordManualDeposit'])->toBeFalse()
+        ->and($presenter['hasIssuedInvoice'])->toBeFalse()
+        ->and($repairOrder->status->is(RepairOrderStatus::InProgress))->toBeTrue();
+
+    expect(fn () => $guard->validateAmount($repairOrder, 1))
+        ->toThrow(ValidationException::class);
+});
+
+test('exact twenty five hundred one cent over authorized is refused while partial advances accumulate', function () {
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    $repairOrder = repairOrderWithTwentyFiveHundredAuthorizedFiveHundredSuggested();
+    $guard = app(RepairOrderDepositRecordingGuard::class);
+    $ledger = app(RecordLedgerEntryAction::class);
+
+    expect(fn () => $guard->validateAmount($repairOrder, 250001))
+        ->toThrow(ValidationException::class);
+
+    $ledger->recordDeposit($repairOrder, 100000, PaymentMethod::Cash);
+    expect($guard->remainingAllowedDepositCents($repairOrder->fresh()))->toBe(150000);
+
+    $ledger->recordDeposit($repairOrder->fresh(), 150000, PaymentMethod::Cash);
+    $repairOrder = $repairOrder->fresh();
+
+    expect($guard->remainingAllowedDepositCents($repairOrder))->toBe(0)
+        ->and(RepairOrderLedgerEntry::query()
+            ->where('repair_order_id', $repairOrder->id)
+            ->where('entry_type', LedgerEntryType::Deposit)
+            ->sum('amount_cents'))->toBe(250000);
 });

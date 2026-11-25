@@ -93,6 +93,75 @@ function repairOrderWithSuggestedPartDeposit(
     return $repairOrder->fresh();
 }
 
+/**
+ * Isolated fixture matching the original failure: $2,500 authorized work,
+ * $500 parts-only suggested deposit, In Progress, no deposits/invoice.
+ */
+function repairOrderWithTwentyFiveHundredAuthorizedFiveHundredSuggested(
+    RepairOrderStatus $status = RepairOrderStatus::InProgress,
+): RepairOrder {
+    ShopSettings::current()->update([
+        'shop_fee_enabled' => false,
+        'tax_enabled' => false,
+        'default_deposit_enabled' => true,
+        'default_deposit_include_parts' => true,
+        'default_deposit_include_diagnostics' => false,
+    ]);
+
+    $customer = Customer::query()->create([
+        'first_name' => 'Advance',
+        'last_name' => 'TwentyFive',
+        'phone' => '555-2500',
+    ]);
+
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2020,
+        'make' => 'Toyota',
+        'model' => 'Camry',
+    ]);
+
+    $repairOrder = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => $status,
+        'mileage_in' => 45000,
+        'concern_summary' => 'Full authorized advance acceptance fixture.',
+    ]);
+
+    $concern = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Approved multi-system repair',
+        'disposition' => RepairOrderConcernDisposition::Approved,
+        'production_status' => ScopeProductionStatus::InProgress,
+        'recommendation_intent' => 'repair',
+        'position' => 1,
+    ]);
+
+    RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Part,
+        'description' => 'Major assembly',
+        'quantity' => '1.00',
+        'unit_price_cents' => 50000,
+        'part_cost_cents' => 32000,
+    ]);
+
+    RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Labor,
+        'description' => 'Install and diagnose',
+        'quantity' => '1.00',
+        'unit_price_cents' => 200000,
+    ]);
+
+    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
+
+    return $repairOrder->fresh();
+}
+
 function issueFinalInvoiceFor(RepairOrder $repairOrder): void
 {
     $repairOrder->forceFill(['status' => RepairOrderStatus::ReadyPickup])->save();

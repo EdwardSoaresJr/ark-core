@@ -76,10 +76,11 @@ final class ScopeProductionStatusFromPartsSync
             return ScopeProductionStatus::WaitingParts;
         }
 
-        // Parts arrived after a parts hold: resume bay work. Do not invent
-        // In Progress for scopes that were never waiting on parts.
+        // Parts receipt is an inventory event, not a work-start event. Clear the
+        // parts hold back to Pending so staff must explicitly resume bay work.
+        // Do not invent In Progress from receipt alone.
         if ($concern->productionStatus() === ScopeProductionStatus::WaitingParts) {
-            return ScopeProductionStatus::InProgress;
+            return ScopeProductionStatus::Pending;
         }
 
         return null;
@@ -91,11 +92,8 @@ final class ScopeProductionStatusFromPartsSync
             return false;
         }
 
-        if ($target === ScopeProductionStatus::InProgress) {
-            return $current === ScopeProductionStatus::WaitingParts;
-        }
-
         if ($target === ScopeProductionStatus::Pending) {
+            // Only clear a parts hold. Never demote In Progress / Completed via inventory.
             return $current === ScopeProductionStatus::WaitingParts;
         }
 

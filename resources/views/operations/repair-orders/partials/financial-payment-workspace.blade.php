@@ -6,11 +6,18 @@
         : 'deposit';
     $canLedger = ($financial['canRecordPayment'] ?? false) || ($financial['canRecordManualDeposit'] ?? false);
     $workspaceLabel = (string) ($financial['paymentWorkspaceLabel'] ?? ($ledgerKind === 'payment' ? 'Pay invoice' : 'Collect deposit / advance'));
+    // Suggested/shop policy is the default keypad amount. Hard ceiling remains remaining authorized
+    // (or suggested advance when nothing is authorized).
     $suggestedAmount = $ledgerKind === 'payment'
         ? (string) ($financial['settlementBalanceDueDecimal'] ?? $financial['balanceDueDecimal'] ?? '')
-        : (string) ($financial['remainingCollectableDepositDecimal']
-            ?? $financial['remainingSuggestedDepositDecimal']
+        : (string) ($financial['remainingSuggestedDepositDecimal']
+            ?? $financial['remainingCollectableDepositDecimal']
             ?? '');
+    $maxDepositAmount = $ledgerKind === 'deposit'
+        ? (string) ($financial['remainingCollectableDepositDecimal']
+            ?? $financial['remainingSuggestedDepositDecimal']
+            ?? '')
+        : '';
     $devices = $readiness['devices'] ?? [];
     $publicConfig = $readiness['public_config'] ?? null;
     $captureReady = (bool) ($readiness['ready'] ?? false);
@@ -49,10 +56,14 @@
 <div
     data-payment-workspace
     data-payment-workspace-suggested="{{ $suggestedAmount }}"
+    @if ($maxDepositAmount !== '')
+        data-payment-workspace-max="{{ $maxDepositAmount }}"
+    @endif
     x-data="arkPaymentCapture({
         workspace: true,
         open: @js($workspaceOpen),
         suggestedAmount: @js($suggestedAmount),
+        maxAmount: @js($maxDepositAmount !== '' ? $maxDepositAmount : null),
         publicConfig: @js($publicConfig),
         defaultMethod: @js($defaultMethod),
         readers: @js($readers),
@@ -175,6 +186,9 @@
                                 @input="onAmountTyped($event)"
                             >
                         </div>
+                        <p class="small text-danger text-center mb-0" x-show="amountExceedsMax()" x-cloak data-payment-workspace-max-error>
+                            Amount exceeds the remaining authorized maximum{{ $maxDepositAmount !== '' ? ' ('.$maxDepositAmount.')' : '' }}.
+                        </p>
                     </div>
 
                     <div class="d-grid gap-2" style="grid-template-columns: repeat(3, minmax(0, 1fr))" data-payment-workspace-keypad>
