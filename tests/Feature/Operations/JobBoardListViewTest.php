@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\Documents\PdfRuntimePaths;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Workboard\JobBoardLayout;
 use App\Ark\Operations\Workboard\JobBoardListPage;
@@ -8,6 +9,7 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Support\Facades\DB;
+use Spatie\Browsershot\Browsershot;
 use Tests\Support\JobBoardAcceptanceScenario;
 
 beforeEach(function () {
@@ -623,7 +625,19 @@ test('cards view uses hierarchical Tabler bands inside Kanban columns', function
         ->and($xpath->query('.//*[@data-job-card-clock]', $card)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-row-vehicle]', $card)->length)->toBe(1)
         ->and($card->getAttribute('class'))->toContain('ark-job-board-card')
+        ->and($card->getAttribute('class'))->not->toContain('h-100')
         ->and($card->getAttribute('class'))->not->toContain('card-sm');
+
+    $footer = $xpath->query('.//*[contains(@class,"ark-job-board-card-band--footer")]', $card)->item(0);
+    expect($footer)->toBeInstanceOf(DOMElement::class)
+        ->and($footer->getAttribute('class'))->not->toContain('mt-auto');
+
+    $css = (string) file_get_contents(resource_path('css/tabler.css'));
+    expect($css)
+        ->toContain('.ark-job-board-kanban-column .ark-job-board-card')
+        ->toContain('height: auto')
+        ->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*0\s+0\s+auto/s')
+        ->not->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*1\s+1\s+auto/s');
 });
 
 test('cards kanban shows every lane column and ignores the active list lane tab', function () {
@@ -830,4 +844,189 @@ test('job board total sort uses numeric cents not formatted strings', function (
 
     expect($firstId)->toBe((string) $high->repair_order_id)
         ->and($secondId)->toBe((string) $low->repair_order_id);
+});
+
+test('kanban cards stay content-height instead of filling the column', function () {
+    $chrome = PdfRuntimePaths::resolveChromePath();
+    $node = PdfRuntimePaths::resolveNodeBinary();
+    $nodeModules = collect([
+        base_path('node_modules'),
+        getenv('PUPPETEER_NODE_MODULES') ?: null,
+    ])->first(fn ($path) => is_string($path) && is_dir($path.DIRECTORY_SEPARATOR.'puppeteer'));
+
+    if (
+        ! is_string($chrome) || $chrome === '' || ! is_executable($chrome)
+        || ! is_string($node) || $node === '' || ! is_executable($node)
+        || ! is_string($nodeModules)
+    ) {
+        $this->markTestSkipped('Chromium, Node, and puppeteer are required for Kanban card height measurements.');
+    }
+
+    $sourceCss = (string) file_get_contents(resource_path('css/tabler.css'));
+    expect($sourceCss)
+        ->toMatch('/\.ark-job-board-kanban-column\s+\.ark-job-board-card\s*\{[^}]*flex:\s*0\s+0\s+auto[^}]*height:\s*auto/s')
+        ->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*0\s+0\s+auto/s');
+
+    // Mirror the production Kanban + card sizing rules for a hermetic layout measurement.
+    $html = <<<'HTML'
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+.ark-job-board-kanban-scroller { --ark-kanban-column-width: 20rem; overflow-x: auto; }
+.ark-job-board-kanban-track { display: flex; align-items: stretch; gap: 0.75rem; min-height: 18rem; width: max-content; }
+.ark-job-board-kanban-column {
+    flex: 0 0 var(--ark-kanban-column-width);
+    width: var(--ark-kanban-column-width);
+    display: flex;
+    flex-direction: column;
+    min-height: 16rem;
+    max-height: min(70vh, 44rem);
+}
+.ark-job-board-kanban-column-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.65rem;
+    padding-top: 0.65rem;
+}
+.ark-job-board-kanban-column .ark-job-board-card {
+    flex: 0 0 auto;
+    height: auto;
+    align-self: stretch;
+}
+.ark-job-board-cards .ark-job-board-card-band--concern {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+.card { display: flex; flex-direction: column; background: #fff; border: 1px solid #ddd; }
+.card-body { flex: 1 1 auto; }
+.card-header { padding: 0.65rem; }
+.ark-job-board-card-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.7rem 0.8rem; min-height: 0; }
+.ark-job-board-card-band--identity { display: flex; align-items: baseline; gap: 0.5rem; }
+.ark-job-board-card-band--footer { border-top: 1px solid #ddd; margin-top: 0.15rem; padding-top: 0.45rem; }
+.fw-bold { font-weight: 700; }
+.ms-auto { margin-left: auto; }
+.small { font-size: 0.8125rem; }
+.text-secondary { color: #6c757d; }
+</style>
+</head>
+<body style="margin:0;font-family:system-ui,sans-serif">
+<div class="ark-job-board-cards ark-job-board-kanban">
+  <div class="ark-job-board-kanban-scroller">
+    <div class="ark-job-board-kanban-track">
+      <section class="ark-job-board-kanban-column card" style="height: min(70vh, 44rem);">
+        <header class="ark-job-board-kanban-column-head card-header"><h2 class="card-title mb-0">Estimates <span>3</span></h2></header>
+        <div class="ark-job-board-kanban-column-body card-body" data-job-board-kanban-column-body>
+          <article class="card ark-job-board-card" data-job-board-card data-measure-card="short">
+            <div class="card-body ark-job-board-card-body">
+              <div class="ark-job-board-card-band ark-job-board-card-band--identity"><span class="fw-bold">RO #1001</span><span class="ms-auto fw-bold">$120</span></div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--party"><div>2018 Honda Civic</div><div class="small text-secondary">Pat Customer</div></div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--concern" data-measure-concern>Oil change</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--state" data-measure-state>Building Estimate · Unassigned</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--next" data-measure-next>Next Review estimate</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--footer" data-measure-footer>Activity · 2h ago</div>
+            </div>
+          </article>
+          <article class="card ark-job-board-card" data-job-board-card data-measure-card="tall">
+            <div class="card-body ark-job-board-card-body">
+              <div class="ark-job-board-card-band ark-job-board-card-band--identity"><span class="fw-bold">RO #1002</span><span class="ms-auto fw-bold">$2,400</span></div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--party"><div>2020 Mercedes-Benz GLA-Class Gla250-4m</div><div class="small text-secondary">Long Name Customer</div></div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--concern" data-measure-concern>Customer reports intermittent grinding from the front brakes when stopping from highway speeds after rain</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--state" data-measure-state>Needs Diagnosis · Edward Soares</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--next" data-measure-next>Next Start diagnosis</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--footer" data-measure-footer>Activity · 28m ago</div>
+            </div>
+          </article>
+          <article class="card ark-job-board-card" data-job-board-card data-measure-card="mid">
+            <div class="card-body ark-job-board-card-body">
+              <div class="ark-job-board-card-band ark-job-board-card-band--identity"><span class="fw-bold">RO #1003</span><span class="ms-auto fw-bold">$890</span></div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--party"><div>2016 Ram 2500</div><div class="small text-secondary">Shop Truck</div></div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--concern" data-measure-concern>Transmission service and fluid flush</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--state" data-measure-state>Building Estimate · Unassigned</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--next" data-measure-next>Next Build estimate</div>
+              <div class="ark-job-board-card-band ark-job-board-card-band--footer" data-measure-footer>Activity · 1d ago</div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+HTML;
+
+    $browser = Browsershot::html($html)
+        ->windowSize(1366, 900)
+        ->setChromePath($chrome)
+        ->setNodeBinary($node)
+        ->setNodeModulePath($nodeModules);
+
+    if ($npm = PdfRuntimePaths::resolveNpmBinary($node)) {
+        $browser->setNpmBinary($npm);
+    }
+
+    if (config('services.pdf.no_sandbox')) {
+        $browser->noSandbox();
+    }
+
+    $payload = json_decode($browser->evaluate(<<<'JS'
+(() => {
+  const body = document.querySelector('[data-job-board-kanban-column-body]');
+  const cards = [...document.querySelectorAll('[data-job-board-card]')];
+  const measure = (card) => {
+    const concern = card.querySelector('[data-measure-concern]');
+    const state = card.querySelector('[data-measure-state]');
+    const footer = card.querySelector('[data-measure-footer]');
+    const concernBottom = concern.getBoundingClientRect().bottom;
+    const stateTop = state.getBoundingClientRect().top;
+    const footerTop = footer.getBoundingClientRect().top;
+    return {
+      height: card.getBoundingClientRect().height,
+      gapConcernToState: stateTop - concernBottom,
+      gapConcernToFooter: footerTop - concernBottom,
+      heightCss: getComputedStyle(card).height,
+      flexGrow: getComputedStyle(card).flexGrow,
+      concernFlex: getComputedStyle(concern).flexGrow,
+    };
+  };
+  const heights = cards.map((card) => card.getBoundingClientRect().height);
+  const visibleCount = cards.filter((card) => {
+    const rect = card.getBoundingClientRect();
+    const bodyRect = body.getBoundingClientRect();
+    return rect.top < bodyRect.bottom && rect.bottom > bodyRect.top;
+  }).length;
+  return JSON.stringify({
+    bodyHeight: body.getBoundingClientRect().height,
+    cards: cards.map(measure),
+    maxCardHeight: Math.max(...heights),
+    sumCardHeights: heights.reduce((a, b) => a + b, 0),
+    visibleCount,
+    viewport: window.innerWidth,
+  });
+})()
+JS), true);
+
+    expect($payload)->toBeArray()
+        ->and($payload['viewport'])->toBe(1366)
+        ->and($payload['visibleCount'])->toBeGreaterThanOrEqual(2)
+        ->and(count($payload['cards']))->toBe(3)
+        // A single stretched card would approach column body height; compact cards stay well below.
+        ->and($payload['maxCardHeight'])->toBeLessThan($payload['bodyHeight'] * 0.55)
+        // Three content-sized cards plus gaps should still exceed one body viewport (scroll required).
+        ->and($payload['sumCardHeights'])->toBeGreaterThan($payload['bodyHeight'] * 0.75);
+
+    foreach ($payload['cards'] as $card) {
+        expect($card['flexGrow'])->toBe('0')
+            ->and($card['concernFlex'])->toBe('0')
+            ->and($card['gapConcernToState'])->toBeLessThan(24.0)
+            ->and($card['gapConcernToFooter'])->toBeLessThan(120.0)
+            ->and($card['height'])->toBeLessThan(280.0)
+            ->and($card['height'])->toBeLessThan($payload['bodyHeight'] * 0.5);
+    }
 });
