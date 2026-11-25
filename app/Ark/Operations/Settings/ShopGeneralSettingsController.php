@@ -123,26 +123,26 @@ class ShopGeneralSettingsController
     }
 
     /**
-     * Public business hours and shop timezone. Same persisted authority as telephony open/closed
-     * (`shop_settings.telephony_call_flow.weekly_hours` + `shop_timezone`). Does not touch
-     * appointment scheduling overrides or staff schedules.
+     * Public business hours and shop timezone. Persists on the existing shop hours authority
+     * (`shop_settings` weekly schedule + timezone). Does not touch appointment scheduling
+     * overrides or staff schedules. Form fields use `business_hours` names; storage stays shared.
      */
     public function updateBusinessHours(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'shop_timezone' => ['required', 'string', Rule::in(timezone_identifiers_list())],
-            'telephony_call_flow' => ['nullable', 'array'],
-            'telephony_call_flow.weekly_hours' => ['nullable', 'array'],
-            'telephony_call_flow.weekly_hours.*.enabled' => ['nullable', 'boolean'],
-            'telephony_call_flow.weekly_hours.*.open' => ['nullable', 'date_format:H:i'],
-            'telephony_call_flow.weekly_hours.*.close' => ['nullable', 'date_format:H:i'],
-            'telephony_call_flow.closed_dates' => ['nullable', 'string'],
+            'business_hours' => ['nullable', 'array'],
+            'business_hours.weekly' => ['nullable', 'array'],
+            'business_hours.weekly.*.enabled' => ['nullable', 'boolean'],
+            'business_hours.weekly.*.open' => ['nullable', 'date_format:H:i'],
+            'business_hours.weekly.*.close' => ['nullable', 'date_format:H:i'],
+            'business_hours.closed_dates' => ['nullable', 'string'],
         ]);
 
         $settings = ShopSettings::current();
-        $callFlowInput = is_array($data['telephony_call_flow'] ?? null) ? $data['telephony_call_flow'] : [];
+        $hoursInput = is_array($data['business_hours'] ?? null) ? $data['business_hours'] : [];
         $existingFlow = TelephonyCallFlowSettings::fromShopSettings($settings)->toArray();
-        $weeklyInput = is_array($callFlowInput['weekly_hours'] ?? null) ? $callFlowInput['weekly_hours'] : [];
+        $weeklyInput = is_array($hoursInput['weekly'] ?? null) ? $hoursInput['weekly'] : [];
 
         foreach (TelephonyCallFlowSettings::WEEKDAYS as $day) {
             $dayInput = is_array($weeklyInput[$day] ?? null) ? $weeklyInput[$day] : [];
@@ -153,8 +153,8 @@ class ShopGeneralSettingsController
             ];
         }
 
-        $closedDates = array_key_exists('closed_dates', $callFlowInput)
-            ? collect(preg_split('/\r\n|\r|\n/', (string) $callFlowInput['closed_dates']) ?: [])
+        $closedDates = array_key_exists('closed_dates', $hoursInput)
+            ? collect(preg_split('/\r\n|\r|\n/', (string) $hoursInput['closed_dates']) ?: [])
                 ->map(fn (string $date): string => trim($date))
                 ->filter(fn (string $date): bool => preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1)
                 ->unique()

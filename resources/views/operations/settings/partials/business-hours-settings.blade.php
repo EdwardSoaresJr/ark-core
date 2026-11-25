@@ -1,6 +1,7 @@
 @php
-    $callFlow = \App\Ark\Operations\Telephony\TelephonyCallFlowSettings::fromShopSettings($settings);
-    $callFlowConfig = $callFlow->toArray();
+    $hoursSnapshot = $settings->businessHoursSnapshot();
+    $weeklyHours = $hoursSnapshot['weekly'];
+    $closedDates = $hoursSnapshot['closed_dates'];
     $weekdayLabels = [
         'monday' => 'Monday',
         'tuesday' => 'Tuesday',
@@ -21,7 +22,7 @@
     <div class="alert alert-info" role="status">
         <div class="fw-medium mb-1">How hours relate</div>
         <ul class="mb-0 small">
-            <li><strong>Business Hours</strong> (this page) — public open/closed schedule and shop timezone. Used for customer-facing display and phone open/closed routing.</li>
+            <li><strong>Business Hours</strong> (this page) — public open/closed schedule and shop timezone for customer-facing display and shop open status.</li>
             <li><strong>Appointment scheduling</strong> — follows Business Hours by default; override under Appointments &amp; Setup when booking windows should differ.</li>
             <li><strong>Staff / technician schedules</strong> — individual availability stays under Staff and scheduling tools, not here.</li>
         </ul>
@@ -54,18 +55,18 @@
         <div class="list-group">
             @foreach ($weekdayLabels as $dayKey => $dayLabel)
                 @php
-                    $dayHours = $callFlowConfig['weekly_hours'][$dayKey] ?? ['enabled' => false, 'open' => '09:00', 'close' => '18:00'];
+                    $dayHours = $weeklyHours[$dayKey] ?? ['enabled' => false, 'open' => '09:00', 'close' => '18:00'];
                 @endphp
                 <div class="list-group-item py-2" data-business-hours-day="{{ $dayKey }}">
                     <div class="row g-2 align-items-center">
                         <div class="col-12 col-sm-3">
                             <label class="form-check mb-0">
-                                <input type="hidden" name="telephony_call_flow[weekly_hours][{{ $dayKey }}][enabled]" value="0">
+                                <input type="hidden" name="business_hours[weekly][{{ $dayKey }}][enabled]" value="0">
                                 <input
                                     type="checkbox"
-                                    name="telephony_call_flow[weekly_hours][{{ $dayKey }}][enabled]"
+                                    name="business_hours[weekly][{{ $dayKey }}][enabled]"
                                     value="1"
-                                    @checked(old("telephony_call_flow.weekly_hours.{$dayKey}.enabled", $dayHours['enabled']))
+                                    @checked(old("business_hours.weekly.{$dayKey}.enabled", $dayHours['enabled']))
                                     class="form-check-input"
                                 >
                                 <span class="form-check-label fw-medium">{{ $dayLabel }}</span>
@@ -76,8 +77,8 @@
                             <input
                                 type="time"
                                 step="60"
-                                name="telephony_call_flow[weekly_hours][{{ $dayKey }}][open]"
-                                value="{{ old("telephony_call_flow.weekly_hours.{$dayKey}.open", $dayHours['open']) }}"
+                                name="business_hours[weekly][{{ $dayKey }}][open]"
+                                value="{{ old("business_hours.weekly.{$dayKey}.open", $dayHours['open']) }}"
                                 class="form-control"
                                 aria-label="{{ $dayLabel }} open"
                             >
@@ -86,8 +87,8 @@
                             <input
                                 type="time"
                                 step="60"
-                                name="telephony_call_flow[weekly_hours][{{ $dayKey }}][close]"
-                                value="{{ old("telephony_call_flow.weekly_hours.{$dayKey}.close", $dayHours['close']) }}"
+                                name="business_hours[weekly][{{ $dayKey }}][close]"
+                                value="{{ old("business_hours.weekly.{$dayKey}.close", $dayHours['close']) }}"
                                 class="form-control"
                                 aria-label="{{ $dayLabel }} close"
                             >
@@ -96,7 +97,7 @@
                 </div>
             @endforeach
         </div>
-        @error('telephony_call_flow.weekly_hours')
+        @error('business_hours.weekly')
             <div class="text-danger small mt-2">{{ $message }}</div>
         @enderror
     </div>
@@ -105,12 +106,12 @@
         <label for="settings-business-hours-closed-dates" class="form-label">Holiday closures (one YYYY-MM-DD per line)</label>
         <textarea
             id="settings-business-hours-closed-dates"
-            name="telephony_call_flow[closed_dates]"
+            name="business_hours[closed_dates]"
             rows="3"
             class="form-control"
             placeholder="2026-12-25&#10;2026-11-27"
-        >{{ old('telephony_call_flow.closed_dates', implode("\n", $callFlowConfig['closed_dates'] ?? [])) }}</textarea>
-        <div class="form-hint">Full-day closures in addition to the weekly schedule. Also used for phone closed routing.</div>
+        >{{ old('business_hours.closed_dates', implode("\n", $closedDates)) }}</textarea>
+        <div class="form-hint">Full-day closures in addition to the weekly schedule.</div>
     </div>
 
     <div class="text-end">

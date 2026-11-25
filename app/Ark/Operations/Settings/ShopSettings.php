@@ -724,6 +724,26 @@ TEXT;
     }
 
     /**
+     * Public business hours for Shop Settings forms (weekly open/closed + holiday closures).
+     *
+     * @return array{
+     *     weekly: array<string, array{enabled: bool, open: string, close: string}>,
+     *     closed_dates: list<string>
+     * }
+     */
+    public function businessHoursSnapshot(): array
+    {
+        $flow = \App\Ark\Operations\Telephony\TelephonyCallFlowSettings::fromShopSettings($this)->toArray();
+
+        return [
+            'weekly' => is_array($flow['weekly_hours'] ?? null) ? $flow['weekly_hours'] : [],
+            'closed_dates' => is_array($flow['closed_dates'] ?? null)
+                ? array_values(array_map('strval', $flow['closed_dates']))
+                : [],
+        ];
+    }
+
+    /**
      * Effective staff booking windows: custom overrides, else Business Hours.
      *
      * @return array<string, array{enabled: bool, open: string, close: string}>
