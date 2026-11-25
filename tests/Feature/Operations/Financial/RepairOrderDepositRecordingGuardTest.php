@@ -49,15 +49,28 @@ test('additional manual deposit is allowed after suggested deposit is on file', 
     $guard->validateAmount($repairOrder->fresh(), 100);
 });
 
-test('manual deposit amount cannot exceed remaining suggested deposit', function () {
+test('manual deposit may collect full authorized amount while suggested deposit remains', function () {
+    $repairOrder = repairOrderWithSuggestedPartDeposit();
+    $guard = app(RepairOrderDepositRecordingGuard::class);
+
+    $suggested = $guard->remainingSuggestedDepositCents($repairOrder);
+    $allowed = $guard->remainingAllowedDepositCents($repairOrder);
+
+    expect($suggested)->toBeInt()->toBeGreaterThan(0)
+        ->and($allowed)->toBeGreaterThan($suggested);
+
+    $guard->validateAmount($repairOrder, $allowed);
+});
+
+test('manual deposit amount cannot exceed remaining authorized owe today', function () {
     $repairOrder = repairOrderWithSuggestedPartDeposit();
     $guard = app(RepairOrderDepositRecordingGuard::class);
     $ledger = app(RecordLedgerEntryAction::class);
 
-    $remaining = $guard->remainingSuggestedDepositCents($repairOrder);
+    $allowed = $guard->remainingAllowedDepositCents($repairOrder);
     $ledger->recordDeposit($repairOrder, 1000, PaymentMethod::Cash);
 
-    $guard->validateAmount($repairOrder->fresh(), $remaining);
+    $guard->validateAmount($repairOrder->fresh(), $allowed);
 })->throws(ValidationException::class);
 
 test('preloaded balance adds zero BalanceDue invoice or ledger queries for remaining and satisfied', function () {

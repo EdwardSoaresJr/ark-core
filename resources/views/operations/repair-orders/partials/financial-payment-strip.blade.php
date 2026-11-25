@@ -96,7 +96,7 @@
     @enderror
 
     @if ($financial['invoiceBlockingReason'] ?? null)
-        <p class="small text-orange mb-0">{{ $financial['invoiceBlockingReason'] }}</p>
+        <p class="small text-orange mb-0" data-invoice-blocking-reason>{{ $financial['invoiceBlockingReason'] }}</p>
     @endif
 
     @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
@@ -121,9 +121,16 @@
             <div id="settlement-deposit" data-continuity-region="settlement">
                 <div class="alert alert-success mb-0">
                     <div class="fw-bold">Deposit on file</div>
-                    <div>Remaining balance is already covered. Void a payment history entry if one was recorded in error.</div>
+                    <div>{{ $financial['depositBlockingReason'] ?? 'Remaining balance is already covered. Void a payment history entry if one was recorded in error.' }}</div>
                 </div>
             </div>
+        @elseif (! (($financial['canRecordManualDeposit'] ?? false) || ($financial['canRecordPayment'] ?? false) || ($financial['canTakePaymentCapture'] ?? false)))
+            @if ($financial['depositBlockingReason'] ?? null)
+                <p class="small text-secondary mb-0" data-deposit-blocking-reason>{{ $financial['depositBlockingReason'] }}</p>
+            @endif
+            @if ($financial['paymentBlockingReason'] ?? null)
+                <p class="small text-secondary mb-0" data-payment-blocking-reason>{{ $financial['paymentBlockingReason'] }}</p>
+            @endif
         @endif
 
         @if (($financial['canRecordManualDeposit'] ?? false) || ($financial['canRecordPayment'] ?? false) || ($financial['canTakePaymentCapture'] ?? false))

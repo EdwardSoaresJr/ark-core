@@ -5,7 +5,6 @@ namespace App\Ark\Operations\Financial;
 use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -27,8 +26,11 @@ final class GenerateInvoiceSnapshotAction
         $repairOrder = $repairOrder->fresh();
         $repairOrder->ensureOpenForEditing();
 
-        if (! $repairOrder->status->is(RepairOrderStatus::ReadyPickup)) {
-            throw new RuntimeException('Generate the final invoice once the repair order is ready for pickup.');
+        if (! RepairOrderFinalInvoiceEligibility::statusAllows($repairOrder)) {
+            throw new RuntimeException(
+                RepairOrderFinalInvoiceEligibility::blockingReason($repairOrder)
+                    ?? 'Generate the final invoice once the repair order is completed or ready for pickup.',
+            );
         }
 
         if ($this->balanceDue->issuedInvoice($repairOrder) !== null) {

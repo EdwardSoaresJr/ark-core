@@ -13,6 +13,18 @@ use Illuminate\Support\Collection;
 final readonly class RepairOrderLifecycleSelectProjection
 {
     /**
+     * Persisted statuses kept for history/compatibility but hidden from normal
+     * forward menus. Invoice truth is the document; Ready for Work overlaps
+     * Approved / In Progress on the Job Board.
+     *
+     * @var list<string>
+     */
+    private const HIDDEN_FORWARD_STATUS_SLUGS = [
+        RepairOrderStatus::Invoiced->value,
+        RepairOrderStatus::ReadyForWork->value,
+    ];
+
+    /**
      * @param  list<array{value: string, label: string, blockedReason: ?string, needsTechnician?: bool, disabled: bool}>  $statusOptions
      * @param  list<array{value: string, label: string, blockedReason: ?string}>  $closeOptions
      */
@@ -47,6 +59,10 @@ final readonly class RepairOrderLifecycleSelectProjection
         $statusOptions = [];
 
         foreach ($lifecycleSlugs as $nextStatusSlug) {
+            if (in_array($nextStatusSlug, self::HIDDEN_FORWARD_STATUS_SLUGS, true)) {
+                continue;
+            }
+
             // Operational unfinished-work acknowledgment is a soft challenge (reason panel),
             // not a hard lifecycle block. Keep it out of dropdown blockedReason so the UI can submit.
             $blockedReason = $transition->blockingReason(
