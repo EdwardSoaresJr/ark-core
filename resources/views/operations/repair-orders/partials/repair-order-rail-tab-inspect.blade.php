@@ -5,7 +5,13 @@
     $attentionItems = $control['attention_items'] ?? [];
     $canRecord = (bool) ($control['can_record'] ?? $canRecordFindings ?? false);
     $canReset = (bool) ($control['can_reset'] ?? false);
+    $requirement = $control['requirement'] ?? null;
+    $canManageRequirement = (bool) ($control['can_manage_requirement'] ?? false);
+    $canWaiveRequirement = (bool) ($control['can_waive_requirement'] ?? false);
     $recipients = $actions['recipients'] ?? [];
+    $requirementValue = $requirement['requirement'] ?? 'optional';
+    $requirementBlocks = (bool) ($requirement['blocks_lifecycle_on_incomplete'] ?? false);
+    $requirementWaived = (bool) ($requirement['waived'] ?? false);
 @endphp
 
 <div id="inspect-rail" data-inspection-control>
@@ -21,6 +27,28 @@
                         <div class="fw-medium text-secondary">{{ $coverage['posture_detail'] }}</div>
                     @endif
                 </div>
+                @if ($requirement)
+                    <div class="mt-2" data-inspection-requirement data-requirement="{{ $requirementValue }}">
+                        <span @class([
+                            'badge',
+                            'bg-secondary-lt' => $requirementValue === 'optional' && ! $requirementWaived,
+                            'bg-azure-lt' => $requirementValue === 'recommended' && ! $requirementWaived,
+                            'bg-orange-lt' => $requirementValue === 'required' && ! $requirementWaived,
+                            'bg-green-lt' => $requirementWaived,
+                        ])>
+                            {{ $requirementWaived ? 'Waived' : ($requirement['requirement_label'] ?? 'Optional') }}
+                        </span>
+                        @if (filled($requirement['detail'] ?? null))
+                            <span class="small text-secondary ms-1">{{ $requirement['detail'] }}</span>
+                        @endif
+                        @if ($requirementWaived && filled($requirement['waive_reason'] ?? null))
+                            <div class="small text-secondary mt-1">Reason: {{ $requirement['waive_reason'] }}</div>
+                        @endif
+                        @unless ($requirementBlocks)
+                            <div class="small text-secondary mt-1">Does not block completing or closing this job.</div>
+                        @endunless
+                    </div>
+                @endif
                 @if (! empty($coverage['template_name']))
                     <div class="small fw-medium mt-1" data-inspection-template-name>{{ $coverage['template_name'] }}</div>
                 @endif
@@ -248,28 +276,82 @@
                 ></button>
             </div>
 
+            @if ($canManageRequirement)
+                <details class="card card-sm" data-inspection-requirement-manage>
+                    <summary class="card-body small fw-medium">Inspection requirement for this job</summary>
+                    <div class="card-body border-top">
+                        <form method="post" action="{{ $actions['requirement_url'] }}">
+                            @csrf
+                            @method('PATCH')
+                            <label class="form-label" for="ro-inspection-requirement">Requirement</label>
+                            <select id="ro-inspection-requirement" name="inspection_lifecycle_policy" class="form-select form-select-sm">
+                                <option value="" @selected(($repairOrder->inspection_lifecycle_policy ?? null) === null)>Follow shop policy</option>
+                                @foreach (\App\Ark\Operations\Inspections\InspectionRequirement::cases() as $policy)
+                                    <option value="{{ $policy->value }}" @selected(($repairOrder->inspection_lifecycle_policy ?? null) === $policy->value)>{{ $policy->label() }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-hint">Overrides shop settings for this RO only. Survives later shop policy changes.</div>
+                            <button type="submit" class="btn btn-sm btn-primary mt-2">Save requirement</button>
+                        </form>
+
+                        @if ($canWaiveRequirement)
+                            <div class="hr-text">Waiver</div>
+                            @if ($requirementWaived)
+                                <form method="post" action="{{ $actions['clear_waiver_url'] }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <p class="small text-secondary">This Required inspection is waived. Clearing the waiver restores the closeout gate.</p>
+                                    <button type="submit" class="btn btn-sm">Clear waiver</button>
+                                </form>
+                            @else
+                                <form method="post" action="{{ $actions['waive_url'] }}">
+                                    @csrf
+                                    <label class="form-label" for="ro-inspection-waive-reason">Waive Required inspection</label>
+                                    <textarea
+                                        id="ro-inspection-waive-reason"
+                                        name="inspection_waived_reason"
+                                        class="form-control form-control-sm"
+                                        rows="2"
+                                        minlength="8"
+                                        maxlength="500"
+                                        required
+                                        placeholder="Customer declined inspection; proceed with approved work."
+                                    ></textarea>
+                                    <div class="form-hint">Admin only. Reason is kept on the repair order for audit.</div>
+                                    <button type="submit" class="btn btn-sm btn-outline-warning mt-2">Waive for this job</button>
+                                </form>
+                            @endif
+                        @endif
+                    </div>
+                </details>
+            @endif
+
             @if ($canReset)
                 <details class="card card-sm" data-inspection-reset>
-                    <summary class="card-body small fw-bold text-danger">Reset inspection walk</summary>
+                    <summary class="card-body small fw-bold text-secondary">Restart checklist walk</summary>
                     <div class="card-body border-top">
-                        <p class="small text-secondary">
+                        <p class="small text-secondary mb-2">
                             Clears checklist conditions, measurements, and walk photos so the shop can redo DVI.
-                            Other Findings stay. Admin and Advisor only.
+                            Other Findings (freeform) stay. Does not make an Optional inspection required.
+                            Admin and Advisor only.
+                        </p>
+                        <p class="small text-secondary">
+                            Photo files for cleared checklist points are removed from storage today. Prefer finishing or abandoning coverage before restarting when evidence must be retained — a non-destructive history path is in Stage B follow-up.
                         </p>
                         <form
                             method="post"
                             action="{{ $actions['reset_url'] }}"
-                            onsubmit="return confirm('Reset this inspection walk? Conditions, measurements, and walk photos will be cleared.');"
+                            onsubmit="return confirm('Restart this checklist walk? Conditions, measurements, and walk photos will be cleared. Other Findings stay.');"
                         >
                             @csrf
                             <label class="form-check">
                                 <input type="checkbox" name="confirm" value="1" required class="form-check-input">
-                                <span class="form-check-label">I understand this clears the walk and cannot be undone.</span>
+                                <span class="form-check-label">I understand checklist walk evidence is cleared and cannot be undone from this screen.</span>
                             </label>
                             <button
                                 type="submit"
-                                class="btn btn-sm btn-outline-danger"
-                            >Reset walk</button>
+                                class="btn btn-sm btn-outline-secondary"
+                            >Restart walk</button>
                         </form>
                     </div>
                 </details>

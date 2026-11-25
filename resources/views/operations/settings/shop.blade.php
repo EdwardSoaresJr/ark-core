@@ -421,7 +421,11 @@
                     </div>
 
                     <div class="card-body" id="workflow-panel-inspections" role="tabpanel" aria-labelledby="workflow-tab-inspections" x-show="workflowTab === 'inspections'" x-cloak>
-                        <h3 class="mb-1">Inspection checklists</h3>
+                        <h3 class="mb-1">Inspection policy</h3>
+                        <p class="text-secondary small">Control whether unfinished inspections can block completing or closing a job. Checklists below stay available either way.</p>
+                        @include('operations.settings.partials.inspection-lifecycle-policy', ['settings' => $settings])
+
+                        <h3 class="mt-4 mb-1">Inspection checklists</h3>
                         <p class="text-secondary small">Mobile technician checklists - item labels, photo requirements, and measurements. Templates add the checklist rows to each RO. Technicians record findings on each checklist item.</p>
                         @include('operations.settings.partials.inspection-template-settings', ['inspectionTemplates' => $inspectionTemplates])
                     </div>

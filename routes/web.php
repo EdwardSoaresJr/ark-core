@@ -108,7 +108,9 @@ use App\Ark\Operations\Inspections\RepairOrderInspectionPhotoDestroyController;
 use App\Ark\Operations\Inspections\RepairOrderInspectionPhotoShowController;
 use App\Ark\Operations\Inspections\RepairOrderInspectionPhotoStoreController;
 use App\Ark\Operations\Inspections\RepairOrderInspectionPointUpdateController;
+use App\Ark\Operations\Inspections\RepairOrderInspectionRequirementController;
 use App\Ark\Operations\Inspections\RepairOrderInspectionResetController;
+use App\Ark\Operations\Inspections\RepairOrderInspectionWaiverController;
 use App\Ark\Operations\Inspections\RepairOrderInspectionShowController;
 use App\Ark\Operations\Inspections\RepairOrderInspectionTemplateAssignController;
 use App\Ark\Operations\Inspections\RepairOrderInspectionWalkLinkSendController;
@@ -1540,6 +1542,18 @@ SurfaceRouting::appRoutes(function (): void {
         Route::post('/app/repair-orders/{repairOrder}/inspection/reset', RepairOrderInspectionResetController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value.'|'.ArkCapability::RepairOrdersLifecycle->value)
             ->name('operations.repair-orders.inspection.reset');
+
+        Route::patch('/app/repair-orders/{repairOrder}/inspection/requirement', RepairOrderInspectionRequirementController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value.'|'.ArkCapability::RepairOrdersLifecycle->value)
+            ->name('operations.repair-orders.inspection.requirement.update');
+
+        Route::post('/app/repair-orders/{repairOrder}/inspection/waiver', [RepairOrderInspectionWaiverController::class, 'store'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.inspection.waiver.store');
+
+        Route::delete('/app/repair-orders/{repairOrder}/inspection/waiver', [RepairOrderInspectionWaiverController::class, 'destroy'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.inspection.waiver.destroy');
 
         Route::post('/app/repair-orders/{repairOrder}/inspection/walk-link', RepairOrderInspectionWalkLinkSendController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
