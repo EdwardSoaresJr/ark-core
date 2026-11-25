@@ -50,7 +50,7 @@ Full free-form pre-approval cash without suggested/estimate anchors remains out 
 
 - Concern `production_status` is independent; Job Board lanes follow **RO status only**.
 - Dual Waiting Parts (RO vs concern) can disagree; board follows RO.
-- Parts clear demoted concern `waiting_parts` → `pending` (“Not started”) — wrong resume signal.
+- Parts clear must not invent active bay work. Inventory receipt clears `waiting_parts` → `pending`; technicians resume explicitly. (PR #274 briefly cleared to `in_progress`; final corrections restore conservative Pending.)
 - `invoiced` and `ready_for_work` are manually selectable but largely duplicative (invoice document / Approved+In Progress). Safe to hide from forward menus without deleting enum values.
 - Approved → Ready for Work → In Progress is already skippable (`approved → in_progress`).
 

@@ -356,6 +356,11 @@ export function arkPaymentCapture(config = {}) {
         workspace: Boolean(config.workspace),
         open: Boolean(config.open),
         suggestedAmount: String(config.suggestedAmount ?? ''),
+        // Soft ceiling for deposit/advance: suggested is the default keypad amount;
+        // maxAmount (remaining authorized) rejects overage without clamping the field.
+        maxAmount: config.maxAmount == null || config.maxAmount === ''
+            ? null
+            : String(config.maxAmount),
         amount: String(config.suggestedAmount ?? ''),
         amountTouched: false,
         manualMethods: Array.isArray(config.manualMethods) ? config.manualMethods : [],
@@ -542,10 +547,21 @@ export function arkPaymentCapture(config = {}) {
             this.paidDateOpen = false;
         },
 
+        amountExceedsMax() {
+            if (this.maxAmount == null) {
+                return false;
+            }
+
+            const amount = Number.parseFloat(this.amount);
+            const max = Number.parseFloat(this.maxAmount);
+
+            return Number.isFinite(amount) && Number.isFinite(max) && amount > max + 0.00001;
+        },
+
         amountCanSubmit() {
             const amount = Number.parseFloat(this.amount);
 
-            return Number.isFinite(amount) && amount > 0;
+            return Number.isFinite(amount) && amount > 0 && ! this.amountExceedsMax();
         },
 
         isLedgerMethod() {
