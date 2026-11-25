@@ -12,6 +12,7 @@ use Illuminate\Support\Collection;
  *
  * Cards (Kanban) ignores the List lane tab so every workflow column stays visible.
  * Search and technician filters still apply to both presentations.
+ * Focus (`?focus=lane_key`) is navigation state for Cards only — not a user preference.
  */
 final readonly class JobBoardListPage
 {
@@ -19,6 +20,12 @@ final readonly class JobBoardListPage
 
     /** Visible cards loaded per Kanban column; column counts remain exact for the filtered set. */
     public const KANBAN_COLUMN_SIZE = 40;
+
+    /** Initial / step size when a Kanban column is focused. */
+    public const FOCUS_BATCH_SIZE = 40;
+
+    /** Hard cap on cards projected for a single focused column request. */
+    public const FOCUS_LIMIT_MAX = 200;
 
     public const SORT_UPDATED = 'updated';
 
@@ -62,6 +69,8 @@ final readonly class JobBoardListPage
         public array $kanbanColumns = [],
         public int $kanbanFilteredTotal = 0,
         public ?string $view = null,
+        public ?string $focusKey = null,
+        public int $focusLimit = self::FOCUS_BATCH_SIZE,
     ) {}
 
     /**
@@ -70,6 +79,26 @@ final readonly class JobBoardListPage
     public function hasBoardWideFilters(): bool
     {
         return $this->query !== '' || $this->techId !== '';
+    }
+
+    public function isFocused(): bool
+    {
+        return $this->focusKey !== null && $this->focusKey !== '';
+    }
+
+    public function focusedColumn(): ?JobBoardKanbanColumn
+    {
+        if (! $this->isFocused()) {
+            return null;
+        }
+
+        foreach ($this->kanbanColumns as $column) {
+            if ($column->key === $this->focusKey) {
+                return $column;
+            }
+        }
+
+        return null;
     }
 
     public function from(): int
@@ -107,6 +136,10 @@ final readonly class JobBoardListPage
         $sort = array_key_exists('sort', $overrides) ? $overrides['sort'] : $this->sortKey;
         $dir = array_key_exists('dir', $overrides) ? $overrides['dir'] : $this->sortDir;
         $page = array_key_exists('page', $overrides) ? (int) $overrides['page'] : $this->page;
+        $focus = array_key_exists('focus', $overrides) ? $overrides['focus'] : $this->focusKey;
+        $focusLimit = array_key_exists('focus_limit', $overrides)
+            ? (int) $overrides['focus_limit']
+            : $this->focusLimit;
 
         $params = [];
 
@@ -133,11 +166,59 @@ final readonly class JobBoardListPage
         // Layout preference is browser-local — never append ?view= to navigation.
         // Bookmarked ?view= is still accepted by JobBoardLayoutPreference / UiLayoutPreference.
 
+        // Focus is Cards navigation state — never written to users.job_board_view.
+        if (is_string($focus) && $focus !== '') {
+            $params['focus'] = $focus;
+
+            if ($focusLimit > self::FOCUS_BATCH_SIZE) {
+                $params['focus_limit'] = min(self::FOCUS_LIMIT_MAX, max(self::FOCUS_BATCH_SIZE, $focusLimit));
+            }
+        }
+
         if ($page > 1) {
             $params['page'] = $page;
         }
 
         return $params;
+    }
+
+    public function focusUrl(string $laneKey): string
+    {
+        return route('operations.index', $this->queryParams([
+            'focus' => $laneKey,
+            'focus_limit' => self::FOCUS_BATCH_SIZE,
+            'page' => 1,
+        ]));
+    }
+
+    public function boardUrl(): string
+    {
+        return route('operations.index', $this->queryParams([
+            'focus' => null,
+            'focus_limit' => self::FOCUS_BATCH_SIZE,
+            'page' => 1,
+        ]));
+    }
+
+    public function focusLoadMoreUrl(): ?string
+    {
+        $column = $this->focusedColumn();
+
+        if ($column === null || $column->hiddenCount <= 0) {
+            return null;
+        }
+
+        $nextLimit = min(self::FOCUS_LIMIT_MAX, $this->focusLimit + self::FOCUS_BATCH_SIZE);
+
+        if ($nextLimit <= $this->focusLimit) {
+            return null;
+        }
+
+        return route('operations.index', $this->queryParams([
+            'focus' => $this->focusKey,
+            'focus_limit' => $nextLimit,
+            'page' => 1,
+        ]));
     }
 
     public function sortUrl(string $column): string
@@ -214,5 +295,34 @@ final readonly class JobBoardListPage
     public static function parsePage(Request $request): int
     {
         return max(1, (int) $request->integer('page', 1));
+    }
+
+    /**
+     * @param  list<string>  $laneKeys
+     */
+    public static function parseFocus(?string $focus, array $laneKeys): ?string
+    {
+        if (! is_string($focus) || $focus === '') {
+            return null;
+        }
+
+        return in_array($focus, $laneKeys, true) ? $focus : null;
+    }
+
+    public static function parseFocusLimit(Request $request): int
+    {
+        $raw = $request->query('focus_limit');
+
+        if ($raw === null || $raw === '') {
+            return self::FOCUS_BATCH_SIZE;
+        }
+
+        $limit = (int) $raw;
+
+        if ($limit < self::FOCUS_BATCH_SIZE) {
+            return self::FOCUS_BATCH_SIZE;
+        }
+
+        return min(self::FOCUS_LIMIT_MAX, $limit);
     }
 }

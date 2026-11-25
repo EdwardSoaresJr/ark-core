@@ -28,6 +28,14 @@ final class JobBoardListPageBuilder
         $byLane = $this->bucketByLane($repairOrders, $laneMeta);
         $laneTabs = $this->listRows->laneTabsFromCounts($laneMeta, $byLane);
         $laneKey = JobBoardListPage::parseLane($request->query('lane'), $laneTabs);
+        $laneKeys = collect($laneMeta)->pluck('key')->all();
+        $focusKey = JobBoardListPage::parseFocus(
+            is_string($request->query('focus')) ? (string) $request->query('focus') : null,
+            $laneKeys,
+        );
+        $focusLimit = $focusKey !== null
+            ? JobBoardListPage::parseFocusLimit($request)
+            : JobBoardListPage::FOCUS_BATCH_SIZE;
         $query = trim((string) $request->query('q', ''));
         $techId = trim((string) $request->query('tech', ''));
         $sortKey = JobBoardListPage::parseSort($request->query('sort'));
@@ -53,7 +61,7 @@ final class JobBoardListPageBuilder
             ->values();
 
         $pageColumns = $this->pageColumns($pageRepairOrders, $byLane, $laneMeta);
-        $kanbanPlan = $this->kanbanVisibleByLane($byLane, $query, $techId, $laneMeta);
+        $kanbanPlan = $this->kanbanVisibleByLane($byLane, $query, $techId, $laneMeta, $focusKey, $focusLimit);
         $projectionRepairOrders = $pageRepairOrders
             ->concat($kanbanPlan['visible']->flatten(1))
             ->unique(fn (RepairOrder $repairOrder): int => $repairOrder->id)
@@ -97,6 +105,8 @@ final class JobBoardListPageBuilder
             kanbanColumns: $kanbanColumns,
             kanbanFilteredTotal: (int) $kanbanPlan['filtered_total'],
             view: $view?->value,
+            focusKey: $focusKey,
+            focusLimit: $focusLimit,
         );
     }
 
@@ -137,13 +147,21 @@ final class JobBoardListPageBuilder
     /**
      * Cards Kanban ignores List lane tabs. Search/tech still apply. Oldest updated first
      * inside each column (longest waiting). Visible rows are capped; counts stay exact.
+     * When a column is focused, that lane loads up to $focusLimit cards; other lanes keep
+     * the board-size cap so returning to the board does not require a second projection.
      *
      * @param  Collection<string, Collection<int, RepairOrder>>  $byLane
      * @param  list<array{key: string, label: string, tone: string, color: string}>  $laneMeta
      * @return array{visible: Collection<string, Collection<int, RepairOrder>>, totals: array<string, int>, filtered_total: int}
      */
-    private function kanbanVisibleByLane(Collection $byLane, string $query, string $techId, array $laneMeta): array
-    {
+    private function kanbanVisibleByLane(
+        Collection $byLane,
+        string $query,
+        string $techId,
+        array $laneMeta,
+        ?string $focusKey = null,
+        int $focusLimit = JobBoardListPage::FOCUS_BATCH_SIZE,
+    ): array {
         $visible = collect();
         $totals = [];
         $filteredTotal = 0;
@@ -157,7 +175,15 @@ final class JobBoardListPageBuilder
             $sorted = $this->sortRepairOrders($filtered, JobBoardListPage::SORT_UPDATED, 'asc');
             $totals[$key] = $sorted->count();
             $filteredTotal += $totals[$key];
-            $visible[$key] = $sorted->take(JobBoardListPage::KANBAN_COLUMN_SIZE)->values();
+
+            if ($focusKey !== null && $key === $focusKey) {
+                $visible[$key] = $sorted->take($focusLimit)->values();
+            } elseif ($focusKey !== null) {
+                // Focused workspace only renders one lane; skip projecting sibling cards.
+                $visible[$key] = collect();
+            } else {
+                $visible[$key] = $sorted->take(JobBoardListPage::KANBAN_COLUMN_SIZE)->values();
+            }
         }
 
         return [
@@ -173,8 +199,12 @@ final class JobBoardListPageBuilder
      * @param  Collection<int, JobBoardListRow>  $rowsByRepairOrderId
      * @return list<JobBoardKanbanColumn>
      */
-    private function kanbanColumns(array $kanbanPlan, array $laneMeta, Collection $rowsByRepairOrderId, Request $request): array
-    {
+    private function kanbanColumns(
+        array $kanbanPlan,
+        array $laneMeta,
+        Collection $rowsByRepairOrderId,
+        Request $request,
+    ): array {
         return collect($laneMeta)
             ->map(function (array $column) use ($kanbanPlan, $rowsByRepairOrderId, $request): JobBoardKanbanColumn {
                 $key = $column['key'];
@@ -186,14 +216,21 @@ final class JobBoardListPageBuilder
                     ->values()
                     ->all();
                 $hidden = max(0, $total - count($rows));
+                $filterQuery = [
+                    'q' => $request->query('q') ?: null,
+                    'tech' => $request->query('tech') ?: null,
+                ];
                 $listUrl = $total > 0
                     ? route('operations.index', array_filter([
                         'lane' => $key,
-                        'q' => $request->query('q') ?: null,
-                        'tech' => $request->query('tech') ?: null,
+                        ...$filterQuery,
                         'view' => JobBoardLayout::List->value,
                     ], fn ($value) => $value !== null && $value !== ''))
                     : null;
+                $focusUrl = route('operations.index', array_filter([
+                    'focus' => $key,
+                    ...$filterQuery,
+                ], fn ($value) => $value !== null && $value !== ''));
 
                 return new JobBoardKanbanColumn(
                     key: $key,
@@ -204,6 +241,7 @@ final class JobBoardListPageBuilder
                     rows: $rows,
                     hiddenCount: $hidden,
                     listUrl: $listUrl,
+                    focusUrl: $focusUrl,
                 );
             })
             ->all();

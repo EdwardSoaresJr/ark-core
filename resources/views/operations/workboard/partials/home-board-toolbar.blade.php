@@ -17,6 +17,12 @@
     @if ($jobBoardListPage->laneKey !== 'all')
         <input type="hidden" name="lane" value="{{ $jobBoardListPage->laneKey }}">
     @endif
+    @if ($jobBoardListPage->isFocused())
+        <input type="hidden" name="focus" value="{{ $jobBoardListPage->focusKey }}">
+        @if ($jobBoardListPage->focusLimit > \App\Ark\Operations\Workboard\JobBoardListPage::FOCUS_BATCH_SIZE)
+            <input type="hidden" name="focus_limit" value="{{ $jobBoardListPage->focusLimit }}">
+        @endif
+    @endif
     @if ($jobBoardListPage->sortKey !== 'updated')
         <input type="hidden" name="sort" value="{{ $jobBoardListPage->sortKey }}">
     @endif
