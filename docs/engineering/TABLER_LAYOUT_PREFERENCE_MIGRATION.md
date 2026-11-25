@@ -8,26 +8,32 @@ One preference contract for List/Cards across Job Board and (later) Customers, V
 
 | Setting | Authority | Notes |
 |---------|-----------|--------|
-| Job Board List/Cards | Browser `localStorage` scoped by **tenant + user + module** | Dual-writes legacy `ark_job_board_layout` cookie for SSR |
-| Customers / Vehicles / RO List/Cards | Same browser API (`UiLayoutModule::*`) | **Not wired in this PR** — reserved keys only; integrate in a later slice |
+| Job Board List/Cards | `users.job_board_view` (DB, per authenticated user in the shop tenant) | Dual-writes legacy `ark_job_board_layout` cookie + scoped localStorage as mirrors only |
+| Customers / Vehicles / RO List/Cards | Browser `localStorage` scoped by **tenant + user + module** | **Not DB-backed in this slice** — reserved keys only |
 | Appearance Light/Dark/System | `users.display_theme` (DB) | Synced to `ark_display_theme` cookie via `SyncEcosystemDisplayThemeCookie` |
 
-## Layout precedence
+## Job Board precedence
 
-Effective layout for a module:
+Effective layout:
 
-1. Explicit browser store for `ark.ui.layout.v1:{tenant}:{user}:{module}`
-2. Legacy unscoped cookie for that module (migrated into the store on first read)
-3. Server `data-*-layout` when request had `?view=` or a legacy cookie (first paint)
-4. **Auto**: List at `min-width: 768px`, Cards below
+1. Bookmarked `?view=list|cards|board` (one-shot → persist to `job_board_view`, then strip from URL)
+2. Authenticated `users.job_board_view`
+3. Legacy unscoped cookie `ark_job_board_layout` (one-time migrate into the user row)
+4. Browser scoped localStorage (client one-time migrate into the user row when the account has no value)
+5. **Default Cards** (desktop and mobile)
 
-Manual List or Cards always wins over the responsive default. Explicit List on a phone keeps the compact mobile List presentation — Cards are never forced.
+An explicit server-saved preference always wins over browser storage and viewport size. Responsive auto layout no longer overrides Job Board.
 
 ### Clean URLs
 
 - Accept bookmarked `?view=list|cards|board` once, persist, then **strip** `view` from the address bar.
 - Pagination, sort, lane, and filter links **must not** append `view`.
 - Filter forms must not submit a hidden `view` field.
+
+### Persistence API
+
+- Job Board switch: `PATCH /app/profile/job-board-view` with `{ "job_board_view": "cards"|"list" }`
+- Profile Appearance → Display Preferences uses the same column via `profile.appearance.update`
 
 ## Appearance precedence
 
@@ -44,28 +50,27 @@ Blocking boot runs in `<head>` before CSS (`partials/operations/display-theme-bo
 |-------|--------|
 | PHP modules | `UiLayoutModule` |
 | PHP scope | `UiPreferenceScope::forRequest()` |
-| PHP resolve / legacy cookies | `UiLayoutPreference` |
-| Job Board façade | `JobBoardLayoutPreference` (delegates) |
-| JS store | `resources/js/ark-ui-layout-preference.js` |
+| PHP Job Board authority | `JobBoardLayoutPreference` (`users.job_board_view`) |
+| PHP shared resolve / legacy cookies | `UiLayoutPreference` |
+| JS mirror store | `resources/js/ark-ui-layout-preference.js` |
 | Job Board UI | `resources/js/ark-job-board-layout.js` |
 
-Collection indexes (#257) should call the same JS helper with `UiLayoutModule.Customers|Vehicles|RepairOrders` instead of maintaining a parallel cookie-only path.
+Collection indexes should call the same JS helper with `UiLayoutModule.Customers|Vehicles|RepairOrders` instead of maintaining a parallel cookie-only path.
 
 ## Compatibility
 
-- Legacy Job Board cookie remains readable and EncryptCookies-excepted.
+- Legacy Job Board cookie remains readable and EncryptCookies-excepted (SSR mirror).
 - Reserved collection cookie names are excepted so a later merge does not brick first-party JS.
 - `view=board` continues to map to Cards.
+- Invalid `job_board_view` values are rejected on write and ignored on read (default Cards).
 
 ## SaaS integration risks
 
 - Hosted shops must keep EncryptCookies exceptions for `ark_display_theme`, `ark_job_board_layout`, and (when collections ship) `ark_collection_layout_*`.
-- Tenant key uses `ShopChannelScope` when bound; otherwise the request/app host. SaaS must bind a stable shop id so preferences do not collide across tenants on a shared browser profile.
-- Do not change the SaaS Core pin in this workstream.
+- Tenant users tables must run the `job_board_view` migration from Core.
 - Appearance remains user-row authority — do not move it solely into localStorage.
 
 ## Out of scope here
 
-- Wiring Customers / Vehicles / Repair Orders blades to the new store (owned by the collection List/Cards PR).
-- Job Board Card visual hierarchy / List UX PRs (#254–#256).
-- DB-backed layout preferences / shop defaults.
+- Wiring Customers / Vehicles / Repair Orders blades to DB-backed preferences.
+- Drag-and-drop Kanban status changes.

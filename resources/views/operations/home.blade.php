@@ -19,6 +19,7 @@
             data-job-board-layout="{{ $jobBoardLayoutMode }}"
             data-job-board-layout-explicit="{{ $jobBoardLayoutExplicit ? '1' : '0' }}"
             data-job-board-cookie-domain="{{ $cookieDomain }}"
+            data-job-board-view-persist-url="{{ route('profile.job-board-view.update') }}"
             data-ark-ui-tenant="{{ $uiPreferenceScope['tenant'] }}"
             data-ark-ui-user="{{ $uiPreferenceScope['user'] }}"
             data-job-board-list-page="{{ $jobBoardListPage->page }}"

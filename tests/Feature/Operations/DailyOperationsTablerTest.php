@@ -521,6 +521,8 @@ test('profile renders in the Tabler shell with every tab form for every role', f
         ->toContain('name="accent_theme"')
         ->toContain('name="accent_color"')
         ->toContain('name="display_theme"')
+        ->toContain('name="job_board_view"')
+        ->toContain('data-profile-display-preferences')
         ->toContain('name="current_password"')
         ->toContain('name="password_confirmation"')
         ->toContain('name="partstech_username"')

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Ark\Operations\Workboard\JobBoardLayout;
 use App\Ark\Runtime\Preferences\AccentColor;
 use App\Ark\Runtime\Preferences\AccentTheme;
 use App\Ark\Runtime\Preferences\DisplayTheme;
@@ -39,6 +40,10 @@ class ProfileAppearanceUpdateRequest extends FormRequest
                 'regex:/^#[0-9a-f]{6}$/',
             ],
             'display_theme' => ['required', Rule::in(DisplayTheme::values())],
+            'job_board_view' => ['required', Rule::in([
+                JobBoardLayout::List->value,
+                JobBoardLayout::Cards->value,
+            ])],
         ];
     }
 }

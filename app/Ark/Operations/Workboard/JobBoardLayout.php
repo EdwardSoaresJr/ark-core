@@ -21,7 +21,7 @@ enum JobBoardLayout: string
 
     public static function default(): self
     {
-        return self::List;
+        return self::Cards;
     }
 
     public static function parse(?string $value): self

@@ -28,7 +28,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'phone', 'partstech_username', 'accent_theme', 'accent_color', 'display_theme', 'schedule_board_view', 'default_parts_catalog', 'default_labor_guide', 'parts_catalog_links', 'labor_cost_cents', 'labor_pay_basis', 'flag_rate_cents', 'floor_rate_cents', 'workday_hours', 'scheduling_hours', 'auto_clock_enabled', 'auto_lunch_minutes'])]
+#[Fillable(['name', 'email', 'phone', 'partstech_username', 'accent_theme', 'accent_color', 'display_theme', 'schedule_board_view', 'job_board_view', 'default_parts_catalog', 'default_labor_guide', 'parts_catalog_links', 'labor_cost_cents', 'labor_pay_basis', 'flag_rate_cents', 'floor_rate_cents', 'workday_hours', 'scheduling_hours', 'auto_clock_enabled', 'auto_lunch_minutes'])]
 #[Hidden(['password', 'remember_token', 'partstech_password', 'operator_pin_hash'])]
 class User extends Authenticatable implements MustVerifyEmail
 {

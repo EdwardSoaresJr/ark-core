@@ -15,7 +15,7 @@ beforeEach(function () {
     $this->seed(RepairOrderStatusCatalogSeeder::class);
 });
 
-test('job board defaults to auto layout with list and cards over the same result set', function () {
+test('job board defaults to cards with list and cards over the same result set', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Table Default');
 
@@ -28,8 +28,9 @@ test('job board defaults to auto layout with list and cards over the same result
     $board = $xpath->query('//*[@data-job-board]')->item(0);
 
     expect($board)->toBeInstanceOf(DOMElement::class)
-        ->and($board->getAttribute('data-job-board-layout'))->toBe('auto')
+        ->and($board->getAttribute('data-job-board-layout'))->toBe('cards')
         ->and($board->getAttribute('data-job-board-layout-explicit'))->toBe('0')
+        ->and($board->getAttribute('data-job-board-view-persist-url'))->toContain('/app/profile/job-board-view')
         ->and($xpath->query('.//*[@data-job-board-layout-toggle]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-layout-option="list"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-layout-option="cards"]', $board)->length)->toBe(1)
@@ -46,7 +47,7 @@ test('job board defaults to auto layout with list and cards over the same result
         ->and($html)->toContain('ops-kanban-col-');
 });
 
-test('view=list and view=cards persist cookie and keep shared board chrome', function () {
+test('view=list and view=cards persist user preference cookie and keep shared board chrome', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Legacy View');
 
@@ -56,7 +57,8 @@ test('view=list and view=cards persist cookie and keep shared board chrome', fun
         ->assertPlainCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::List->value)
         ->getContent();
 
-    expect($listHtml)->toContain('data-job-board-layout="list"')
+    expect($advisor->fresh()->job_board_view)->toBe(JobBoardLayout::List->value)
+        ->and($listHtml)->toContain('data-job-board-layout="list"')
         ->and($listHtml)->toContain('data-job-board-layout-toggle')
         ->and($listHtml)->toContain('data-job-board-list')
         ->and($listHtml)->toContain('data-job-board-cards')
@@ -75,7 +77,8 @@ test('view=list and view=cards persist cookie and keep shared board chrome', fun
     $xpath = new DOMXPath($document);
     $board = $xpath->query('//*[@data-job-board]')->item(0);
 
-    expect($board?->getAttribute('data-job-board-layout'))->toBe('cards')
+    expect($advisor->fresh()->job_board_view)->toBe(JobBoardLayout::Cards->value)
+        ->and($board?->getAttribute('data-job-board-layout'))->toBe('cards')
         ->and($xpath->query('.//*[@data-job-board-layout-option="cards"][@aria-current="true"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1);
@@ -90,6 +93,8 @@ test('legacy view=board maps to cards preference', function () {
         ->assertOk()
         ->assertPlainCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
         ->assertSee('data-job-board-layout="cards"', false);
+
+    expect($advisor->fresh()->job_board_view)->toBe(JobBoardLayout::Cards->value);
 });
 
 test('job board navigation stays free of view query and exposes preference scope', function () {
@@ -128,18 +133,58 @@ test('job board navigation stays free of view query and exposes preference scope
     }
 });
 
-test('job board cookie preference selects cards without a user settings column', function () {
+test('job board cookie preference migrates into the user job_board_view column', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Cookie Pref');
 
-    expect(\Illuminate\Support\Facades\Schema::hasColumn('users', 'job_board_layout'))->toBeFalse();
+    expect(\Illuminate\Support\Facades\Schema::hasColumn('users', JobBoardLayoutPreference::COLUMN))->toBeTrue()
+        ->and($advisor->job_board_view)->toBeNull();
 
     $this->actingAs($advisor)
-        ->withUnencryptedCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::Cards->value)
+        ->withUnencryptedCookie(JobBoardLayoutPreference::COOKIE_NAME, JobBoardLayout::List->value)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('data-job-board-layout="cards"', false)
+        ->assertSee('data-job-board-layout="list"', false)
         ->assertSee('data-job-board-layout-explicit="1"', false);
+
+    expect($advisor->fresh()->job_board_view)->toBe(JobBoardLayout::List->value);
+});
+
+test('saved job board view survives a fresh request without cookies', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $advisor->forceFill(['job_board_view' => JobBoardLayout::List->value])->save();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Saved Pref');
+
+    $this->actingAs($advisor)
+        ->get(route('operations.index'))
+        ->assertOk()
+        ->assertSee('data-job-board-layout="list"', false)
+        ->assertSee('data-job-board-layout-explicit="1"', false);
+});
+
+test('job board view preference endpoint persists for the authenticated user only', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $other = User::factory()->create()->assignRole('advisor');
+
+    $this->actingAs($advisor)
+        ->patchJson(route('profile.job-board-view.update'), ['job_board_view' => 'list'])
+        ->assertOk()
+        ->assertJson(['job_board_view' => 'list']);
+
+    expect($advisor->fresh()->job_board_view)->toBe('list')
+        ->and($other->fresh()->job_board_view)->toBeNull();
+
+    $this->actingAs($advisor)
+        ->patchJson(route('profile.job-board-view.update'), ['job_board_view' => 'kanban'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['job_board_view']);
+
+    expect($advisor->fresh()->job_board_view)->toBe('list');
+
+    auth()->logout();
+
+    $this->patchJson(route('profile.job-board-view.update'), ['job_board_view' => 'cards'])
+        ->assertUnauthorized();
 });
 
 test('list and cards views render the same filtered repair order ids', function () {

@@ -4,16 +4,29 @@ use App\Ark\Operations\Workboard\JobBoardLayout;
 use App\Ark\Runtime\Preferences\UiLayoutModule;
 use App\Ark\Runtime\Preferences\UiLayoutPreference;
 use App\Ark\Runtime\Preferences\UiPreferenceScope;
+use App\Models\User;
 use Illuminate\Http\Request;
 
-test('ui layout preference defaults to auto without cookie or query', function () {
+test('ui layout preference defaults job board to cards without cookie or query', function () {
     $resolved = UiLayoutPreference::resolve(Request::create('/app', 'GET'), UiLayoutModule::JobBoard);
 
-    expect($resolved['mode'])->toBe(UiLayoutPreference::MODE_AUTO)
-        ->and($resolved['layout'])->toBeNull()
+    expect($resolved['mode'])->toBe(JobBoardLayout::Cards->value)
+        ->and($resolved['layout'])->toBe(JobBoardLayout::Cards)
         ->and($resolved['explicit'])->toBeFalse()
         ->and($resolved['module'])->toBe(UiLayoutModule::JobBoard)
         ->and($resolved['scope'])->toHaveKeys(['tenant', 'user']);
+});
+
+test('ui layout preference honors saved job board view for the authenticated user', function () {
+    $user = User::factory()->create(['job_board_view' => 'list']);
+    $request = Request::create('/app', 'GET');
+    $request->setUserResolver(fn () => $user);
+
+    $resolved = UiLayoutPreference::resolve($request, UiLayoutModule::JobBoard);
+
+    expect($resolved['mode'])->toBe('list')
+        ->and($resolved['layout'])->toBe(JobBoardLayout::List)
+        ->and($resolved['explicit'])->toBeTrue();
 });
 
 test('ui layout preference honors view query and queues legacy cookie', function () {

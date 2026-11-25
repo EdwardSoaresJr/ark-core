@@ -1,18 +1,18 @@
 /**
  * Job Board List | Cards switcher.
  * List = lane tabs + table. Cards = Kanban columns (List lane tabs do not constrain Cards).
- * Uses shared ark-ui-layout-preference (tenant + user + job_board).
- * Does not rewrite ?view= into the URL.
+ *
+ * Authority: server `users.job_board_view` (PATCH profile.job-board-view.update).
+ * Browser localStorage / legacy cookie are mirrors and one-time migration sources.
+ * Does not rewrite ?view= into the URL. Does not use viewport to override a saved preference.
  */
 import {
-    MD_UP,
     UiLayoutModule,
     normalizeLayout,
     readExplicitLayout,
     readViewQueryParam,
     scopeFromDocument,
     stripViewQueryParam,
-    viewportDefault,
     writeExplicitLayout,
 } from './ark-ui-layout-preference';
 
@@ -24,6 +24,10 @@ function boardScope(board) {
         module: UiLayoutModule.JobBoard,
         cookieDomain: board.getAttribute('data-job-board-cookie-domain') || null,
     };
+}
+
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 }
 
 function syncToggle(board, layout) {
@@ -40,17 +44,87 @@ function syncToggle(board, layout) {
     });
 }
 
-function applyLayout(board, layout, { persist = false, mode = null, scope = null } = {}) {
-    if (persist && scope) {
-        writeExplicitLayout(scope, layout, { cookieDomain: scope.cookieDomain });
-        board.setAttribute('data-job-board-layout', layout);
-        board.setAttribute('data-job-board-layout-explicit', '1');
-    } else if (mode) {
-        board.setAttribute('data-job-board-layout', mode);
+function setStatus(board, message, { isError = false } = {}) {
+    const status = board.querySelector('[data-job-board-layout-status]');
+    if (!status) {
+        return;
     }
+    if (!message) {
+        status.textContent = '';
+        status.classList.add('d-none');
+        status.classList.remove('text-danger', 'text-secondary');
+        return;
+    }
+    status.textContent = message;
+    status.classList.remove('d-none');
+    status.classList.toggle('text-danger', isError);
+    status.classList.toggle('text-secondary', !isError);
+}
 
+function applyLayout(board, layout, { mode = null } = {}) {
+    const nextMode = mode || layout;
+    board.setAttribute('data-job-board-layout', nextMode);
+    board.setAttribute('data-job-board-layout-explicit', '1');
     board.setAttribute('data-job-board-effective-layout', layout);
     syncToggle(board, layout);
+}
+
+async function persistLayout(board, layout, scope, sequence) {
+    const url = board.getAttribute('data-job-board-view-persist-url');
+    const token = csrfToken();
+    if (!url || !token) {
+        setStatus(board, 'Could not save view preference (missing security token).', { isError: true });
+        return false;
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ job_board_view: layout }),
+            credentials: 'same-origin',
+        });
+
+        if (sequence !== Number(board.dataset.jobBoardLayoutPersistSeq || '0')) {
+            // A newer switch superseded this request; ignore stale result.
+            return true;
+        }
+
+        if (!response.ok) {
+            let detail = 'Could not save view preference.';
+            try {
+                const payload = await response.json();
+                if (payload?.message) {
+                    detail = String(payload.message);
+                } else if (payload?.errors?.job_board_view?.[0]) {
+                    detail = String(payload.errors.job_board_view[0]);
+                }
+            } catch {
+                // keep default message
+            }
+            setStatus(board, `${detail} Keeping the current view on screen.`, { isError: true });
+            return false;
+        }
+
+        const payload = await response.json().catch(() => ({}));
+        const saved = normalizeLayout(payload?.job_board_view) || layout;
+        writeExplicitLayout(scope, saved, { cookieDomain: scope.cookieDomain });
+        setStatus(board, '');
+        return true;
+    } catch {
+        if (sequence !== Number(board.dataset.jobBoardLayoutPersistSeq || '0')) {
+            return true;
+        }
+        setStatus(board, 'Could not save view preference. Keeping the current view on screen.', {
+            isError: true,
+        });
+        return false;
+    }
 }
 
 function initBoard(board) {
@@ -58,33 +132,42 @@ function initBoard(board) {
         return;
     }
     board.dataset.jobBoardLayoutReady = '1';
+    board.dataset.jobBoardLayoutPersistSeq = '0';
 
     const scope = boardScope(board);
     const fromQuery = readViewQueryParam();
     const fromStore = readExplicitLayout(scope);
-    const modeAttr = board.getAttribute('data-job-board-layout') || 'auto';
-    const serverExplicit = normalizeLayout(modeAttr);
+    const modeAttr = board.getAttribute('data-job-board-layout') || 'cards';
+    const serverLayout = normalizeLayout(modeAttr) || 'cards';
+    const serverExplicit = board.getAttribute('data-job-board-layout-explicit') === '1';
 
-    let mode = 'auto';
-    let layout = viewportDefault();
+    let layout = serverLayout;
 
     if (fromQuery) {
-        writeExplicitLayout(scope, fromQuery, { cookieDomain: scope.cookieDomain });
-        mode = fromQuery;
         layout = fromQuery;
         stripViewQueryParam();
-    } else if (fromStore) {
-        mode = fromStore;
-        layout = fromStore;
+        applyLayout(board, layout);
+        writeExplicitLayout(scope, layout, { cookieDomain: scope.cookieDomain });
+        const seq = Number(board.dataset.jobBoardLayoutPersistSeq || '0') + 1;
+        board.dataset.jobBoardLayoutPersistSeq = String(seq);
+        void persistLayout(board, layout, scope, seq);
     } else if (serverExplicit) {
-        mode = serverExplicit;
-        layout = serverExplicit;
-        // Migrate SSR/cookie-only preference into the scoped store.
-        writeExplicitLayout(scope, serverExplicit, { cookieDomain: scope.cookieDomain });
+        layout = serverLayout;
+        applyLayout(board, layout);
+        writeExplicitLayout(scope, layout, { cookieDomain: scope.cookieDomain });
+    } else if (fromStore) {
+        // One-time migration of legacy browser preference when the account has none.
+        layout = fromStore;
+        applyLayout(board, layout);
+        const seq = Number(board.dataset.jobBoardLayoutPersistSeq || '0') + 1;
+        board.dataset.jobBoardLayoutPersistSeq = String(seq);
+        void persistLayout(board, layout, scope, seq);
+    } else {
+        layout = 'cards';
+        applyLayout(board, layout, { mode: 'cards' });
+        board.setAttribute('data-job-board-layout-explicit', '0');
+        writeExplicitLayout(scope, layout, { cookieDomain: scope.cookieDomain });
     }
-
-    board.setAttribute('data-job-board-layout-explicit', mode === 'auto' ? '0' : '1');
-    applyLayout(board, layout, { persist: false, mode });
 
     board.querySelectorAll('[data-job-board-layout-option]').forEach((btn) => {
         btn.addEventListener('click', (event) => {
@@ -93,7 +176,12 @@ function initBoard(board) {
             if (!next) {
                 return;
             }
-            applyLayout(board, next, { persist: true, scope });
+            applyLayout(board, next);
+            writeExplicitLayout(scope, next, { cookieDomain: scope.cookieDomain });
+            const seq = Number(board.dataset.jobBoardLayoutPersistSeq || '0') + 1;
+            board.dataset.jobBoardLayoutPersistSeq = String(seq);
+            setStatus(board, 'Saving view…');
+            void persistLayout(board, next, scope, seq);
         });
     });
 
@@ -109,24 +197,6 @@ function initBoard(board) {
             column.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
             scroller.focus({ preventScroll: true });
         });
-    }
-
-    const media = window.matchMedia(MD_UP);
-    const onViewportChange = () => {
-        if (board.getAttribute('data-job-board-layout-explicit') === '1') {
-            // Explicit List on a phone keeps compact mobile List — never force Cards.
-            applyLayout(board, board.getAttribute('data-job-board-layout') === 'cards' ? 'cards' : 'list', {
-                persist: false,
-                mode: board.getAttribute('data-job-board-layout'),
-            });
-            return;
-        }
-        applyLayout(board, viewportDefault(), { persist: false, mode: 'auto' });
-    };
-    if (typeof media.addEventListener === 'function') {
-        media.addEventListener('change', onViewportChange);
-    } else if (typeof media.addListener === 'function') {
-        media.addListener(onViewportChange);
     }
 }
 
