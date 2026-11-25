@@ -53,21 +53,28 @@ final class JobBoardListPageBuilder
             ->values();
 
         $pageColumns = $this->pageColumns($pageRepairOrders, $byLane, $laneMeta);
-        $totals = $pageRepairOrders->mapWithKeys(fn (RepairOrder $repairOrder): array => [
+        $kanbanPlan = $this->kanbanVisibleByLane($byLane, $query, $techId, $laneMeta);
+        $projectionRepairOrders = $pageRepairOrders
+            ->concat($kanbanPlan['visible']->flatten(1))
+            ->unique(fn (RepairOrder $repairOrder): int => $repairOrder->id)
+            ->values();
+        $totals = $projectionRepairOrders->mapWithKeys(fn (RepairOrder $repairOrder): array => [
             $repairOrder->id => $this->totalsCalculator->totalsFor($repairOrder),
         ]);
+        $projectionColumns = $this->pageColumns($projectionRepairOrders, $byLane, $laneMeta);
         $surfaces = $this->homeCardSurfaces->mapForHomeBoard(
-            new \Illuminate\Database\Eloquent\Collection($pageRepairOrders->all()),
-            $pageColumns,
+            new \Illuminate\Database\Eloquent\Collection($projectionRepairOrders->all()),
+            $projectionColumns,
             $totals,
         );
-        $rowsByRepairOrderId = collect($this->listRows->fromHomeBoard($pageColumns, $surfaces))
+        $rowsByRepairOrderId = collect($this->listRows->fromHomeBoard($projectionColumns, $surfaces))
             ->keyBy(fn (JobBoardListRow $row): int => $row->card->repairOrder->id);
         $rows = $pageRepairOrders
             ->map(fn (RepairOrder $repairOrder): ?JobBoardListRow => $rowsByRepairOrderId->get($repairOrder->id))
             ->filter()
             ->values()
             ->all();
+        $kanbanColumns = $this->kanbanColumns($kanbanPlan, $laneMeta, $rowsByRepairOrderId, $request);
 
         $view = JobBoardLayout::tryParse(is_string($request->query('view')) ? (string) $request->query('view') : null);
 
@@ -87,6 +94,8 @@ final class JobBoardListPageBuilder
             rows: $rows,
             pageColumns: $pageColumns,
             pageRepairOrders: $pageRepairOrders,
+            kanbanColumns: $kanbanColumns,
+            kanbanFilteredTotal: (int) $kanbanPlan['filtered_total'],
             view: $view?->value,
         );
     }
@@ -100,9 +109,20 @@ final class JobBoardListPageBuilder
     {
         $byLane = collect($laneMeta)
             ->mapWithKeys(fn (array $column): array => [$column['key'] => collect()]);
+        $fallbackLane = collect($laneMeta)->first()['key'] ?? JobBoardLaneCatalogDefaults::WORK_IN_PROGRESS;
 
         foreach ($repairOrders as $repairOrder) {
             $laneKey = WorkboardSwimlaneCatalog::homeBoardColumnKeyForRepairOrder($repairOrder);
+
+            if ($laneKey === null) {
+                // Closed / non-board statuses stay off the board.
+                continue;
+            }
+
+            if (! $byLane->has($laneKey)) {
+                // Custom / unrecognized advisor_lane_key → first configured lane (deterministic).
+                $laneKey = $byLane->has($fallbackLane) ? $fallbackLane : $byLane->keys()->first();
+            }
 
             if ($laneKey === null || ! $byLane->has($laneKey)) {
                 continue;
@@ -112,6 +132,81 @@ final class JobBoardListPageBuilder
         }
 
         return $byLane;
+    }
+
+    /**
+     * Cards Kanban ignores List lane tabs. Search/tech still apply. Oldest updated first
+     * inside each column (longest waiting). Visible rows are capped; counts stay exact.
+     *
+     * @param  Collection<string, Collection<int, RepairOrder>>  $byLane
+     * @param  list<array{key: string, label: string, tone: string, color: string}>  $laneMeta
+     * @return array{visible: Collection<string, Collection<int, RepairOrder>>, totals: array<string, int>, filtered_total: int}
+     */
+    private function kanbanVisibleByLane(Collection $byLane, string $query, string $techId, array $laneMeta): array
+    {
+        $visible = collect();
+        $totals = [];
+        $filteredTotal = 0;
+
+        foreach ($laneMeta as $column) {
+            $key = $column['key'];
+            $filtered = ($byLane->get($key) ?? collect())
+                ->filter(fn (RepairOrder $repairOrder): bool => $this->matchesSearch($repairOrder, $query))
+                ->filter(fn (RepairOrder $repairOrder): bool => $this->matchesTech($repairOrder, $techId))
+                ->values();
+            $sorted = $this->sortRepairOrders($filtered, JobBoardListPage::SORT_UPDATED, 'asc');
+            $totals[$key] = $sorted->count();
+            $filteredTotal += $totals[$key];
+            $visible[$key] = $sorted->take(JobBoardListPage::KANBAN_COLUMN_SIZE)->values();
+        }
+
+        return [
+            'visible' => $visible,
+            'totals' => $totals,
+            'filtered_total' => $filteredTotal,
+        ];
+    }
+
+    /**
+     * @param  array{visible: Collection<string, Collection<int, RepairOrder>>, totals: array<string, int>, filtered_total: int}  $kanbanPlan
+     * @param  list<array{key: string, label: string, tone: string, color: string}>  $laneMeta
+     * @param  Collection<int, JobBoardListRow>  $rowsByRepairOrderId
+     * @return list<JobBoardKanbanColumn>
+     */
+    private function kanbanColumns(array $kanbanPlan, array $laneMeta, Collection $rowsByRepairOrderId, Request $request): array
+    {
+        return collect($laneMeta)
+            ->map(function (array $column) use ($kanbanPlan, $rowsByRepairOrderId, $request): JobBoardKanbanColumn {
+                $key = $column['key'];
+                $total = (int) ($kanbanPlan['totals'][$key] ?? 0);
+                $visibleOrders = $kanbanPlan['visible']->get($key) ?? collect();
+                $rows = $visibleOrders
+                    ->map(fn (RepairOrder $repairOrder): ?JobBoardListRow => $rowsByRepairOrderId->get($repairOrder->id))
+                    ->filter()
+                    ->values()
+                    ->all();
+                $hidden = max(0, $total - count($rows));
+                $listUrl = $total > 0
+                    ? route('operations.index', array_filter([
+                        'lane' => $key,
+                        'q' => $request->query('q') ?: null,
+                        'tech' => $request->query('tech') ?: null,
+                        'view' => JobBoardLayout::List->value,
+                    ], fn ($value) => $value !== null && $value !== ''))
+                    : null;
+
+                return new JobBoardKanbanColumn(
+                    key: $key,
+                    label: $column['label'],
+                    tone: $column['tone'],
+                    color: $column['color'] ?? 'secondary',
+                    totalCount: $total,
+                    rows: $rows,
+                    hiddenCount: $hidden,
+                    listUrl: $listUrl,
+                );
+            })
+            ->all();
     }
 
     /**

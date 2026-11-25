@@ -36,11 +36,14 @@ test('job board defaults to auto layout with list and cards over the same result
         ->and($xpath->query('.//*[@data-job-board-lanes]', $board)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-list]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-cards]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-kanban]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-kanban-column]', $board)->length)->toBeGreaterThanOrEqual(5)
         ->and($xpath->query('.//*[@data-job-board-lane-tabs]//*[@data-job-board-lane-tab]', $board)->length)->toBeGreaterThanOrEqual(6)
         ->and($xpath->query('.//*[@data-job-board-lane-tab="all"][@aria-current="page"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1)
-        ->and($html)->not->toContain('ops-home-col-');
+        ->and($html)->not->toContain('ops-home-col-')
+        ->and($html)->toContain('ops-kanban-col-');
 });
 
 test('view=list and view=cards persist cookie and keep shared board chrome', function () {
@@ -545,7 +548,7 @@ test('cards view keeps Watch without yellow edge while attention and critical ke
     expect($watchCards->length + $attentionCards->length + $criticalCards->length)->toBeGreaterThan(0);
 });
 
-test('cards view uses hierarchical Tabler bands and shared card grid', function () {
+test('cards view uses hierarchical Tabler bands inside Kanban columns', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Card Hierarchy');
 
@@ -561,7 +564,9 @@ test('cards view uses hierarchical Tabler bands and shared card grid', function 
 
     $card = $xpath->query('//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]')->item(0);
     expect($card)->toBeInstanceOf(DOMElement::class)
-        ->and($xpath->query('//*[@data-job-board-cards-grid][contains(@class,"ark-card-grid")]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-track]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-column="waiting_approval"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-column="waiting_approval"]//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]')->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-row-ro]', $card)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-card-total]', $card)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $card)->length)->toBe(1)
@@ -574,6 +579,73 @@ test('cards view uses hierarchical Tabler bands and shared card grid', function 
         ->and($xpath->query('.//*[@data-job-board-row-vehicle]', $card)->length)->toBe(1)
         ->and($card->getAttribute('class'))->toContain('ark-job-board-card')
         ->and($card->getAttribute('class'))->not->toContain('card-sm');
+});
+
+test('cards kanban shows every lane column and ignores the active list lane tab', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $waiting = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Kanban Waiting');
+    $parts = repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Kanban Parts');
+    $progress = repairOrderForCommunication(RepairOrderStatus::InProgress, 'Kanban Progress');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', [
+            'view' => 'cards',
+            'lane' => 'waiting_approval',
+        ]))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    expect($xpath->query('//*[@data-job-board-kanban-column]')->length)->toBeGreaterThanOrEqual(5)
+        ->and($xpath->query('//*[@data-job-board-list-chrome]')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@id="ops-card-ro-'.$waiting->repair_order_id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@id="ops-card-ro-'.$parts->repair_order_id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@id="ops-card-ro-'.$progress->repair_order_id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-column="waiting_approval"]//*[@id="ops-card-ro-'.$waiting->repair_order_id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-column="parts"]//*[@id="ops-card-ro-'.$parts->repair_order_id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-column="work_in_progress"]//*[@id="ops-card-ro-'.$progress->repair_order_id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-count="waiting_approval"]')->item(0)?->textContent)->toContain('1');
+
+    $listHtml = $this->actingAs($advisor)
+        ->get(route('operations.index', [
+            'view' => 'list',
+            'lane' => 'waiting_approval',
+        ]))
+        ->assertOk()
+        ->getContent();
+
+    expect($listHtml)->toContain('id="ops-list-ro-'.$waiting->repair_order_id.'"')
+        ->and($listHtml)->not->toContain('id="ops-list-ro-'.$parts->repair_order_id.'"');
+});
+
+test('cards kanban search keeps matches grouped in their workflow columns', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $match = repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'UniqueKanbanNeedle');
+    repairOrderForCommunication(RepairOrderStatus::InProgress, 'Other Vehicle');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', [
+            'view' => 'cards',
+            'q' => 'UniqueKanbanNeedle',
+        ]))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    expect($xpath->query('//*[@id="ops-card-ro-'.$match->repair_order_id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-column="parts"]//*[@id="ops-card-ro-'.$match->repair_order_id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-count="parts"]')->item(0)?->textContent)->toContain('1')
+        ->and((int) trim((string) $xpath->query('//*[@data-job-board-kanban-count="work_in_progress"]')->item(0)?->textContent))->toBe(0);
 });
 
 test('job board click contract keeps RO vehicle and customer destinations separate', function () {

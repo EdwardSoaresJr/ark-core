@@ -1,5 +1,6 @@
 /**
  * Job Board List | Cards switcher.
+ * List = lane tabs + table. Cards = Kanban columns (List lane tabs do not constrain Cards).
  * Uses shared ark-ui-layout-preference (tenant + user + job_board).
  * Does not rewrite ?view= into the URL.
  */
@@ -95,6 +96,20 @@ function initBoard(board) {
             applyLayout(board, next, { persist: true, scope });
         });
     });
+
+    const columnSelect = board.querySelector('[data-job-board-kanban-column-select]');
+    if (columnSelect) {
+        columnSelect.addEventListener('change', () => {
+            const key = columnSelect.value;
+            const column = board.querySelector(`[data-job-board-kanban-column="${key}"]`);
+            const scroller = board.querySelector('[data-job-board-kanban-scroller]');
+            if (!column || !scroller) {
+                return;
+            }
+            column.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+            scroller.focus({ preventScroll: true });
+        });
+    }
 
     const media = window.matchMedia(MD_UP);
     const onViewportChange = () => {

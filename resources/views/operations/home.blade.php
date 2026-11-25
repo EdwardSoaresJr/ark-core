@@ -40,13 +40,15 @@
                     'jobBoardLayoutMode' => $jobBoardLayoutMode,
                 ])
 
-                @include('operations.workboard.partials.home-board-lane-tabs', [
-                    'jobBoardLaneTabs' => $jobBoardLaneTabs,
-                    'jobBoardListPage' => $jobBoardListPage,
-                ])
+                <div data-job-board-list-chrome>
+                    @include('operations.workboard.partials.home-board-lane-tabs', [
+                        'jobBoardLaneTabs' => $jobBoardLaneTabs,
+                        'jobBoardListPage' => $jobBoardListPage,
+                    ])
+                </div>
             </div>
 
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-0" data-job-board-list-summary>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-0" data-job-board-list-chrome data-job-board-list-summary>
                 <p class="mb-0 text-secondary small" data-job-board-list-range>
                     @if ($jobBoardListPage->filteredTotal === 0)
                         No matching repair orders
@@ -79,7 +81,7 @@
             </div>
 
             @if ($jobBoardListPage->lastPage > 1)
-                <nav class="d-flex justify-content-between align-items-center mt-1" aria-label="Job board pages" data-job-board-list-pagination>
+                <nav class="d-flex justify-content-between align-items-center mt-1" aria-label="Job board pages" data-job-board-list-chrome data-job-board-list-pagination>
                     @if ($jobBoardListPage->page > 1)
                         <a class="btn btn-outline-secondary" href="{{ route('operations.index', $jobBoardListPage->queryParams(['page' => $jobBoardListPage->page - 1])) }}" data-job-board-list-prev>Previous</a>
                     @else

@@ -7,11 +7,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
- * Bounded Job Board list: exact lane totals, server filters, page-sized card projection only.
+ * Bounded Job Board list + Cards Kanban: exact lane totals, shared search/tech filters,
+ * page-sized List projection, and per-column capped Kanban projection.
+ *
+ * Cards (Kanban) ignores the List lane tab so every workflow column stays visible.
+ * Search and technician filters still apply to both presentations.
  */
 final readonly class JobBoardListPage
 {
     public const PAGE_SIZE = 50;
+
+    /** Visible cards loaded per Kanban column; column counts remain exact for the filtered set. */
+    public const KANBAN_COLUMN_SIZE = 40;
 
     public const SORT_UPDATED = 'updated';
 
@@ -34,6 +41,7 @@ final readonly class JobBoardListPage
      * @param  list<array{key: string, label: string, color: string, count: int}>  $laneTabs
      * @param  list<JobBoardListRow>  $rows
      * @param  list<WorkboardTriageLaneProjection>  $pageColumns
+     * @param  list<JobBoardKanbanColumn>  $kanbanColumns
      */
     public function __construct(
         public Collection $repairOrders,
@@ -51,8 +59,18 @@ final readonly class JobBoardListPage
         public array $rows,
         public array $pageColumns,
         public Collection $pageRepairOrders,
+        public array $kanbanColumns = [],
+        public int $kanbanFilteredTotal = 0,
         public ?string $view = null,
     ) {}
+
+    /**
+     * Search / tech filters that Cards (Kanban) honors. Lane tabs are List-only.
+     */
+    public function hasBoardWideFilters(): bool
+    {
+        return $this->query !== '' || $this->techId !== '';
+    }
 
     public function from(): int
     {
