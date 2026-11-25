@@ -135,7 +135,7 @@ test('ordering parts on an approved scope moves production to waiting parts', fu
     expect($concern->fresh()->productionStatus())->toBe(ScopeProductionStatus::WaitingParts);
 });
 
-test('receiving all parts on a scope moves production from waiting parts to pending', function () {
+test('receiving all parts on a scope resumes production from waiting parts to in progress', function () {
     $repairOrder = scopeProductionRepairOrder();
     $concern = $repairOrder->concerns()->firstOrFail();
     $line = $repairOrder->lines()->where('type', RepairOrderLineType::Part)->firstOrFail();
@@ -148,7 +148,7 @@ test('receiving all parts on a scope moves production from waiting parts to pend
         ])
         ->assertRedirect();
 
-    expect($concern->fresh()->productionStatus())->toBe(ScopeProductionStatus::Pending);
+    expect($concern->fresh()->productionStatus())->toBe(ScopeProductionStatus::InProgress);
 });
 
 test('parts automation does not override completed scope production status', function () {

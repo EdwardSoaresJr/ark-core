@@ -1,11 +1,16 @@
 @php
     $captureAttempts = $financial['paymentCaptureAttempts'] ?? [];
     $readiness = app(\App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection::class)->current();
-    $ledgerKind = ($financial['canRecordPayment'] ?? false) ? 'payment' : 'deposit';
+    $ledgerKind = ($financial['paymentWorkspaceMode'] ?? null) === 'invoice' || ($financial['canRecordPayment'] ?? false)
+        ? 'payment'
+        : 'deposit';
     $canLedger = ($financial['canRecordPayment'] ?? false) || ($financial['canRecordManualDeposit'] ?? false);
+    $workspaceLabel = (string) ($financial['paymentWorkspaceLabel'] ?? ($ledgerKind === 'payment' ? 'Pay invoice' : 'Collect deposit / advance'));
     $suggestedAmount = $ledgerKind === 'payment'
         ? (string) ($financial['settlementBalanceDueDecimal'] ?? $financial['balanceDueDecimal'] ?? '')
-        : (string) ($financial['remainingSuggestedDepositDecimal'] ?? $financial['remainingCollectableDepositDecimal'] ?? '');
+        : (string) ($financial['remainingCollectableDepositDecimal']
+            ?? $financial['remainingSuggestedDepositDecimal']
+            ?? '');
     $devices = $readiness['devices'] ?? [];
     $publicConfig = $readiness['public_config'] ?? null;
     $captureReady = (bool) ($readiness['ready'] ?? false);
@@ -66,7 +71,7 @@
         data-payment-workspace-open
         @click="openWorkspace()"
     >
-        Take payment
+        {{ $workspaceLabel }}
     </button>
 
     {{-- ark-payment-capture.js shows and hides this overlay and raises the rail above the page while it is open. --}}
@@ -90,7 +95,7 @@
         ></button>
         <div class="card shadow-lg position-relative w-100" style="max-width: 44rem; max-height: calc(100dvh - 1rem)" @click.stop>
             <div class="card-header">
-                <h2 id="payment-workspace-title-{{ $repairOrder->getKey() }}" class="card-title">Take payment</h2>
+                <h2 id="payment-workspace-title-{{ $repairOrder->getKey() }}" class="card-title">{{ $workspaceLabel }}</h2>
                 <button type="button" class="btn-close ms-auto" aria-label="Close" x-show="!transactionBound()" @click="requestClose($event)"></button>
             </div>
 
@@ -140,13 +145,20 @@
 
                     @if ($ledgerKind === 'deposit')
                         <p class="small text-secondary mb-0">
-                            Deposit is payment against authorized work — not a change to what the customer authorized.
+                            Deposit / advance is money held against this visit — not authorization to perform unapproved work, and not a final invoice payment.
                         </p>
-                        @if (filled($financial['remainingSuggestedDeposit'] ?? null))
-                            <p class="small text-secondary mb-0">Up to {{ $financial['remainingSuggestedDeposit'] }} remaining on suggested deposit.</p>
-                        @elseif (filled($financial['remainingCollectableDeposit'] ?? null))
-                            <p class="small text-secondary mb-0">Up to {{ $financial['remainingCollectableDeposit'] }} remaining on this repair.</p>
+                        @if (filled($financial['remainingCollectableDeposit'] ?? null))
+                            <p class="small text-secondary mb-0">Up to {{ $financial['remainingCollectableDeposit'] }} remaining on authorized work.</p>
+                            @if (filled($financial['remainingSuggestedDeposit'] ?? null))
+                                <p class="small text-secondary mb-0">Suggested deposit remaining: {{ $financial['remainingSuggestedDeposit'] }} (default only — full authorized amount is allowed).</p>
+                            @endif
+                        @elseif (filled($financial['remainingSuggestedDeposit'] ?? null))
+                            <p class="small text-secondary mb-0">Up to {{ $financial['remainingSuggestedDeposit'] }} suggested advance (parts/diagnostics) before authorization.</p>
                         @endif
+                    @else
+                        <p class="small text-secondary mb-0">
+                            Pay the issued invoice balance. This does not mark repairs complete.
+                        </p>
                     @endif
 
                     <div>

@@ -65,21 +65,27 @@ final class RepairOrderDepositRecordingGuard
     }
 
     /**
-     * Hard cap for the next deposit:
-     * shop suggested remainder first, then remaining owe-today after that is covered.
+     * Hard cap for the next deposit / advance payment.
+     *
+     * Authorized owe-today wins when present so advisors can collect a full
+     * advance in one capture. When nothing is authorized yet, the shop
+     * suggested remainder (recommended parts/diagnostics) may still be held
+     * as an advance without implying approval.
      */
     public function remainingAllowedDepositCents(
         RepairOrder $repairOrder,
         ?BalanceDueResult $balance = null,
         ?FinancialPositionProjection $position = null,
     ): int {
-        $suggestedRemaining = $this->remainingSuggestedDepositCents($repairOrder, $balance);
+        $collectable = $this->remainingCollectableDepositCents($repairOrder, $balance, $position);
 
-        if ($suggestedRemaining !== null && $suggestedRemaining > 0) {
-            return $suggestedRemaining;
+        if ($collectable > 0) {
+            return $collectable;
         }
 
-        return $this->remainingCollectableDepositCents($repairOrder, $balance, $position);
+        $suggestedRemaining = $this->remainingSuggestedDepositCents($repairOrder, $balance);
+
+        return max(0, $suggestedRemaining ?? 0);
     }
 
     public function portalChargeCents(RepairOrder $repairOrder, int $approvedAmountCents): int
@@ -90,15 +96,9 @@ final class RepairOrderDepositRecordingGuard
             return 0;
         }
 
-        $suggestedRemaining = $this->remainingSuggestedDepositCents($repairOrder);
-
-        if ($suggestedRemaining !== null && $suggestedRemaining > 0) {
-            $policy = $this->defaultDepositCalculator->portalDepositCents($repairOrder, $approvedAmountCents);
-
-            return min($allowed, $policy);
-        }
-
-        return $allowed;
+        // Portal may collect any amount up to the same hard cap staff use
+        // (authorized owe-today, or suggested advance when nothing is authorized).
+        return min($allowed, $approvedAmountCents);
     }
 
     public function validateAmount(RepairOrder $repairOrder, int $amountCents): void

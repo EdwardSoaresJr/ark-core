@@ -47,7 +47,8 @@ final class RepairOrderFinancialPresenter
         $balanceProjection ??= $this->balanceDue->projectForRepairOrder($repairOrder);
         $balance = $balanceProjection->balance;
         $invoice = $balanceProjection->invoice;
-        $hasApprovedInvoiceableWork = $repairOrder->status->is(RepairOrderStatus::ReadyPickup)
+        $statusAllowsFinalInvoice = RepairOrderFinalInvoiceEligibility::statusAllows($repairOrder);
+        $hasApprovedInvoiceableWork = $statusAllowsFinalInvoice
             && $this->totalsCalculator->hasApprovedInvoiceableWork($repairOrder);
 
         $workflowPosture = $this->workflowPosture($repairOrder, $balance);
@@ -168,11 +169,17 @@ final class RepairOrderFinancialPresenter
             'storeCreditBalance' => $this->formatCents((int) $repairOrder->customer->store_credit_balance_cents),
             'storeCreditBalanceCents' => (int) $repairOrder->customer->store_credit_balance_cents,
             'canGenerateInvoice' => $this->canGenerateInvoice($repairOrder, $balance, $hasApprovedInvoiceableWork),
-            'invoiceBlockingReason' => $this->invoiceBlockingReason($repairOrder, $balance, $hasApprovedInvoiceableWork),
+            'invoiceBlockingReason' => $this->invoiceBlockingReason($repairOrder, $balance, $hasApprovedInvoiceableWork, $statusAllowsFinalInvoice),
             'canRecordDeposit' => $canRecordDeposit,
             'canRecordManualDeposit' => $canRecordDeposit
                 && $this->depositGuard->remainingAllowedDepositCents($repairOrder, $balance, $position) > 0,
             'canRecordPayment' => $this->canRecordPayment($repairOrder, $balance),
+            'depositBlockingReason' => $this->depositBlockingReason($repairOrder, $balance, $canRecordDeposit, $position),
+            'paymentBlockingReason' => $this->paymentBlockingReason($repairOrder, $balance),
+            'paymentWorkspaceMode' => $this->canRecordPayment($repairOrder, $balance) ? 'invoice' : 'deposit',
+            'paymentWorkspaceLabel' => $this->canRecordPayment($repairOrder, $balance)
+                ? 'Pay invoice'
+                : 'Collect deposit / advance',
             'canClose' => $closeoutBlockingReason === null,
             'closeoutBlockingReason' => $closeoutBlockingReason,
             'canPost' => $canPost,
@@ -353,8 +360,8 @@ final class RepairOrderFinancialPresenter
         }
 
         return match ($workflowPosture) {
-            'pre_invoice' => 'Record deposits anytime. Final invoice issues when the vehicle is ready for pickup.',
-            'pre_invoice_with_deposits' => 'Deposits are on file and will apply when the final invoice is issued. The customer can still pay more toward the remaining balance now.',
+            'pre_invoice' => 'Collect deposits or the full authorized advance anytime. Final invoice issues at Completed or Ready for Pickup — receiving money does not mark work done.',
+            'pre_invoice_with_deposits' => 'Deposits are on file and will apply when the final invoice is issued. The customer can still pay more toward the remaining authorized balance now.',
             'ready_for_final_invoice' => 'Generate the final invoice to collect payment against approved work.',
             'ready_for_final_invoice_with_deposits' => 'Generate the final invoice to apply deposits and collect the remaining balance.',
             'invoice_issued' => 'Collect payment before vehicle release. Or waive the remaining balance as courtesy / trade.',
@@ -381,15 +388,23 @@ final class RepairOrderFinancialPresenter
 
     private function canGenerateInvoice(RepairOrder $repairOrder, BalanceDueResult $balance, bool $hasApprovedInvoiceableWork): bool
     {
-        return $repairOrder->status->is(RepairOrderStatus::ReadyPickup)
+        return RepairOrderFinalInvoiceEligibility::statusAllows($repairOrder)
             && ! $balance->hasIssuedInvoice
             && $hasApprovedInvoiceableWork;
     }
 
-    private function invoiceBlockingReason(RepairOrder $repairOrder, BalanceDueResult $balance, bool $hasApprovedInvoiceableWork): ?string
-    {
-        if (! $repairOrder->status->is(RepairOrderStatus::ReadyPickup) || $balance->hasIssuedInvoice) {
+    private function invoiceBlockingReason(
+        RepairOrder $repairOrder,
+        BalanceDueResult $balance,
+        bool $hasApprovedInvoiceableWork,
+        bool $statusAllowsFinalInvoice,
+    ): ?string {
+        if ($balance->hasIssuedInvoice) {
             return null;
+        }
+
+        if (! $statusAllowsFinalInvoice) {
+            return RepairOrderFinalInvoiceEligibility::blockingReason($repairOrder);
         }
 
         if ($hasApprovedInvoiceableWork) {
@@ -397,6 +412,57 @@ final class RepairOrderFinancialPresenter
         }
 
         return 'Approve at least one concern with billable lines before the final invoice can be issued.';
+    }
+
+    private function depositBlockingReason(
+        RepairOrder $repairOrder,
+        BalanceDueResult $balance,
+        bool $canRecordDeposit,
+        FinancialPositionProjection $position,
+    ): ?string {
+        if ($canRecordDeposit && $this->depositGuard->remainingAllowedDepositCents($repairOrder, $balance, $position) > 0) {
+            return null;
+        }
+
+        if ($repairOrder->isTerminal()) {
+            return 'This repair order is closed. Collect remaining balances through Accounts Receivable when applicable.';
+        }
+
+        if ($balance->hasIssuedInvoice) {
+            return 'Final invoice is issued. Use Pay invoice for settlement, not deposits.';
+        }
+
+        if ($position->customerOwesTodayCents <= 0) {
+            $suggested = $this->depositGuard->remainingSuggestedDepositCents($repairOrder, $balance);
+            if ($suggested !== null && $suggested === 0) {
+                return 'Authorized work and the suggested deposit are already covered. Void a history entry if a deposit was recorded in error.';
+            }
+
+            return 'No authorized balance to collect yet. Approve billable work, or record a suggested parts/diagnostics advance when shop policy offers one.';
+        }
+
+        return 'Nothing left to collect as a deposit on this repair order.';
+    }
+
+    private function paymentBlockingReason(RepairOrder $repairOrder, BalanceDueResult $balance): ?string
+    {
+        if ($this->canRecordPayment($repairOrder, $balance)) {
+            return null;
+        }
+
+        if (! $balance->hasIssuedInvoice) {
+            return null;
+        }
+
+        if ($balance->balanceDueCents <= 0) {
+            return 'This invoice is paid in full.';
+        }
+
+        if (! $repairOrder->allowsAccountsReceivableCollection()) {
+            return 'This repair order does not allow further collection on the invoice.';
+        }
+
+        return null;
     }
 
     private function canRecordDeposit(RepairOrder $repairOrder, BalanceDueResult $balance): bool
@@ -437,27 +503,27 @@ final class RepairOrderFinancialPresenter
             return 'closed';
         }
 
-        if (! $repairOrder->status->is(RepairOrderStatus::ReadyPickup)) {
-            return $balance->unappliedDepositsCents > 0
-                ? 'pre_invoice_with_deposits'
-                : 'pre_invoice';
+        if ($balance->hasIssuedInvoice) {
+            if ($balance->balanceDueCents === 0) {
+                return 'paid_ready_to_close';
+            }
+
+            if ($balance->invoiceStatus === InvoiceStatus::PartiallyPaid) {
+                return 'partially_paid';
+            }
+
+            return 'invoice_issued';
         }
 
-        if (! $balance->hasIssuedInvoice) {
+        if (RepairOrderFinalInvoiceEligibility::statusAllows($repairOrder)) {
             return $balance->unappliedDepositsCents > 0
                 ? 'ready_for_final_invoice_with_deposits'
                 : 'ready_for_final_invoice';
         }
 
-        if ($balance->balanceDueCents === 0) {
-            return 'paid_ready_to_close';
-        }
-
-        if ($balance->invoiceStatus === InvoiceStatus::PartiallyPaid) {
-            return 'partially_paid';
-        }
-
-        return 'invoice_issued';
+        return $balance->unappliedDepositsCents > 0
+            ? 'pre_invoice_with_deposits'
+            : 'pre_invoice';
     }
 
     private function workflowLabel(string $workflowPosture): string

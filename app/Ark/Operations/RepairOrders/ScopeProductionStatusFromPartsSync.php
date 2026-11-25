@@ -76,13 +76,23 @@ final class ScopeProductionStatusFromPartsSync
             return ScopeProductionStatus::WaitingParts;
         }
 
-        return ScopeProductionStatus::Pending;
+        // Parts arrived after a parts hold: resume bay work. Do not invent
+        // In Progress for scopes that were never waiting on parts.
+        if ($concern->productionStatus() === ScopeProductionStatus::WaitingParts) {
+            return ScopeProductionStatus::InProgress;
+        }
+
+        return null;
     }
 
     private function shouldApply(ScopeProductionStatus $current, ScopeProductionStatus $target): bool
     {
         if ($current === ScopeProductionStatus::Completed) {
             return false;
+        }
+
+        if ($target === ScopeProductionStatus::InProgress) {
+            return $current === ScopeProductionStatus::WaitingParts;
         }
 
         if ($target === ScopeProductionStatus::Pending) {

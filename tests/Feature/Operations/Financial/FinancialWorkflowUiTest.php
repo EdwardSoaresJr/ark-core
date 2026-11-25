@@ -448,7 +448,8 @@ test('manual deposit form stays available after suggested deposit is satisfied',
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
+        ->assertSee('Collect deposit / advance')
         ->assertSee('Record deposit in ledger')
-        ->assertSee('remaining on this repair')
+        ->assertSee('remaining on authorized work')
         ->assertDontSee('Suggested deposit is covered.');
 });
