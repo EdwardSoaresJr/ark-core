@@ -230,9 +230,13 @@ function assertSettlementRegionsDoNotNest(string $html): void
 function assertSettlementRegionsExcludeCapture(string $html): void
 {
     $xpath = settlementContinuityXPath($html);
+    $workspaceOpen = '//*[@data-payment-workspace-open]';
 
-    expect($xpath->query('//*[@data-continuity-region="settlement"][contains(., "Take payment")]')->length)->toBe(0)
-        ->and($xpath->query('//*[contains(text(), "Take payment")]')->length)->toBeGreaterThan(0)
+    expect($xpath->query('//*[@data-continuity-region="settlement"]'.$workspaceOpen)->length)->toBe(0)
+        ->and($xpath->query($workspaceOpen)->length)->toBeGreaterThan(0)
+        ->and(
+            $xpath->query('//*[contains(text(), "Collect deposit / advance") or contains(text(), "Pay invoice")]')->length
+        )->toBeGreaterThan(0)
         ->and($xpath->query('//*[@data-continuity-region="settlement"][contains(., "Platform is not connected.")]')->length)->toBe(0);
 }
 

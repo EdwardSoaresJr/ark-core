@@ -127,7 +127,6 @@ tests/Feature/Operations/CustomerVehicleRepairOrderDraftTest.php::the shop can d
 tests/Feature/Operations/CustomerVehicleRepairOrderDraftTest.php::the shop can edit customer and vehicle details from the customer page
 tests/Feature/Operations/DeferredWorkContinuityTest.php::current deferred work feeds queue pressure and document snapshots
 tests/Feature/Operations/EstimateSentWithMissingVinTest.php::send estimate sms with missing vin override records operational fact
-tests/Feature/Operations/Financial/RepairOrderFinancialPresenterBalanceAxesTest.php::presenter with preloaded balance projection does not add BalanceDueCalculator queries
 tests/Feature/Operations/IndependentAppointmentOwnershipTest.php::brand-new caller confirmation creates conversation when none exists
 tests/Feature/Operations/IndependentAppointmentOwnershipTest.php::sms confirmation resolves snapshot phone without customer
 tests/Feature/Operations/InspectionProductionEntryPhase1Test.php::inspection handoff lets advisor choose staff for sms or email
