@@ -638,9 +638,12 @@ test('cards view uses hierarchical Tabler bands inside Kanban columns', function
         ->toContain('height: auto')
         ->toContain('container-type: inline-size')
         ->toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
+        ->toContain('@container ark-job-board-kanban (min-width: 1200px)')
+        ->toContain('--ark-kanban-sticky-top')
         ->toContain('max-height: none')
         ->not->toContain('max-height: min(70vh, 44rem)')
         ->not->toContain('--ark-kanban-column-width: 20rem')
+        ->not->toContain('@container ark-job-board-kanban (min-width: 980px)')
         ->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*0\s+0\s+auto/s')
         ->not->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*1\s+1\s+auto/s');
 });

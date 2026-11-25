@@ -131,15 +131,19 @@
 
 /*
  * Job Board Cards = fluid Kanban.
- * Desktop: five equal columns across available content width (container queries).
- * Smaller boards wrap to 3 → 2 columns. Mobile: one readable column with snap + selector.
+ * Desktop: five equal columns only when content is wide enough for readable cards.
+ * Narrower boards wrap to 3 → 2 columns. Mobile: one readable column with snap + selector.
  * Compact card sizing from PR #269 is preserved (no h-100 / no nested column scroll).
+ *
+ * Five-column threshold (~1200px content) keeps columns ≥ ~230px so vehicle/customer
+ * text stays usable. 1280 viewports with the sidebar (~990px content) use three columns.
  */
 .ark-job-board-kanban {
     --ark-kanban-gap: 0.35rem; /* ~5.6px between columns */
     --ark-kanban-card-gap: 0.5rem; /* ~8px between cards */
     --ark-kanban-pad-x: 0.45rem; /* ~7px horizontal column padding */
     --ark-kanban-pad-y: 0.45rem;
+    --ark-kanban-sticky-top: calc(var(--ark-topbar-height, 3.5rem) + var(--ops-workspace-tabs-height, 0px));
     container-type: inline-size;
     container-name: ark-job-board-kanban;
 }
@@ -172,6 +176,7 @@
     flex-direction: column;
     min-height: 0;
     max-height: none;
+    overflow: visible;
     border-color: var(--tblr-border-color);
     box-shadow: none;
     scroll-snap-align: start;
@@ -180,7 +185,8 @@
 
 .ark-job-board-kanban-column-head {
     position: sticky;
-    top: 0;
+    /* Sit below the Tabler top bar + workspace tabs; z-index stays under menus (1020+). */
+    top: var(--ark-kanban-sticky-top);
     z-index: 2;
     background: var(--tblr-bg-surface);
     padding-block: 0.45rem;
@@ -253,10 +259,11 @@
 }
 
 /*
- * ≥ ~980px content: all five stages across the board with no horizontal scroll.
- * Sized for 1366px desktops where the Tabler shell + sidebar leave ~1070–1200px.
+ * ≥ ~1200px content: all five stages across the board with no horizontal scroll.
+ * Requires roughly a 1600px+ outer viewport once the Tabler sidebar is present.
+ * Below this, prefer three wider columns over five truncated ones.
  */
-@container ark-job-board-kanban (min-width: 980px) {
+@container ark-job-board-kanban (min-width: 1200px) {
     .ark-job-board-kanban-track {
         grid-template-columns: repeat(5, minmax(0, 1fr));
     }
@@ -294,7 +301,7 @@
         }
     }
 
-    @media (min-width: 1280px) {
+    @media (min-width: 1480px) {
         .ark-job-board-kanban-track {
             grid-template-columns: repeat(5, minmax(0, 1fr));
         }
