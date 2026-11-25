@@ -15,6 +15,7 @@ final class InspectionControlCenterProjection
     public function __construct(
         private readonly EnsureInspectionAction $ensureInspection,
         private readonly ApplyInspectionTemplateAction $applyTemplate,
+        private readonly InspectionRequirementResolver $requirementResolver,
     ) {}
 
     /**
@@ -80,10 +81,18 @@ final class InspectionControlCenterProjection
             && ! $repairOrder->isTerminal()
             && ((int) ($coverage['checked'] ?? 0) > 0 || count($attentionItems) > 0);
 
+        $decision = $this->requirementResolver->forRepairOrder($repairOrder);
+        $open = ! $repairOrder->isTerminal();
+
         return [
             'coverage' => $coverage,
+            'requirement' => $decision->toArray(),
             'can_record' => $coverage['can_record'],
             'can_reset' => $canReset,
+            'can_manage_requirement' => $open && SetRepairOrderInspectionRequirementAction::canManage($actor),
+            'can_waive_requirement' => $open
+                && WaiveRepairOrderInspectionAction::canWaive($actor)
+                && ($decision->requirement === InspectionRequirement::Required || $decision->waived),
             'attention_items' => $attentionItems,
             'assigned_technician_name' => $technician?->name,
             'actions' => [
@@ -92,6 +101,9 @@ final class InspectionControlCenterProjection
                 'copy_url' => $walkUrl,
                 'companion_deep_link' => $coverage['companion_deep_link'],
                 'reset_url' => route('operations.repair-orders.inspection.reset', $repairOrder),
+                'requirement_url' => route('operations.repair-orders.inspection.requirement.update', $repairOrder),
+                'waive_url' => route('operations.repair-orders.inspection.waiver.store', $repairOrder),
+                'clear_waiver_url' => route('operations.repair-orders.inspection.waiver.destroy', $repairOrder),
                 'send_url' => route('operations.repair-orders.inspection.walk-link.send', $repairOrder),
                 'recipients' => $recipients,
                 'default_recipient_id' => $this->defaultRecipientId($recipients, $repairOrder),

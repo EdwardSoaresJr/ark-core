@@ -5,6 +5,7 @@ use App\Ark\Operations\Appointments\RemoveScheduleBayController;
 use App\Ark\Operations\Appointments\StoreScheduleBayController;
 use App\Ark\Operations\Appointments\UpdateScheduleBayController;
 use App\Ark\Operations\Booking\Http\BookingSettingsController;
+use App\Ark\Operations\Inspections\InspectionLifecyclePolicySettingsController;
 use App\Ark\Operations\Inspections\InspectionTemplateSettingsController;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalogSettingsController;
 use App\Ark\Operations\Settings\LaborMatrixSettingsController;
@@ -224,6 +225,9 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
 
     Route::patch('/app/settings/shop/status-catalog', RepairOrderStatusCatalogSettingsController::class)
         ->name('operations.settings.shop.status-catalog.update');
+
+    Route::patch('/app/settings/shop/inspection-lifecycle-policy', InspectionLifecyclePolicySettingsController::class)
+        ->name('operations.settings.shop.inspection-lifecycle-policy.update');
 
     Route::patch('/app/settings/shop/inspection-templates', InspectionTemplateSettingsController::class)
         ->name('operations.settings.shop.inspection-templates.update');

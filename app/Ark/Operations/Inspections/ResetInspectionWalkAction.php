@@ -6,11 +6,12 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 /**
- * Clears the template walk so the shop can redo DVI.
- * Does not delete Other Findings (ad-hoc items without a template point).
+ * Restarts the template checklist walk without destroying historical evidence.
+ *
+ * Active checklist points are superseded (photos/measurements retained on those rows).
+ * Fresh not_checked template rows are applied. Other Findings (no template point) stay active.
  */
 final class ResetInspectionWalkAction
 {
@@ -32,36 +33,35 @@ final class ResetInspectionWalkAction
 
         $repairOrder->ensureOpenForEditing();
 
-        DB::transaction(function () use ($inspection): void {
-            $checklistItems = $inspection->items()
+        DB::transaction(function () use ($repairOrder, $inspection, $actor): void {
+            $now = now();
+
+            // Keep freeform / Other Findings active. Supersede checklist points only.
+            $inspection->items()
+                ->whereNull('superseded_at')
                 ->whereNotNull('inspection_template_item_id')
-                ->with(['photos', 'measurements'])
-                ->get();
+                ->update([
+                    'superseded_at' => $now,
+                    'updated_at' => $now,
+                ]);
 
-            foreach ($checklistItems as $item) {
-                foreach ($item->photos as $photo) {
-                    if ($photo->storage_path !== '' && Storage::disk('local')->exists($photo->storage_path)) {
-                        Storage::disk('local')->delete($photo->storage_path);
-                    }
-
-                    $photo->delete();
-                }
-
-                $item->measurements()->delete();
-
-                $item->forceFill([
-                    'observed_state' => InspectionObservedState::NotChecked->value,
-                    'notes' => null,
-                    'selected_observations' => null,
-                ])->save();
-            }
-
-            // Checklist walk abandoned — clear session completion markers.
-            // Freeform / Other Findings (no template point) are retained by design.
             $inspection->forceFill([
                 'completed_at' => null,
                 'recorded_by_user_id' => null,
                 'started_at' => null,
+            ])->save();
+
+            app(ApplyInspectionTemplateAction::class)->execute(
+                $repairOrder->fresh(),
+                $inspection->fresh(),
+                actor: $actor,
+            );
+
+            // Apply stamps started_at for a new capture session; restart should leave Not Started
+            // until the technician records again.
+            $inspection->fresh()->forceFill([
+                'started_at' => null,
+                'completed_at' => null,
             ])->save();
         });
     }

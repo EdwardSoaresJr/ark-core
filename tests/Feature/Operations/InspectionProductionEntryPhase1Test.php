@@ -193,7 +193,8 @@ test('inspection handoff lets advisor choose staff for sms or email', function (
         ->assertSee('Ada Advisor', false)
         ->assertSee('data-inspection-handoff-sms', false)
         ->assertSee('data-inspection-handoff-email', false)
-        ->assertSee(route('operations.repair-orders.inspection.walk-link.send', $repairOrder), false)
+        ->assertSee('data-inspection-handoff', false)
+        ->assertSee('Send walk link', false)
         ->assertDontSee('sms:', false)
         ->assertDontSee('mailto:', false);
 });
@@ -358,21 +359,23 @@ test('advisor can reset inspection walk; technician cannot', function () {
             'tab' => 'inspect',
         ]))
         ->assertOk()
-        ->assertSee('Reset inspection walk', false)
-        ->assertSee('Reset walk', false);
+        ->assertSee('Restart checklist walk', false)
+        ->assertSee('Restart walk', false);
 
     $this->actingAs($advisor)
         ->post(route('operations.repair-orders.inspection.reset', $repairOrder), ['confirm' => '1'])
         ->assertRedirect();
 
     $item->refresh();
-    expect($item->observed_state)->toBe(InspectionObservedState::NotChecked)
-        ->and($item->notes)->toBeNull()
-        ->and($item->measurements()->count())->toBe(0);
+    expect($item->superseded_at)->not->toBeNull()
+        ->and($item->notes)->toBe('Worn')
+        ->and($item->measurements()->count())->toBe(3);
 
     $coverage = InspectionCoverageProjection::for($repairOrder->fresh(), $advisor);
     expect($coverage['checked'])->toBe(0)
-        ->and($coverage['posture_label'])->toBe('Not Started');
+        ->and($coverage['posture_label'])->toBe('Not Started')
+        ->and($inspection->fresh()->items()->whereNull('superseded_at')->where('label', 'LF Tire')->where('observed_state', InspectionObservedState::NotChecked->value)->exists())
+        ->toBeTrue();
 });
 
 test('walk photos use lightbox trigger for enlarge', function () {
