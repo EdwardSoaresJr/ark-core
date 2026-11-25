@@ -50,6 +50,7 @@ test('profile appearance can be updated', function () {
         ->patch(route('profile.appearance.update'), [
             'accent_theme' => 'ark2',
             'display_theme' => 'system',
+            'job_board_view' => 'list',
         ]);
 
     $response
@@ -60,6 +61,7 @@ test('profile appearance can be updated', function () {
 
     $this->assertSame('ark2', $user->accent_theme);
     $this->assertSame('system', $user->display_theme);
+    $this->assertSame('list', $user->job_board_view);
 });
 
 test('profile accent theme must be a supported value', function () {
@@ -69,6 +71,7 @@ test('profile accent theme must be a supported value', function () {
         ->patch(route('profile.appearance.update'), [
             'accent_theme' => 'chartreuse',
             'display_theme' => 'system',
+            'job_board_view' => 'cards',
         ])
         ->assertSessionHasErrors('accent_theme');
 });
@@ -81,6 +84,7 @@ test('profile custom accent color can be saved', function () {
             'accent_theme' => 'custom',
             'accent_color' => '#12abef',
             'display_theme' => 'system',
+            'job_board_view' => 'cards',
         ])
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('profile.edit', ['tab' => 'appearance']));
@@ -102,6 +106,7 @@ test('preset accent clears stored custom color', function () {
             'accent_theme' => 'ark2',
             'display_theme' => 'system',
             'accent_color' => '#12abef',
+            'job_board_view' => 'cards',
         ])
         ->assertSessionHasNoErrors();
 
@@ -119,8 +124,32 @@ test('custom accent requires a valid hex color', function () {
             'accent_theme' => 'custom',
             'accent_color' => 'not-a-color',
             'display_theme' => 'system',
+            'job_board_view' => 'cards',
         ])
         ->assertSessionHasErrors('accent_color');
+});
+
+test('profile display preferences persist job board view', function () {
+    $user = User::factory()->create(['job_board_view' => null]);
+
+    $this->actingAs($user)
+        ->get(route('profile.edit', ['tab' => 'appearance']))
+        ->assertOk()
+        ->assertSee('data-profile-display-preferences', false)
+        ->assertSee('Default Job Board View', false)
+        ->assertSee('Cards (Kanban)', false)
+        ->assertSee('List (Tabs &amp; Table)', false);
+
+    $this->actingAs($user)
+        ->patch(route('profile.appearance.update'), [
+            'accent_theme' => 'ark2',
+            'display_theme' => 'light',
+            'job_board_view' => 'list',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('profile.edit', ['tab' => 'appearance']));
+
+    expect($user->fresh()->job_board_view)->toBe('list');
 });
 
 test('email verification status is unchanged when the email address is unchanged', function () {

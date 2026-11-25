@@ -2,17 +2,11 @@
  * Shared browser-local List/Cards preference API.
  *
  * Storage key: ark.ui.layout.v1:{tenant}:{user}:{module}
- * Values: list | cards (absence = auto / responsive default)
+ * Values: list | cards
  *
- * Modules are independent. Do not share keys across job_board / customers /
- * vehicles / repair_orders. Collection indexes should call this helper in a
- * later integration slice — do not invent a competing store.
- *
- * Precedence when resolving effective layout:
- * 1. Explicit localStorage for this scope
- * 2. Legacy unscoped cookie (migrated into localStorage once)
- * 3. Server data-*-layout when explicit
- * 4. Viewport default (list md+, cards below)
+ * Job Board authority is the authenticated user's `job_board_view` (server).
+ * This module mirrors that choice for fast paint and one-time legacy migration.
+ * Collection modules may still use this store until their DB-backed slice ships.
  *
  * Clean URLs: never add ?view=; accept and strip legacy bookmarks.
  */

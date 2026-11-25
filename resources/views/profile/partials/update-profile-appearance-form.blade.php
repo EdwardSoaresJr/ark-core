@@ -12,11 +12,18 @@
         @method('patch')
 
         @php
+            use App\Ark\Operations\Workboard\JobBoardLayout;
             use App\Ark\Runtime\Preferences\AccentColor;
             use App\Ark\Runtime\Preferences\AccentTheme;
+            use App\Ark\Runtime\Preferences\JobBoardLayoutPreference;
 
             $selectedAccentTheme = old('accent_theme', $user->accentTheme()->value);
             $customAccentColor = AccentColor::resolve(old('accent_color', $user->accent_color));
+            $storedJobBoard = JobBoardLayoutPreference::storedLayout($user);
+            $selectedJobBoardView = old(
+                'job_board_view',
+                $storedJobBoard?->value ?? JobBoardLayout::default()->value,
+            );
         @endphp
 
         <fieldset class="mb-4">
@@ -88,6 +95,37 @@
                 @endforeach
             </div>
             @foreach ($errors->get('display_theme') as $message)
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+            @endforeach
+        </fieldset>
+
+        <fieldset class="mb-3" data-profile-display-preferences>
+            <legend class="form-label">Display Preferences</legend>
+            <p class="text-secondary">Default Job Board presentation. The same setting is updated when you switch List or Cards on the Job Board.</p>
+            <div class="mb-1">
+                <span class="form-label d-block">Default Job Board View</span>
+                <label class="form-check form-check-inline">
+                    <input
+                        type="radio"
+                        name="job_board_view"
+                        value="{{ JobBoardLayout::Cards->value }}"
+                        @checked($selectedJobBoardView === JobBoardLayout::Cards->value)
+                        class="form-check-input"
+                    >
+                    <span class="form-check-label">Cards (Kanban)</span>
+                </label>
+                <label class="form-check form-check-inline">
+                    <input
+                        type="radio"
+                        name="job_board_view"
+                        value="{{ JobBoardLayout::List->value }}"
+                        @checked($selectedJobBoardView === JobBoardLayout::List->value)
+                        class="form-check-input"
+                    >
+                    <span class="form-check-label">List (Tabs &amp; Table)</span>
+                </label>
+            </div>
+            @foreach ($errors->get('job_board_view') as $message)
                 <div class="invalid-feedback d-block">{{ $message }}</div>
             @endforeach
         </fieldset>

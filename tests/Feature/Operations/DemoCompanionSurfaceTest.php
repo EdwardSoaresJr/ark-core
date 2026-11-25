@@ -23,9 +23,15 @@ test('demo hides arkademy and platform surfaces', function () {
     $this->actingAs($admin)
         ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
         ->get(route('operations.settings.shop.edit', ['section' => 'ark-cloud']))
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'general']));
+
+    $this->actingAs($admin)
+        ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
+        ->get(route('operations.settings.shop.edit'))
         ->assertOk()
-        ->assertDontSee("setActive('ark-cloud')", false)
-        ->assertDontSee('Connect in ARK Platform', false);
+        ->assertDontSee("@click=\"setActive('ark-cloud')\"", false)
+        ->assertDontSee('Connect in ARK Platform', false)
+        ->assertDontSee('Connect this Box', false);
 
     $this->actingAs($admin)
         ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
@@ -37,7 +43,7 @@ test('demo hides arkademy and platform surfaces', function () {
         ->assertSee('ARK Shop coming soon', false);
 });
 
-test('shops outside the demo still show arkademy and platform', function () {
+test('shops outside the demo still show arkademy without shop platform pairing', function () {
     config(['app.url' => 'https://app.lugsnplugs.test', 'ark.arkademy_in_navigation' => true]);
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
@@ -46,7 +52,9 @@ test('shops outside the demo still show arkademy and platform', function () {
         ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
         ->get(route('operations.settings.shop.edit'))
         ->assertOk()
-        ->assertSee('ARK Platform', false)
+        ->assertDontSee("@click=\"setActive('ark-cloud')\"", false)
+        ->assertDontSee('Connect in ARK Platform', false)
+        ->assertDontSee('Connect this Box', false)
         ->assertSee('>ARKademy<', false)
         ->assertDontSee('ARK Public Demo', false);
 });

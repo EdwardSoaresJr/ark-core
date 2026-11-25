@@ -65,26 +65,34 @@
     </div>
 
     <div class="col-6 col-sm-auto ms-sm-auto ms-lg-0">
-        <div
-            class="nav nav-segmented justify-content-stretch ark-job-board-layout-toggle"
-            role="group"
-            aria-label="Job board layout"
-            data-job-board-layout-toggle
-        >
-            <button
-                type="button"
-                class="nav-link flex-fill{{ $listActive ? ' active' : '' }}"
-                data-job-board-layout-option="list"
-                aria-pressed="{{ $listActive ? 'true' : 'false' }}"
-                @if ($listActive) aria-current="true" @endif
-            >List</button>
-            <button
-                type="button"
-                class="nav-link flex-fill{{ $cardsActive ? ' active' : '' }}"
-                data-job-board-layout-option="cards"
-                aria-pressed="{{ $cardsActive ? 'true' : 'false' }}"
-                @if ($cardsActive) aria-current="true" @endif
-            >Cards</button>
+        <div class="d-flex flex-column align-items-stretch gap-1">
+            <div
+                class="nav nav-segmented justify-content-stretch ark-job-board-layout-toggle"
+                role="group"
+                aria-label="Job board layout"
+                data-job-board-layout-toggle
+            >
+                <button
+                    type="button"
+                    class="nav-link flex-fill{{ $listActive ? ' active' : '' }}"
+                    data-job-board-layout-option="list"
+                    aria-pressed="{{ $listActive ? 'true' : 'false' }}"
+                    @if ($listActive) aria-current="true" @endif
+                >List</button>
+                <button
+                    type="button"
+                    class="nav-link flex-fill{{ $cardsActive ? ' active' : '' }}"
+                    data-job-board-layout-option="cards"
+                    aria-pressed="{{ $cardsActive ? 'true' : 'false' }}"
+                    @if ($cardsActive) aria-current="true" @endif
+                >Cards</button>
+            </div>
+            <div
+                class="small text-danger d-none"
+                role="status"
+                aria-live="polite"
+                data-job-board-layout-status
+            ></div>
         </div>
     </div>
 

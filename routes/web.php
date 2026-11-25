@@ -305,6 +305,7 @@ use App\Ark\ShopMemory\Rewrite\RepairOrderAiRewriteController;
 use App\Ark\ShopMemory\ShopMemorySuggestionEventStoreController;
 use App\Http\Controllers\DevRolePretendController;
 use App\Http\Controllers\DisplayThemeController;
+use App\Http\Controllers\JobBoardViewPreferenceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReverbDeploymentHealthController;
 use Illuminate\Support\Facades\Route;
@@ -365,6 +366,7 @@ SurfaceRouting::appRoutes(function (): void {
         Route::patch('/app/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/app/profile/appearance', [ProfileController::class, 'updateAppearance'])->name('profile.appearance.update');
         Route::patch('/app/profile/display-theme', [DisplayThemeController::class, 'update'])->name('profile.display-theme.update');
+        Route::patch('/app/profile/job-board-view', [JobBoardViewPreferenceController::class, 'update'])->name('profile.job-board-view.update');
         Route::patch('/app/profile/partstech', [ProfileController::class, 'updatePartsTech'])->name('profile.partstech.update');
         Route::patch('/app/profile/catalogs', [ProfileController::class, 'updateCatalogs'])->name('profile.catalogs.update');
         Route::patch('/app/profile/workstation-pin', [ProfileController::class, 'updateWorkstationPin'])->name('profile.workstation-pin.update');

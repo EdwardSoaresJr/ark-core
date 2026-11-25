@@ -9,10 +9,12 @@ use App\Ark\Operations\Parts\PartsCatalogProvider;
 use App\Ark\Operations\Parts\UserPartsTechCredentials;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Workstations\UpdateWorkstationOperatorPinAction;
+use App\Ark\Operations\Workboard\JobBoardLayout;
 use App\Ark\Runtime\Preferences\AccentTheme;
 use App\Ark\Runtime\Preferences\DisplayTheme;
 use App\Ark\Runtime\Preferences\EcosystemDisplayTheme;
 use App\Ark\Runtime\Preferences\EstimateToolbarPreference;
+use App\Ark\Runtime\Preferences\JobBoardLayoutPreference;
 use App\Http\Requests\ProfileAppearanceUpdateRequest;
 use App\Http\Requests\ProfileIdentityUpdateRequest;
 use App\Http\Requests\ProfilePartsTechUpdateRequest;
@@ -64,8 +66,14 @@ class ProfileController extends Controller
 
     public function updateAppearance(ProfileAppearanceUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $data = $request->validated();
+        $jobBoardView = JobBoardLayout::parse((string) ($data['job_board_view'] ?? JobBoardLayout::default()->value));
+        unset($data['job_board_view']);
+
+        $request->user()->fill($data);
         $request->user()->save();
+
+        JobBoardLayoutPreference::persist($request->user(), $jobBoardView);
 
         if ($request->user()->wasChanged('display_theme')) {
             EcosystemDisplayTheme::queueForUser($request->user()->displayTheme());
@@ -242,7 +250,7 @@ class ProfileController extends Controller
             return 'catalogs';
         }
 
-        if ($errors?->has('accent_theme') || $errors?->has('accent_color') || $errors?->has('display_theme')) {
+        if ($errors?->has('accent_theme') || $errors?->has('accent_color') || $errors?->has('display_theme') || $errors?->has('job_board_view')) {
             return 'appearance';
         }
 

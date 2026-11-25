@@ -9,17 +9,16 @@ use Illuminate\Support\Facades\Cookie;
 /**
  * Shared List/Cards preference contract.
  *
- * Authority (browser): localStorage keyed by tenant + user + module
- * (`ark.ui.layout.v1:{tenant}:{user}:{module}`). See
- * `resources/js/ark-ui-layout-preference.js` and
- * `docs/engineering/TABLER_LAYOUT_PREFERENCE_MIGRATION.md`.
+ * Job Board authority: authenticated `users.job_board_view` via
+ * {@see JobBoardLayoutPreference}. Browser localStorage / legacy cookie are
+ * mirrors and one-time migration sources only.
  *
- * Server resolve is for first paint / bookmarks only:
- * `?view=` (compat) → legacy module cookie → auto.
- * Navigation must not emit `?view=`; JS must not rewrite the URL to add it.
+ * Collection modules (customers / vehicles / repair_orders) still use the
+ * browser-local contract until their DB-backed slice ships — do not invent a
+ * second store for those modules.
  *
- * Dual-write: when the server accepts `?view=`, it still queues the legacy
- * cookie so the next SSR paints correctly until the browser store is warm.
+ * `?view=` remains a one-shot bookmark for Job Board (persisted then stripped).
+ * Navigation must not emit `?view=`.
  */
 final class UiLayoutPreference
 {
@@ -39,6 +38,18 @@ final class UiLayoutPreference
     public static function resolve(Request $request, UiLayoutModule $module): array
     {
         $scope = UiPreferenceScope::forRequest($request);
+
+        if ($module === UiLayoutModule::JobBoard) {
+            $resolved = JobBoardLayoutPreference::resolve($request);
+
+            return [
+                'mode' => $resolved['mode'],
+                'layout' => $resolved['layout'],
+                'explicit' => $resolved['explicit'],
+                'module' => $module,
+                'scope' => $scope,
+            ];
+        }
 
         if ($request->filled('view')) {
             $layout = JobBoardLayout::parse((string) $request->string('view'));
