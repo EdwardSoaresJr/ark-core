@@ -129,63 +129,85 @@
     min-height: 2.25rem;
 }
 
-/* Job Board Cards = Kanban board (horizontal columns; cards reuse established hierarchy). */
+/*
+ * Job Board Cards = fluid Kanban.
+ * Desktop: five equal columns across available content width (container queries).
+ * Smaller boards wrap to 3 → 2 columns. Mobile: one readable column with snap + selector.
+ * Compact card sizing from PR #269 is preserved (no h-100 / no nested column scroll).
+ */
+.ark-job-board-kanban {
+    --ark-kanban-gap: 0.35rem; /* ~5.6px between columns */
+    --ark-kanban-card-gap: 0.5rem; /* ~8px between cards */
+    --ark-kanban-pad-x: 0.45rem; /* ~7px horizontal column padding */
+    --ark-kanban-pad-y: 0.45rem;
+    container-type: inline-size;
+    container-name: ark-job-board-kanban;
+}
+
 .ark-job-board-kanban-scroller {
-    --ark-kanban-column-width: 20rem;
     overflow-x: auto;
-    overflow-y: hidden;
-    margin-inline: -0.25rem;
-    padding-inline: 0.25rem;
-    padding-bottom: 0.35rem;
+    overflow-y: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+    padding-bottom: 0.25rem;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
+    scroll-snap-type: x mandatory;
 }
 
 .ark-job-board-kanban-track {
     display: flex;
-    align-items: stretch;
-    gap: 0.75rem;
-    min-height: 18rem;
+    align-items: start;
+    gap: var(--ark-kanban-gap);
     width: max-content;
     max-width: none;
+    min-height: 0;
 }
 
 .ark-job-board-kanban-column {
-    flex: 0 0 var(--ark-kanban-column-width);
-    width: var(--ark-kanban-column-width);
-    max-width: var(--ark-kanban-column-width);
+    flex: 0 0 min(88vw, 19.5rem);
+    width: min(88vw, 19.5rem);
+    max-width: min(88vw, 19.5rem);
     display: flex;
     flex-direction: column;
-    min-height: 16rem;
-    max-height: min(70vh, 44rem);
+    min-height: 0;
+    max-height: none;
     border-color: var(--tblr-border-color);
     box-shadow: none;
     scroll-snap-align: start;
+    min-width: 0;
 }
 
 .ark-job-board-kanban-column-head {
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2;
     background: var(--tblr-bg-surface);
-    padding-block: 0.65rem;
+    padding-block: 0.45rem;
+    padding-inline: var(--ark-kanban-pad-x);
 }
 
 .ark-job-board-kanban-column-head .card-title {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ark-job-board-kanban-column-body {
-    flex: 1 1 auto;
-    overflow-y: auto;
+    flex: 0 0 auto;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 0.65rem;
-    padding-top: 0.65rem;
-    overscroll-behavior: contain;
+    gap: var(--ark-kanban-card-gap);
+    padding: var(--ark-kanban-pad-y) var(--ark-kanban-pad-x);
+}
+
+.ark-job-board-kanban-column .card-footer {
+    padding: 0.35rem var(--ark-kanban-pad-x);
 }
 
 .ark-job-board-kanban-column .ark-job-board-card {
@@ -193,16 +215,86 @@
     flex: 0 0 auto;
     height: auto;
     align-self: stretch;
+    min-width: 0;
 }
 
-@media (max-width: 767.98px) {
+.ark-job-board-kanban-column .ark-job-board-card-body {
+    padding: 0.55rem 0.6rem;
+}
+
+/* ≥ ~520px content: two fluid columns, page scroll, no horizontal board scroll. */
+@container ark-job-board-kanban (min-width: 520px) {
     .ark-job-board-kanban-scroller {
-        --ark-kanban-column-width: min(85vw, 20rem);
-        scroll-snap-type: x mandatory;
+        overflow-x: visible;
+        scroll-snap-type: none;
+    }
+
+    .ark-job-board-kanban-track {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+        width: 100%;
+        max-width: 100%;
     }
 
     .ark-job-board-kanban-column {
-        max-height: min(65vh, 36rem);
+        flex: none;
+        width: auto;
+        max-width: none;
+        min-width: 0;
+    }
+}
+
+/* ≥ ~780px content: three fluid columns (remaining wrap to next row). */
+@container ark-job-board-kanban (min-width: 780px) {
+    .ark-job-board-kanban-track {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* ≥ ~1100px content: all five stages across the board with no horizontal scroll. */
+@container ark-job-board-kanban (min-width: 1100px) {
+    .ark-job-board-kanban-track {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+/*
+ * Viewport fallbacks when container queries are unavailable.
+ * Prefer content-width queries above; these only approximate shell + sidebar.
+ */
+@supports not (container-type: inline-size) {
+    @media (min-width: 768px) {
+        .ark-job-board-kanban-scroller {
+            overflow-x: visible;
+            scroll-snap-type: none;
+        }
+
+        .ark-job-board-kanban-track {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .ark-job-board-kanban-column {
+            flex: none;
+            width: auto;
+            max-width: none;
+            min-width: 0;
+        }
+    }
+
+    @media (min-width: 1100px) {
+        .ark-job-board-kanban-track {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 1400px) {
+        .ark-job-board-kanban-track {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
     }
 }
 
