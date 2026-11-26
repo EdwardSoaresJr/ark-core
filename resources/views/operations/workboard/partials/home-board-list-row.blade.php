@@ -41,9 +41,9 @@
     $attentionTone = filled($surface->attention) ? $surface->attention : 'none';
 @endphp
 
-<tr
+<article
     id="ops-list-ro-{{ $repairOrder->repair_order_id }}"
-    class="ark-job-board-list-row ark-job-board-list-row--{{ $attentionTone }}"
+    class="ark-job-board-hybrid-record ark-job-board-hybrid-record--{{ $attentionTone }}"
     data-job-board-row
     data-job-card
     data-ro-id="{{ $repairOrder->repair_order_id }}"
@@ -53,139 +53,159 @@
     data-workboard-attention="{{ $surface->attention }}"
     @if ($surface->waitingOnCustomerDecision) data-workboard-decision="1" @endif
 >
-    <td class="ark-job-board-col-ro">
-        <a
-            href="{{ $builderUrl }}"
-            class="ark-job-board-ro-link"
-            data-job-board-row-ro
-            data-job-card-ro
-        >RO #{{ $repairOrder->repair_order_id }}</a>
-    </td>
-    <td class="ark-job-board-col-customer-vehicle" data-job-board-row-customer-vehicle>
-        <div class="ark-job-board-visit">
-            <div class="ark-job-board-visit__vehicle text-truncate">
-                <a href="{{ $builderUrl }}" class="ark-job-board-visit__vehicle-link" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
-            </div>
-            <div class="ark-job-board-visit__customer text-truncate">
-                @if ($surface->customerHubUrl)
-                    <a href="{{ $surface->customerHubUrl }}" class="ark-job-board-visit__customer-link" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
+    <div class="ark-job-board-hybrid-record__primary">
+        <div class="ark-job-board-hybrid-record__topline" data-job-board-row-customer-vehicle>
+            <a
+                href="{{ $builderUrl }}"
+                class="ark-job-board-hybrid-record__ro"
+                data-job-board-row-ro
+                data-job-card-ro
+            >RO #{{ $repairOrder->repair_order_id }}</a>
+            <a
+                href="{{ $builderUrl }}"
+                class="ark-job-board-hybrid-record__vehicle"
+                data-job-board-row-vehicle
+                data-job-card-vehicle
+            >{{ $card->vehicleLabel }}</a>
+            @if ($surface->customerHubUrl)
+                <a
+                    href="{{ $surface->customerHubUrl }}"
+                    class="ark-job-board-hybrid-record__customer"
+                    data-job-board-row-customer
+                    data-job-card-customer
+                >{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
+            @else
+                <span
+                    class="ark-job-board-hybrid-record__customer"
+                    data-job-board-row-customer
+                    data-job-card-customer
+                >{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</span>
+            @endif
+        </div>
+
+        <div
+            class="ark-job-board-hybrid-record__concern ark-job-board-col-concern"
+            data-job-board-row-concern
+            title="{{ $concernFull !== '' ? $concernFull : null }}"
+        >
+            @if ($concernLines === [])
+                <span class="ark-job-board-concern-text text-secondary">—</span>
+            @else
+                <div class="ark-job-board-concern-stack">
+                    @foreach ($concernLines as $line)
+                        <div class="ark-job-board-concern-text{{ $loop->first ? '' : ' ark-job-board-concern-text--secondary' }}">{{ $line }}</div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        <div class="ark-job-board-hybrid-record__actions-row">
+            @if ($nextAction)
+                <a
+                    href="{{ $builderUrl }}"
+                    class="ark-job-board-hybrid-record__next ark-job-board-hybrid-record__next--{{ $nextPresentation['kind'] }}"
+                    data-next-kind="{{ $nextPresentation['kind'] }}"
+                >{{ $nextAction }}</a>
+            @endif
+            <div class="ark-job-board-hybrid-record__activity" data-job-board-row-activity data-job-card-activity>
+                @if ($activityStrip['visible'] === [])
+                    <span class="text-secondary visually-hidden" data-job-board-activity-empty>No activity</span>
                 @else
-                    <span data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</span>
+                    <div class="d-inline-flex align-items-center flex-nowrap ark-job-board-activity" role="group" aria-label="Activity">
+                        @foreach ($activityStrip['visible'] as $mark)
+                            @php
+                                $markHref = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::destinationFor($mark->key, $card->href);
+                            @endphp
+                            @if ($markHref)
+                                <a
+                                    href="{{ $markHref }}"
+                                    class="ark-job-board-activity-mark"
+                                    data-job-card-mark="{{ $mark->key }}"
+                                    data-job-card-mark-state="{{ $mark->state->value }}"
+                                    data-job-board-activity-mark
+                                    data-job-board-activity-link
+                                    role="link"
+                                    title="{{ $mark->tooltip }}"
+                                    aria-label="{{ $mark->tooltip }}"
+                                >
+                                    @include('operations.workboard.partials.activity-mark-icon', [
+                                        'key' => $mark->key,
+                                        'filled' => true,
+                                        'badge' => $mark->badge,
+                                    ])
+                                </a>
+                            @else
+                                <span
+                                    class="ark-job-board-activity-mark"
+                                    data-job-card-mark="{{ $mark->key }}"
+                                    data-job-card-mark-state="{{ $mark->state->value }}"
+                                    data-job-board-activity-mark
+                                    role="img"
+                                    tabindex="-1"
+                                    title="{{ $mark->tooltip }}"
+                                    aria-label="{{ $mark->tooltip }}"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-trigger="hover focus"
+                                >
+                                    @include('operations.workboard.partials.activity-mark-icon', [
+                                        'key' => $mark->key,
+                                        'filled' => true,
+                                        'badge' => $mark->badge,
+                                    ])
+                                </span>
+                            @endif
+                        @endforeach
+                    </div>
                 @endif
             </div>
-            @if ($nextAction)
-                <div
-                    class="ark-job-board-visit__next ark-job-board-visit__next--{{ $nextPresentation['kind'] }} text-truncate"
-                    data-next-kind="{{ $nextPresentation['kind'] }}"
-                    title="{{ $nextAction }}"
-                >{{ $nextAction }}</div>
+            <span class="ark-job-board-hybrid-record__updated" data-job-board-row-updated data-job-card-clock>{{ $row->updatedLabel }}</span>
+        </div>
+    </div>
+
+    <div class="ark-job-board-hybrid-record__workflow">
+        <div class="ark-job-board-hybrid-record__workflow-block">
+            <div class="ark-job-board-hybrid-record__field-label">Status</div>
+            <a href="{{ $builderUrl }}" class="text-decoration-none" data-job-board-row-status data-job-card-status>
+                <x-tabler.status-badge :tone="$statusTone">{{ $statusLabel }}</x-tabler.status-badge>
+            </a>
+        </div>
+        <div class="ark-job-board-hybrid-record__workflow-block">
+            <div class="ark-job-board-hybrid-record__field-label">Technician</div>
+            <div class="ark-job-board-hybrid-record__tech{{ $row->technicianName ? '' : ' is-empty' }}" data-job-board-row-technician>
+                {{ $row->technicianName ?? 'Unassigned' }}
+            </div>
+        </div>
+    </div>
+
+    <div class="ark-job-board-hybrid-record__finance">
+        <div class="ark-job-board-hybrid-record__money" data-job-board-row-total data-job-card-total>
+            <div @class(['ark-job-board-money', 'ark-job-board-money--due' => $isBalanceDue])>
+                <span class="ark-job-board-money__amount ark-money">{{ $moneyLabel }}</span>
+                @if ($moneyCaptionLabel)
+                    <span class="ark-job-board-money__caption">{{ $moneyCaptionLabel }}</span>
+                @endif
+            </div>
+        </div>
+        <div class="ark-job-board-hybrid-record__attention" data-job-board-row-attention data-attention="{{ $surface->attention }}">
+            @if ($attentionLabel)
+                <span
+                    @class([
+                        'ark-job-board-attention',
+                        'text-danger fw-semibold' => $surface->attention === 'critical',
+                        'text-warning fw-semibold' => $surface->attention === 'attention',
+                        'text-secondary' => $surface->attention === 'watch',
+                    ])
+                    data-attention-tone="{{ $surface->attention }}"
+                >{{ $attentionLabel }}</span>
             @endif
         </div>
-    </td>
-    <td
-        class="text-body ark-job-board-col-concern"
-        data-job-board-row-concern
-        title="{{ $concernFull !== '' ? $concernFull : null }}"
-    >
-        @if ($concernLines === [])
-            <span class="ark-job-board-concern-text text-secondary">—</span>
-        @else
-            <div class="ark-job-board-concern-stack">
-                @foreach ($concernLines as $line)
-                    <div class="ark-job-board-concern-text{{ $loop->first ? '' : ' ark-job-board-concern-text--secondary' }}">{{ $line }}</div>
-                @endforeach
-            </div>
-        @endif
-    </td>
-    <td class="ark-job-board-col-status">
-        <a href="{{ $builderUrl }}" class="text-decoration-none" data-job-board-row-status data-job-card-status>
-            <x-tabler.status-badge :tone="$statusTone">{{ $statusLabel }}</x-tabler.status-badge>
-        </a>
-    </td>
-    <td class="text-nowrap ark-job-board-col-tech" data-job-board-row-technician>
-        <span class="ark-job-board-tech">{{ $row->technicianName ?? '—' }}</span>
-    </td>
-    <td class="text-end ark-job-board-col-total" data-job-board-row-total data-job-card-total>
-        <div @class(['ark-job-board-money', 'ark-job-board-money--due' => $isBalanceDue])>
-            <span class="ark-job-board-money__amount ark-money">{{ $moneyLabel }}</span>
-            @if ($moneyCaptionLabel)
-                <span class="ark-job-board-money__caption">{{ $moneyCaptionLabel }}</span>
-            @endif
-        </div>
-    </td>
-    <td class="ark-job-board-col-attention" data-job-board-row-attention data-attention="{{ $surface->attention }}">
-        @if ($attentionLabel)
-            <span
-                @class([
-                    'ark-job-board-attention',
-                    'text-danger fw-semibold' => $surface->attention === 'critical',
-                    'text-warning fw-semibold' => $surface->attention === 'attention',
-                    'text-secondary' => $surface->attention === 'watch',
-                ])
-                data-attention-tone="{{ $surface->attention }}"
-            >{{ $attentionLabel }}</span>
-        @else
-            <span class="text-secondary">—</span>
-        @endif
-    </td>
-    <td class="text-nowrap ark-job-board-col-activity" data-job-board-row-activity data-job-card-activity>
-        @if ($activityStrip['visible'] === [])
-            <span class="text-secondary" data-job-board-activity-empty>—</span>
-        @else
-            <div class="d-inline-flex align-items-center flex-nowrap ark-job-board-activity" role="group" aria-label="Activity">
-                @foreach ($activityStrip['visible'] as $mark)
-                    @php
-                        $markHref = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::destinationFor($mark->key, $card->href);
-                    @endphp
-                    @if ($markHref)
-                        {{-- Keep Bootstrap tooltip off the <a>; data-bs-toggle on anchors can swallow hash navigation. --}}
-                        <a
-                            href="{{ $markHref }}"
-                            class="ark-job-board-activity-mark"
-                            data-job-card-mark="{{ $mark->key }}"
-                            data-job-card-mark-state="{{ $mark->state->value }}"
-                            data-job-board-activity-mark
-                            data-job-board-activity-link
-                            role="link"
-                            title="{{ $mark->tooltip }}"
-                            aria-label="{{ $mark->tooltip }}"
-                        >
-                            @include('operations.workboard.partials.activity-mark-icon', [
-                                'key' => $mark->key,
-                                'filled' => true,
-                                'badge' => $mark->badge,
-                            ])
-                        </a>
-                    @else
-                        <span
-                            class="ark-job-board-activity-mark"
-                            data-job-card-mark="{{ $mark->key }}"
-                            data-job-card-mark-state="{{ $mark->state->value }}"
-                            data-job-board-activity-mark
-                            role="img"
-                            tabindex="-1"
-                            title="{{ $mark->tooltip }}"
-                            aria-label="{{ $mark->tooltip }}"
-                            data-bs-toggle="tooltip"
-                            data-bs-trigger="hover focus"
-                        >
-                            @include('operations.workboard.partials.activity-mark-icon', [
-                                'key' => $mark->key,
-                                'filled' => true,
-                                'badge' => $mark->badge,
-                            ])
-                        </span>
-                    @endif
-                @endforeach
-            </div>
-        @endif
-    </td>
-    <td class="ark-job-board-col-updated" data-job-board-row-updated data-job-card-clock>
-        <span class="ark-job-board-updated">{{ $row->updatedLabel }}</span>
-    </td>
-    <td class="ark-job-board-col-open">
-        <a href="{{ $builderUrl }}" class="btn btn-sm btn-ghost-secondary ark-job-board-open" aria-label="Open RO #{{ $repairOrder->repair_order_id }}">
+        <a
+            href="{{ $builderUrl }}"
+            class="ark-job-board-hybrid-record__open"
+            aria-label="Open RO #{{ $repairOrder->repair_order_id }}"
+        >
+            Open
             <x-tabler.icon name="chevron-right" />
         </a>
-    </td>
-</tr>
+    </div>
+</article>

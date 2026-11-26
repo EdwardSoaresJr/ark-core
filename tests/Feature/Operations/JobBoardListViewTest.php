@@ -265,7 +265,7 @@ test('job board table renders dense columns including total and activity marks',
 
     expect($list)->toBeInstanceOf(DOMElement::class)
         ->and($cards)->toBeInstanceOf(DOMElement::class)
-        ->and($xpath->query('.//*[@data-job-board-list-body]//tr[@data-job-board-row]', $list)->length)->toBe(2)
+        ->and($xpath->query('.//*[@data-job-board-list-body]//*[@data-job-board-row]', $list)->length)->toBe(2)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$waiting->repair_order_id.'"]', $list)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$parts->repair_order_id.'"]', $list)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$closed->repair_order_id.'"]', $list)->length)->toBe(0)
@@ -283,7 +283,9 @@ test('job board table renders dense columns including total and activity marks',
         ->and($html)->toContain('Attention')
         ->and($html)->not->toContain('>Promised<')
         ->and($html)->not->toContain('>Parts</th>')
-        ->and($html)->toContain('data-job-board-list-mobile');
+        ->and($html)->toContain('ark-job-board-hybrid')
+        ->and($html)->not->toContain('data-job-board-list-mobile')
+        ->and($html)->not->toContain('data-job-board-list-desktop');
 });
 
 test('job board lane tab counts stay exact while page rows are bounded', function () {
@@ -328,7 +330,7 @@ test('job board search and lane filters agree with rendered rows', function () {
     $xpath = new DOMXPath($document);
     $board = $xpath->query('//*[@data-job-board]')->item(0);
 
-    expect($xpath->query('.//*[@data-job-board-list-body]//tr[@data-job-board-row]', $board)->length)->toBe(1)
+    expect($xpath->query('.//*[@data-job-board-list-body]//*[@data-job-board-row]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$match->repair_order_id.'"]', $board)->length)->toBe(1)
         ->and($board->getAttribute('data-job-board-list-filtered-total'))->toBe('1')
         ->and($xpath->query('.//*[@data-job-board-lane-tab="waiting_approval"][@aria-current="page"]', $board)->length)->toBe(1)
@@ -354,7 +356,7 @@ test('job board zero-result search shows empty state and keeps queue totals', fu
 
     expect($board->getAttribute('data-job-board-list-filtered-total'))->toBe('0')
         ->and($board->getAttribute('data-job-board-list-queue-total'))->toBe('1')
-        ->and($xpath->query('.//*[@data-job-board-list-body]//tr[@data-job-board-row]', $board)->length)->toBe(0);
+        ->and($xpath->query('.//*[@data-job-board-list-body]//*[@data-job-board-row]', $board)->length)->toBe(0);
 });
 
 test('job board paginates and only projects the current page of rows', function () {
@@ -376,7 +378,7 @@ test('job board paginates and only projects the current page of rows', function 
     $xpath = new DOMXPath($document);
     $board = $xpath->query('//*[@data-job-board]')->item(0);
 
-    expect($xpath->query('.//*[@data-job-board-list-body]//tr[@data-job-board-row]', $board)->length)->toBe(JobBoardListPage::PAGE_SIZE)
+    expect($xpath->query('.//*[@data-job-board-list-body]//*[@data-job-board-row]', $board)->length)->toBe(JobBoardListPage::PAGE_SIZE)
         ->and($board->getAttribute('data-job-board-list-filtered-total'))->toBe((string) (JobBoardListPage::PAGE_SIZE + 5))
         ->and($xpath->query('.//*[@data-job-board-list-next]', $board)->length)->toBe(1);
 
@@ -391,7 +393,7 @@ test('job board paginates and only projects the current page of rows', function 
     libxml_clear_errors();
     $xpath2 = new DOMXPath($document2);
 
-    expect($xpath2->query('//*[@data-job-board-list-body]//tr[@data-job-board-row]')->length)->toBe(5);
+    expect($xpath2->query('//*[@data-job-board-list-body]//*[@data-job-board-row]')->length)->toBe(5);
 });
 
 test('job board sort links set aria-sort on the active column', function () {
@@ -421,9 +423,9 @@ test('job board sort links set aria-sort on the active column', function () {
     libxml_clear_errors();
     $vehicleXpath = new DOMXPath($vehicleDocument);
 
-    expect($xpath->query('//*[@data-job-board-sort="customer"]/ancestor::th[@aria-sort="ascending"]')->length)->toBe(1)
+    expect($xpath->query('//*[@data-job-board-sort="customer"][@aria-sort="ascending"]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-sort="customer"][@aria-current="true"]')->length)->toBe(1)
-        ->and($vehicleXpath->query('//*[@data-job-board-sort="vehicle"]/ancestor::th[@aria-sort="ascending"]')->length)->toBe(1)
+        ->and($vehicleXpath->query('//*[@data-job-board-sort="vehicle"][@aria-sort="ascending"]')->length)->toBe(1)
         ->and($vehicleXpath->query('//*[@data-job-board-sort="vehicle"][@aria-current="true"]')->length)->toBe(1);
 });
 
@@ -434,17 +436,17 @@ test('job board customer vehicle header has a single class attribute', function 
     $html = $this->actingAs($advisor)->get(route('operations.index'))->assertOk()->getContent();
 
     expect(preg_match_all(
-        '/<th\b[^>]*\bdata-job-board-col="customer-vehicle"[^>]*>/',
+        '/<(?:div|th)\b[^>]*\bdata-job-board-col="customer-vehicle"[^>]*>/',
         $html,
         $matches
     ))->toBe(1);
 
-    $th = $matches[0][0] ?? '';
-    $classCount = preg_match_all('/\sclass="/', $th);
+    $header = $matches[0][0] ?? '';
+    $classCount = preg_match_all('/\sclass="/', $header);
 
-    expect($th)->toContain('class="ark-job-board-col-customer-vehicle"')
+    expect($header)->toContain('ark-job-board-hybrid__sort')
         ->and($classCount)->toBe(1)
-        ->and(substr_count($th, ' class='))->toBe(1);
+        ->and(substr_count($header, ' class='))->toBe(1);
 });
 
 test('job board is denied to users without operations access', function () {
@@ -482,7 +484,7 @@ test('job board high-volume request stays within page projection bound', functio
     libxml_clear_errors();
     $xpath = new DOMXPath($document);
     $board = $xpath->query('//*[@data-job-board]')->item(0);
-    $rowCount = $xpath->query('.//*[@data-job-board-list-body]//tr[@data-job-board-row]', $board)->length;
+    $rowCount = $xpath->query('.//*[@data-job-board-list-body]//*[@data-job-board-row]', $board)->length;
 
     expect($rowCount)->toBe(JobBoardListPage::PAGE_SIZE)
         ->and($board->getAttribute('data-job-board-list-filtered-total'))->toBe((string) $volume)
@@ -742,20 +744,20 @@ test('job board click contract keeps RO vehicle and customer destinations separa
         ->and($customerHref)->toContain('/customers/'.$customerId)
         ->and($customerHref)->not->toContain('/repair-orders/')
         ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $row)->length)->toBe(1)
-        ->and($xpath->query('.//*[@class="ark-job-board-visit"]', $row)->length)->toBe(1)
-        ->and($xpath->query('.//*[@class="ark-job-board-visit__vehicle text-truncate"]', $row)->length)->toBe(1)
-        ->and($xpath->query('.//*[@class="ark-job-board-visit__customer text-truncate"]', $row)->length)->toBe(1)
-        ->and($xpath->query('.//td[@data-job-board-row-concern]//a', $row)->length)->toBe(0)
+        ->and($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " ark-job-board-hybrid-record__topline ")]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " ark-job-board-hybrid-record__vehicle ")]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " ark-job-board-hybrid-record__customer ")]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-concern]//a', $row)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-row-promised]', $row)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-row-parts]', $row)->length)->toBe(0);
 
-    $visitHtml = '';
-    $visitNode = $xpath->query('.//*[@class="ark-job-board-visit"]', $row)->item(0);
-    if ($visitNode instanceof DOMElement) {
-        $visitHtml = $document->saveHTML($visitNode) ?: '';
+    $toplineHtml = '';
+    $toplineNode = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " ark-job-board-hybrid-record__topline ")]', $row)->item(0);
+    if ($toplineNode instanceof DOMElement) {
+        $toplineHtml = $document->saveHTML($toplineNode) ?: '';
     }
-    $vehiclePos = strpos($visitHtml, 'ark-job-board-visit__vehicle');
-    $customerPos = strpos($visitHtml, 'ark-job-board-visit__customer');
+    $vehiclePos = strpos($toplineHtml, 'ark-job-board-hybrid-record__vehicle');
+    $customerPos = strpos($toplineHtml, 'ark-job-board-hybrid-record__customer');
     expect($vehiclePos)->not->toBeFalse()
         ->and($customerPos)->not->toBeFalse()
         ->and($vehiclePos)->toBeLessThan((int) $customerPos);
@@ -777,7 +779,9 @@ test('job board acceptance scenario surfaces tech status totals without promised
         ->and($html)->toContain('Jordan Lee')
         ->and($html)->toContain('grinding front brakes')
         ->and($html)->toContain('Waiting Parts')
-        ->and($html)->toContain('ark-job-board-table--grid')
+        ->and($html)->toContain('ark-job-board-hybrid')
+        ->and($html)->not->toContain('ark-job-board-table--grid')
+        ->and($html)->not->toContain('data-job-board-list-mobile')
         ->and($xpath->query('//*[@data-job-board-col="customer-vehicle"]', $document)->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-sort="customer"]', $document)->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-sort="vehicle"]', $document)->length)->toBe(1)
@@ -831,7 +835,7 @@ test('job board exposes tech total and attention sort controls with aria-sort', 
     expect($xpath->query('//*[@data-job-board-sort="tech"]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-sort="total"]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-sort="attention"]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-job-board-sort="tech"]/ancestor::th[@aria-sort="ascending"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-sort="tech"][@aria-sort="ascending"]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-sort="tech"][@aria-current="true"]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-lane-tabs]//a[contains(@class,"active")][@aria-current="page"]')->length)->toBe(1);
 
@@ -861,7 +865,7 @@ test('job board total sort uses numeric cents not formatted strings', function (
     $document->loadHTML($html);
     libxml_clear_errors();
     $xpath = new DOMXPath($document);
-    $rows = $xpath->query('//*[@data-job-board-list-body]//tr[@data-job-board-row]');
+    $rows = $xpath->query('//*[@data-job-board-list-body]//*[@data-job-board-row]');
 
     expect($rows->length)->toBeGreaterThanOrEqual(2);
     $firstId = (string) $rows->item(0)?->attributes?->getNamedItem('data-ro-id')?->nodeValue;

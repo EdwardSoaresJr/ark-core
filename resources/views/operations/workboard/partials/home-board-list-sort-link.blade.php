@@ -14,6 +14,7 @@
     data-job-board-sort="{{ $column }}"
     data-sort-dir="{{ $active ? $jobBoardListPage->sortDir : '' }}"
     @if ($active) aria-current="true" @endif
+    @if ($ariaSort) aria-sort="{{ $ariaSort }}" @endif
     aria-label="Sort by {{ $label }}, {{ $active ? ($jobBoardListPage->sortDir === 'asc' ? 'ascending' : 'descending') : 'activate' }}; activates {{ $nextDir }}ending"
 >
     <span class="ark-job-board-sort__label">{{ $label }}</span>

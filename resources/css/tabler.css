@@ -556,171 +556,260 @@
     border: 1px solid var(--tblr-bg-surface);
 }
 
-.ark-job-board-list .card {
-    border-radius: var(--tblr-border-radius);
-    overflow: hidden;
+/* Concept C — hybrid Job Board List (single responsive record component) */
+.ark-job-board-hybrid {
+    --ark-hybrid-radius: 0.8rem;
+    --ark-hybrid-gap: 0.55rem;
+    --ark-hybrid-soft: color-mix(in srgb, var(--tblr-secondary) 10%, var(--tblr-bg-surface));
+    container-type: inline-size;
+    container-name: ark-job-board-hybrid;
 }
 
-.ark-job-board-table {
-    --tblr-table-cell-padding-y: 0.45rem;
-    --tblr-table-cell-padding-x: 0.6rem;
-    --ark-job-board-col-rule: color-mix(in srgb, var(--tblr-border-color) 40%, var(--tblr-secondary));
-    --ark-job-board-header-bg: color-mix(in srgb, var(--tblr-secondary) 18%, var(--tblr-bg-surface));
-    --ark-job-board-header-rule: color-mix(in srgb, var(--tblr-border-color) 25%, var(--tblr-secondary));
-    --ark-job-board-money-bg: color-mix(in srgb, var(--tblr-secondary) 7%, transparent);
-    --ark-job-board-ops-bg: color-mix(in srgb, var(--tblr-secondary) 5%, transparent);
-    width: 100%;
-    table-layout: fixed;
-    font-size: 0.8125rem;
-    border-collapse: separate;
-    border-spacing: 0;
+.ark-job-board-hybrid__sort {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.75rem;
+    margin-bottom: 0.65rem;
+    padding: 0.35rem 0.15rem;
 }
 
-.ark-job-board-table--grid thead th,
-.ark-job-board-table--grid tbody td {
-    border-right: 1px solid var(--ark-job-board-col-rule);
+.ark-job-board-hybrid__sort-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tblr-secondary);
 }
 
-.ark-job-board-table--grid thead th:last-child,
-.ark-job-board-table--grid tbody td:last-child {
-    border-right: 0;
+.ark-job-board-hybrid__sort-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.35rem;
+    align-items: center;
 }
 
-.ark-job-board-table--grid tbody td {
-    border-bottom: 1px solid var(--tblr-border-color);
-    background-clip: padding-box;
-}
-
-.ark-job-board-table--grid tbody tr:nth-child(even) td {
-    background-color: color-mix(in srgb, var(--tblr-secondary) 4%, var(--tblr-bg-surface));
-}
-
-.ark-job-board-table--grid tbody tr:hover td {
-    background-color: color-mix(in srgb, var(--tblr-primary) 5%, var(--tblr-bg-surface));
-}
-
-.ark-job-board-table--grid .ark-job-board-col-status,
-.ark-job-board-table--grid .ark-job-board-col-tech {
-    background-image: linear-gradient(var(--ark-job-board-ops-bg), var(--ark-job-board-ops-bg));
-}
-
-.ark-job-board-table--grid .ark-job-board-col-total {
-    background-image: linear-gradient(var(--ark-job-board-money-bg), var(--ark-job-board-money-bg));
-}
-
-.ark-job-board-table--grid thead .ark-job-board-col-status,
-.ark-job-board-table--grid thead .ark-job-board-col-tech,
-.ark-job-board-table--grid thead .ark-job-board-col-total {
-    background-image: none;
-}
-
-.ark-job-board-list-row {
-    position: relative;
-}
-
-.ark-job-board-list-row > td:first-child {
-    box-shadow: inset 3px 0 0 transparent;
-}
-
-.ark-job-board-list-row--critical > td:first-child {
-    box-shadow: inset 3px 0 0 var(--tblr-danger);
-}
-
-.ark-job-board-list-row--attention > td:first-child {
-    box-shadow: inset 3px 0 0 var(--tblr-orange, #f76707);
-}
-
-.ark-job-board-list-row--watch > td:first-child {
-    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--tblr-secondary) 55%, transparent);
-}
-
-.ark-job-board-ro-link {
-    display: inline-block;
-    font-size: 0.875rem;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-    color: var(--tblr-body-color);
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.ark-job-board-ro-link:hover,
-.ark-job-board-ro-link:focus-visible {
-    color: var(--tblr-primary);
-    text-decoration: none;
-}
-
-.ark-job-board-table .ark-job-board-col-ro {
-    width: 5.75rem;
-    white-space: nowrap;
-    vertical-align: top;
-}
-
-.ark-job-board-table .ark-job-board-col-customer-vehicle {
-    width: 18%;
-    min-width: 10.5rem;
-    vertical-align: top;
-}
-
-.ark-job-board-visit {
+.ark-job-board-hybrid__records {
     display: flex;
     flex-direction: column;
-    gap: 0.12rem;
+    gap: var(--ark-hybrid-gap);
+}
+
+.ark-job-board-hybrid-record {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(10.5rem, 0.85fr) minmax(8rem, 0.7fr);
+    gap: 0.75rem 1.15rem;
+    padding: 0.8rem 0.95rem;
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--tblr-bg-surface) 96%, var(--tblr-primary)),
+            var(--tblr-bg-surface) 28%
+        );
+    border: 1px solid color-mix(in srgb, var(--tblr-border-color) 75%, transparent);
+    border-radius: var(--ark-hybrid-radius);
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.ark-job-board-hybrid-record:hover,
+.ark-job-board-hybrid-record:focus-within {
+    border-color: color-mix(in srgb, var(--tblr-primary) 42%, var(--tblr-border-color));
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--tblr-body-color) 6%, transparent);
+}
+
+.ark-job-board-hybrid-record--attention::before,
+.ark-job-board-hybrid-record--critical::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--tblr-orange, #f76707);
+}
+
+.ark-job-board-hybrid-record--critical::before {
+    background: var(--tblr-danger);
+}
+
+.ark-job-board-hybrid-record--watch::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: color-mix(in srgb, var(--tblr-secondary) 55%, transparent);
+}
+
+.ark-job-board-hybrid-record__primary {
+    min-width: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.ark-job-board-hybrid-record__topline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.7rem;
     min-width: 0;
 }
 
-.ark-job-board-visit__vehicle-link,
-.ark-job-board-visit__customer-link {
-    color: inherit;
+.ark-job-board-hybrid-record__ro {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.12rem 0.45rem;
+    border-radius: 0.35rem;
+    background: var(--ark-hybrid-soft);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--tblr-secondary);
     text-decoration: none;
+    white-space: nowrap;
 }
 
-.ark-job-board-visit__vehicle-link:hover,
-.ark-job-board-visit__customer-link:hover {
+.ark-job-board-hybrid-record__ro:hover,
+.ark-job-board-hybrid-record__ro:focus-visible {
     color: var(--tblr-primary);
     text-decoration: none;
 }
 
-.ark-job-board-visit__vehicle {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+.ark-job-board-hybrid-record__vehicle {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
     line-height: 1.2;
+    color: var(--tblr-body-color);
+    text-decoration: none;
+    min-width: 0;
+}
+
+.ark-job-board-hybrid-record__vehicle:hover,
+.ark-job-board-hybrid-record__vehicle:focus-visible {
+    color: var(--tblr-primary);
+    text-decoration: none;
+}
+
+.ark-job-board-hybrid-record__customer {
+    font-size: 0.84rem;
+    color: var(--tblr-secondary);
+    text-decoration: none;
+    min-width: 0;
+}
+
+.ark-job-board-hybrid-record__customer::before {
+    content: '·';
+    margin-right: 0.55rem;
+    color: color-mix(in srgb, var(--tblr-secondary) 65%, transparent);
+}
+
+.ark-job-board-hybrid-record__customer:hover,
+.ark-job-board-hybrid-record__customer:focus-visible {
+    color: var(--tblr-primary);
+    text-decoration: none;
+}
+
+.ark-job-board-hybrid-record__concern {
+    min-width: 0;
+}
+
+.ark-job-board-hybrid-record__concern .ark-job-board-concern-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.ark-job-board-hybrid-record__concern .ark-job-board-concern-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.35;
+    font-size: 0.86rem;
     color: var(--tblr-body-color);
 }
 
-.ark-job-board-visit__customer {
-    font-size: 0.75rem;
-    font-weight: 500;
-    line-height: 1.2;
+.ark-job-board-hybrid-record__concern .ark-job-board-concern-text--secondary {
     color: var(--tblr-secondary);
+    font-size: 0.78rem;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
 }
 
-.ark-job-board-visit__next {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    line-height: 1.2;
-    margin-top: 0.05rem;
+.ark-job-board-hybrid-record__actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.75rem;
+    min-width: 0;
 }
 
-.ark-job-board-visit__next--action {
+.ark-job-board-hybrid-record__next {
+    font-size: 0.8rem;
+    font-weight: 650;
+    text-decoration: none;
     color: var(--tblr-primary);
 }
 
-.ark-job-board-visit__next--warning {
+.ark-job-board-hybrid-record__next--warning {
     color: var(--tblr-orange, #f76707);
 }
 
-.ark-job-board-visit__next--watch {
+.ark-job-board-hybrid-record__next--watch {
     color: var(--tblr-secondary);
 }
 
-.ark-job-board-table .ark-job-board-col-concern {
-    width: 16%;
-    min-width: 8.5rem;
-    vertical-align: top;
+.ark-job-board-hybrid-record__next:hover,
+.ark-job-board-hybrid-record__next:focus-visible {
+    text-decoration: underline;
+}
+
+.ark-job-board-hybrid-record__updated {
+    font-size: 0.75rem;
+    color: var(--tblr-secondary);
+    white-space: nowrap;
+}
+
+.ark-job-board-hybrid-record__workflow {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.1rem 0 0.1rem 0.85rem;
+    border-left: 1px solid color-mix(in srgb, var(--tblr-border-color) 65%, transparent);
+    min-width: 0;
+}
+
+.ark-job-board-hybrid-record__field-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--tblr-secondary);
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+}
+
+.ark-job-board-hybrid-record__tech {
+    font-size: 0.84rem;
+    color: var(--tblr-body-color);
+}
+
+.ark-job-board-hybrid-record__tech.is-empty {
+    color: var(--tblr-secondary);
+}
+
+.ark-job-board-hybrid-record__finance {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.3rem;
+    text-align: right;
+    min-width: 0;
 }
 
 .ark-job-board-money {
@@ -732,7 +821,7 @@
 }
 
 .ark-job-board-money__amount {
-    font-size: 0.875rem;
+    font-size: 1.05rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
@@ -744,9 +833,9 @@
 }
 
 .ark-job-board-money__caption {
-    font-size: 0.625rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    font-size: 0.68rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--tblr-secondary);
 }
@@ -755,103 +844,42 @@
     color: var(--tblr-danger);
 }
 
-.ark-job-board-tech,
-.ark-job-board-updated {
-    font-size: 0.75rem;
-    color: var(--tblr-secondary);
-    line-height: 1.2;
+.ark-job-board-hybrid-record__attention .ark-job-board-attention {
+    font-size: 0.78rem;
 }
 
-.ark-job-board-table .ark-job-board-col-status {
-    width: 8.25rem;
-    vertical-align: middle;
-}
-
-.ark-job-board-table .ark-job-board-col-tech {
-    width: 7.5rem;
-    vertical-align: middle;
-}
-
-.ark-job-board-table .ark-job-board-col-attention {
-    width: 7.75rem;
-    vertical-align: middle;
-}
-
-.ark-job-board-table .ark-job-board-col-updated {
-    width: 5.25rem;
-    vertical-align: middle;
-}
-
-.ark-job-board-table .ark-job-board-col-total {
-    width: 6.75rem;
-    vertical-align: middle;
-}
-
-.ark-job-board-table .ark-job-board-col-open {
-    width: 2.25rem;
-    vertical-align: middle;
-}
-
-.ark-job-board-table .ark-job-board-attention {
-    display: inline-block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.75rem;
-    line-height: 1.2;
-}
-
-.ark-job-board-table .ark-job-board-concern-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    min-width: 0;
-}
-
-.ark-job-board-table .ark-job-board-concern-text {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow: hidden;
-    white-space: normal;
-    line-height: 1.25;
-    color: var(--tblr-body-color);
-}
-
-.ark-job-board-table .ark-job-board-concern-stack .ark-job-board-concern-text {
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-}
-
-.ark-job-board-table .ark-job-board-concern-text--secondary {
-    color: var(--tblr-secondary);
-    font-size: 0.75rem;
-}
-
-.ark-job-board-table .ark-job-board-attention[data-attention-tone="watch"] {
+.ark-job-board-hybrid-record__attention .ark-job-board-attention[data-attention-tone="watch"] {
     font-weight: var(--tblr-font-weight-normal, 400);
-    opacity: 0.72;
+    opacity: 0.8;
 }
 
-.ark-job-board-table .ark-job-board-attention[data-attention-tone="attention"],
-.ark-job-board-table .ark-job-board-attention[data-attention-tone="critical"] {
-    opacity: 1;
+.ark-job-board-hybrid-record__open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    margin-top: 0.15rem;
+    padding: 0.25rem 0.45rem;
+    border-radius: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: var(--tblr-secondary);
+    text-decoration: none;
+    min-height: 2rem;
 }
 
-.ark-job-board-table .ark-job-board-col-activity {
-    min-width: 7.5rem;
-    width: 1%;
-    white-space: nowrap;
-    vertical-align: middle;
+.ark-job-board-hybrid-record__open:hover,
+.ark-job-board-hybrid-record__open:focus-visible {
+    color: var(--tblr-primary);
+    background: color-mix(in srgb, var(--tblr-primary) 10%, transparent);
+    outline: none;
+    text-decoration: none;
 }
 
-.ark-job-board-table .ark-job-board-activity {
+.ark-job-board-hybrid-record .ark-job-board-activity {
     gap: 0.1rem;
 }
 
-.ark-job-board-table .ark-job-board-activity-mark {
+.ark-job-board-hybrid-record .ark-job-board-activity-mark {
     --ark-job-board-activity-hit: 1.5rem;
     width: var(--ark-job-board-activity-hit);
     height: var(--ark-job-board-activity-hit);
@@ -859,41 +887,35 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    border-radius: 0;
+    border-radius: 0.3rem;
     text-decoration: none;
     color: var(--tblr-secondary);
     background: transparent;
     border: 0;
-    box-shadow: none;
     flex: 0 0 auto;
     line-height: 1;
 }
 
-.ark-job-board-table .ark-job-board-activity-mark svg {
+.ark-job-board-hybrid-record .ark-job-board-activity-mark svg {
     width: 1rem;
     height: 1rem;
     display: block;
 }
 
-.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="ready"],
-.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="sent"] {
-    color: var(--tblr-secondary);
-}
-
-.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="engaged"] {
+.ark-job-board-hybrid-record .ark-job-board-activity-mark[data-job-card-mark-state="engaged"] {
     color: var(--tblr-azure);
 }
 
-.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="attention"] {
+.ark-job-board-hybrid-record .ark-job-board-activity-mark[data-job-card-mark-state="attention"] {
     color: var(--tblr-orange, #f76707);
 }
 
-.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="attention"][data-job-card-mark="phone"],
-.ark-job-board-table .ark-job-board-activity-mark[data-job-card-mark-state="attention"][data-job-card-mark="sms"] {
+.ark-job-board-hybrid-record .ark-job-board-activity-mark[data-job-card-mark-state="attention"][data-job-card-mark="phone"],
+.ark-job-board-hybrid-record .ark-job-board-activity-mark[data-job-card-mark-state="attention"][data-job-card-mark="sms"] {
     color: var(--tblr-danger);
 }
 
-.ark-job-board-table .ark-job-board-activity-mark .badge {
+.ark-job-board-hybrid-record .ark-job-board-activity-mark .badge {
     position: absolute;
     top: 0.05rem;
     right: 0.05rem;
@@ -904,76 +926,126 @@
     border: 1px solid var(--tblr-bg-surface);
 }
 
-@media (max-width: 1399.98px) {
-    .ark-job-board-table {
-        --tblr-table-cell-padding-x: 0.45rem;
+/* Tablet: workflow under primary; finance stays prominent */
+@container ark-job-board-hybrid (max-width: 980px) {
+    .ark-job-board-hybrid-record {
+        grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 0.55fr);
+        gap: 0.65rem 0.9rem;
     }
 
-    .ark-job-board-table .ark-job-board-col-customer-vehicle {
-        width: 20%;
-        min-width: 9.5rem;
+    .ark-job-board-hybrid-record__primary {
+        grid-column: 1;
+        grid-row: 1;
     }
 
-    .ark-job-board-table .ark-job-board-col-concern {
-        width: 15%;
-        min-width: 7.5rem;
+    .ark-job-board-hybrid-record__finance {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: start;
+    }
+
+    .ark-job-board-hybrid-record__workflow {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.65rem 1.25rem;
+        padding: 0.55rem 0 0;
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--tblr-border-color) 65%, transparent);
     }
 }
 
-@media (max-width: 1199.98px) {
-    .ark-job-board-table .ark-job-board-col-tech,
-    .ark-job-board-table .ark-job-board-col-updated {
-        display: none;
+/* Mobile: stacked hybrid list record (still List, not Cards view) */
+@container ark-job-board-hybrid (max-width: 560px) {
+    .ark-job-board-hybrid-record {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+        padding: 0.75rem 0.8rem;
     }
 
-    .ark-job-board-table .ark-job-board-col-customer-vehicle {
-        width: 24%;
+    .ark-job-board-hybrid-record__primary,
+    .ark-job-board-hybrid-record__workflow,
+    .ark-job-board-hybrid-record__finance {
+        grid-column: 1;
+        grid-row: auto;
     }
 
-    .ark-job-board-table .ark-job-board-col-concern {
-        width: 20%;
+    .ark-job-board-hybrid-record__topline {
+        align-items: flex-start;
+    }
+
+    .ark-job-board-hybrid-record__customer::before {
+        content: none;
+        margin: 0;
+    }
+
+    .ark-job-board-hybrid-record__customer {
+        flex-basis: 100%;
+        margin-top: -0.1rem;
+    }
+
+    .ark-job-board-hybrid-record__finance {
+        align-items: flex-start;
+        text-align: left;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.45rem 0.85rem;
+        padding-top: 0.15rem;
+    }
+
+    .ark-job-board-money {
+        align-items: flex-start;
+    }
+
+    .ark-job-board-hybrid-record__workflow {
+        padding-top: 0.45rem;
+    }
+
+    .ark-job-board-hybrid-record__open {
+        margin-top: 0;
+        margin-left: auto;
     }
 }
 
+/* Viewport fallbacks when container queries are unavailable / nested width differs */
 @media (max-width: 991.98px) {
-    .ark-job-board-table .ark-job-board-col-attention,
-    .ark-job-board-table .ark-job-board-col-activity {
-        display: none;
+    .ark-job-board-hybrid-record {
+        grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 0.55fr);
     }
 
-    .ark-job-board-table .ark-job-board-col-customer-vehicle {
-        width: 30%;
-    }
-
-    .ark-job-board-table .ark-job-board-col-concern {
-        width: 24%;
-        min-width: 6.5rem;
+    .ark-job-board-hybrid-record__workflow {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--tblr-border-color) 65%, transparent);
+        padding: 0.55rem 0 0;
     }
 }
 
-.ark-job-board-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    white-space: nowrap;
-    font-size: 0.7rem;
-    letter-spacing: 0.035em;
-    text-transform: uppercase;
-    font-weight: var(--tblr-font-weight-bold, 700);
-    color: var(--tblr-body-color);
-    background: var(--ark-job-board-header-bg);
-    border-bottom: 2px solid var(--ark-job-board-header-rule);
-    padding-top: 0.55rem;
-    padding-bottom: 0.55rem;
-    vertical-align: middle;
-    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--tblr-border-color) 80%, transparent);
-}
+@media (max-width: 575.98px) {
+    .ark-job-board-hybrid-record {
+        grid-template-columns: 1fr;
+    }
 
-.ark-job-board-table .ark-job-board-th-static {
-    display: inline-block;
-    padding: 0.15rem 0.15rem;
-    color: var(--tblr-secondary);
-    font-weight: var(--tblr-font-weight-semibold, 600);
+    .ark-job-board-hybrid-record__finance {
+        align-items: flex-start;
+        text-align: left;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.45rem 0.85rem;
+    }
+
+    .ark-job-board-money {
+        align-items: flex-start;
+    }
+
+    .ark-job-board-hybrid-record__open {
+        margin-left: auto;
+    }
 }
 
 .ark-job-board-sort {
@@ -981,14 +1053,13 @@
     align-items: center;
     gap: 0.2rem;
     max-width: 100%;
-    padding: 0.15rem 0.2rem;
-    margin: -0.15rem -0.2rem;
+    padding: 0.2rem 0.4rem;
     border-radius: var(--tblr-border-radius-sm, 0.25rem);
     color: var(--tblr-secondary);
     text-decoration: none;
     font-weight: var(--tblr-font-weight-semibold, 600);
-    font-size: inherit;
-    letter-spacing: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
     line-height: 1.2;
     background: transparent;
@@ -1008,7 +1079,8 @@
 }
 
 .ark-job-board-sort.is-active {
-    color: var(--tblr-body-color);
+    color: var(--tblr-primary);
+    background: color-mix(in srgb, var(--tblr-primary) 10%, transparent);
 }
 
 .ark-job-board-sort__label {
@@ -1036,36 +1108,6 @@
 
 .ark-job-board-sort__chevron.is-on {
     color: var(--tblr-primary);
-}
-
-.ark-job-board-table th.text-end .ark-job-board-sort {
-    justify-content: flex-end;
-    width: 100%;
-}
-
-.ark-job-board-table .ark-job-board-sort.is-active {
-    color: var(--tblr-primary);
-    background: color-mix(in srgb, var(--tblr-primary) 10%, transparent);
-}
-
-.ark-job-board-mobile-card {
-    border-left: 3px solid transparent;
-}
-
-.ark-job-board-mobile-card--critical {
-    border-left-color: var(--tblr-danger);
-}
-
-.ark-job-board-mobile-card--attention {
-    border-left-color: var(--tblr-orange, #f76707);
-}
-
-.ark-job-board-mobile-card--watch {
-    border-left-color: color-mix(in srgb, var(--tblr-secondary) 55%, transparent);
-}
-
-.ark-job-board-table .avatar-xs {
-    --tblr-avatar-size: 1.1rem;
 }
 
 [data-job-board-lane-tabs].nav-tabs {
@@ -1107,27 +1149,6 @@
 [data-bs-theme='dark'] [data-job-board-lane-tabs] .nav-link.active {
     background: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface));
     border-bottom-color: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface));
-}
-
-[data-bs-theme='dark'] .ark-job-board-table {
-    --ark-job-board-col-rule: color-mix(in srgb, var(--tblr-border-color) 35%, #94a3b8);
-    --ark-job-board-header-bg: color-mix(in srgb, var(--tblr-secondary) 26%, var(--tblr-bg-surface));
-    --ark-job-board-header-rule: color-mix(in srgb, var(--tblr-border-color) 20%, #94a3b8);
-    --ark-job-board-money-bg: color-mix(in srgb, var(--tblr-secondary) 10%, transparent);
-    --ark-job-board-ops-bg: color-mix(in srgb, var(--tblr-secondary) 7%, transparent);
-}
-
-[data-bs-theme='dark'] .ark-job-board-table thead th {
-    background: var(--ark-job-board-header-bg);
-    color: var(--tblr-body-color);
-}
-
-[data-bs-theme='dark'] .ark-job-board-table--grid tbody tr:nth-child(even) td {
-    background-color: color-mix(in srgb, var(--tblr-secondary) 8%, var(--tblr-bg-surface));
-}
-
-[data-bs-theme='dark'] .ark-job-board-table--grid tbody tr:hover td {
-    background-color: color-mix(in srgb, var(--tblr-primary) 10%, var(--tblr-bg-surface));
 }
 
 [data-job-board-lane-tabs] .status-dot {
