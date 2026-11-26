@@ -51,7 +51,7 @@
     </div>
 
     <div class="col-12 col-sm-6 col-md-4 col-lg-auto ark-job-board-toolbar-tech">
-        <label class="form-label" for="job-board-tech">Employee</label>
+        <label class="form-label visually-hidden" for="job-board-tech">Employee</label>
         <select
             id="job-board-tech"
             name="tech"
@@ -66,11 +66,11 @@
         </select>
     </div>
 
-    <div class="col-6 col-sm-auto">
-        <button type="submit" class="btn btn-outline-secondary w-100 w-sm-auto">Search</button>
+    <div class="col-auto ark-job-board-toolbar-search-btn">
+        <button type="submit" class="btn btn-outline-secondary">Search</button>
     </div>
 
-    <div class="col-6 col-sm-auto ms-sm-auto ms-lg-0">
+    <div class="col-auto ark-job-board-toolbar-layout">
         <div class="d-flex flex-column align-items-stretch gap-1">
             <div
                 class="nav nav-segmented justify-content-stretch ark-job-board-layout-toggle"
@@ -103,7 +103,7 @@
     </div>
 
     @can('repair_orders.manage')
-        <div class="col-12 col-sm-auto">
+        <div class="col-auto ark-job-board-toolbar-checkin ms-auto">
             <a href="{{ route('operations.intake.create') }}" class="btn btn-primary w-100 w-sm-auto" data-ark-workspace="off">
                 <x-tabler.icon name="plus" />
                 Check In

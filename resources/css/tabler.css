@@ -100,26 +100,17 @@
     white-space: nowrap;
 }
 
-/* Job Board toolbar: readable employee control on narrow screens. */
-.ark-job-board-toolbar .ark-job-board-toolbar-tech .form-label {
-    margin-bottom: 0.25rem;
-    font-size: 0.75rem;
-    color: var(--tblr-secondary);
+/* Job Board toolbar: compact controls so the first RO appears sooner on phones. */
+.ark-job-board-toolbar {
+    --ark-job-board-toolbar-gap: 0.45rem;
+    row-gap: var(--ark-job-board-toolbar-gap);
+}
+
+.ark-job-board-toolbar .ark-job-board-toolbar-tech {
+    min-width: 9.5rem;
 }
 
 @media (min-width: 992px) {
-    .ark-job-board-toolbar .ark-job-board-toolbar-tech .form-label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-    }
-
     .ark-job-board-toolbar .ark-job-board-toolbar-tech {
         min-width: 11rem;
     }
@@ -127,6 +118,64 @@
 
 .ark-job-board-toolbar .ark-job-board-layout-toggle {
     min-height: 2.25rem;
+}
+
+@media (max-width: 575.98px) {
+    .ark-job-board-toolbar {
+        --ark-job-board-toolbar-gap: 0.35rem;
+        --bs-gutter-x: 0.45rem;
+        --bs-gutter-y: 0.35rem;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            'search search'
+            'tech search-btn'
+            'layout checkin';
+        align-items: stretch;
+    }
+
+    .ark-job-board-toolbar > [class*='col-'] {
+        width: auto;
+        max-width: none;
+        padding-top: 0;
+        padding-bottom: 0;
+        flex: none;
+    }
+
+    .ark-job-board-toolbar > .col-12.col-lg {
+        grid-area: search;
+    }
+
+    .ark-job-board-toolbar-tech {
+        grid-area: tech;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .ark-job-board-toolbar-search-btn {
+        grid-area: search-btn;
+    }
+
+    .ark-job-board-toolbar-layout {
+        grid-area: layout;
+        min-width: 0;
+    }
+
+    .ark-job-board-toolbar-checkin {
+        grid-area: checkin;
+        margin-left: 0 !important;
+        justify-self: end;
+    }
+
+    .ark-job-board-toolbar-search-btn .btn,
+    .ark-job-board-toolbar-checkin .btn {
+        min-height: 2.4rem;
+        padding-inline: 0.7rem;
+    }
+
+    .ark-job-board-toolbar-layout .ark-job-board-layout-toggle {
+        width: 100%;
+    }
 }
 
 /*
@@ -589,6 +638,46 @@
     align-items: center;
 }
 
+.ark-job-board-hybrid__sort--compact {
+    display: none;
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+}
+
+.ark-job-board-hybrid__sort-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 14rem;
+}
+
+.ark-job-board-hybrid__sort-dir {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 2rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .ark-job-board-hybrid__sort--links {
+        display: none;
+    }
+
+    .ark-job-board-hybrid__sort--compact {
+        display: flex;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .ark-job-board-hybrid__sort--links {
+        display: none;
+    }
+
+    .ark-job-board-hybrid__sort--compact {
+        display: flex;
+    }
+}
+
 .ark-job-board-hybrid__records {
     display: flex;
     flex-direction: column;
@@ -645,6 +734,19 @@
     min-width: 0;
     display: grid;
     gap: 0.4rem;
+}
+
+.ark-job-board-hybrid-record__middle {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.ark-job-board-hybrid-record__finance-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.3rem;
 }
 
 .ark-job-board-hybrid-record__topline {
@@ -957,23 +1059,54 @@
     }
 }
 
-/* Mobile: stacked hybrid list record (still List, not Cards view) */
+/* Mobile: denser hybrid List — amount stays upper-right; workflow stays compact */
 @container ark-job-board-hybrid (max-width: 560px) {
+    .ark-job-board-hybrid {
+        --ark-hybrid-gap: 0.4rem;
+    }
+
     .ark-job-board-hybrid-record {
-        grid-template-columns: 1fr;
-        gap: 0.55rem;
-        padding: 0.75rem 0.8rem;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            'identity money'
+            'middle middle'
+            'workflow open';
+        gap: 0.3rem 0.6rem;
+        padding: 0.55rem 0.65rem;
+        border-radius: 0.65rem;
     }
 
     .ark-job-board-hybrid-record__primary,
-    .ark-job-board-hybrid-record__workflow,
     .ark-job-board-hybrid-record__finance {
-        grid-column: 1;
-        grid-row: auto;
+        display: contents;
     }
 
     .ark-job-board-hybrid-record__topline {
-        align-items: flex-start;
+        grid-area: identity;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 0.4rem;
+        row-gap: 0.08rem;
+        align-items: baseline;
+    }
+
+    .ark-job-board-hybrid-record__vehicle {
+        grid-column: 1;
+        font-size: 0.92rem;
+        line-height: 1.2;
+    }
+
+    .ark-job-board-hybrid-record__ro {
+        grid-column: 2;
+        justify-self: end;
+        align-self: start;
+        padding: 0.08rem 0.35rem;
+        font-size: 0.68rem;
+    }
+
+    .ark-job-board-hybrid-record__customer {
+        grid-column: 1 / -1;
+        font-size: 0.78rem;
     }
 
     .ark-job-board-hybrid-record__customer::before {
@@ -981,32 +1114,79 @@
         margin: 0;
     }
 
-    .ark-job-board-hybrid-record__customer {
-        flex-basis: 100%;
-        margin-top: -0.1rem;
+    .ark-job-board-hybrid-record__middle {
+        grid-area: middle;
+        gap: 0.18rem;
     }
 
-    .ark-job-board-hybrid-record__finance {
-        align-items: flex-start;
-        text-align: left;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.45rem 0.85rem;
-        padding-top: 0.15rem;
+    .ark-job-board-hybrid-record__concern .ark-job-board-concern-text {
+        font-size: 0.8rem;
+        line-height: 1.3;
     }
 
-    .ark-job-board-money {
-        align-items: flex-start;
+    .ark-job-board-hybrid-record__actions-row {
+        gap: 0.3rem 0.5rem;
+    }
+
+    .ark-job-board-hybrid-record__next {
+        font-size: 0.75rem;
+    }
+
+    .ark-job-board-hybrid-record__updated {
+        font-size: 0.7rem;
+    }
+
+    .ark-job-board-hybrid-record__finance-stack {
+        grid-area: money;
+        align-self: start;
+        gap: 0.12rem;
     }
 
     .ark-job-board-hybrid-record__workflow {
-        padding-top: 0.45rem;
+        grid-area: workflow;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.3rem 0.7rem;
+        padding: 0.3rem 0 0;
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--tblr-border-color) 55%, transparent);
+    }
+
+    .ark-job-board-hybrid-record__field-label {
+        display: none;
+    }
+
+    .ark-job-board-hybrid-record__workflow-block {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .ark-job-board-hybrid-record__tech {
+        font-size: 0.78rem;
+    }
+
+    .ark-job-board-money__amount {
+        font-size: 0.95rem;
+    }
+
+    .ark-job-board-money__caption {
+        font-size: 0.62rem;
+    }
+
+    .ark-job-board-hybrid-record__attention .ark-job-board-attention {
+        font-size: 0.72rem;
     }
 
     .ark-job-board-hybrid-record__open {
-        margin-top: 0;
-        margin-left: auto;
+        grid-area: open;
+        align-self: end;
+        justify-self: end;
+        margin: 0;
+        min-height: 2rem;
+        padding: 0.2rem 0.4rem;
+        border-top: 0;
     }
 }
 
@@ -1027,24 +1207,52 @@
 }
 
 @media (max-width: 575.98px) {
+    .ark-job-board-hybrid {
+        --ark-hybrid-gap: 0.4rem;
+    }
+
     .ark-job-board-hybrid-record {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            'identity money'
+            'middle middle'
+            'workflow open';
+        gap: 0.3rem 0.6rem;
+        padding: 0.55rem 0.65rem;
     }
 
+    .ark-job-board-hybrid-record__primary,
     .ark-job-board-hybrid-record__finance {
-        align-items: flex-start;
-        text-align: left;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 0.45rem 0.85rem;
+        display: contents;
     }
 
-    .ark-job-board-money {
-        align-items: flex-start;
+    .ark-job-board-hybrid-record__topline {
+        grid-area: identity;
+    }
+
+    .ark-job-board-hybrid-record__middle {
+        grid-area: middle;
+    }
+
+    .ark-job-board-hybrid-record__finance-stack {
+        grid-area: money;
+    }
+
+    .ark-job-board-hybrid-record__workflow {
+        grid-area: workflow;
     }
 
     .ark-job-board-hybrid-record__open {
-        margin-left: auto;
+        grid-area: open;
+    }
+
+    .ark-job-board-hybrid-record__field-label {
+        display: none;
+    }
+
+    .ark-job-board-hybrid-record__customer::before {
+        content: none;
+        margin: 0;
     }
 }
 
@@ -1110,89 +1318,181 @@
     color: var(--tblr-primary);
 }
 
-[data-job-board-lane-tabs].nav-tabs {
-    border-bottom: 1px solid var(--tblr-border-color);
-    gap: 0.15rem;
-    padding-bottom: 0;
+/* Job Board status tabs — primary pill/segmented filter control */
+.ark-job-board-lane-tabs {
+    --ark-lane-tab-radius: 999px;
+    margin: 0 0 0.85rem;
+    min-width: 0;
 }
 
-[data-job-board-lane-tabs] .nav-link {
-    cursor: pointer;
+.ark-job-board-lane-tabs__track {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.35rem;
+    padding: 0.3rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    border: 1px solid color-mix(in srgb, var(--tblr-border-color) 85%, transparent);
+    border-radius: calc(var(--ark-lane-tab-radius) + 0.15rem);
+    background: color-mix(in srgb, var(--tblr-bg-surface-secondary) 72%, var(--tblr-bg-surface));
+}
+
+.ark-job-board-lane-tabs__track::-webkit-scrollbar {
+    height: 0.35rem;
+}
+
+.ark-job-board-lane-tabs__tab {
+    --ark-lane-accent: var(--tblr-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+    min-height: 2.4rem;
+    padding: 0.35rem 0.8rem;
     border: 1px solid transparent;
-    border-bottom: 0;
-    border-radius: var(--tblr-border-radius) var(--tblr-border-radius) 0 0;
+    border-radius: var(--ark-lane-tab-radius);
     color: var(--tblr-secondary);
-    font-weight: var(--tblr-font-weight-normal, 400);
-    margin-bottom: -1px;
     background: transparent;
+    font-weight: var(--tblr-font-weight-semibold, 600);
+    font-size: 0.84rem;
+    line-height: 1.15;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        color 0.12s ease,
+        background-color 0.12s ease,
+        border-color 0.12s ease,
+        box-shadow 0.12s ease;
 }
 
-[data-job-board-lane-tabs] .nav-link:hover {
+.ark-job-board-lane-tabs__tab:hover {
     color: var(--tblr-body-color);
-    background: color-mix(in srgb, var(--tblr-bg-surface-secondary) 70%, transparent);
+    background: color-mix(in srgb, var(--tblr-bg-surface) 78%, transparent);
+    border-color: color-mix(in srgb, var(--tblr-border-color) 70%, transparent);
+    text-decoration: none;
 }
 
-[data-job-board-lane-tabs] .nav-link:focus-visible {
+.ark-job-board-lane-tabs__tab:focus-visible {
     outline: 2px solid var(--tblr-primary);
-    outline-offset: 1px;
-}
-
-[data-job-board-lane-tabs] .nav-link.active {
+    outline-offset: 2px;
     color: var(--tblr-body-color);
-    background: color-mix(in srgb, var(--tblr-primary) 10%, var(--tblr-bg-surface));
-    border-color: var(--tblr-border-color);
-    border-bottom-color: color-mix(in srgb, var(--tblr-primary) 10%, var(--tblr-bg-surface));
-    font-weight: var(--tblr-font-weight-bold, 600);
-    box-shadow: inset 0 -2px 0 var(--tblr-primary);
+    z-index: 1;
 }
 
-[data-bs-theme='dark'] [data-job-board-lane-tabs] .nav-link.active {
-    background: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface));
-    border-bottom-color: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface));
+.ark-job-board-lane-tabs__tab.active,
+.ark-job-board-lane-tabs__tab[aria-current='page'] {
+    color: var(--tblr-body-color);
+    background: var(--tblr-bg-surface);
+    border-color: color-mix(in srgb, var(--ark-lane-accent) 42%, var(--tblr-border-color));
+    box-shadow:
+        0 1px 2px color-mix(in srgb, var(--tblr-body-color) 10%, transparent),
+        inset 0 -2px 0 color-mix(in srgb, var(--ark-lane-accent) 75%, transparent);
+    font-weight: var(--tblr-font-weight-bold, 700);
 }
 
-[data-job-board-lane-tabs] .status-dot {
+[data-bs-theme='dark'] .ark-job-board-lane-tabs__track {
+    background: color-mix(in srgb, var(--tblr-bg-surface-secondary) 55%, #000);
+}
+
+[data-bs-theme='dark'] .ark-job-board-lane-tabs__tab.active,
+[data-bs-theme='dark'] .ark-job-board-lane-tabs__tab[aria-current='page'] {
+    background: color-mix(in srgb, var(--tblr-bg-surface) 88%, var(--ark-lane-accent) 12%);
+    border-color: color-mix(in srgb, var(--ark-lane-accent) 50%, var(--tblr-border-color));
+}
+
+.ark-job-board-lane-tabs__label {
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ark-job-board-lane-tabs__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.45rem;
+    min-height: 1.45rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--tblr-body-color);
+    background: color-mix(in srgb, var(--tblr-secondary) 16%, var(--tblr-bg-surface));
+}
+
+.ark-job-board-lane-tabs__tab.active .ark-job-board-lane-tabs__count,
+.ark-job-board-lane-tabs__tab[aria-current='page'] .ark-job-board-lane-tabs__count {
+    color: var(--tblr-primary);
+    background: color-mix(in srgb, var(--tblr-primary) 16%, var(--tblr-bg-surface));
+}
+
+.ark-job-board-lane-tabs .status-dot {
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
     display: inline-block;
-    vertical-align: middle;
-    background: var(--tblr-secondary);
+    flex: 0 0 auto;
+    background: var(--ark-lane-accent, var(--tblr-secondary));
 }
 
-[data-job-board-lane-tabs] .status-dot.status-azure,
-[data-job-board-lane-tabs] .status-dot.status-blue,
-[data-job-board-lane-tabs] .status-dot.status-primary {
-    background: var(--tblr-primary);
+.ark-job-board-lane-tabs__tab[data-lane-tone='azure'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='blue'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='primary'] {
+    --ark-lane-accent: var(--tblr-primary);
 }
 
-[data-job-board-lane-tabs] .status-dot.status-yellow,
-[data-job-board-lane-tabs] .status-dot.status-orange,
-[data-job-board-lane-tabs] .status-dot.status-warning {
-    background: var(--tblr-warning);
+.ark-job-board-lane-tabs__tab[data-lane-tone='yellow'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='orange'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='warning'] {
+    --ark-lane-accent: var(--tblr-warning);
 }
 
-[data-job-board-lane-tabs] .status-dot.status-green,
-[data-job-board-lane-tabs] .status-dot.status-success,
-[data-job-board-lane-tabs] .status-dot.status-teal {
-    background: var(--tblr-success);
+.ark-job-board-lane-tabs__tab[data-lane-tone='green'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='success'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='teal'] {
+    --ark-lane-accent: var(--tblr-success);
 }
 
-[data-job-board-lane-tabs] .status-dot.status-cyan,
-[data-job-board-lane-tabs] .status-dot.status-info {
-    background: var(--tblr-info);
+.ark-job-board-lane-tabs__tab[data-lane-tone='cyan'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='info'] {
+    --ark-lane-accent: var(--tblr-info);
 }
 
-[data-job-board-lane-tabs] .status-dot.status-red,
-[data-job-board-lane-tabs] .status-dot.status-danger,
-[data-job-board-lane-tabs] .status-dot.status-pink {
-    background: var(--tblr-danger);
+.ark-job-board-lane-tabs__tab[data-lane-tone='red'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='danger'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='pink'] {
+    --ark-lane-accent: var(--tblr-danger);
 }
 
-[data-job-board-lane-tabs] .status-dot.status-secondary,
-[data-job-board-lane-tabs] .status-dot.status-dark,
-[data-job-board-lane-tabs] .status-dot.status-muted {
-    background: var(--tblr-secondary);
+.ark-job-board-lane-tabs__tab[data-lane-tone='secondary'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='dark'],
+.ark-job-board-lane-tabs__tab[data-lane-tone='muted'] {
+    --ark-lane-accent: var(--tblr-secondary);
+}
+
+@media (max-width: 575.98px) {
+    .ark-job-board-lane-tabs {
+        margin-bottom: 0.65rem;
+    }
+
+    .ark-job-board-lane-tabs__track {
+        padding: 0.25rem;
+        gap: 0.28rem;
+        border-radius: calc(var(--ark-lane-tab-radius) + 0.1rem);
+    }
+
+    .ark-job-board-lane-tabs__tab {
+        min-height: 2.75rem;
+        padding: 0.4rem 0.85rem;
+        font-size: 0.86rem;
+    }
 }
 
 /*
