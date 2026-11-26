@@ -43,4 +43,32 @@
             </a>
         @endforeach
     </div>
+
+    <form
+        method="get"
+        action="{{ route('operations.index') }}"
+        class="ark-job-board-lane-tabs__queue"
+        data-job-board-lane-queue
+        aria-label="Queue"
+    >
+        @foreach ($jobBoardListPage->queryParams(['lane' => null, 'page' => 1]) as $name => $value)
+            <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+        @endforeach
+        <label class="visually-hidden" for="job-board-queue-field">Queue</label>
+        <select
+            id="job-board-queue-field"
+            name="lane"
+            class="form-select form-select-sm ark-job-board-lane-tabs__queue-select"
+            data-job-board-lane-queue-select
+            onchange="this.form.submit()"
+        >
+            @foreach ($jobBoardLaneTabs as $tab)
+                <option
+                    value="{{ $tab['key'] }}"
+                    @selected($activeLane === $tab['key'])
+                    data-job-board-lane-count="{{ $tab['key'] }}"
+                >{{ $tab['label'] }} ({{ $tab['count'] }})</option>
+            @endforeach
+        </select>
+    </form>
 </nav>
