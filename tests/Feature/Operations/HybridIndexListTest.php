@@ -44,10 +44,26 @@ it('renders the list view as hybrid records with no table', function (string $ro
     expect($html)->toContain('ark-collection-hybrid')
         ->and($html)->toContain('data-collection-hybrid-sort-compact')
         ->and($html)->toContain($expected)
+        ->and($html)->toContain('ark-status-edge')
+        ->and($html)->toContain('data-status-edge=')
         ->and($html)->not->toContain('ark-collection-list-table')
         ->and($html)->not->toContain('ark-collection-mobile-list')
         ->and($html)->toContain('data-collection-view="cards"');
 })->with('hybrid indexes');
+
+it('paints the Repair Orders hybrid row edge from the RO status tone', function (): void {
+    [, , $repairOrder] = hybridIndexFixture();
+
+    $html = $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.repair-orders.index', ['view' => 'list']))
+        ->assertOk()
+        ->getContent();
+
+    $tone = $repairOrder->fresh()->status->indexTone();
+
+    expect($html)->toContain('ark-status-edge--'.$tone)
+        ->and($html)->toContain('data-status-edge="'.$tone.'"');
+});
 
 it('keeps sort links and preserves filters in the compact sort form', function (): void {
     hybridIndexFixture();

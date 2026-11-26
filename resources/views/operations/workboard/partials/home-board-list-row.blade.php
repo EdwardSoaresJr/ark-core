@@ -38,12 +38,12 @@
     $nextAction = in_array($nextPresentation['kind'], ['action', 'warning', 'watch'], true)
         ? $nextPresentation['label']
         : null;
-    $attentionTone = filled($surface->attention) ? $surface->attention : 'none';
+    $normalizedStatusTone = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::normalizeChipTone($statusTone);
 @endphp
 
 <article
     id="ops-list-ro-{{ $repairOrder->repair_order_id }}"
-    class="ark-job-board-hybrid-record ark-job-board-hybrid-record--{{ $attentionTone }}"
+    @class(['ark-job-board-hybrid-record', 'ark-status-edge', 'ark-status-edge--'.$normalizedStatusTone])
     data-job-board-row
     data-job-card
     data-ro-id="{{ $repairOrder->repair_order_id }}"
@@ -51,6 +51,7 @@
     data-home-tech-id="{{ $row->technicianId ?? '' }}"
     data-home-lane-key="{{ $row->laneKey }}"
     data-workboard-attention="{{ $surface->attention }}"
+    data-status-edge="{{ $normalizedStatusTone }}"
     @if ($surface->waitingOnCustomerDecision) data-workboard-decision="1" @endif
 >
     <div class="ark-job-board-hybrid-record__primary">

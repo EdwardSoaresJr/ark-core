@@ -22,6 +22,7 @@
 @endphp
 
 <x-tabler.hybrid-record
+    :status-tone="$chipTone"
     data-collection-row
     data-vehicle-id="{{ $vehicle->id }}"
 >

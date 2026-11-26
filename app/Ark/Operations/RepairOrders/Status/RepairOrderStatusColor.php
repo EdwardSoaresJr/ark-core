@@ -83,10 +83,27 @@ final class RepairOrderStatusColor
         };
     }
 
+    /**
+     * Chip tones that drive status edges and badges.
+     *
+     * @return list<string>
+     */
+    public static function chipTones(): array
+    {
+        return ['approval', 'blocked', 'motion', 'ready', 'closed', 'move'];
+    }
+
+    public static function normalizeChipTone(?string $tone): string
+    {
+        $tone = strtolower(trim((string) $tone));
+
+        return in_array($tone, self::chipTones(), true) ? $tone : 'move';
+    }
+
     /** Tabler color name for a chip tone. Follows swatch(), not the Bootstrap meaning of the key. */
     public static function tablerColorForChipTone(string $tone): string
     {
-        return match ($tone) {
+        return match (self::normalizeChipTone($tone)) {
             'approval' => 'orange',
             'blocked' => 'yellow',
             'motion' => 'azure',
@@ -94,6 +111,15 @@ final class RepairOrderStatusColor
             'closed' => 'dark',
             default => 'secondary',
         };
+    }
+
+    /**
+     * Shared CSS modifier for the status-colored left edge on hybrid rows and cards.
+     * Status drives the edge; attention never does.
+     */
+    public static function edgeClass(?string $chipTone): string
+    {
+        return 'ark-status-edge ark-status-edge--'.self::normalizeChipTone($chipTone);
     }
 
     /** ops-status-chip / ops-ro-card tone. */

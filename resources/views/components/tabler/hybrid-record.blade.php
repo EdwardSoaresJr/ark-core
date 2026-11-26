@@ -1,8 +1,18 @@
 @props([
+    'statusTone' => 'move',
     'attentionTone' => 'none',
 ])
 
-<article {{ $attributes->class(['ark-collection-hybrid-record', 'ark-collection-hybrid-record--'.$attentionTone]) }}>
+@php
+    $normalizedStatusTone = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::normalizeChipTone($statusTone);
+@endphp
+
+<article {{ $attributes->class([
+    'ark-collection-hybrid-record',
+    'ark-status-edge',
+    'ark-status-edge--'.$normalizedStatusTone,
+    'ark-collection-hybrid-record--'.$attentionTone => $attentionTone !== 'none',
+])->merge(['data-status-edge' => $normalizedStatusTone]) }}>
     <div class="ark-collection-hybrid-record__primary">
         <div class="ark-collection-hybrid-record__topline">
             {{ $identity }}

@@ -784,25 +784,44 @@
     box-shadow: 0 8px 22px color-mix(in srgb, var(--tblr-body-color) 6%, transparent);
 }
 
-.ark-job-board-hybrid-record--attention::before,
-.ark-job-board-hybrid-record--critical::before {
+/* Status-driven left edge (shared). Attention stays in text/badges, not the rail. */
+.ark-status-edge {
+    position: relative;
+}
+
+.ark-status-edge::before {
     content: '';
     position: absolute;
     inset: 0 auto 0 0;
     width: 3px;
+    background: color-mix(in srgb, var(--tblr-secondary) 70%, transparent);
+    border-radius: var(--ark-hybrid-radius, 0.65rem) 0 0 var(--ark-hybrid-radius, 0.65rem);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.ark-status-edge--approval::before {
     background: var(--tblr-orange, #f76707);
 }
 
-.ark-job-board-hybrid-record--critical::before {
-    background: var(--tblr-danger);
+.ark-status-edge--blocked::before {
+    background: var(--tblr-yellow, #f59f00);
 }
 
-.ark-job-board-hybrid-record--watch::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: color-mix(in srgb, var(--tblr-secondary) 55%, transparent);
+.ark-status-edge--motion::before {
+    background: var(--tblr-azure, #4299e1);
+}
+
+.ark-status-edge--ready::before {
+    background: var(--tblr-green, #2fb344);
+}
+
+.ark-status-edge--closed::before {
+    background: var(--tblr-dark, #1e293b);
+}
+
+.ark-status-edge--move::before {
+    background: color-mix(in srgb, var(--tblr-secondary) 70%, transparent);
 }
 
 .ark-job-board-hybrid-record__primary {
@@ -1440,26 +1459,7 @@
     box-shadow: 0 8px 22px color-mix(in srgb, var(--tblr-body-color) 6%, transparent);
 }
 
-.ark-collection-hybrid-record--attention::before,
-.ark-collection-hybrid-record--critical::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--tblr-orange, #f76707);
-}
-
-.ark-collection-hybrid-record--critical::before {
-    background: var(--tblr-danger);
-}
-
-.ark-collection-hybrid-record--watch::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: color-mix(in srgb, var(--tblr-secondary) 55%, transparent);
-}
+/* Collection hybrid edges use shared .ark-status-edge* (status-driven). */
 
 .ark-collection-hybrid-record__primary {
     min-width: 0;

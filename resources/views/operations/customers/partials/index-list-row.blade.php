@@ -16,6 +16,7 @@
 @endphp
 
 <x-tabler.hybrid-record
+    :status-tone="$chipTone"
     data-collection-row
     data-customer-id="{{ $customer->id }}"
 >

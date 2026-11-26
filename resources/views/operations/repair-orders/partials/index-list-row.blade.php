@@ -25,6 +25,7 @@
 @endphp
 
 <x-tabler.hybrid-record
+    :status-tone="$cardTone"
     data-collection-row
     data-ro-id="{{ $repairOrder->repair_order_id }}"
 >
