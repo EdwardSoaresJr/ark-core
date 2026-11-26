@@ -15,7 +15,19 @@
     @else
         <div class="card d-none d-md-block" data-job-board-list-desktop>
             <div class="table-responsive">
-                <table class="table table-vcenter table-hover card-table table-sm mb-0 ark-job-board-table">
+                <table class="table table-vcenter table-hover card-table table-sm mb-0 ark-job-board-table ark-job-board-table--grid">
+                    <colgroup>
+                        <col class="ark-job-board-col-ro">
+                        <col class="ark-job-board-col-customer-vehicle">
+                        <col class="ark-job-board-col-concern">
+                        <col class="ark-job-board-col-status">
+                        <col class="ark-job-board-col-tech">
+                        <col class="ark-job-board-col-total">
+                        <col class="ark-job-board-col-attention">
+                        <col class="ark-job-board-col-activity">
+                        <col class="ark-job-board-col-updated">
+                        <col class="ark-job-board-col-open">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th scope="col" class="ark-job-board-col-ro" @if ($jobBoardListPage->ariaSort('ro')) aria-sort="{{ $jobBoardListPage->ariaSort('ro') }}" @endif>

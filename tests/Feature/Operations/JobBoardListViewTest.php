@@ -777,6 +777,7 @@ test('job board acceptance scenario surfaces tech status totals without promised
         ->and($html)->toContain('Jordan Lee')
         ->and($html)->toContain('grinding front brakes')
         ->and($html)->toContain('Waiting Parts')
+        ->and($html)->toContain('ark-job-board-table--grid')
         ->and($xpath->query('//*[@data-job-board-col="customer-vehicle"]', $document)->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-sort="customer"]', $document)->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-sort="vehicle"]', $document)->length)->toBe(1)
