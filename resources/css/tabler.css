@@ -640,20 +640,25 @@
 
 .ark-job-board-hybrid__sort--compact {
     display: none;
-    gap: 0.45rem;
-    margin-bottom: 0.55rem;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.45rem;
+    padding: 0.15rem 0;
 }
 
 .ark-job-board-hybrid__sort-select {
     flex: 1 1 auto;
+    width: auto;
     min-width: 0;
-    max-width: 14rem;
+    max-width: none;
 }
 
 .ark-job-board-hybrid__sort-dir {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
+    flex: 0 0 auto;
     min-height: 2rem;
     white-space: nowrap;
 }
