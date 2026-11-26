@@ -62,7 +62,7 @@
     display: none !important;
 }
 
-/* List range and list pagination are List-only. Queue/status chrome stays for Cards too. */
+/* Lane tabs, Queue select, list range, and list pagination are List-only. */
 [data-job-board][data-job-board-effective-layout="cards"] [data-job-board-list-chrome],
 [data-job-board]:not([data-job-board-effective-layout])[data-job-board-layout="cards"] [data-job-board-list-chrome] {
     display: none !important;

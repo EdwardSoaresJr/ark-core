@@ -857,6 +857,9 @@ test('job board mobile queue select mirrors lane tabs with counts and preserves 
         ->toBe((int) preg_replace('/.*\((\d+)\)$/', '$1', $optionLabels['waiting_approval'] ?? '0'))
         ->and($queueHtml)->not->toContain('name="view"');
 
+    expect($xpath->query('//*[@data-job-board-list-chrome]//*[@data-job-board-lane-queue]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-list-chrome]//*[@data-job-board-lane-tabs]')->length)->toBe(1);
+
     $cardsHtml = $this->actingAs($advisor)
         ->get(route('operations.index', ['view' => 'cards', 'lane' => 'parts']))
         ->assertOk()
@@ -867,15 +870,29 @@ test('job board mobile queue select mirrors lane tabs with counts and preserves 
     $cardsDocument->loadHTML($cardsHtml);
     libxml_clear_errors();
     $cardsXpath = new DOMXPath($cardsDocument);
+    $board = $cardsXpath->query('//*[@data-job-board]')->item(0);
 
-    expect($cardsXpath->query('//*[@data-job-board-lane-queue]//select[@name="lane"]/option[@value="parts"][@selected]')->length)->toBe(1)
-        ->and($cardsXpath->query('//*[@data-job-board-lane-tab="parts"][@aria-current="page"]')->length)->toBe(1);
+    expect($board)->toBeInstanceOf(DOMElement::class)
+        ->and($board->getAttribute('data-job-board-layout'))->toBe('cards')
+        ->and($cardsXpath->query('.//*[@data-job-board-list-chrome]//*[@data-job-board-lane-queue]//select[@name="lane"]/option[@value="parts"][@selected]', $board)->length)->toBe(1)
+        ->and($cardsXpath->query('.//*[@data-job-board-lane-tab="parts"][@aria-current="page"]', $board)->length)->toBe(1)
+        ->and($cardsHtml)->toContain('applies only in List view');
+
+    $listAgain = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'list', 'lane' => 'parts']))
+        ->assertOk()
+        ->getContent();
+
+    expect($listAgain)->toContain('data-job-board-layout="list"')
+        ->and($listAgain)->toContain('data-job-board-lane-tab="parts"')
+        ->and($listAgain)->toContain('aria-current="page"');
 
     $css = (string) file_get_contents(resource_path('css/tabler.css'));
     expect($css)
         ->toContain('@media (max-width: 991.98px)')
         ->toContain('.ark-job-board-lane-tabs__track')
         ->toContain('.ark-job-board-lane-tabs__queue')
+        ->toContain('[data-job-board-list-chrome]')
         ->toContain('display: none')
         ->toContain('display: flex');
 });

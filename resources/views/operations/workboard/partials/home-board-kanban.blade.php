@@ -31,7 +31,7 @@
             @endif
             · Queue total {{ $jobBoardListPage->queueTotal }}
             @if ($jobBoardListPage->laneKey !== 'all')
-                <span class="text-secondary">· Queue “{{ collect($jobBoardListPage->laneTabs)->firstWhere('key', $jobBoardListPage->laneKey)['label'] ?? $jobBoardListPage->laneKey }}” filters List; Cards columns stay board-wide</span>
+                <span class="text-secondary">· List queue “{{ collect($jobBoardListPage->laneTabs)->firstWhere('key', $jobBoardListPage->laneKey)['label'] ?? $jobBoardListPage->laneKey }}” applies only in List view</span>
             @endif
         @endif
         @if ($jobBoardListPage->hasBoardWideFilters())
