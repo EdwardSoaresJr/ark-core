@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -27,6 +28,8 @@ return new class extends Migration
                 ->where('color', 'secondary')
                 ->update(['color' => 'light']);
         }
+
+        $this->forgetStatusCatalogCaches();
     }
 
     public function down(): void
@@ -44,5 +47,15 @@ return new class extends Migration
                 ->where('color', 'light')
                 ->update(['color' => 'secondary']);
         }
+
+        $this->forgetStatusCatalogCaches();
+    }
+
+    private function forgetStatusCatalogCaches(): void
+    {
+        Cache::forget('repair_order_status_catalog.v4');
+        Cache::forget('repair_order_status_catalog.v2');
+        Cache::forget('repair_order_status_catalog.v1');
+        Cache::forget('job_board_lanes.v1');
     }
 };
