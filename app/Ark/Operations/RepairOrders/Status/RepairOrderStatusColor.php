@@ -12,6 +12,9 @@ final class RepairOrderStatusColor
 
     public const SECONDARY = 'secondary';
 
+    /** Theme-aware white (dark UI) / dark-neutral (light UI) — Building Estimate. */
+    public const LIGHT = 'light';
+
     public const WARNING = 'warning';
 
     public const INFO = 'info';
@@ -28,6 +31,7 @@ final class RepairOrderStatusColor
         return [
             self::DARK,
             self::SECONDARY,
+            self::LIGHT,
             self::WARNING,
             self::INFO,
             self::PRIMARY,
@@ -63,6 +67,7 @@ final class RepairOrderStatusColor
         return match (self::normalize($color)) {
             self::DARK => 'Slate',
             self::SECONDARY => 'Neutral',
+            self::LIGHT => 'White',
             self::WARNING => 'Waiting',
             self::INFO => 'Info',
             self::PRIMARY => 'In motion',
@@ -76,6 +81,7 @@ final class RepairOrderStatusColor
         return match (self::normalize($color)) {
             self::DARK => '#334155',
             self::SECONDARY => '#94a3b8',
+            self::LIGHT => '#f8fafc',
             self::WARNING => '#f97316',
             self::INFO => '#f59e0b',
             self::PRIMARY => '#0ea5e9',
@@ -90,7 +96,7 @@ final class RepairOrderStatusColor
      */
     public static function chipTones(): array
     {
-        return ['approval', 'blocked', 'motion', 'ready', 'closed', 'move'];
+        return ['approval', 'blocked', 'motion', 'ready', 'closed', 'building', 'move'];
     }
 
     public static function normalizeChipTone(?string $tone): string
@@ -100,7 +106,10 @@ final class RepairOrderStatusColor
         return in_array($tone, self::chipTones(), true) ? $tone : 'move';
     }
 
-    /** Tabler color name for a chip tone. Follows swatch(), not the Bootstrap meaning of the key. */
+    /**
+     * Tabler / ARK color token for a chip tone.
+     * `building` is theme-aware (white in dark, dark-neutral in light) via shared CSS.
+     */
     public static function tablerColorForChipTone(string $tone): string
     {
         return match (self::normalizeChipTone($tone)) {
@@ -109,6 +118,7 @@ final class RepairOrderStatusColor
             'motion' => 'azure',
             'ready' => 'green',
             'closed' => 'dark',
+            'building' => 'building',
             default => 'secondary',
         };
     }
@@ -131,6 +141,7 @@ final class RepairOrderStatusColor
             self::PRIMARY => 'motion',
             self::SUCCESS => 'ready',
             self::DARK => 'closed',
+            self::LIGHT => 'building',
             self::SECONDARY => 'move',
         };
     }

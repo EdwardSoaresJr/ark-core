@@ -38,6 +38,32 @@ test('job board ships the five default lanes in shop order', function () {
     ]);
 });
 
+test('building estimate defaults to light and closed stays dark', function () {
+    $estimate = RepairOrderStatusDefinition::query()->where('slug', 'estimate')->first();
+    $closed = RepairOrderStatusDefinition::query()->where('slug', 'closed')->first();
+    $estimatesLane = app(JobBoardLaneCatalog::class)->lane(JobBoardLaneCatalogDefaults::ESTIMATES);
+
+    expect($estimate?->color)->toBe(RepairOrderStatusColor::LIGHT)
+        ->and($closed?->color)->toBe(RepairOrderStatusColor::DARK)
+        ->and($estimatesLane['color'])->toBe(RepairOrderStatusColor::LIGHT)
+        ->and(RepairOrderStatusColor::chipTone($estimate?->color))->toBe('building')
+        ->and(RepairOrderStatusColor::chipTone($closed?->color))->toBe('closed');
+});
+
+test('catalog sync preserves tenant status and lane colors', function () {
+    RepairOrderStatusDefinition::query()->where('slug', 'estimate')->update(['color' => RepairOrderStatusColor::WARNING]);
+    JobBoardLane::query()->where('key', JobBoardLaneCatalogDefaults::ESTIMATES)->update(['color' => RepairOrderStatusColor::PRIMARY]);
+
+    \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalogDefaults::sync(app(RepairOrderStatusCatalog::class));
+    app(JobBoardLaneCatalog::class)->forgetCache();
+    app(RepairOrderStatusCatalog::class)->forgetCache();
+
+    expect(RepairOrderStatusDefinition::query()->where('slug', 'estimate')->value('color'))
+        ->toBe(RepairOrderStatusColor::WARNING)
+        ->and(JobBoardLane::query()->where('key', JobBoardLaneCatalogDefaults::ESTIMATES)->value('color'))
+        ->toBe(RepairOrderStatusColor::PRIMARY);
+});
+
 test('lane color persists independently from status color', function () {
     $admin = actingAsLearnCurrentStaff(ArkRole::Admin);
 

@@ -821,8 +821,48 @@
     background: color-mix(in srgb, var(--tblr-secondary) 55%, var(--tblr-dark, #1e293b));
 }
 
+.ark-status-edge--building::before {
+    /* Light theme: dark neutral so the rail stays visible on white surfaces. */
+    background: color-mix(in srgb, var(--tblr-body-color) 78%, transparent);
+}
+
+[data-bs-theme='dark'] .ark-status-edge--building::before {
+    background: #fff;
+}
+
 .ark-status-edge--move::before {
     background: var(--tblr-secondary);
+}
+
+/*
+ * Theme-aware Building Estimate token (RepairOrderStatusColor::LIGHT → chip tone building).
+ * Distinct from Closed (dark/gray): white in dark UI, dark-neutral in light UI.
+ */
+:root,
+[data-bs-theme='light'] {
+    --ark-status-building: #334155;
+    --ark-status-building-fg: #1e293b;
+    --ark-status-building-lt: color-mix(in srgb, #334155 14%, transparent);
+}
+
+[data-bs-theme='dark'] {
+    --ark-status-building: #f8fafc;
+    --ark-status-building-fg: #f8fafc;
+    --ark-status-building-lt: color-mix(in srgb, #f8fafc 16%, transparent);
+}
+
+.bg-building {
+    --tblr-bg-opacity: 1;
+    background-color: var(--ark-status-building) !important;
+}
+
+.bg-building-lt {
+    color: var(--ark-status-building-fg) !important;
+    background: var(--ark-status-building-lt) !important;
+}
+
+.text-building {
+    color: var(--ark-status-building-fg) !important;
 }
 
 .ark-job-board-hybrid-record__primary {
@@ -2189,6 +2229,10 @@
 .ark-job-board-lane-tabs__tab[data-lane-tone='dark'],
 .ark-job-board-lane-tabs__tab[data-lane-tone='muted'] {
     --ark-lane-accent: var(--tblr-secondary);
+}
+
+.ark-job-board-lane-tabs__tab[data-lane-tone='building'] {
+    --ark-lane-accent: var(--ark-status-building);
 }
 
 /* Same breakpoint as compact Sort by: tabs on desktop, Queue select on smaller screens. */

@@ -26,7 +26,7 @@ final class JobBoardLaneCatalogDefaults
             [
                 'key' => self::ESTIMATES,
                 'name' => 'Estimates',
-                'color' => RepairOrderStatusColor::SECONDARY,
+                'color' => RepairOrderStatusColor::LIGHT,
                 'sort_order' => 0,
                 'active' => true,
                 'is_system' => true,
@@ -120,10 +120,18 @@ final class JobBoardLaneCatalogDefaults
     public static function sync(): void
     {
         foreach (self::lanes() as $lane) {
-            JobBoardLane::query()->updateOrCreate(
-                ['key' => $lane['key']],
-                $lane,
-            );
+            $existing = JobBoardLane::query()->where('key', $lane['key'])->first();
+            if ($existing === null) {
+                JobBoardLane::query()->create($lane);
+
+                continue;
+            }
+
+            // Preserve tenant-chosen lane colors; sync still refreshes structure and flags.
+            $tenantColor = $existing->color;
+            $existing->fill($lane);
+            $existing->color = $tenantColor;
+            $existing->save();
         }
     }
 }
