@@ -564,11 +564,11 @@
 .ark-job-board-table {
     --tblr-table-cell-padding-y: 0.45rem;
     --tblr-table-cell-padding-x: 0.6rem;
-    --ark-job-board-col-rule: color-mix(in srgb, var(--tblr-border-color) 72%, var(--tblr-secondary));
-    --ark-job-board-header-bg: color-mix(in srgb, var(--tblr-secondary) 14%, var(--tblr-bg-surface));
-    --ark-job-board-header-rule: color-mix(in srgb, var(--tblr-border-color) 45%, var(--tblr-secondary));
-    --ark-job-board-money-bg: color-mix(in srgb, var(--tblr-secondary) 5%, transparent);
-    --ark-job-board-ops-bg: color-mix(in srgb, var(--tblr-secondary) 3.5%, transparent);
+    --ark-job-board-col-rule: color-mix(in srgb, var(--tblr-border-color) 40%, var(--tblr-secondary));
+    --ark-job-board-header-bg: color-mix(in srgb, var(--tblr-secondary) 18%, var(--tblr-bg-surface));
+    --ark-job-board-header-rule: color-mix(in srgb, var(--tblr-border-color) 25%, var(--tblr-secondary));
+    --ark-job-board-money-bg: color-mix(in srgb, var(--tblr-secondary) 7%, transparent);
+    --ark-job-board-ops-bg: color-mix(in srgb, var(--tblr-secondary) 5%, transparent);
     width: 100%;
     table-layout: fixed;
     font-size: 0.8125rem;
@@ -1110,9 +1110,9 @@
 }
 
 [data-bs-theme='dark'] .ark-job-board-table {
-    --ark-job-board-col-rule: color-mix(in srgb, var(--tblr-border-color) 55%, #94a3b8);
-    --ark-job-board-header-bg: color-mix(in srgb, var(--tblr-secondary) 22%, var(--tblr-bg-surface));
-    --ark-job-board-header-rule: color-mix(in srgb, var(--tblr-border-color) 35%, #94a3b8);
+    --ark-job-board-col-rule: color-mix(in srgb, var(--tblr-border-color) 35%, #94a3b8);
+    --ark-job-board-header-bg: color-mix(in srgb, var(--tblr-secondary) 26%, var(--tblr-bg-surface));
+    --ark-job-board-header-rule: color-mix(in srgb, var(--tblr-border-color) 20%, #94a3b8);
     --ark-job-board-money-bg: color-mix(in srgb, var(--tblr-secondary) 10%, transparent);
     --ark-job-board-ops-bg: color-mix(in srgb, var(--tblr-secondary) 7%, transparent);
 }
