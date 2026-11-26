@@ -15,10 +15,16 @@
         : null;
     $moneyLabel = filled($row->moneyLabel) ? $row->moneyLabel : '$0';
     $isBalanceDue = $row->moneyCaption === 'due';
+    $moneyCaptionLabel = match ($row->moneyCaption) {
+        'due' => 'due',
+        'pending' => 'pending',
+        default => null,
+    };
+    $attentionTone = filled($surface->attention) ? $surface->attention : 'none';
 @endphp
 
 <article
-    class="card card-sm"
+    class="card card-sm ark-job-board-mobile-card ark-job-board-mobile-card--{{ $attentionTone }}"
     data-job-board-row
     data-job-card
     data-job-board-mobile-for="{{ $repairOrder->repair_order_id }}"
@@ -29,13 +35,18 @@
     data-workboard-attention="{{ $surface->attention }}"
 >
     <a href="{{ $builderUrl }}" class="card-body py-2 px-3 text-reset text-decoration-none">
-        <div class="d-flex align-items-baseline gap-2">
-            <span class="fw-bold" data-job-board-row-ro data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</span>
-            <span @class(['ms-auto fw-bold ark-money text-nowrap small', 'text-danger' => $isBalanceDue]) data-job-card-total>{{ $moneyLabel }}</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="ark-job-board-ro-link" data-job-board-row-ro data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</span>
+            <span @class(['ms-auto fw-bold ark-money text-nowrap', 'text-danger' => $isBalanceDue]) data-job-card-total>
+                {{ $moneyLabel }}
+                @if ($moneyCaptionLabel)
+                    <span class="small fw-normal text-secondary">{{ $moneyCaptionLabel }}</span>
+                @endif
+            </span>
             <x-tabler.status-badge :tone="$statusTone">{{ $statusLabel }}</x-tabler.status-badge>
         </div>
-        <div class="fw-medium text-truncate mt-1" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</div>
-        <div class="small text-secondary text-truncate" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</div>
+        <div class="ark-job-board-visit__vehicle text-truncate mt-1" data-job-board-row-vehicle data-job-card-vehicle>{{ $card->vehicleLabel }}</div>
+        <div class="ark-job-board-visit__customer text-truncate" data-job-board-row-customer data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</div>
         <div class="d-flex align-items-center gap-2 mt-2 small">
             <span class="text-truncate{{ $nextAction === null ? ' text-secondary' : '' }}" data-next-kind="{{ $nextPresentation['kind'] }}">{{ $nextAction ?? '—' }}</span>
             <span class="ms-auto text-secondary text-nowrap">{{ $row->updatedLabel }}</span>
