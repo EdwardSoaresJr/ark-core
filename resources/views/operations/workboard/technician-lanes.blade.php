@@ -14,7 +14,7 @@
 
 <x-tabler.page
     layout="fluid"
-    title="Job Board"
+    title="Shop Queue"
     :title-count="$boardQueueCount"
     subtitle="Repair order lifecycle pressure in the building."
 >
@@ -84,7 +84,8 @@
                                 $statusTone = $repairOrder->status->indexTone();
                             @endphp
 
-                            <article class="card card-sm" data-technician-board-card data-age-pressure="{{ $agePressure }}">
+                            <article class="card card-sm" data-technician-board-card data-age-pressure="{{ $agePressure }}" data-status-edge="{{ \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::normalizeChipTone($statusTone) }}">
+                                <div class="card-status-start bg-{{ \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone($statusTone) }}" data-status-edge-rail></div>
                                 <div class="card-body p-2">
                                     <div class="d-flex align-items-baseline gap-2">
                                         <a href="{{ route('operations.repair-orders.show', $repairOrder) }}" class="fw-bold text-reset text-truncate stretched-link" data-technician-board-card-link>{{ $repairOrder->vehicle->display_name }}</a>

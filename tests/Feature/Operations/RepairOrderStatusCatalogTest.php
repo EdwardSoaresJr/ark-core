@@ -350,7 +350,7 @@ test('shop workflow settings expose the repair order status catalog', function (
     $this->get(route('operations.settings.shop.edit', ['section' => 'workflow', 'workflow-tab' => 'statuses']))
         ->assertOk()
         ->assertSee('RO statuses')
-        ->assertSee('Job Board lanes')
+        ->assertSee('Shop Queue lanes')
         ->assertSee('Waiting Approval')
         ->assertSee('Paid')
         ->assertSee('Save status catalog')
@@ -493,7 +493,7 @@ test('technicians see a filtered workboard for assigned bay work', function () {
 
     $this->get(route('operations.workboard'))
         ->assertOk()
-        ->assertSee('Job Board')
+        ->assertSee('Shop Queue')
         ->assertDontSee('Tech Operations')
         ->assertSee('TECH-ASSIGNED-BAY-WORK')
         ->assertDontSee('TECH-FOREIGN-BAY-WORK')

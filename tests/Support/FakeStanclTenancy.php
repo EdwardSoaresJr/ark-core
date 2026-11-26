@@ -30,6 +30,7 @@ final class FakeStanclTenancy
 
         self::$instance->initialized = false;
         self::$instance->tenant = null;
+        self::$instance = null;
     }
 
     private static function ensureHelper(): void

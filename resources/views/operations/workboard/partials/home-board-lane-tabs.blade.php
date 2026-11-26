@@ -6,7 +6,7 @@
 
 <nav
     class="ark-job-board-lane-tabs"
-    aria-label="Job board queues"
+    aria-label="Shop Queue queues"
     data-job-board-lane-tabs
 >
     <div class="ark-job-board-lane-tabs__track" data-job-board-lane-tabs-track>

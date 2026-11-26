@@ -137,7 +137,7 @@
         <x-tabler.page layout="fluid" title="Shop Dashboard" :subtitle="$headlineDate" actions-label="Dashboard shortcuts">
             <x-slot:actions>
                 <x-tabler.page-action :href="$dashboard->openQueueUrl" icon="file-text" :label="$openRepairOrdersLabel" />
-                <x-tabler.page-action :href="$dashboard->jobBoardUrl" icon="layout-grid" label="Job Board" />
+                <x-tabler.page-action :href="$dashboard->jobBoardUrl" icon="layout-grid" label="Shop Queue" />
                 @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
                     <x-tabler.page-action :href="\App\Ark\Operations\Communications\CommunicationsNeedsYou::url()" icon="message" label="Comms" />
                 @endcan
@@ -315,7 +315,7 @@
     @else
         <x-tabler.page layout="fluid" title="Today" :title-count="$today->attentionCount" :subtitle="$today->greeting" actions-label="Today shortcuts">
             <x-slot:actions>
-                <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Job Board" />
+                <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Shop Queue" />
             </x-slot:actions>
 
             @include('operations.today.partials.technician-lanes', ['today' => $today, 'sections' => $sections])

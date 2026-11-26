@@ -26,7 +26,7 @@ final class RepairOrderStatusCatalogDefaults
             ->map(fn (array $lane): array => [
                 'key' => $lane['key'],
                 'label' => $lane['name'],
-                'description' => 'Job Board lane',
+                'description' => 'Shop Queue lane',
                 'tone' => JobBoardLaneCatalogDefaults::defaultTone($lane['color']),
             ])
             ->values()

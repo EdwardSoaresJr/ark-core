@@ -33,11 +33,10 @@
         $exceptionLabel,
         ...array_column($exceptionExtras, 'label'),
     ])->filter()->join(' '));
-    $attentionColor = match ($attention) {
-        'watch', 'attention' => 'yellow',
-        'critical' => 'red',
-        default => null,
-    };
+    $statusTone = filled($chip?->statusColor)
+        ? \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::chipTone($chip->statusColor)
+        : ($chip?->tone ?? 'move');
+    $statusEdgeColor = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone($statusTone);
     $toneText = fn (?string $tone): ?string => match ($tone) {
         'attention' => 'text-warning',
         'critical', 'missed' => 'text-danger',
@@ -67,9 +66,7 @@
         @if ($isRecommended) data-workboard-recommended @endif
         @if ($surface?->waitingOnCustomerDecision) data-workboard-decision="1" @endif
     >
-        @if ($attentionColor)
-            <div class="card-status-start bg-{{ $attentionColor }}"></div>
-        @endif
+        <div class="card-status-start bg-{{ $statusEdgeColor }}" data-status-edge-rail data-status-edge="{{ \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::normalizeChipTone($statusTone) }}"></div>
         <div class="card-body p-2" data-job-card-scan>
             <div class="d-flex align-items-baseline gap-2">
                 <a href="{{ $builderUrl }}" class="fw-bold text-reset" data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</a>

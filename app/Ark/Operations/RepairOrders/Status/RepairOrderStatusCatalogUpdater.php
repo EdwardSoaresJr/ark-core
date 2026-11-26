@@ -92,7 +92,7 @@ final class RepairOrderStatusCatalogUpdater
 
         if ($laneKey === null) {
             throw ValidationException::withMessages([
-                'create.advisor_lane_key' => 'Choose a valid Job Board lane.',
+                'create.advisor_lane_key' => 'Choose a valid Shop Queue lane.',
             ]);
         }
 
@@ -238,7 +238,7 @@ final class RepairOrderStatusCatalogUpdater
 
             if ($laneKey === null) {
                 throw ValidationException::withMessages([
-                    "statuses.{$slug}.advisor_lane_key" => 'Choose a valid Job Board lane.',
+                    "statuses.{$slug}.advisor_lane_key" => 'Choose a valid Shop Queue lane.',
                 ]);
             }
 

@@ -53,7 +53,7 @@ test('lane color persists independently from status color', function () {
             ],
         ])
         ->assertRedirect()
-        ->assertSessionHas('status', 'Job Board lanes saved.');
+        ->assertSessionHas('status', 'Shop Queue lanes saved.');
 
     app(JobBoardLaneCatalog::class)->forgetCache();
 
@@ -235,6 +235,6 @@ test('job board settings can rename a default lane without changing its key', fu
     $this->actingAs($admin)
         ->get(route('operations.settings.shop.edit', ['section' => 'workflow', 'workflow-tab' => 'statuses']))
         ->assertOk()
-        ->assertSee('Job Board lanes', false)
+        ->assertSee('Shop Queue lanes', false)
         ->assertSee('Parts Hold', false);
 });

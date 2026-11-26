@@ -47,7 +47,7 @@ it('puts schedule on the rail and customer hub', function (): void {
     $this->actingAs($this->advisor)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Job Board', false)
+        ->assertSee('Shop Queue', false)
         ->assertSee('>Schedule</span>', false)
         ->assertDontSee('>Workspace</span>', false);
 

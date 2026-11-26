@@ -64,7 +64,7 @@
         <div class="btn-list" data-day-review-links>
             <a href="{{ route('operations.reports.index') }}" class="btn">All reports</a>
             <a href="{{ $eod->reportUrl }}" class="btn">Operational Report</a>
-            <a href="{{ route('operations.workboard') }}" class="btn">Job Board</a>
+            <a href="{{ route('operations.workboard') }}" class="btn">Shop Queue</a>
             <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}" class="btn">Day Review guide</a>
         </div>
     </x-tabler.page>

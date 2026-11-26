@@ -1,6 +1,7 @@
 @php
     /** @var \App\Ark\Operations\Vehicles\Vehicle $vehicle */
     $displayTz = config('app.display_timezone');
+    // Only a currently open RO is surfaced; historical ROs are never treated as active work.
     $activeRepairOrder = $vehicle->repairOrders->first();
     $customer = $vehicle->customer;
     $hubUrl = $customer
@@ -17,26 +18,54 @@
     $chipLabel = $activeRepairOrder
         ? $activeRepairOrder->statusDisplayLabel()
         : 'No open RO';
+    $updatedLabel = $vehicle->updated_at->timezone($displayTz)->format('M j, Y');
 @endphp
 
-<tr data-collection-row data-vehicle-id="{{ $vehicle->id }}">
-    <td>
+<x-tabler.hybrid-record
+    :status-tone="$chipTone"
+    data-collection-row
+    data-vehicle-id="{{ $vehicle->id }}"
+>
+    <x-slot:identity>
         @if ($hubUrl !== null)
-            <a href="{{ $hubUrl }}" class="fw-bold text-reset">{{ $vehicle->operational_identity }}</a>
+            <a href="{{ $hubUrl }}" class="ark-collection-hybrid-record__vehicle">{{ $vehicle->operational_identity }}</a>
         @else
-            <span class="fw-bold">{{ $vehicle->operational_identity }}</span>
+            <span class="ark-collection-hybrid-record__vehicle">{{ $vehicle->operational_identity }}</span>
         @endif
-    </td>
-    <td>
         @if ($customerUrl !== null)
-            <a href="{{ $customerUrl }}" class="text-reset">{{ $customer?->name ?? 'Unknown customer' }}</a>
+            <a href="{{ $customerUrl }}" class="ark-collection-hybrid-record__customer">{{ $customer?->name ?? 'Unknown customer' }}</a>
         @else
-            <span class="text-secondary">Unknown customer</span>
+            <span class="ark-collection-hybrid-record__customer">Unknown customer</span>
         @endif
-    </td>
-    <td class="d-none d-lg-table-cell text-secondary text-nowrap">{{ $plateLabel !== '' ? $plateLabel : '—' }}</td>
-    <td class="d-none d-xl-table-cell text-secondary font-monospace">{{ $vinTail ? '…'.$vinTail : '—' }}</td>
-    <td><x-tabler.status-badge :tone="$chipTone">{{ $chipLabel }}</x-tabler.status-badge></td>
-    <td class="d-none d-xl-table-cell text-secondary text-nowrap">{{ $mileage !== null ? number_format($mileage).' mi' : '—' }}</td>
-    <td class="d-none d-xl-table-cell text-secondary text-nowrap">{{ $vehicle->updated_at->timezone($displayTz)->format('M j, Y') }}</td>
-</tr>
+    </x-slot:identity>
+
+    <x-slot:middle>
+        <div class="ark-collection-hybrid-record__meta">
+            <span class="ark-collection-hybrid-record__meta-item">{{ $plateLabel !== '' ? $plateLabel : 'No plate' }}</span>
+            <span class="ark-collection-hybrid-record__meta-item is-mono">{{ $vinTail ? 'VIN …'.$vinTail : 'No VIN' }}</span>
+        </div>
+        <div class="ark-collection-hybrid-record__actions-row">
+            <span class="ark-collection-hybrid-record__updated">Updated {{ $updatedLabel }}</span>
+        </div>
+    </x-slot:middle>
+
+    <x-slot:workflow>
+        <div class="ark-collection-hybrid-record__workflow-block">
+            <div class="ark-collection-hybrid-record__field-label">Open work</div>
+            <x-tabler.status-badge :tone="$chipTone">{{ $chipLabel }}</x-tabler.status-badge>
+        </div>
+    </x-slot:workflow>
+
+    <x-slot:finance>
+        <div class="ark-job-board-money">
+            <span class="ark-job-board-money__amount">{{ $mileage !== null ? number_format($mileage) : '—' }}</span>
+            <span class="ark-job-board-money__caption">{{ $mileage !== null ? 'Miles' : 'Mileage' }}</span>
+        </div>
+    </x-slot:finance>
+
+    <x-slot:open>
+        @if ($hubUrl !== null)
+            <a href="{{ $hubUrl }}" class="ark-collection-hybrid-record__open" aria-label="Open {{ $vehicle->operational_identity }}">Open <span aria-hidden="true">›</span></a>
+        @endif
+    </x-slot:open>
+</x-tabler.hybrid-record>

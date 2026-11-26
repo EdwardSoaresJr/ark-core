@@ -137,7 +137,7 @@ test('the technician Job Board renders lanes and cards in the Tabler shell', fun
     $main = dailyOpsTablerMain($this->actingAs($technician)->get(route('operations.workboard')));
 
     expectNoLegacyMarkup($main);
-    expect($main)->toContain('class="page-title">Job Board')
+    expect($main)->toContain('class="page-title">Shop Queue')
         ->toContain('class="ark-board pb-2" data-technician-board')
         ->toContain('data-technician-lane=')
         ->toContain('data-technician-board-card')

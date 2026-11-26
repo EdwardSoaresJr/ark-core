@@ -344,8 +344,8 @@ test('advisors and technicians see the repair order board under one name', funct
     $advisor = $labels(User::factory()->create()->assignRole(ArkRole::Advisor->value));
     $technician = $labels(User::factory()->create()->assignRole(ArkRole::Technician->value));
 
-    expect($advisor['job-board'])->toBe('Job Board')
-        ->and($technician['workboard'])->toBe('Job Board')
+    expect($advisor['job-board'])->toBe('Shop Queue')
+        ->and($technician['workboard'])->toBe('Shop Queue')
         ->and($technician)->not->toHaveKey('work-queues')
         ->and($advisor['work-queues'])->toBe('Work Queues');
 });

@@ -101,9 +101,9 @@
 
         <fieldset class="mb-3" data-profile-display-preferences>
             <legend class="form-label">Display Preferences</legend>
-            <p class="text-secondary">Default Job Board presentation. The same setting is updated when you switch List or Cards on the Job Board.</p>
+            <p class="text-secondary">Default Shop Queue presentation. The same setting is updated when you switch List or Cards on the Shop Queue.</p>
             <div class="mb-1">
-                <span class="form-label d-block">Default Job Board View</span>
+                <span class="form-label d-block">Default Shop Queue View</span>
                 <label class="form-check form-check-inline">
                     <input
                         type="radio"

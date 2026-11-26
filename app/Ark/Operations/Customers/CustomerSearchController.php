@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Customers;
 
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Preferences\CollectionLayoutModule;
 use App\Ark\Runtime\Preferences\CollectionLayoutPreference;
@@ -58,7 +59,11 @@ class CustomerSearchController
         );
 
         $customers = Customer::query()
-            ->withCount('vehicles')
+            ->withCount([
+                'vehicles',
+                'repairOrders as open_repair_orders_count' => fn (Builder $repairOrders): Builder => $repairOrders
+                    ->whereIn('status', RepairOrderStatus::operationalQueueValues()),
+            ])
             ->tap(fn (Builder $customers) => CustomerSearchQuery::withOperationalContext($customers))
             ->when(
                 $query !== '',

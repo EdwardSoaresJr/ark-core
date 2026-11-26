@@ -558,9 +558,9 @@ test('job board watch attention is neutral while actionable attention stays prom
     expect($watch->length + $attention->length + $critical->length)->toBeGreaterThan(0);
 });
 
-test('cards view keeps Watch without yellow edge while attention and critical keep accents', function () {
+test('cards view paints a status-colored edge on every card and keeps attention as secondary copy', function () {
     $advisor = actingAsLearnCurrentAdvisor();
-    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Card Watch Tone');
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Card Status Edge');
 
     $html = $this->actingAs($advisor)
         ->get(route('operations.index', ['view' => 'cards']))
@@ -572,31 +572,28 @@ test('cards view keeps Watch without yellow edge while attention and critical ke
     libxml_clear_errors();
     $xpath = new DOMXPath($document);
 
-    $watchCards = $xpath->query('//*[@data-job-board-card][@data-workboard-attention="watch"]');
-    $attentionCards = $xpath->query('//*[@data-job-board-card][@data-workboard-attention="attention"]');
-    $criticalCards = $xpath->query('//*[@data-job-board-card][@data-workboard-attention="critical"]');
+    $cards = $xpath->query('//*[@data-job-board-card]');
+    expect($cards->length)->toBeGreaterThan(0);
 
+    for ($i = 0; $i < $cards->length; $i++) {
+        $card = $cards->item($i);
+        expect($xpath->query('.//*[@data-status-edge-rail][contains(@class,"card-status-start")]', $card)->length)->toBe(1)
+            ->and($card->attributes->getNamedItem('data-status-edge')?->nodeValue)->not->toBe('')
+            ->and($xpath->query('.//*[contains(@class,"card-status-start") and contains(@class,"bg-red")]', $card)->length)->toBe(0);
+    }
+
+    $approvalEdges = $xpath->query('//*[@data-job-board-card][@data-status-edge="approval"]');
+    expect($approvalEdges->length)->toBeGreaterThan(0);
+    $approvalCard = $approvalEdges->item(0);
+    expect($xpath->query('.//*[contains(@class,"card-status-start") and contains(@class,"bg-orange")]', $approvalCard)->length)->toBe(1);
+
+    $watchCards = $xpath->query('//*[@data-job-board-card][@data-workboard-attention="watch"]');
     for ($i = 0; $i < $watchCards->length; $i++) {
         $card = $watchCards->item($i);
-        expect($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " card-status-start ")]', $card)->length)->toBe(0);
-
         $watchTone = $xpath->query('.//*[@data-attention-tone="watch"][contains(@class,"text-secondary")]', $card)->length;
         $concreteNext = $xpath->query('.//*[@data-next-kind="action"]', $card)->length;
-        // Watch stays edge-less; band may show understated Watch or a concrete Next action.
         expect($watchTone + $concreteNext)->toBeGreaterThan(0);
     }
-
-    for ($i = 0; $i < $attentionCards->length; $i++) {
-        $card = $attentionCards->item($i);
-        expect($xpath->query('.//*[contains(@class,"card-status-start") and contains(@class,"bg-yellow")]', $card)->length)->toBe(1);
-    }
-
-    for ($i = 0; $i < $criticalCards->length; $i++) {
-        $card = $criticalCards->item($i);
-        expect($xpath->query('.//*[contains(@class,"card-status-start") and contains(@class,"bg-red")]', $card)->length)->toBe(1);
-    }
-
-    expect($watchCards->length + $attentionCards->length + $criticalCards->length)->toBeGreaterThan(0);
 });
 
 test('cards view uses hierarchical Tabler bands inside Kanban columns', function () {
@@ -767,7 +764,10 @@ test('job board click contract keeps RO vehicle and customer destinations separa
     $xpath = new DOMXPath($document);
     $row = $xpath->query('//*[@id="ops-list-ro-'.$roId.'"]')->item(0);
 
-    expect($row)->toBeInstanceOf(DOMElement::class);
+    expect($row)->toBeInstanceOf(DOMElement::class)
+        ->and($row->attributes->getNamedItem('data-status-edge')?->nodeValue)->not->toBeNull()
+        ->and(str_contains((string) $row->getAttribute('class'), 'ark-status-edge--'))->toBeTrue()
+        ->and(str_contains((string) $row->getAttribute('class'), 'ark-job-board-hybrid-record--attention'))->toBeFalse();
 
     $roHref = (string) $xpath->query('.//*[@data-job-board-row-ro]', $row)->item(0)?->attributes?->getNamedItem('href')?->nodeValue;
     $vehicleHref = (string) $xpath->query('.//*[@data-job-board-row-vehicle]', $row)->item(0)?->attributes?->getNamedItem('href')?->nodeValue;

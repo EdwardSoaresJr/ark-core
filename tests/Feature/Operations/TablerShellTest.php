@@ -188,7 +188,7 @@ test('secondary actions are one labeled element each, marked for the overflow me
         ->get(route('operations.customers.search'))
         ->assertOk()
         ->assertSee('data-ark-page-action="secondary" aria-label="Vehicles"', false)
-        ->assertSee('data-ark-page-action="secondary" aria-label="Job Board"', false)
+        ->assertSee('data-ark-page-action="secondary" aria-label="Shop Queue"', false)
         ->assertSee('data-ark-page-overflow hidden', false)
         ->assertSee('aria-label="More page actions"', false)
         ->assertDontSee('btn-icon d-sm-none', false);

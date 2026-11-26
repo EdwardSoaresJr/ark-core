@@ -389,15 +389,15 @@
                     <div class="card-header">
                         <div>
                             <div class="subheader">Workflow Defaults</div>
-                            <h2 class="card-title">Check In defaults and Job Board</h2>
-                            <div class="card-subtitle">Shop-wide Check In defaults, Job Board lanes, and the repair order statuses that fill those lanes.</div>
+                            <h2 class="card-title">Check In defaults and Shop Queue</h2>
+                            <div class="card-subtitle">Shop-wide Check In defaults, Shop Queue lanes, and the repair order statuses that fill those lanes.</div>
                         </div>
                     </div>
                     <div class="card-header">
                         <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Workflow Defaults">
                             @foreach ([
                                 'defaults' => 'Check In defaults',
-                                'statuses' => 'Job Board',
+                                'statuses' => 'Shop Queue',
                                 'inspections' => 'Inspection checklists',
                                 'saved-work' => 'Common Jobs',
                             ] as $workflowTabKey => $workflowTabLabel)
@@ -424,7 +424,7 @@
                     </div>
 
                     <div class="card-body" id="workflow-panel-statuses" role="tabpanel" aria-labelledby="workflow-tab-statuses" x-show="workflowTab === 'statuses'" x-cloak>
-                        <h3 class="mb-1">Job Board</h3>
+                        <h3 class="mb-1">Shop Queue</h3>
                         <p class="text-secondary small">Set up the shop queues and the statuses that live in each one. Attention stays derived - it is not a lane or a status color.</p>
                         @include('operations.settings.partials.job-board-lanes')
                         <h3 class="mt-5 mb-1">RO statuses</h3>

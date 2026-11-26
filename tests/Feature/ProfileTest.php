@@ -136,7 +136,7 @@ test('profile display preferences persist job board view', function () {
         ->get(route('profile.edit', ['tab' => 'appearance']))
         ->assertOk()
         ->assertSee('data-profile-display-preferences', false)
-        ->assertSee('Default Job Board View', false)
+        ->assertSee('Default Shop Queue View', false)
         ->assertSee('Cards (Kanban)', false)
         ->assertSee('List (Tabs &amp; Table)', false);
 

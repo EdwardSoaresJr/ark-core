@@ -11,8 +11,8 @@
     $uiPreferenceScope ??= ['tenant' => 'local', 'user' => 'anon'];
 @endphp
 
-<x-operations.app title="Job Board" ui="tabler">
-    <x-tabler.page layout="fluid" title="Job Board">
+<x-operations.app title="Shop Queue" ui="tabler">
+    <x-tabler.page layout="fluid" title="Shop Queue">
         <section
             class="d-flex flex-column gap-2"
             data-job-board
@@ -82,7 +82,7 @@
             </div>
 
             @if ($jobBoardListPage->lastPage > 1)
-                <nav class="d-flex justify-content-between align-items-center mt-1" aria-label="Job board pages" data-job-board-list-chrome data-job-board-list-pagination>
+                <nav class="d-flex justify-content-between align-items-center mt-1" aria-label="Shop Queue pages" data-job-board-list-chrome data-job-board-list-pagination>
                     @if ($jobBoardListPage->page > 1)
                         <a class="btn btn-outline-secondary" href="{{ route('operations.index', $jobBoardListPage->queryParams(['page' => $jobBoardListPage->page - 1])) }}" data-job-board-list-prev>Previous</a>
                     @else

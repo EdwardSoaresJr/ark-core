@@ -24,11 +24,7 @@
     $concernFull = $concernLines !== [] ? implode("\n", $concernLines) : '';
     $nextPresentation = \App\Ark\Operations\Workboard\JobBoardCardNextPresentation::forSurface($surface);
     $activityStrip = \App\Ark\Operations\Workboard\JobBoardActivityPresentation::forList($row->activityMarks);
-    $attentionColor = match ($surface->attention) {
-        'attention' => 'yellow',
-        'critical' => 'red',
-        default => null,
-    };
+    $statusEdgeColor = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone($statusTone);
 @endphp
 
 <article
@@ -42,11 +38,10 @@
     data-home-tech-id="{{ $row->technicianId ?? '' }}"
     data-home-lane-key="{{ $row->laneKey }}"
     data-workboard-attention="{{ $surface->attention }}"
+    data-status-edge="{{ \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::normalizeChipTone($statusTone) }}"
     @if ($surface->waitingOnCustomerDecision) data-workboard-decision="1" @endif
 >
-    @if ($attentionColor)
-        <div class="card-status-start bg-{{ $attentionColor }}"></div>
-    @endif
+    <div class="card-status-start bg-{{ $statusEdgeColor }}" data-status-edge-rail></div>
     <div class="card-body ark-job-board-card-body">
         <div class="ark-job-board-card-band ark-job-board-card-band--identity">
             <a href="{{ $builderUrl }}" class="fw-bold text-reset text-nowrap" data-job-board-row-ro data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</a>
