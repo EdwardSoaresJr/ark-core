@@ -181,7 +181,10 @@
 /*
  * Job Board Cards = fluid Kanban.
  * Desktop: five equal columns only when content is wide enough for readable cards.
- * Narrower boards wrap to 3 → 2 columns. Mobile: one readable column with snap + selector.
+ * Narrower boards wrap to 3 → 2 columns.
+ * Mobile (≤767.98px, matches Column dropdown / d-md-none): exactly one lane at full
+ * content width — selected via [data-job-board-kanban-column-select]; neighbors are
+ * display:none + inert (see ark-job-board-layout.js). No horizontal board scroll.
  * Compact card sizing from PR #269 is preserved (no h-100 / no nested column scroll).
  *
  * Five-column threshold (~1200px content) keeps columns ≥ ~230px so vehicle/customer
@@ -230,6 +233,40 @@
     box-shadow: none;
     scroll-snap-align: start;
     min-width: 0;
+}
+
+/*
+ * Mobile single-lane Cards: same breakpoint as the Column select (Bootstrap md / d-md-none).
+ * Placed before wider container grids so those grids still apply on tablet/desktop, then
+ * re-asserted after the container blocks so ≤767.98px always wins over a 2-column wrap.
+ */
+@media (max-width: 767.98px) {
+    .ark-job-board-kanban-scroller {
+        overflow-x: hidden;
+        overflow-y: visible;
+        scroll-snap-type: none;
+        -webkit-overflow-scrolling: auto;
+        overscroll-behavior-x: auto;
+    }
+
+    .ark-job-board-kanban-track {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        gap: 0;
+    }
+
+    .ark-job-board-kanban-column {
+        display: none;
+        flex: none;
+        width: 100%;
+        max-width: 100%;
+        scroll-snap-align: none;
+    }
+
+    .ark-job-board-kanban-column.is-kanban-column-active {
+        display: flex;
+    }
 }
 
 .ark-job-board-kanban-column-head {
@@ -425,6 +462,39 @@
         .ark-job-board-kanban-track {
             grid-template-columns: repeat(5, minmax(0, 1fr));
         }
+    }
+}
+
+/*
+ * Re-assert mobile single-lane after container / @supports grids so ≤767.98px never
+ * falls into a multi-column wrap while the Column dropdown is visible.
+ */
+@media (max-width: 767.98px) {
+    .ark-job-board-kanban-scroller {
+        overflow-x: hidden;
+        overflow-y: visible;
+        scroll-snap-type: none;
+        -webkit-overflow-scrolling: auto;
+        overscroll-behavior-x: auto;
+    }
+
+    .ark-job-board-kanban-track {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        gap: 0;
+    }
+
+    .ark-job-board-kanban-column {
+        display: none;
+        flex: none;
+        width: 100%;
+        max-width: 100%;
+        scroll-snap-align: none;
+    }
+
+    .ark-job-board-kanban-column.is-kanban-column-active {
+        display: flex;
     }
 }
 

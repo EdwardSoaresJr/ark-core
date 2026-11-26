@@ -5,10 +5,17 @@
     $hasAnyCards = collect($kanbanColumns)->contains(fn ($column) => $column->totalCount > 0);
 @endphp
 
-<div data-job-board-cards data-job-board-kanban class="ark-job-board-cards ark-job-board-kanban">
+<div
+    data-job-board-cards
+    data-job-board-kanban
+    class="ark-job-board-cards ark-job-board-kanban"
+    @if ($hasAnyCards && isset($kanbanColumns[0]))
+        data-job-board-kanban-active-column="{{ $kanbanColumns[0]->key }}"
+    @endif
+>
     <div class="d-flex flex-wrap align-items-center gap-2 mb-2 d-md-none" data-job-board-kanban-mobile-nav>
         <label for="job-board-kanban-column" class="form-label mb-0 small text-secondary">Column</label>
-        <select id="job-board-kanban-column" class="form-select form-select-sm" data-job-board-kanban-column-select aria-label="Jump to Kanban column">
+        <select id="job-board-kanban-column" class="form-select form-select-sm" data-job-board-kanban-column-select aria-label="Kanban column">
             @foreach ($kanbanColumns as $column)
                 <option value="{{ $column->key }}">{{ $column->label }} ({{ $column->totalCount }})</option>
             @endforeach
@@ -58,7 +65,7 @@
                     @endphp
                     <section
                         id="ops-kanban-col-{{ $column->key }}"
-                        class="ark-job-board-kanban-column card"
+                        class="ark-job-board-kanban-column card{{ $loop->first ? ' is-kanban-column-active' : '' }}"
                         data-job-board-kanban-column="{{ $column->key }}"
                         data-lane-key="{{ $column->key }}"
                         data-lane-color="{{ $column->color }}"

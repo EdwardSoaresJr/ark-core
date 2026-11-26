@@ -210,17 +210,60 @@ function initBoard(board) {
     }
 
     const columnSelect = board.querySelector('[data-job-board-kanban-column-select]');
-    if (columnSelect) {
-        columnSelect.addEventListener('change', () => {
+    if (columnSelect instanceof HTMLSelectElement) {
+        const kanban = board.querySelector('[data-job-board-kanban]');
+        const mobileColumnMq = window.matchMedia('(max-width: 767.98px)');
+
+        const syncKanbanActiveColumn = () => {
             const key = columnSelect.value;
-            const column = board.querySelector(`[data-job-board-kanban-column="${key}"]`);
+            const mobile = mobileColumnMq.matches;
+
+            if (kanban instanceof HTMLElement) {
+                kanban.setAttribute('data-job-board-kanban-active-column', key);
+            }
+
+            board.querySelectorAll('[data-job-board-kanban-column]').forEach((column) => {
+                if (!(column instanceof HTMLElement)) {
+                    return;
+                }
+                const active = column.getAttribute('data-job-board-kanban-column') === key;
+                column.classList.toggle('is-kanban-column-active', active);
+
+                // Desktop keeps every lane interactive. Mobile hides neighbors from
+                // layout (CSS) and from keyboard / assistive tech (inert).
+                if (!mobile || active) {
+                    column.removeAttribute('inert');
+                    column.removeAttribute('aria-hidden');
+                    return;
+                }
+
+                column.setAttribute('inert', '');
+                column.setAttribute('aria-hidden', 'true');
+            });
+        };
+
+        columnSelect.addEventListener('change', () => {
+            syncKanbanActiveColumn();
+            // Mobile swaps visibility in place — no scrollIntoView (avoids page jump).
+            if (mobileColumnMq.matches) {
+                return;
+            }
+            const column = board.querySelector(`[data-job-board-kanban-column="${columnSelect.value}"]`);
             const scroller = board.querySelector('[data-job-board-kanban-scroller]');
-            if (!column || !scroller) {
+            if (!(column instanceof HTMLElement) || !(scroller instanceof HTMLElement)) {
                 return;
             }
             column.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
             scroller.focus({ preventScroll: true });
         });
+
+        if (typeof mobileColumnMq.addEventListener === 'function') {
+            mobileColumnMq.addEventListener('change', syncKanbanActiveColumn);
+        } else if (typeof mobileColumnMq.addListener === 'function') {
+            mobileColumnMq.addListener(syncKanbanActiveColumn);
+        }
+
+        syncKanbanActiveColumn();
     }
 }
 
