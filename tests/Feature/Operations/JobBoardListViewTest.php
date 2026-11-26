@@ -757,10 +757,58 @@ test('job board click contract keeps RO vehicle and customer destinations separa
         $toplineHtml = $document->saveHTML($toplineNode) ?: '';
     }
     $vehiclePos = strpos($toplineHtml, 'ark-job-board-hybrid-record__vehicle');
+    $roPos = strpos($toplineHtml, 'ark-job-board-hybrid-record__ro');
     $customerPos = strpos($toplineHtml, 'ark-job-board-hybrid-record__customer');
     expect($vehiclePos)->not->toBeFalse()
+        ->and($roPos)->not->toBeFalse()
         ->and($customerPos)->not->toBeFalse()
-        ->and($vehiclePos)->toBeLessThan((int) $customerPos);
+        ->and($vehiclePos)->toBeLessThan((int) $roPos)
+        ->and($roPos)->toBeLessThan((int) $customerPos);
+});
+
+test('job board concept c polish keeps denser hybrid chrome and compact mobile sort', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Polish Density');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', [
+            'view' => 'list',
+            'lane' => 'waiting_approval',
+            'sort' => 'total',
+            'dir' => 'asc',
+        ]))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $row = $xpath->query('//*[@data-job-board-list-body]//*[@data-job-board-row]')->item(0);
+
+    expect($row)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " ark-job-board-hybrid-record__middle ")]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " ark-job-board-hybrid-record__finance-stack ")]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-status]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-row-technician]', $row)->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-list-sort-compact]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-list-sort-compact]//select[@name="sort"]/option[@value="total"][@selected]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-lane-tabs]//*[contains(concat(" ", normalize-space(@class), " "), " ark-job-board-lane-tabs__track ")]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-lane-tab="waiting_approval"][contains(concat(" ", normalize-space(@class), " "), " ark-job-board-lane-tabs__tab ")][@aria-current="page"]')->length)->toBe(1)
+        ->and($html)->toContain('ark-job-board-lane-tabs__count')
+        ->and($html)->toContain('ark-job-board-hybrid__sort--compact')
+        ->and($html)->toContain('ark-job-board-hybrid__sort--links')
+        ->and($html)->not->toContain('data-job-board-list-mobile')
+        ->and($html)->not->toContain('ark-job-board-table--grid');
+
+    $css = (string) file_get_contents(resource_path('css/tabler.css'));
+    expect($css)
+        ->toContain('.ark-job-board-lane-tabs__track')
+        ->toContain('overflow-x: auto')
+        ->toContain('.ark-job-board-hybrid__sort--compact')
+        ->toMatch("/grid-template-areas:\\s*'identity money'\\s*'middle middle'\\s*'workflow open'/s")
+        ->toContain('display: contents');
 });
 
 test('job board acceptance scenario surfaces tech status totals without promised or parts columns', function () {
