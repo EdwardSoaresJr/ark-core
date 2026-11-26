@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Operations\Documents\PdfRuntimePaths;
+use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Workboard\JobBoardLayout;
 use App\Ark\Operations\Workboard\JobBoardListPage;
@@ -9,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Browsershot\Browsershot;
 use Tests\Support\JobBoardAcceptanceScenario;
 
@@ -139,7 +141,7 @@ test('job board cookie preference migrates into the user job_board_view column',
     $advisor = actingAsLearnCurrentAdvisor();
     repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Cookie Pref');
 
-    expect(\Illuminate\Support\Facades\Schema::hasColumn('users', JobBoardLayoutPreference::COLUMN))->toBeTrue()
+    expect(Schema::hasColumn('users', JobBoardLayoutPreference::COLUMN))->toBeTrue()
         ->and($advisor->job_board_view)->toBeNull();
 
     $this->actingAs($advisor)
@@ -740,9 +742,23 @@ test('job board click contract keeps RO vehicle and customer destinations separa
         ->and($customerHref)->toContain('/customers/'.$customerId)
         ->and($customerHref)->not->toContain('/repair-orders/')
         ->and($xpath->query('.//*[@data-job-board-row-customer-vehicle]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[@class="ark-job-board-visit"]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[@class="ark-job-board-visit__vehicle text-truncate"]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[@class="ark-job-board-visit__customer text-truncate"]', $row)->length)->toBe(1)
         ->and($xpath->query('.//td[@data-job-board-row-concern]//a', $row)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-row-promised]', $row)->length)->toBe(0)
         ->and($xpath->query('.//*[@data-job-board-row-parts]', $row)->length)->toBe(0);
+
+    $visitHtml = '';
+    $visitNode = $xpath->query('.//*[@class="ark-job-board-visit"]', $row)->item(0);
+    if ($visitNode instanceof DOMElement) {
+        $visitHtml = $document->saveHTML($visitNode) ?: '';
+    }
+    $vehiclePos = strpos($visitHtml, 'ark-job-board-visit__vehicle');
+    $customerPos = strpos($visitHtml, 'ark-job-board-visit__customer');
+    expect($vehiclePos)->not->toBeFalse()
+        ->and($customerPos)->not->toBeFalse()
+        ->and($vehiclePos)->toBeLessThan((int) $customerPos);
 });
 
 test('job board acceptance scenario surfaces tech status totals without promised or parts columns', function () {
@@ -783,7 +799,7 @@ test('job board concern column falls back to concern row summaries when RO summa
     ]);
     $repairOrder->concerns()->create([
         'summary' => 'Secondary fluid service job',
-        'disposition' => \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::Recommended,
+        'disposition' => RepairOrderConcernDisposition::Recommended,
         'recommendation_intent' => 'maintenance',
         'position' => 2,
     ]);
