@@ -562,12 +562,56 @@
 }
 
 .ark-job-board-table {
-    --tblr-table-cell-padding-y: 0.42rem;
-    --tblr-table-cell-padding-x: 0.55rem;
+    --tblr-table-cell-padding-y: 0.45rem;
+    --tblr-table-cell-padding-x: 0.6rem;
+    --ark-job-board-col-rule: color-mix(in srgb, var(--tblr-border-color) 72%, var(--tblr-secondary));
+    --ark-job-board-header-bg: color-mix(in srgb, var(--tblr-secondary) 14%, var(--tblr-bg-surface));
+    --ark-job-board-header-rule: color-mix(in srgb, var(--tblr-border-color) 45%, var(--tblr-secondary));
+    --ark-job-board-money-bg: color-mix(in srgb, var(--tblr-secondary) 5%, transparent);
+    --ark-job-board-ops-bg: color-mix(in srgb, var(--tblr-secondary) 3.5%, transparent);
     width: 100%;
+    table-layout: fixed;
     font-size: 0.8125rem;
     border-collapse: separate;
     border-spacing: 0;
+}
+
+.ark-job-board-table--grid thead th,
+.ark-job-board-table--grid tbody td {
+    border-right: 1px solid var(--ark-job-board-col-rule);
+}
+
+.ark-job-board-table--grid thead th:last-child,
+.ark-job-board-table--grid tbody td:last-child {
+    border-right: 0;
+}
+
+.ark-job-board-table--grid tbody td {
+    border-bottom: 1px solid var(--tblr-border-color);
+    background-clip: padding-box;
+}
+
+.ark-job-board-table--grid tbody tr:nth-child(even) td {
+    background-color: color-mix(in srgb, var(--tblr-secondary) 4%, var(--tblr-bg-surface));
+}
+
+.ark-job-board-table--grid tbody tr:hover td {
+    background-color: color-mix(in srgb, var(--tblr-primary) 5%, var(--tblr-bg-surface));
+}
+
+.ark-job-board-table--grid .ark-job-board-col-status,
+.ark-job-board-table--grid .ark-job-board-col-tech {
+    background-image: linear-gradient(var(--ark-job-board-ops-bg), var(--ark-job-board-ops-bg));
+}
+
+.ark-job-board-table--grid .ark-job-board-col-total {
+    background-image: linear-gradient(var(--ark-job-board-money-bg), var(--ark-job-board-money-bg));
+}
+
+.ark-job-board-table--grid thead .ark-job-board-col-status,
+.ark-job-board-table--grid thead .ark-job-board-col-tech,
+.ark-job-board-table--grid thead .ark-job-board-col-total {
+    background-image: none;
 }
 
 .ark-job-board-list-row {
@@ -609,15 +653,14 @@
 }
 
 .ark-job-board-table .ark-job-board-col-ro {
-    width: 5.5rem;
+    width: 5.75rem;
     white-space: nowrap;
     vertical-align: top;
 }
 
 .ark-job-board-table .ark-job-board-col-customer-vehicle {
-    min-width: 11rem;
-    max-width: 18rem;
-    width: 22%;
+    width: 18%;
+    min-width: 10.5rem;
     vertical-align: top;
 }
 
@@ -675,9 +718,8 @@
 }
 
 .ark-job-board-table .ark-job-board-col-concern {
-    min-width: 10rem;
-    max-width: 22rem;
-    width: 24%;
+    width: 16%;
+    min-width: 8.5rem;
     vertical-align: top;
 }
 
@@ -721,24 +763,43 @@
 }
 
 .ark-job-board-table .ark-job-board-col-status {
-    width: 8.5rem;
+    width: 8.25rem;
     vertical-align: middle;
 }
 
-.ark-job-board-table .ark-job-board-col-tech,
-.ark-job-board-table .ark-job-board-col-updated,
+.ark-job-board-table .ark-job-board-col-tech {
+    width: 7.5rem;
+    vertical-align: middle;
+}
+
 .ark-job-board-table .ark-job-board-col-attention {
+    width: 7.75rem;
+    vertical-align: middle;
+}
+
+.ark-job-board-table .ark-job-board-col-updated {
+    width: 5.25rem;
     vertical-align: middle;
 }
 
 .ark-job-board-table .ark-job-board-col-total {
-    width: 6.5rem;
+    width: 6.75rem;
     vertical-align: middle;
 }
 
 .ark-job-board-table .ark-job-board-col-open {
-    width: 2rem;
+    width: 2.25rem;
     vertical-align: middle;
+}
+
+.ark-job-board-table .ark-job-board-attention {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    line-height: 1.2;
 }
 
 .ark-job-board-table .ark-job-board-concern-stack {
@@ -845,17 +906,17 @@
 
 @media (max-width: 1399.98px) {
     .ark-job-board-table {
-        --tblr-table-cell-padding-x: 0.4rem;
+        --tblr-table-cell-padding-x: 0.45rem;
     }
 
     .ark-job-board-table .ark-job-board-col-customer-vehicle {
-        min-width: 10rem;
-        max-width: 15rem;
+        width: 20%;
+        min-width: 9.5rem;
     }
 
     .ark-job-board-table .ark-job-board-col-concern {
-        min-width: 9rem;
-        max-width: 16rem;
+        width: 15%;
+        min-width: 7.5rem;
     }
 }
 
@@ -863,6 +924,14 @@
     .ark-job-board-table .ark-job-board-col-tech,
     .ark-job-board-table .ark-job-board-col-updated {
         display: none;
+    }
+
+    .ark-job-board-table .ark-job-board-col-customer-vehicle {
+        width: 24%;
+    }
+
+    .ark-job-board-table .ark-job-board-col-concern {
+        width: 20%;
     }
 }
 
@@ -872,24 +941,32 @@
         display: none;
     }
 
+    .ark-job-board-table .ark-job-board-col-customer-vehicle {
+        width: 30%;
+    }
+
     .ark-job-board-table .ark-job-board-col-concern {
-        min-width: 7rem;
-        max-width: 12rem;
+        width: 24%;
+        min-width: 6.5rem;
     }
 }
 
 .ark-job-board-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     white-space: nowrap;
-    font-size: 0.72rem;
-    letter-spacing: 0.02em;
+    font-size: 0.7rem;
+    letter-spacing: 0.035em;
     text-transform: uppercase;
-    font-weight: var(--tblr-font-weight-bold, 600);
+    font-weight: var(--tblr-font-weight-bold, 700);
     color: var(--tblr-body-color);
-    background: color-mix(in srgb, var(--tblr-secondary) 10%, var(--tblr-bg-surface));
-    border-bottom: 1px solid var(--tblr-border-color);
-    padding-top: 0.45rem;
-    padding-bottom: 0.45rem;
-    vertical-align: bottom;
+    background: var(--ark-job-board-header-bg);
+    border-bottom: 2px solid var(--ark-job-board-header-rule);
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+    vertical-align: middle;
+    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--tblr-border-color) 80%, transparent);
 }
 
 .ark-job-board-table .ark-job-board-th-static {
@@ -966,8 +1043,9 @@
     width: 100%;
 }
 
-.ark-job-board-table tbody tr:hover {
-    background: color-mix(in srgb, var(--tblr-primary) 4%, var(--tblr-bg-surface));
+.ark-job-board-table .ark-job-board-sort.is-active {
+    color: var(--tblr-primary);
+    background: color-mix(in srgb, var(--tblr-primary) 10%, transparent);
 }
 
 .ark-job-board-mobile-card {
@@ -1031,8 +1109,25 @@
     border-bottom-color: color-mix(in srgb, var(--tblr-primary) 18%, var(--tblr-bg-surface));
 }
 
+[data-bs-theme='dark'] .ark-job-board-table {
+    --ark-job-board-col-rule: color-mix(in srgb, var(--tblr-border-color) 55%, #94a3b8);
+    --ark-job-board-header-bg: color-mix(in srgb, var(--tblr-secondary) 22%, var(--tblr-bg-surface));
+    --ark-job-board-header-rule: color-mix(in srgb, var(--tblr-border-color) 35%, #94a3b8);
+    --ark-job-board-money-bg: color-mix(in srgb, var(--tblr-secondary) 10%, transparent);
+    --ark-job-board-ops-bg: color-mix(in srgb, var(--tblr-secondary) 7%, transparent);
+}
+
 [data-bs-theme='dark'] .ark-job-board-table thead th {
-    background: color-mix(in srgb, var(--tblr-secondary) 18%, var(--tblr-bg-surface));
+    background: var(--ark-job-board-header-bg);
+    color: var(--tblr-body-color);
+}
+
+[data-bs-theme='dark'] .ark-job-board-table--grid tbody tr:nth-child(even) td {
+    background-color: color-mix(in srgb, var(--tblr-secondary) 8%, var(--tblr-bg-surface));
+}
+
+[data-bs-theme='dark'] .ark-job-board-table--grid tbody tr:hover td {
+    background-color: color-mix(in srgb, var(--tblr-primary) 10%, var(--tblr-bg-surface));
 }
 
 [data-job-board-lane-tabs] .status-dot {
