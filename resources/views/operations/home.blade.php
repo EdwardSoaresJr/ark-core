@@ -41,12 +41,10 @@
                     'jobBoardLayoutMode' => $jobBoardLayoutMode,
                 ])
 
-                <div data-job-board-list-chrome>
-                    @include('operations.workboard.partials.home-board-lane-tabs', [
-                        'jobBoardLaneTabs' => $jobBoardLaneTabs,
-                        'jobBoardListPage' => $jobBoardListPage,
-                    ])
-                </div>
+                @include('operations.workboard.partials.home-board-lane-tabs', [
+                    'jobBoardLaneTabs' => $jobBoardLaneTabs,
+                    'jobBoardListPage' => $jobBoardListPage,
+                ])
             </div>
 
             <div class="d-flex flex-wrap align-items-center gap-2 mb-0" data-job-board-list-chrome data-job-board-list-summary>

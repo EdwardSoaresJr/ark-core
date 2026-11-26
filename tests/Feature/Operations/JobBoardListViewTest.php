@@ -796,6 +796,7 @@ test('job board concept c polish keeps denser hybrid chrome and compact mobile s
         ->and($xpath->query('//*[@data-job-board-list-sort-compact]//select[@name="sort"]/option[@value="total"][@selected]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-lane-tabs]//*[contains(concat(" ", normalize-space(@class), " "), " ark-job-board-lane-tabs__track ")]')->length)->toBe(1)
         ->and($xpath->query('//*[@data-job-board-lane-tab="waiting_approval"][contains(concat(" ", normalize-space(@class), " "), " ark-job-board-lane-tabs__tab ")][@aria-current="page"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-lane-queue]//select[@name="lane"]/option[@value="waiting_approval"][@selected]')->length)->toBe(1)
         ->and($html)->toContain('ark-job-board-lane-tabs__count')
         ->and($html)->toContain('ark-job-board-hybrid__sort--compact')
         ->and($html)->toContain('ark-job-board-hybrid__sort--links')
@@ -805,10 +806,78 @@ test('job board concept c polish keeps denser hybrid chrome and compact mobile s
     $css = (string) file_get_contents(resource_path('css/tabler.css'));
     expect($css)
         ->toContain('.ark-job-board-lane-tabs__track')
+        ->toContain('.ark-job-board-lane-tabs__queue')
         ->toContain('overflow-x: auto')
         ->toContain('.ark-job-board-hybrid__sort--compact')
         ->toMatch("/grid-template-areas:\\s*'identity money'\\s*'middle middle'\\s*'workflow open'/s")
         ->toContain('display: contents');
+});
+
+test('job board mobile queue select mirrors lane tabs with counts and preserves query params', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Queue Select A');
+    repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Queue Select B');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', [
+            'view' => 'list',
+            'lane' => 'waiting_approval',
+            'q' => 'Queue Select',
+            'sort' => 'total',
+            'dir' => 'asc',
+        ]))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $queue = $xpath->query('//*[@data-job-board-lane-queue]')->item(0);
+
+    expect($queue)->toBeInstanceOf(DOMElement::class);
+
+    $queueHtml = $document->saveHTML($queue) ?: '';
+    $optionLabels = [];
+    foreach ($xpath->query('.//select[@name="lane"]/option', $queue) as $option) {
+        $optionLabels[(string) $option->attributes?->getNamedItem('value')?->nodeValue] = trim((string) $option->textContent);
+    }
+
+    expect($xpath->query('.//select[@name="lane"]/option', $queue)->length)->toBeGreaterThanOrEqual(6)
+        ->and($xpath->query('.//select[@name="lane"]/option[@value="waiting_approval"][@selected]', $queue)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="hidden"][@name="q"][@value="Queue Select"]', $queue)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="hidden"][@name="sort"][@value="total"]', $queue)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="hidden"][@name="dir"][@value="asc"]', $queue)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="hidden"][@name="page"]', $queue)->length)->toBe(0)
+        ->and($optionLabels['waiting_approval'] ?? '')->toContain('Waiting Approval (')
+        ->and($optionLabels['parts'] ?? '')->toContain('Waiting Parts (')
+        ->and($optionLabels['all'] ?? '')->toMatch('/^All \(\d+\)$/')
+        ->and((int) trim((string) $xpath->query('//*[@data-job-board-lane-count="waiting_approval"]')->item(0)?->textContent))
+        ->toBe((int) preg_replace('/.*\((\d+)\)$/', '$1', $optionLabels['waiting_approval'] ?? '0'))
+        ->and($queueHtml)->not->toContain('name="view"');
+
+    $cardsHtml = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'cards', 'lane' => 'parts']))
+        ->assertOk()
+        ->getContent();
+
+    $cardsDocument = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $cardsDocument->loadHTML($cardsHtml);
+    libxml_clear_errors();
+    $cardsXpath = new DOMXPath($cardsDocument);
+
+    expect($cardsXpath->query('//*[@data-job-board-lane-queue]//select[@name="lane"]/option[@value="parts"][@selected]')->length)->toBe(1)
+        ->and($cardsXpath->query('//*[@data-job-board-lane-tab="parts"][@aria-current="page"]')->length)->toBe(1);
+
+    $css = (string) file_get_contents(resource_path('css/tabler.css'));
+    expect($css)
+        ->toContain('@media (max-width: 991.98px)')
+        ->toContain('.ark-job-board-lane-tabs__track')
+        ->toContain('.ark-job-board-lane-tabs__queue')
+        ->toContain('display: none')
+        ->toContain('display: flex');
 });
 
 test('job board acceptance scenario surfaces tech status totals without promised or parts columns', function () {
