@@ -23,7 +23,7 @@ test('work surface renders active repair order board as advisor home', function 
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Search job board', false)
+        ->assertSee('Search shop queue', false)
         ->assertDontSee('Active Cars', false)
         ->assertDontSee('ops-advisor-home-cockpit', false)
         ->assertSee('Estimates', false)
@@ -89,7 +89,7 @@ test('work surface comms strip lives on communications attention not advisor hom
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Search job board', false)
+        ->assertSee('Search shop queue', false)
         ->assertDontSee('Since Last Shift (1)');
 
     Carbon::setTestNow();

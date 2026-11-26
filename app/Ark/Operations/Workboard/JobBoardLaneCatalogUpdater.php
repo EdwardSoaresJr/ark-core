@@ -130,7 +130,7 @@ final class JobBoardLaneCatalogUpdater
         }
 
         throw ValidationException::withMessages([
-            'lanes' => 'Keep at least one Job Board lane enabled.',
+            'lanes' => 'Keep at least one Shop Queue lane enabled.',
         ]);
     }
 }

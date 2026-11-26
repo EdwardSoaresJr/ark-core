@@ -34,7 +34,7 @@
             <div class="col-12 col-sm-4">
                 <div class="card card-sm h-100">
                     <div class="card-body">
-                        <div class="subheader">Job Board first</div>
+                        <div class="subheader">Shop Queue first</div>
                         <div class="h3 mb-0 mt-1 ark-money">{{ $frontDoorLanding['workboard'] }}</div>
                     </div>
                 </div>

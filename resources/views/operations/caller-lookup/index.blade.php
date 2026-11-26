@@ -5,7 +5,7 @@
         subtitle="Who is calling and what is going on? Paste a phone number to resolve customer, vehicles, open ROs, and recent conversation."
     >
         <x-slot:actions>
-            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Job Board" />
+            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Shop Queue" />
             @if ($context?->customer)
                 <x-tabler.page-action :href="route('operations.customers.show', $context->customer)" icon="user" label="Customer Hub" />
             @endif

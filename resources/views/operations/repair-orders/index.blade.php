@@ -39,7 +39,7 @@
     <x-tabler.page layout="fluid" title="Repair Orders" pretitle="Records" :subtitle="$subtitle">
         <x-slot:actions>
             @if ($workboardReturnUrl ?? null)
-                <x-tabler.page-action :href="$workboardReturnUrl" icon="arrow-left" label="Job Board triage" />
+                <x-tabler.page-action :href="$workboardReturnUrl" icon="arrow-left" label="Shop Queue triage" />
             @endif
             <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Shop Queue" />
             <x-tabler.page-action :href="route('operations.customers.search')" icon="users" label="Customers" />

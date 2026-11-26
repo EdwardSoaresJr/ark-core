@@ -26,7 +26,7 @@ final class RegisterCoreOperationsCommands
     {
         $registry->register(new OperationsCommand(
             id: 'nav.workboard',
-            title: 'Job Board',
+            title: 'Shop Queue',
             group: 'Navigate',
             keywords: ['job board', 'workboard', 'board', 'today', 'home', 'attention'],
             permission: ArkCapability::OperationsAccess->value,

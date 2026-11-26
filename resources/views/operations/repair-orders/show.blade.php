@@ -1635,7 +1635,7 @@
             @endunless
             <x-slot:actions>
                 @if ($repairOrder->status->isIntake())
-                    <x-tabler.page-action :href="route('operations.index')" icon="arrow-left" label="Job Board" />
+                    <x-tabler.page-action :href="route('operations.index')" icon="arrow-left" label="Shop Queue" />
                 @endif
                 @include('operations.repair-orders.partials.repair-order-visit-actions', $visitCommands)
             </x-slot:actions>

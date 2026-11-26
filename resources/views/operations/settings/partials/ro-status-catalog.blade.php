@@ -219,7 +219,7 @@
                     <div>
                         <div class="subheader">{{ $groupName }}</div>
                         @if ($groupName === 'Terminal')
-                            <div class="text-secondary small">Off the Job Board. Closed visits can still have pickup or payment work. This is not the Completed lane.</div>
+                            <div class="text-secondary small">Off the Shop Queue. Closed visits can still have pickup or payment work. This is not the Completed lane.</div>
                         @endif
                     </div>
                     <span class="text-secondary small">{{ $statuses->count() }} {{ str()->plural('status', $statuses->count()) }}</span>
@@ -274,7 +274,7 @@
                             <div class="row g-2 align-items-end">
                                 @unless ($status['is_terminal'])
                                     <div class="col-12 col-sm-6 col-xl-3">
-                                        <label for="{{ $statusField }}-lane" class="form-label">Job Board lane</label>
+                                        <label for="{{ $statusField }}-lane" class="form-label">Shop Queue lane</label>
                                         <select id="{{ $statusField }}-lane" name="statuses[{{ $status['slug'] }}][advisor_lane_key]" class="form-select">
                                             @foreach ($advisorLaneOptions as $laneKey => $laneLabel)
                                                 @php
@@ -343,7 +343,7 @@
                                                     @checked(old('statuses.'.$status['slug'].'.is_terminal', $status['is_terminal']))
                                                     class="form-check-input"
                                                 >
-                                                <span class="form-check-label">Hide from Job Board</span>
+                                                <span class="form-check-label">Hide from Shop Queue</span>
                                             </label>
                                         @endif
                                     </div>

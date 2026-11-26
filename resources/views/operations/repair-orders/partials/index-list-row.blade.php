@@ -1,6 +1,6 @@
 @php
     /** @var \App\Ark\Operations\RepairOrders\RepairOrder $repairOrder */
-    /** @var array<int, array{label: string, caption: ?string}>|null $indexMoney */
+    /** @var array<int, array{label: string, caption: ?string, collectible: bool}>|null $indexMoney */
     $displayTz = config('app.display_timezone');
     $customer = $repairOrder->customer;
     $vehicle = $repairOrder->vehicle;
@@ -20,7 +20,8 @@
     $openedLabel = $repairOrder->displayOpenedAt()->timezone($displayTz)->format('M j, Y');
     $updatedLabel = $repairOrder->updated_at->timezone($displayTz)->format('M j, Y');
     $money = ($indexMoney ?? [])[$repairOrder->id] ?? null;
-    $isBalanceDue = ($money['caption'] ?? null) === 'due';
+    $isCollectible = (bool) ($money['collectible'] ?? false);
+    $moneyCaption = $money['caption'] ?? null;
 @endphp
 
 <x-tabler.hybrid-record
@@ -69,10 +70,10 @@
 
     <x-slot:finance>
         @if ($money !== null)
-            <div @class(['ark-job-board-money', 'ark-job-board-money--due' => $isBalanceDue])>
+            <div @class(['ark-job-board-money', 'ark-job-board-money--due' => $isCollectible])>
                 <span class="ark-job-board-money__amount ark-money">{{ $money['label'] }}</span>
-                @if (($money['caption'] ?? null) === 'due')
-                    <span class="ark-job-board-money__caption">Balance due</span>
+                @if (filled($moneyCaption))
+                    <span class="ark-job-board-money__caption">{{ $moneyCaption }}</span>
                 @endif
             </div>
         @else

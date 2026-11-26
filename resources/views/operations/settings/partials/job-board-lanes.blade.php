@@ -12,8 +12,8 @@
     <div class="card card-sm mb-3">
         <div class="card-header">
             <div>
-                <h4 class="card-title">Job Board lanes</h4>
-                <div class="card-subtitle">These are the shop queues on the Job Board. Rename, reorder, and recolor them. Lane color is visual identity - it is not ARK attention.</div>
+                <h4 class="card-title">Shop Queue lanes</h4>
+                <div class="card-subtitle">These are the shop queues on the Shop Queue. Rename, reorder, and recolor them. Lane color is visual identity - it is not ARK attention.</div>
             </div>
         </div>
         <div class="list-group list-group-flush">
@@ -63,7 +63,7 @@
                                     @checked(old('lanes.'.$lane['key'].'.active', $lane['active']))
                                     class="form-check-input"
                                 >
-                                <span class="form-check-label">Show on Job Board</span>
+                                <span class="form-check-label">Show on Shop Queue</span>
                             </label>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
                     ])
                 </div>
                 <div class="col-12 col-md-3 d-grid d-md-flex justify-content-md-end">
-                    <button type="submit" class="btn btn-primary">Save Job Board lanes</button>
+                    <button type="submit" class="btn btn-primary">Save Shop Queue lanes</button>
                 </div>
             </div>
             @error('create.name')

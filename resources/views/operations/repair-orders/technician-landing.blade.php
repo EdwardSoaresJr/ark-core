@@ -12,7 +12,7 @@
 
     <x-tabler.page layout="focused" pretitle="Work order" :title="$landing['vehicle_label']">
         <x-slot:actions>
-            <x-tabler.page-action :href="$landing['back_url']" icon="arrow-left" label="Job Board" />
+            <x-tabler.page-action :href="$landing['back_url']" icon="arrow-left" label="Shop Queue" />
         </x-slot:actions>
 
         <div class="d-flex flex-column gap-3" data-technician-production-landing>

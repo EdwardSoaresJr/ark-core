@@ -28,7 +28,7 @@
             @if ($jobBoardListPage->hasFilters())
                 No repair orders match these filters.
             @else
-                No open repair orders on the job board.
+                No open repair orders on the shop queue.
             @endif
         </x-tabler.empty-state>
     @else
@@ -39,7 +39,7 @@
             @if ($customerVehicleAriaSort) aria-sort="{{ $customerVehicleAriaSort }}" @endif
         >
             <span class="ark-job-board-hybrid__sort-label">Sort</span>
-            <div class="ark-job-board-hybrid__sort-links" role="group" aria-label="Sort job board list">
+            <div class="ark-job-board-hybrid__sort-links" role="group" aria-label="Sort shop queue list">
                 @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'ro', 'label' => 'RO #'])
                 @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'vehicle', 'label' => 'Vehicle'])
                 @include('operations.workboard.partials.home-board-list-sort-link', ['column' => 'customer', 'label' => 'Customer'])
@@ -56,7 +56,7 @@
             action="{{ route('operations.index') }}"
             class="ark-job-board-hybrid__sort ark-job-board-hybrid__sort--compact"
             data-job-board-list-sort-compact
-            aria-label="Sort job board list"
+            aria-label="Sort shop queue list"
         >
             @foreach ($jobBoardListPage->queryParams(['sort' => null, 'dir' => null, 'page' => 1]) as $name => $value)
                 <input type="hidden" name="{{ $name }}" value="{{ $value }}">

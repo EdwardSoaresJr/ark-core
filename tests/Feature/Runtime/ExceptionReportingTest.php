@@ -35,7 +35,7 @@ test('operations routes render workboard recovery actions on errors', function (
     $presented = ErrorPagePresenter::forStatus(404, Request::create('/app/does-not-exist', 'GET'));
 
     expect($presented['surface'])->toBe('operations')
-        ->and($presented['primary_label'])->toBe('Return To Job Board');
+        ->and($presented['primary_label'])->toBe('Return To Shop Queue');
 });
 
 test('server errors render a calm customer page when debug is off', function () {

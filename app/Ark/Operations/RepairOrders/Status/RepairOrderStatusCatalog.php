@@ -158,7 +158,7 @@ final class RepairOrderStatusCatalog
 
             $lanes[] = [
                 'label' => $column['label'],
-                'description' => 'Job Board lane',
+                'description' => 'Shop Queue lane',
                 'tone' => $column['tone'],
                 'statuses' => $slugs,
             ];

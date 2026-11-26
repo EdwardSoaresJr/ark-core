@@ -20,7 +20,7 @@ test('phone navigation reuses the operations rail', function (): void {
         ->assertSee('aria-controls="ops-mobile-nav"', false)
         ->assertSee('Close navigation', false)
         ->assertSee('Sign out', false)
-        ->assertSee('Job Board', false)
+        ->assertSee('Shop Queue', false)
         ->assertSee('Schedule', false)
         ->getContent();
 

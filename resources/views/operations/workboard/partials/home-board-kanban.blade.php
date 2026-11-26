@@ -27,7 +27,7 @@
             @if ($jobBoardListPage->hasBoardWideFilters())
                 No repair orders match these filters.
             @else
-                No open repair orders on the job board.
+                No open repair orders on the shop queue.
             @endif
         @else
             {{ $jobBoardListPage->kanbanFilteredTotal }}
@@ -51,11 +51,11 @@
             @if ($jobBoardListPage->hasBoardWideFilters())
                 No repair orders match these filters.
             @else
-                No open repair orders on the job board.
+                No open repair orders on the shop queue.
             @endif
         </x-tabler.empty-state>
     @else
-        <div class="ark-job-board-kanban-scroller" data-job-board-kanban-scroller tabindex="0" aria-label="Job board Kanban columns">
+        <div class="ark-job-board-kanban-scroller" data-job-board-kanban-scroller tabindex="0" aria-label="Shop Queue Kanban columns">
             <div class="ark-job-board-kanban-track" data-job-board-kanban-track role="list">
                 @foreach ($kanbanColumns as $column)
                     @php

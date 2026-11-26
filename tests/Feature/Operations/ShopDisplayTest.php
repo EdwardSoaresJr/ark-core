@@ -39,7 +39,7 @@ test('shop display renders ambient projection without workflow chrome', function
         ->assertSee('Ready Pickup', false)
         ->assertSee('Lam Tran', false)
         ->assertSee('ops-shop-display-card__status--waiting-approval', false)
-        ->assertDontSee('Search job board', false)
+        ->assertDontSee('Search shop queue', false)
         ->assertDontSee('ops-attention-card__action', false)
         ->assertDontSee('>Call<', false);
 });

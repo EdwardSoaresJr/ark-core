@@ -30,7 +30,7 @@ test('advisor home renders customer first attention cockpit', function () {
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Search job board', false)
+        ->assertSee('Search shop queue', false)
         ->assertDontSee('+ Create Repair Order', false)
         ->assertSee('Estimates', false)
         ->assertSee('Waiting Approval', false)

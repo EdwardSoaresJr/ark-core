@@ -9,7 +9,7 @@
     method="get"
     action="{{ route('operations.index') }}"
     class="row g-2 align-items-end ark-job-board-toolbar"
-    aria-label="Job board filters"
+    aria-label="Shop Queue filters"
     role="search"
     data-job-board-filters
     data-job-board-list-search
@@ -31,7 +31,7 @@
     @endif
 
     <div class="col-12 col-lg">
-        <label class="form-label visually-hidden" for="job-board-search">Search job board</label>
+        <label class="form-label visually-hidden" for="job-board-search">Search shop queue</label>
         <div class="input-icon">
             <span class="input-icon-addon" aria-hidden="true">
                 <x-tabler.icon name="search" />
@@ -43,7 +43,7 @@
                 value="{{ $jobBoardListPage->query }}"
                 class="form-control"
                 placeholder="Search RO #, customer, vehicle, concern"
-                aria-label="Search job board"
+                aria-label="Search shop queue"
                 autocomplete="off"
                 spellcheck="false"
             >
@@ -75,7 +75,7 @@
             <div
                 class="nav nav-segmented justify-content-stretch ark-job-board-layout-toggle"
                 role="group"
-                aria-label="Job board layout"
+                aria-label="Shop Queue layout"
                 data-job-board-layout-toggle
             >
                 <button
