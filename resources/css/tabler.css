@@ -794,7 +794,7 @@
     position: absolute;
     inset: 0 auto 0 0;
     width: 3px;
-    background: color-mix(in srgb, var(--tblr-secondary) 70%, transparent);
+    background: var(--tblr-secondary);
     border-radius: var(--ark-hybrid-radius, 0.65rem) 0 0 var(--ark-hybrid-radius, 0.65rem);
     z-index: 1;
     pointer-events: none;
@@ -817,11 +817,12 @@
 }
 
 .ark-status-edge--closed::before {
-    background: var(--tblr-dark, #1e293b);
+    /* Keep closed readable in dark theme (pure dark disappears on charcoal cards). */
+    background: color-mix(in srgb, var(--tblr-secondary) 55%, var(--tblr-dark, #1e293b));
 }
 
 .ark-status-edge--move::before {
-    background: color-mix(in srgb, var(--tblr-secondary) 70%, transparent);
+    background: var(--tblr-secondary);
 }
 
 .ark-job-board-hybrid-record__primary {
