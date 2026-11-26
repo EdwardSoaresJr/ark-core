@@ -2042,6 +2042,9 @@
 }
 
 .ark-job-board-lane-tabs__tab {
+    /* Same containing-block vars Tabler cards use so .card-status-top mask paints. */
+    --tblr-card-border-width: 1px;
+    --tblr-card-border-radius: var(--ark-lane-tab-radius);
     --ark-lane-accent: var(--tblr-secondary);
     position: relative;
     display: flex;
@@ -2068,7 +2071,8 @@
 }
 
 .ark-job-board-lane-tabs__tab .card-status-top {
-    flex: 0 0 auto;
+    /* Tabler positions this absolute+mask; keep it out of flex flow. */
+    flex: none;
 }
 
 .ark-job-board-lane-tabs__body {
