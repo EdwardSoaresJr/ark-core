@@ -848,7 +848,11 @@ test('job board concept c polish keeps denser hybrid chrome and compact mobile s
         ->toContain('compact Kanban column-header family')
         ->toContain('--tblr-card-border-width: 1px')
         ->toContain('--tblr-card-border-radius: var(--ark-lane-tab-radius)')
+        ->toContain('--ark-lane-tab-active-underline')
+        ->toContain(".ark-job-board-lane-tabs__tab.active::after")
+        ->toContain('--ark-lane-tab-active-underline: #fff')
         ->not->toContain('--ark-lane-tab-radius: 999px')
+        ->not->toContain('inset 0 0 0 1px color-mix(in srgb, var(--tblr-primary)')
         ->toContain('.ark-job-board-hybrid__sort--compact')
         ->toMatch("/grid-template-areas:\\s*'identity money'\\s*'middle middle'\\s*'workflow open'/s")
         ->toContain('display: contents');

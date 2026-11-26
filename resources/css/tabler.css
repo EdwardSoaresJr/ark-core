@@ -2046,6 +2046,7 @@
     --tblr-card-border-width: 1px;
     --tblr-card-border-radius: var(--ark-lane-tab-radius);
     --ark-lane-accent: var(--tblr-secondary);
+    --ark-lane-tab-active-underline: var(--tblr-body-color);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -2056,10 +2057,10 @@
     overflow: hidden;
     border: 1px solid var(--tblr-border-color);
     border-radius: var(--ark-lane-tab-radius);
-    color: var(--tblr-body-color);
+    color: var(--tblr-secondary);
     background: var(--tblr-bg-surface);
     box-shadow: none;
-    font-weight: var(--tblr-font-weight-semibold, 600);
+    font-weight: var(--tblr-font-weight-normal, 400);
     font-size: 0.875rem;
     line-height: 1.25;
     text-decoration: none;
@@ -2082,12 +2083,12 @@
     gap: 0.4rem;
     flex: 1 1 auto;
     min-width: 0;
-    padding: 0.45rem 0.65rem;
+    padding: 0.45rem 0.65rem 0.55rem;
 }
 
 .ark-job-board-lane-tabs__tab:hover {
     color: var(--tblr-body-color);
-    background: var(--tblr-bg-surface-secondary, color-mix(in srgb, var(--tblr-bg-surface) 92%, var(--tblr-secondary) 8%));
+    background: var(--tblr-bg-surface);
     border-color: color-mix(in srgb, var(--tblr-border-color) 70%, var(--tblr-body-color) 30%);
     text-decoration: none;
 }
@@ -2098,29 +2099,48 @@
     z-index: 1;
 }
 
+/*
+ * Selected tab: same neutral surface as siblings; bold label + bottom underline.
+ * No primary fill, outline, or inset glow — status accent stays on card-status-top only.
+ */
 .ark-job-board-lane-tabs__tab.active,
 .ark-job-board-lane-tabs__tab[aria-current='page'] {
     color: var(--tblr-body-color);
-    background: var(--tblr-bg-surface-secondary, color-mix(in srgb, var(--tblr-bg-surface) 88%, var(--tblr-primary) 12%));
-    border-color: color-mix(in srgb, var(--tblr-primary) 55%, var(--tblr-border-color));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tblr-primary) 35%, transparent);
+    background: var(--tblr-bg-surface);
+    border-color: var(--tblr-border-color);
+    box-shadow: none;
     font-weight: var(--tblr-font-weight-bold, 700);
 }
 
+.ark-job-board-lane-tabs__tab.active::after,
+.ark-job-board-lane-tabs__tab[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0;
+    height: 2.5px;
+    border-radius: 2px 2px 0 0;
+    background: var(--ark-lane-tab-active-underline);
+    pointer-events: none;
+    z-index: 1;
+}
+
 [data-bs-theme='dark'] .ark-job-board-lane-tabs__tab {
+    --ark-lane-tab-active-underline: #fff;
     background: var(--tblr-bg-surface);
     border-color: var(--tblr-border-color);
 }
 
 [data-bs-theme='dark'] .ark-job-board-lane-tabs__tab:hover {
-    background: color-mix(in srgb, var(--tblr-bg-surface) 82%, #fff 6%);
+    background: var(--tblr-bg-surface);
 }
 
 [data-bs-theme='dark'] .ark-job-board-lane-tabs__tab.active,
 [data-bs-theme='dark'] .ark-job-board-lane-tabs__tab[aria-current='page'] {
-    background: color-mix(in srgb, var(--tblr-bg-surface) 72%, var(--tblr-primary) 14%);
-    border-color: color-mix(in srgb, var(--tblr-primary) 60%, var(--tblr-border-color));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tblr-primary) 45%, transparent);
+    background: var(--tblr-bg-surface);
+    border-color: var(--tblr-border-color);
+    box-shadow: none;
 }
 
 .ark-job-board-lane-tabs__label {
