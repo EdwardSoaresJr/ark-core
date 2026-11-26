@@ -57,6 +57,10 @@ require_once __DIR__.'/Support/HostedDragon.php';
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->beforeEach(function (): void {
+        // Hosted catalog / FakeStancl fixtures must not leak across Feature files in focused CI.
+        clearHostedTenantCatalog();
+        \Tests\Support\FakeStanclTenancy::clear();
+
         if (! Schema::hasTable('shop_settings') || ! Schema::hasColumn('shop_settings', 'shop_timezone')) {
             return;
         }
