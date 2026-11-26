@@ -17,7 +17,7 @@
     >
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.vehicles.search')" icon="car" label="Vehicles" />
-            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Job Board" />
+            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Shop Queue" />
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
                 <x-tabler.page-action :href="route('operations.intake.create')" icon="plus" label="Check In" primary />
             @endcan
@@ -95,74 +95,20 @@
                 </x-tabler.empty-state>
             @else
                 <div data-collection-view="list">
-                    <div class="card d-none d-md-block">
-                        <div class="table-responsive">
-                            <table class="table table-vcenter card-table table-sm ark-collection-list-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <x-tabler.sortable-th
-                                            label="Customer"
-                                            :href="$collectionSort->url('name', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('name')"
-                                            :aria-sort="$collectionSort->ariaSort('name')"
-                                            sort-key="name"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Phone"
-                                            :href="$collectionSort->url('phone', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('phone')"
-                                            :aria-sort="$collectionSort->ariaSort('phone')"
-                                            sort-key="phone"
-                                            class="d-none d-lg-table-cell"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Email"
-                                            :href="$collectionSort->url('email', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('email')"
-                                            :aria-sort="$collectionSort->ariaSort('email')"
-                                            sort-key="email"
-                                            class="d-none d-xl-table-cell"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Type"
-                                            :href="$collectionSort->url('type', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('type')"
-                                            :aria-sort="$collectionSort->ariaSort('type')"
-                                            sort-key="type"
-                                            class="d-none d-lg-table-cell"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Vehicles"
-                                            :href="$collectionSort->url('vehicles', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('vehicles')"
-                                            :aria-sort="$collectionSort->ariaSort('vehicles')"
-                                            sort-key="vehicles"
-                                        />
-                                        <th scope="col">Open work</th>
-                                        <x-tabler.sortable-th
-                                            label="Updated"
-                                            :href="$collectionSort->url('updated', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('updated')"
-                                            :aria-sort="$collectionSort->ariaSort('updated')"
-                                            sort-key="updated"
-                                            class="d-none d-xl-table-cell"
-                                        />
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($customers as $customer)
-                                        @include('operations.customers.partials.index-list-row', ['customer' => $customer, 'intakeMode' => $intakeMode ?? false])
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="ark-collection-mobile-list d-md-none">
+                    <x-tabler.hybrid-records>
+                        <x-slot:sort>
+                            <x-tabler.hybrid-sort
+                                :sort="$collectionSort"
+                                :route-name="$routeName"
+                                :filter-query="$filterQuery"
+                                label="Sort customers"
+                                :columns="['name' => 'Customer', 'phone' => 'Phone', 'email' => 'Email', 'type' => 'Type', 'vehicles' => 'Vehicles', 'updated' => 'Updated']"
+                            />
+                        </x-slot:sort>
                         @foreach ($customers as $customer)
-                            @include('operations.customers.partials.index-mobile-row', ['customer' => $customer, 'intakeMode' => $intakeMode ?? false])
+                            @include('operations.customers.partials.index-list-row', ['customer' => $customer, 'intakeMode' => $intakeMode ?? false])
                         @endforeach
-                    </div>
+                    </x-tabler.hybrid-records>
                 </div>
 
                 <div data-collection-view="cards">

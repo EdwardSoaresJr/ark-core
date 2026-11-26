@@ -1331,6 +1331,613 @@
     }
 }
 
+/* Concept C — shared hybrid collection indexes (Repair Orders, Customers, Vehicles). Mirrors .ark-job-board-hybrid*; reuses money/attention/concern/sort atoms. */
+.ark-collection-hybrid {
+    --ark-hybrid-radius: 0.8rem;
+    --ark-hybrid-gap: 0.55rem;
+    --ark-hybrid-soft: color-mix(in srgb, var(--tblr-secondary) 10%, var(--tblr-bg-surface));
+    container-type: inline-size;
+    container-name: ark-collection-hybrid;
+}
+
+.ark-collection-hybrid__sort {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.75rem;
+    margin-bottom: 0.65rem;
+    padding: 0.35rem 0.15rem;
+}
+
+.ark-collection-hybrid__sort-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tblr-secondary);
+}
+
+.ark-collection-hybrid__sort-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.35rem;
+    align-items: center;
+}
+
+.ark-collection-hybrid__sort--compact {
+    display: none;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.45rem;
+    padding: 0.15rem 0;
+}
+
+.ark-collection-hybrid__sort-select {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+}
+
+.ark-collection-hybrid__sort-dir {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+    min-height: 2rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .ark-collection-hybrid__sort--links {
+        display: none;
+    }
+
+    .ark-collection-hybrid__sort--compact {
+        display: flex;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .ark-collection-hybrid__sort--links {
+        display: none;
+    }
+
+    .ark-collection-hybrid__sort--compact {
+        display: flex;
+    }
+}
+
+.ark-collection-hybrid__records {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ark-hybrid-gap);
+}
+
+.ark-collection-hybrid-record {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(10.5rem, 0.85fr) minmax(8rem, 0.7fr);
+    gap: 0.75rem 1.15rem;
+    padding: 0.8rem 0.95rem;
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--tblr-bg-surface) 96%, var(--tblr-primary)),
+            var(--tblr-bg-surface) 28%
+        );
+    border: 1px solid color-mix(in srgb, var(--tblr-border-color) 75%, transparent);
+    border-radius: var(--ark-hybrid-radius);
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.ark-collection-hybrid-record:hover,
+.ark-collection-hybrid-record:focus-within {
+    border-color: color-mix(in srgb, var(--tblr-primary) 42%, var(--tblr-border-color));
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--tblr-body-color) 6%, transparent);
+}
+
+.ark-collection-hybrid-record--attention::before,
+.ark-collection-hybrid-record--critical::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--tblr-orange, #f76707);
+}
+
+.ark-collection-hybrid-record--critical::before {
+    background: var(--tblr-danger);
+}
+
+.ark-collection-hybrid-record--watch::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: color-mix(in srgb, var(--tblr-secondary) 55%, transparent);
+}
+
+.ark-collection-hybrid-record__primary {
+    min-width: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.ark-collection-hybrid-record__middle {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__finance-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.3rem;
+}
+
+.ark-collection-hybrid-record__topline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.7rem;
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__ro {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.12rem 0.45rem;
+    border-radius: 0.35rem;
+    background: var(--ark-hybrid-soft);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--tblr-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.ark-collection-hybrid-record__ro:hover,
+.ark-collection-hybrid-record__ro:focus-visible {
+    color: var(--tblr-primary);
+    text-decoration: none;
+}
+
+.ark-collection-hybrid-record__vehicle {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    color: var(--tblr-body-color);
+    text-decoration: none;
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__vehicle:hover,
+.ark-collection-hybrid-record__vehicle:focus-visible {
+    color: var(--tblr-primary);
+    text-decoration: none;
+}
+
+.ark-collection-hybrid-record__customer {
+    font-size: 0.84rem;
+    color: var(--tblr-secondary);
+    text-decoration: none;
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__customer::before {
+    content: '·';
+    margin-right: 0.55rem;
+    color: color-mix(in srgb, var(--tblr-secondary) 65%, transparent);
+}
+
+.ark-collection-hybrid-record__customer:hover,
+.ark-collection-hybrid-record__customer:focus-visible {
+    color: var(--tblr-primary);
+    text-decoration: none;
+}
+
+.ark-collection-hybrid-record__concern {
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__concern .ark-job-board-concern-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__concern .ark-job-board-concern-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.35;
+    font-size: 0.86rem;
+    color: var(--tblr-body-color);
+}
+
+.ark-collection-hybrid-record__concern .ark-job-board-concern-text--secondary {
+    color: var(--tblr-secondary);
+    font-size: 0.78rem;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+}
+
+.ark-collection-hybrid-record__actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.75rem;
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__next {
+    font-size: 0.8rem;
+    font-weight: 650;
+    text-decoration: none;
+    color: var(--tblr-primary);
+}
+
+.ark-collection-hybrid-record__next--warning {
+    color: var(--tblr-orange, #f76707);
+}
+
+.ark-collection-hybrid-record__next--watch {
+    color: var(--tblr-secondary);
+}
+
+.ark-collection-hybrid-record__next:hover,
+.ark-collection-hybrid-record__next:focus-visible {
+    text-decoration: underline;
+}
+
+.ark-collection-hybrid-record__updated {
+    font-size: 0.75rem;
+    color: var(--tblr-secondary);
+    white-space: nowrap;
+}
+
+.ark-collection-hybrid-record__workflow {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.1rem 0 0.1rem 0.85rem;
+    border-left: 1px solid color-mix(in srgb, var(--tblr-border-color) 65%, transparent);
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__field-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--tblr-secondary);
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+}
+
+.ark-collection-hybrid-record__tech {
+    font-size: 0.84rem;
+    color: var(--tblr-body-color);
+}
+
+.ark-collection-hybrid-record__tech.is-empty {
+    color: var(--tblr-secondary);
+}
+
+.ark-collection-hybrid-record__finance {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.3rem;
+    text-align: right;
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__attention .ark-job-board-attention {
+    font-size: 0.78rem;
+}
+
+.ark-collection-hybrid-record__attention .ark-job-board-attention[data-attention-tone="watch"] {
+    font-weight: var(--tblr-font-weight-normal, 400);
+    opacity: 0.8;
+}
+
+.ark-collection-hybrid-record__open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    margin-top: 0.15rem;
+    padding: 0.25rem 0.45rem;
+    border-radius: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: var(--tblr-secondary);
+    text-decoration: none;
+    min-height: 2rem;
+}
+
+.ark-collection-hybrid-record__open:hover,
+.ark-collection-hybrid-record__open:focus-visible {
+    color: var(--tblr-primary);
+    background: color-mix(in srgb, var(--tblr-primary) 10%, transparent);
+    outline: none;
+    text-decoration: none;
+}
+
+/* Tablet: workflow under primary; finance stays prominent */
+@container ark-collection-hybrid (max-width: 980px) {
+    .ark-collection-hybrid-record {
+        grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 0.55fr);
+        gap: 0.65rem 0.9rem;
+    }
+
+    .ark-collection-hybrid-record__primary {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .ark-collection-hybrid-record__finance {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: start;
+    }
+
+    .ark-collection-hybrid-record__workflow {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.65rem 1.25rem;
+        padding: 0.55rem 0 0;
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--tblr-border-color) 65%, transparent);
+    }
+}
+
+/* Mobile: denser hybrid List — amount stays upper-right; workflow stays compact */
+@container ark-collection-hybrid (max-width: 560px) {
+    .ark-collection-hybrid {
+        --ark-hybrid-gap: 0.4rem;
+    }
+
+    .ark-collection-hybrid-record {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            'identity money'
+            'middle middle'
+            'workflow open';
+        gap: 0.3rem 0.6rem;
+        padding: 0.55rem 0.65rem;
+        border-radius: 0.65rem;
+    }
+
+    .ark-collection-hybrid-record__primary,
+    .ark-collection-hybrid-record__finance {
+        display: contents;
+    }
+
+    .ark-collection-hybrid-record__topline {
+        grid-area: identity;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 0.4rem;
+        row-gap: 0.08rem;
+        align-items: baseline;
+    }
+
+    .ark-collection-hybrid-record__vehicle {
+        grid-column: 1;
+        font-size: 0.92rem;
+        line-height: 1.2;
+    }
+
+    .ark-collection-hybrid-record__ro {
+        grid-column: 2;
+        justify-self: end;
+        align-self: start;
+        padding: 0.08rem 0.35rem;
+        font-size: 0.68rem;
+    }
+
+    .ark-collection-hybrid-record__customer {
+        grid-column: 1 / -1;
+        font-size: 0.78rem;
+    }
+
+    .ark-collection-hybrid-record__customer::before {
+        content: none;
+        margin: 0;
+    }
+
+    .ark-collection-hybrid-record__middle {
+        grid-area: middle;
+        gap: 0.18rem;
+    }
+
+    .ark-collection-hybrid-record__concern .ark-job-board-concern-text {
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+
+    .ark-collection-hybrid-record__actions-row {
+        gap: 0.3rem 0.5rem;
+    }
+
+    .ark-collection-hybrid-record__next {
+        font-size: 0.75rem;
+    }
+
+    .ark-collection-hybrid-record__updated {
+        font-size: 0.7rem;
+    }
+
+    .ark-collection-hybrid-record__finance-stack {
+        grid-area: money;
+        align-self: start;
+        gap: 0.12rem;
+    }
+
+    .ark-collection-hybrid-record__workflow {
+        grid-area: workflow;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.3rem 0.7rem;
+        padding: 0.3rem 0 0;
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--tblr-border-color) 55%, transparent);
+    }
+
+    .ark-collection-hybrid-record__field-label {
+        display: none;
+    }
+
+    .ark-collection-hybrid-record__workflow-block {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .ark-collection-hybrid-record__tech {
+        font-size: 0.78rem;
+    }
+
+    .ark-job-board-money__amount {
+        font-size: 0.95rem;
+    }
+
+    .ark-job-board-money__caption {
+        font-size: 0.62rem;
+    }
+
+    .ark-collection-hybrid-record__attention .ark-job-board-attention {
+        font-size: 0.72rem;
+    }
+
+    .ark-collection-hybrid-record__open {
+        grid-area: open;
+        align-self: end;
+        justify-self: end;
+        margin: 0;
+        min-height: 2rem;
+        padding: 0.2rem 0.4rem;
+        border-top: 0;
+    }
+}
+
+/* Viewport fallbacks when container queries are unavailable / nested width differs */
+@media (max-width: 991.98px) {
+    .ark-collection-hybrid-record {
+        grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 0.55fr);
+    }
+
+    .ark-collection-hybrid-record__workflow {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--tblr-border-color) 65%, transparent);
+        padding: 0.55rem 0 0;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .ark-collection-hybrid {
+        --ark-hybrid-gap: 0.4rem;
+    }
+
+    .ark-collection-hybrid-record {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            'identity money'
+            'middle middle'
+            'workflow open';
+        gap: 0.3rem 0.6rem;
+        padding: 0.55rem 0.65rem;
+    }
+
+    .ark-collection-hybrid-record__primary,
+    .ark-collection-hybrid-record__finance {
+        display: contents;
+    }
+
+    .ark-collection-hybrid-record__topline {
+        grid-area: identity;
+    }
+
+    .ark-collection-hybrid-record__middle {
+        grid-area: middle;
+    }
+
+    .ark-collection-hybrid-record__finance-stack {
+        grid-area: money;
+    }
+
+    .ark-collection-hybrid-record__workflow {
+        grid-area: workflow;
+    }
+
+    .ark-collection-hybrid-record__open {
+        grid-area: open;
+    }
+
+    .ark-collection-hybrid-record__field-label {
+        display: none;
+    }
+
+    .ark-collection-hybrid-record__customer::before {
+        content: none;
+        margin: 0;
+    }
+}
+
+.ark-collection-hybrid-record__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    font-size: 0.82rem;
+    color: var(--tblr-secondary);
+    min-width: 0;
+}
+
+.ark-collection-hybrid-record__meta-item {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.ark-collection-hybrid-record__meta-item.is-mono {
+    font-family: var(--tblr-font-monospace, monospace);
+}
+
+.ark-collection-hybrid-record__stat {
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--tblr-body-color);
+}
+
+.ark-collection-hybrid-record__stat-caption {
+    font-size: 0.68rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--tblr-secondary);
+}
+
 .ark-job-board-sort {
     display: inline-flex;
     align-items: center;

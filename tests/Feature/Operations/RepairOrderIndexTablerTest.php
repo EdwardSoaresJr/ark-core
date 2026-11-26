@@ -63,3 +63,20 @@ test('queue drill-downs keep their hidden filters and an empty result offers a w
         ->assertSee('No repair orders match these filters.')
         ->assertSee('Clear search');
 });
+
+test('the repair order list renders hybrid records with the vehicle first and a money region', function (): void {
+    $repairOrder = repairOrderIndexFixture()->refresh();
+
+    $html = $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.repair-orders.index', ['view' => 'list']))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('ark-collection-hybrid-record')
+        ->and($html)->toContain('data-ro-id="'.$repairOrder->repair_order_id.'"')
+        ->and($html)->toContain('class="ark-collection-hybrid-record__ro">RO #'.$repairOrder->repair_order_id)
+        ->and($html)->toContain('ark-job-board-money__amount')
+        ->and($html)->toContain('Open <span')
+        ->and(strpos($html, 'ark-collection-hybrid-record__vehicle'))->toBeLessThan(strpos($html, 'ark-collection-hybrid-record__ro'))
+        ->and($html)->not->toContain('ark-collection-mobile-list');
+});

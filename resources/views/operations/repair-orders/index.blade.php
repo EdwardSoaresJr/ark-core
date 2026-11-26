@@ -41,7 +41,7 @@
             @if ($workboardReturnUrl ?? null)
                 <x-tabler.page-action :href="$workboardReturnUrl" icon="arrow-left" label="Job Board triage" />
             @endif
-            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Job Board" />
+            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Shop Queue" />
             <x-tabler.page-action :href="route('operations.customers.search')" icon="users" label="Customers" />
             <x-tabler.page-action :href="route('operations.vehicles.search')" icon="car" label="Vehicles" />
         </x-slot:actions>
@@ -141,72 +141,20 @@
                 </x-tabler.empty-state>
             @else
                 <div data-collection-view="list">
-                    <div class="card d-none d-md-block">
-                        <div class="table-responsive">
-                            <table class="table table-vcenter card-table table-sm ark-collection-list-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <x-tabler.sortable-th
-                                            label="RO #"
-                                            :href="$collectionSort->url('ro', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('ro')"
-                                            :aria-sort="$collectionSort->ariaSort('ro')"
-                                            sort-key="ro"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Vehicle"
-                                            :href="$collectionSort->url('vehicle', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('vehicle')"
-                                            :aria-sort="$collectionSort->ariaSort('vehicle')"
-                                            sort-key="vehicle"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Customer"
-                                            :href="$collectionSort->url('customer', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('customer')"
-                                            :aria-sort="$collectionSort->ariaSort('customer')"
-                                            sort-key="customer"
-                                            class="d-none d-lg-table-cell"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Status"
-                                            :href="$collectionSort->url('status', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('status')"
-                                            :aria-sort="$collectionSort->ariaSort('status')"
-                                            sort-key="status"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Opened"
-                                            :href="$collectionSort->url('opened', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('opened')"
-                                            :aria-sort="$collectionSort->ariaSort('opened')"
-                                            sort-key="opened"
-                                            class="d-none d-xl-table-cell"
-                                        />
-                                        <x-tabler.sortable-th
-                                            label="Updated"
-                                            :href="$collectionSort->url('updated', $routeName, $filterQuery)"
-                                            :active="$collectionSort->isActive('updated')"
-                                            :aria-sort="$collectionSort->ariaSort('updated')"
-                                            sort-key="updated"
-                                            class="d-none d-xl-table-cell"
-                                        />
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($repairOrders as $repairOrder)
-                                        @include('operations.repair-orders.partials.index-list-row', ['repairOrder' => $repairOrder])
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="ark-collection-mobile-list d-md-none">
+                    <x-tabler.hybrid-records>
+                        <x-slot:sort>
+                            <x-tabler.hybrid-sort
+                                :sort="$collectionSort"
+                                :route-name="$routeName"
+                                :filter-query="$filterQuery"
+                                label="Sort repair orders"
+                                :columns="['ro' => 'RO #', 'vehicle' => 'Vehicle', 'customer' => 'Customer', 'status' => 'Status', 'opened' => 'Opened', 'updated' => 'Updated']"
+                            />
+                        </x-slot:sort>
                         @foreach ($repairOrders as $repairOrder)
-                            @include('operations.repair-orders.partials.index-mobile-row', ['repairOrder' => $repairOrder])
+                            @include('operations.repair-orders.partials.index-list-row', ['repairOrder' => $repairOrder, 'indexMoney' => $indexMoney ?? []])
                         @endforeach
-                    </div>
+                    </x-tabler.hybrid-records>
                 </div>
 
                 <div data-collection-view="cards">

@@ -33,7 +33,9 @@ it('customers index serves list and cards over the same authorized set', functio
         ->and($html)->toContain('data-ark-ui-tenant=')
         ->and($html)->toContain('data-ark-ui-user=')
         ->and($html)->toContain('List Cards Customer')
-        ->and($html)->toContain('data-collection-sort="name"');
+        ->and($html)->toContain('data-collection-sort="name"')
+        ->and($html)->toContain('ark-collection-hybrid')
+        ->and($html)->not->toContain('ark-collection-list-table');
 
     $cards = $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.customers.search', ['view' => 'cards', 'q' => 'Cards Customer']))
@@ -93,6 +95,8 @@ it('vehicles index supports list cards toggle and plate sort chrome', function (
     expect($html)->toContain('data-collection-module="vehicles"')
         ->and($html)->toContain('Honda')
         ->and($html)->toContain('data-collection-sort="plate"')
+        ->and($html)->toContain('ark-collection-hybrid')
+        ->and($html)->not->toContain('ark-collection-list-table')
         ->and($html)->toContain('ABC1234');
 });
 
@@ -114,6 +118,8 @@ it('repair orders index list preserves filters and drill-down links', function (
         ->and($html)->toContain('RO #'.$repairOrder->repair_order_id)
         ->and($html)->toContain(route('operations.repair-orders.show', $repairOrder))
         ->and($html)->toContain('name="status"')
+        ->and($html)->toContain('ark-collection-hybrid')
+        ->and($html)->not->toContain('ark-collection-list-table')
         ->and($html)->not->toContain('data-job-board');
 });
 

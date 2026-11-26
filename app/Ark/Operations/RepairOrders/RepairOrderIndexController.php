@@ -176,6 +176,8 @@ class RepairOrderIndexController
             ->paginate(24)
             ->withQueryString();
 
+        $indexMoney = app(RepairOrderIndexMoney::class)->forPage($repairOrders->getCollection());
+
         $filterQuery = array_filter([
             'q' => $search !== '' ? $search : null,
             'status' => $status?->value,
@@ -209,6 +211,7 @@ class RepairOrderIndexController
                 $unassignedFilter,
             ),
             'repairOrders' => $repairOrders,
+            'indexMoney' => $indexMoney,
             'selectedStatus' => $status?->value,
             'dispositionFilter' => $dispositionFilter?->value,
             'openQueueFilter' => $openQueueFilter,

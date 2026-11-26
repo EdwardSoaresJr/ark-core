@@ -11,8 +11,8 @@
     $uiPreferenceScope ??= ['tenant' => 'local', 'user' => 'anon'];
 @endphp
 
-<x-operations.app title="Job Board" ui="tabler">
-    <x-tabler.page layout="fluid" title="Job Board">
+<x-operations.app title="Shop Queue" ui="tabler">
+    <x-tabler.page layout="fluid" title="Shop Queue">
         <section
             class="d-flex flex-column gap-2"
             data-job-board

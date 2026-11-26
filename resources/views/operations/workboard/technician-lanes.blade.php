@@ -14,7 +14,7 @@
 
 <x-tabler.page
     layout="fluid"
-    title="Job Board"
+    title="Shop Queue"
     :title-count="$boardQueueCount"
     subtitle="Repair order lifecycle pressure in the building."
 >
