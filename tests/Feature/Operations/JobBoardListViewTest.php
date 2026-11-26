@@ -652,6 +652,40 @@ test('cards view uses hierarchical Tabler bands inside Kanban columns', function
         ->not->toMatch('/\.ark-job-board-cards\s+\.ark-job-board-card-band--concern\s*\{[^}]*flex:\s*1\s+1\s+auto/s');
 });
 
+test('cards kanban marks the first lane active for mobile single-column Cards', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    repairOrderForCommunication(RepairOrderStatus::Estimate, 'Mobile Single Lane');
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.index', ['view' => 'cards']))
+        ->assertOk()
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+
+    $kanban = $xpath->query('//*[@data-job-board-kanban]')->item(0);
+    expect($kanban)->toBeInstanceOf(DOMElement::class)
+        ->and($kanban->getAttribute('data-job-board-kanban-active-column'))->not->toBe('')
+        ->and($xpath->query('//*[@data-job-board-kanban-column-select]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-job-board-kanban-column-select]/@aria-label')->item(0)?->nodeValue)
+        ->toBe('Kanban column');
+
+    $active = $xpath->query('//*[@data-job-board-kanban-column][contains(concat(" ", normalize-space(@class), " "), " is-kanban-column-active ")]');
+    expect($active->length)->toBe(1)
+        ->and($active->item(0)?->getAttribute('data-job-board-kanban-column'))
+        ->toBe($kanban->getAttribute('data-job-board-kanban-active-column'));
+
+    $css = (string) file_get_contents(resource_path('css/tabler.css'));
+    expect($css)
+        ->toContain('.ark-job-board-kanban-column.is-kanban-column-active')
+        ->toContain('Re-assert mobile single-lane after container')
+        ->toMatch('/\.ark-job-board-kanban-column\s*\{[^}]*display:\s*none;[^}]*width:\s*100%/s');
+});
+
 test('cards kanban shows every lane column and ignores the active list lane tab', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $waiting = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Kanban Waiting');
