@@ -132,7 +132,7 @@ test('advisor home board paginates large waiting-approval queues', function () {
     libxml_clear_errors();
     $xpath = new DOMXPath($document);
 
-    expect($xpath->query('//*[@data-job-board-list-body]//tr[@data-job-board-row]')->length)->toBe(30)
+    expect($xpath->query('//*[@data-job-board-list-body]//*[@data-job-board-row]')->length)->toBe(30)
         ->and(trim((string) $xpath->query('//*[@data-job-board-lane-count="waiting_approval"]')->item(0)?->textContent))->toBe('30');
 });
 
