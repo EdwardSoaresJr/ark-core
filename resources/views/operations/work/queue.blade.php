@@ -75,7 +75,7 @@
                     [\App\Ark\Operations\Work\WorkQueue::Decisions, $decisionPressureCount],
                 ];
             @endphp
-            <nav class="nav nav-segmented flex-nowrap overflow-auto align-self-start mw-100" aria-label="Work queues" data-work-queue-nav>
+            <nav class="nav nav-segmented flex-nowrap overflow-auto align-self-start mw-100" aria-label="Attention" data-work-queue-nav>
                 @foreach ($queueSwitcher as [$switchQueue, $switchCount])
                     <a
                         href="{{ route('operations.work.queue', $switchQueue) }}"

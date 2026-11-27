@@ -347,5 +347,5 @@ test('advisors and technicians see the repair order board under one name', funct
     expect($advisor['job-board'])->toBe('Shop Queue')
         ->and($technician['workboard'])->toBe('Shop Queue')
         ->and($technician)->not->toHaveKey('work-queues')
-        ->and($advisor['work-queues'])->toBe('Work Queues');
+        ->and($advisor['work-queues'])->toBe('Attention');
 });

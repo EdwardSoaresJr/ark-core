@@ -30,9 +30,9 @@ Each shell renders those arrays in its own markup: the legacy rail in `component
 
 `StaffNavigationTest` covers what each role sees, active routes, and that both shells render exactly the shared sections and account entries.
 
-The repair order board is "Job Board" for every role. Staff with operations access open the advisor board (`operations.index`); technicians and production-only staff open their lanes (`operations.workboard`, key `workboard`). The routes, keys, views, and permissions stay separate; only the label, page titles, and links read "Job Board".
+The repair order board is "Shop Queue" for every role. Staff with operations access open the advisor board (`operations.index`); technicians and production-only staff open their lanes (`operations.workboard`, key `workboard`). The routes, keys, views, and permissions stay separate; only the label, page titles, and links read "Shop Queue".
 
-"Work Queues" (`work-queues`, staff with operations access) opens Tasks (`operations.work.queue`). Each queue page links to the other three (Tasks, Follow-Ups, Scheduled, Customer Decisions) with their counts. The `/app/work/queues/{queue}` URLs are unchanged, and `/app/work/queues/comms` still redirects to the inbox.
+"Attention" (`work-queues`, staff with operations access) opens Tasks (`operations.work.queue`). Each queue page links to the other three (Tasks, Follow-Ups, Scheduled, Customer Decisions) with their counts. The `/app/work/queues/{queue}` URLs are unchanged, and `/app/work/queues/comms` still redirects to the inbox.
 
 ## Legacy components on a Tabler page
 
