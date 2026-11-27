@@ -15,6 +15,8 @@ use App\Ark\Runtime\Preferences\AccentColor;
 use App\Ark\Runtime\Preferences\AccentTheme;
 use App\Ark\Runtime\Preferences\DisplayTheme;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -30,10 +32,10 @@ use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'phone', 'partstech_username', 'accent_theme', 'accent_color', 'display_theme', 'schedule_board_view', 'job_board_view', 'default_parts_catalog', 'default_labor_guide', 'parts_catalog_links', 'labor_cost_cents', 'labor_pay_basis', 'flag_rate_cents', 'floor_rate_cents', 'workday_hours', 'scheduling_hours', 'auto_clock_enabled', 'auto_lunch_minutes'])]
 #[Hidden(['password', 'remember_token', 'partstech_password', 'operator_pin_hash'])]
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements CanResetPasswordContract, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+    use CanResetPassword, HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * Get the attributes that should be cast.

@@ -4,35 +4,36 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Exception\TransportException;
 
-test('mailer names cannot select postmark or smtp', function () {
+test('staff mailers resolve to the configured laravel transport', function () {
     config([
-        'mail.default' => 'postmark',
-        'services.postmark.token' => 'should-not-send',
+        'mail.default' => 'array',
         'mail.mailers.smtp.host' => '127.0.0.1',
-        'mail.mailers.smtp.port' => 1,
+        'mail.mailers.smtp.port' => 2525,
+    ]);
+
+    expect((string) Mail::mailer('array')->getSymfonyTransport())->toContain('array')
+        ->and((string) Mail::mailer('log')->getSymfonyTransport())->toContain('log')
+        ->and((string) Mail::mailer('smtp')->getSymfonyTransport())->toContain('smtp');
+});
+
+test('provider sdk mailer names cannot be selected', function () {
+    config([
+        'mail.default' => 'array',
+        'services.postmark.token' => 'should-not-send',
     ]);
 
     config(['mail.mailers.mailgun' => ['transport' => 'mailgun']]);
 
     expect((string) Mail::mailer('postmark')->getSymfonyTransport())->toBe('ark-platform://platform')
-        ->and((string) Mail::mailer('smtp')->getSymfonyTransport())->toBe('ark-platform://platform')
         ->and((string) Mail::mailer('ses')->getSymfonyTransport())->toBe('ark-platform://platform')
         ->and((string) Mail::mailer('mailgun')->getSymfonyTransport())->toBe('ark-platform://platform')
         ->and((string) Mail::mailer('resend')->getSymfonyTransport())->toBe('ark-platform://platform')
-        ->and((string) Mail::mailer('sendmail')->getSymfonyTransport())->toBe('ark-platform://platform')
         ->and(class_exists(\Symfony\Component\Mailer\Bridge\Postmark\Transport\PostmarkTransportFactory::class))->toBeFalse();
 });
 
-test('valid smtp and postmark settings cannot send from core', function () {
+test('ark-platform mailer still refuses to deliver', function () {
     enableHostedPlatformMail();
-    config([
-        'mail.default' => 'smtp',
-        'mail.mailers.smtp.host' => '127.0.0.1',
-        'mail.mailers.smtp.port' => 2525,
-        'mail.mailers.smtp.username' => 'core-user',
-        'mail.mailers.smtp.password' => 'core-secret',
-        'services.postmark.token' => 'should-not-send',
-    ]);
+    config(['mail.default' => 'ark-platform']);
 
     $mailable = new class extends \Illuminate\Mail\Mailable
     {
@@ -47,7 +48,7 @@ test('valid smtp and postmark settings cannot send from core', function () {
         }
     };
 
-    expect(fn () => Mail::to('advisor@example.test')->send($mailable))
+    expect(fn () => Mail::mailer('ark-platform')->to('advisor@example.test')->send($mailable))
         ->toThrow(TransportException::class, 'Core does not render or deliver email.');
 
     Http::assertNothingSent();
@@ -79,7 +80,7 @@ test('platform rejection does not fall back to the local mailer', function () {
 test('owner digest uses platform and ignores the local mailer', function () {
     enableHostedPlatformMail();
     fakeHostedPlatformMail();
-    config(['mail.default' => 'postmark', 'services.postmark.token' => 'should-not-send']);
+    config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => '127.0.0.1']);
 
     $this->artisan('shop-excellence:owner-digest', ['--email' => 'owner@example.test'])
         ->assertSuccessful();

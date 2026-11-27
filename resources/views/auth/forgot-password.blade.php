@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="mb-4 text-sm text-gray-600">
-        Enter the email for your staff account. If it matches the recovery owner on file, ARK sends a one-time code to that recovery email.
+        Enter the email for your staff account. If it matches an active account, ARK emails a password reset link using this shop’s mail settings.
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -14,12 +14,9 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-between mt-4 gap-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('password.offline') }}">
-                This Box cannot reach Cloud
-            </a>
+        <div class="flex items-center justify-end mt-4">
             <x-primary-button>
-                Send recovery code
+                Email password reset link
             </x-primary-button>
         </div>
     </form>

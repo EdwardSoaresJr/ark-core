@@ -42,7 +42,7 @@ Core keeps:
 
 - the customer's phone numbers and email addresses as contact fields
 - basic customer intake: the website contact or booking request and the resulting lead record, with its source and status
-- local staff sign-in and account recovery that work without ARK Shop. The framework's password-reset and staff email-verification mail use the shop's own mail settings for **staff** accounts only. Recovery must also work from the command line, with no mail at all.
+- local staff sign-in and account recovery that work without ARK Shop. The framework's password-reset and staff email-verification mail use the process `MAIL_*` settings for **staff** accounts only (self-hosted: that install's mailer; hosted SaaS: the shared node platform SMTP — not a per-shop credential and not ARK Shop customer mail). Recovery must also work from the command line, with no mail at all.
 - small, provider-neutral extension points: domain events, contracts whose Core implementation does nothing, and registries for navigation, timeline entries, attention sources, and settings sections
 - historical communications records and the shared workspace shell described below, without a standalone delivery stack
 

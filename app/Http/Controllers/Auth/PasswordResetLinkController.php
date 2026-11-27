@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Ark\Auth\StaffRecoveryService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
@@ -17,19 +15,18 @@ class PasswordResetLinkController extends Controller
         return view('auth.forgot-password');
     }
 
-    /**
-     * @throws ValidationException
-     */
-    public function store(Request $request, StaffRecoveryService $recovery): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'email' => ['required', 'email'],
         ]);
 
-        $message = $recovery->requestCode($request->string('email')->toString());
+        // Always attempt; generic status avoids account enumeration.
+        Password::sendResetLink($request->only('email'));
 
-        return redirect()
-            ->route('password.reset', ['email' => $request->string('email')->toString()])
-            ->with('status', $message);
+        return back()->with(
+            'status',
+            'If that email belongs to an active staff account, we sent a password reset link.',
+        );
     }
 }
