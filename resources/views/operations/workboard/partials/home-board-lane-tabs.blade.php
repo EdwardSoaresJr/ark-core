@@ -13,8 +13,9 @@
     <div class="ark-job-board-lane-tabs__track" data-job-board-lane-tabs-track>
         @foreach ($jobBoardLaneTabs as $tab)
             @php
-                $tabTone = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone(
-                    \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::chipTone($tab['color']),
+                $tabTone = \App\Ark\Operations\Workboard\JobBoardLaneTabPresentation::tablerToneForTab(
+                    $tab['key'],
+                    $tab['color'] ?? null,
                 );
                 $tabUrl = route('operations.index', $jobBoardListPage->queryParams([
                     'lane' => $tab['key'],

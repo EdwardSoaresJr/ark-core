@@ -865,6 +865,25 @@
     color: var(--ark-status-building-fg) !important;
 }
 
+/*
+ * Shop Queue "All" aggregate filter accent (JobBoardLaneTabPresentation::ALL_ACCENT).
+ * System slate — not a repair-order status and not in status/lane color pickers.
+ * Kept distinct from Building Estimate (--ark-status-building).
+ */
+:root,
+[data-bs-theme='light'] {
+    --ark-queue-all: #64748b;
+}
+
+[data-bs-theme='dark'] {
+    --ark-queue-all: #94a3b8;
+}
+
+.bg-ark-all {
+    --tblr-bg-opacity: 1;
+    background-color: var(--ark-queue-all) !important;
+}
+
 .ark-job-board-hybrid-record__primary {
     min-width: 0;
     display: grid;
@@ -2235,6 +2254,10 @@
 
 .ark-job-board-lane-tabs__tab[data-lane-tone='building'] {
     --ark-lane-accent: var(--ark-status-building);
+}
+
+.ark-job-board-lane-tabs__tab[data-lane-tone='ark-all'] {
+    --ark-lane-accent: var(--ark-queue-all);
 }
 
 /* Same breakpoint as compact Sort by: tabs on desktop, Queue select on smaller screens. */

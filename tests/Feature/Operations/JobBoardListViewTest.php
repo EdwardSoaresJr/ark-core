@@ -3,7 +3,9 @@
 use App\Ark\Operations\Documents\PdfRuntimePaths;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor;
 use App\Ark\Operations\Workboard\JobBoardLayout;
+use App\Ark\Operations\Workboard\JobBoardLaneTabPresentation;
 use App\Ark\Operations\Workboard\JobBoardListPage;
 use App\Ark\Runtime\Preferences\JobBoardLayoutPreference;
 use App\Models\User;
@@ -45,6 +47,10 @@ test('job board defaults to cards with list and cards over the same result set',
         ->and($xpath->query('.//*[@data-job-board-kanban-column]', $board)->length)->toBeGreaterThanOrEqual(5)
         ->and($xpath->query('.//*[@data-job-board-lane-tabs]//*[@data-job-board-lane-tab]', $board)->length)->toBeGreaterThanOrEqual(6)
         ->and($xpath->query('.//*[@data-job-board-lane-tab="all"][@aria-current="page"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-lane-tab="all"][@data-lane-tone="'.JobBoardLaneTabPresentation::ALL_ACCENT.'"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-lane-tab="all"]//*[contains(concat(" ", normalize-space(@class), " "), " bg-'.JobBoardLaneTabPresentation::ALL_ACCENT.' ")]', $board)->length)->toBe(2)
+        ->and($xpath->query('.//*[@data-job-board-lane-tab="estimates"][@data-lane-tone="building"][@data-lane-color="'.RepairOrderStatusColor::LIGHT.'"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-lane-tab="estimates"]//*[contains(concat(" ", normalize-space(@class), " "), " bg-building ")]', $board)->length)->toBe(2)
         ->and($xpath->query('.//*[@id="ops-list-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]', $board)->length)->toBe(1)
         ->and($html)->not->toContain('ops-home-col-')
@@ -853,6 +859,8 @@ test('job board concept c polish keeps denser hybrid chrome and compact mobile s
         ->toContain('--tblr-card-border-radius: var(--ark-lane-tab-radius)')
         ->toContain('.ark-job-board-lane-tabs__underline')
         ->toContain(".ark-job-board-lane-tabs__tab.active .ark-job-board-lane-tabs__underline")
+        ->toContain('--ark-queue-all')
+        ->toContain('.bg-ark-all')
         ->not->toContain('--ark-lane-tab-active-underline')
         ->not->toContain('.ark-job-board-lane-tabs__tab.active::after')
         ->not->toContain('--ark-lane-tab-radius: 999px')

@@ -7,6 +7,8 @@ use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusDefinition;
 use App\Ark\Operations\Workboard\JobBoardLane;
 use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Workboard\JobBoardLaneCatalogDefaults;
+use App\Ark\Operations\Workboard\JobBoardLaneTabPresentation;
+use App\Ark\Operations\Workboard\JobBoardListRowProjection;
 use App\Ark\Operations\Workboard\WorkboardCardGlance;
 use App\Ark\Operations\Workboard\WorkboardCardGlanceProjection;
 use App\Ark\Operations\Workboard\WorkboardSwimlaneCatalog;
@@ -48,6 +50,59 @@ test('building estimate defaults to light and closed stays dark', function () {
         ->and($estimatesLane['color'])->toBe(RepairOrderStatusColor::LIGHT)
         ->and(RepairOrderStatusColor::chipTone($estimate?->color))->toBe('building')
         ->and(RepairOrderStatusColor::chipTone($closed?->color))->toBe('closed');
+});
+
+test('all filter uses a system accent distinct from estimates building default', function () {
+    $tabs = app(JobBoardListRowProjection::class)->laneTabsFromCounts(
+        app(JobBoardLaneCatalog::class)->homeBoardColumns(),
+        collect(),
+    );
+
+    $byKey = collect($tabs)->keyBy('key');
+
+    expect($byKey->get(JobBoardLaneTabPresentation::ALL_KEY)['color'])
+        ->toBe(JobBoardLaneTabPresentation::ALL_ACCENT)
+        ->and($byKey->get(JobBoardLaneCatalogDefaults::ESTIMATES)['color'])
+        ->toBe(RepairOrderStatusColor::LIGHT)
+        ->and(JobBoardLaneTabPresentation::tablerToneForTab(JobBoardLaneTabPresentation::ALL_KEY))
+        ->toBe(JobBoardLaneTabPresentation::ALL_ACCENT)
+        ->and(JobBoardLaneTabPresentation::tablerToneForTab(
+            JobBoardLaneCatalogDefaults::ESTIMATES,
+            RepairOrderStatusColor::LIGHT,
+        ))->toBe('building')
+        ->and(JobBoardLaneTabPresentation::ALL_ACCENT)
+        ->not->toBe(RepairOrderStatusColor::LIGHT)
+        ->and(JobBoardLaneTabPresentation::fallbackLaneColor(JobBoardLaneCatalogDefaults::ESTIMATES))
+        ->toBe(RepairOrderStatusColor::LIGHT)
+        ->and(JobBoardLaneTabPresentation::fallbackLaneColor(JobBoardLaneCatalogDefaults::PARTS))
+        ->toBe(RepairOrderStatusColor::SECONDARY)
+        ->and(collect(RepairOrderStatusColor::keys()))->not->toContain(JobBoardLaneTabPresentation::ALL_ACCENT)
+        ->and(collect(RepairOrderStatusColor::options())->pluck('key'))->not->toContain(JobBoardLaneTabPresentation::ALL_ACCENT);
+});
+
+test('list tab colors honor tenant lane customizations without changing all', function () {
+    JobBoardLane::query()->where('key', JobBoardLaneCatalogDefaults::ESTIMATES)
+        ->update(['color' => RepairOrderStatusColor::PRIMARY]);
+    JobBoardLane::query()->where('key', JobBoardLaneCatalogDefaults::WAITING_APPROVAL)
+        ->update(['color' => RepairOrderStatusColor::SUCCESS]);
+    app(JobBoardLaneCatalog::class)->forgetCache();
+
+    $tabs = app(JobBoardListRowProjection::class)->laneTabsFromCounts(
+        app(JobBoardLaneCatalog::class)->homeBoardColumns(),
+        collect(),
+    );
+    $byKey = collect($tabs)->keyBy('key');
+
+    expect($byKey->get(JobBoardLaneTabPresentation::ALL_KEY)['color'])
+        ->toBe(JobBoardLaneTabPresentation::ALL_ACCENT)
+        ->and($byKey->get(JobBoardLaneCatalogDefaults::ESTIMATES)['color'])
+        ->toBe(RepairOrderStatusColor::PRIMARY)
+        ->and($byKey->get(JobBoardLaneCatalogDefaults::WAITING_APPROVAL)['color'])
+        ->toBe(RepairOrderStatusColor::SUCCESS)
+        ->and(JobBoardLaneTabPresentation::tablerToneForTab(
+            JobBoardLaneCatalogDefaults::ESTIMATES,
+            RepairOrderStatusColor::PRIMARY,
+        ))->toBe('azure');
 });
 
 test('catalog sync preserves tenant status and lane colors', function () {
