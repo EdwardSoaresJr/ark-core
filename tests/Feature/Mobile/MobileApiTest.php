@@ -69,7 +69,9 @@ test('staff can login and receive sanctum token with permissions', function (): 
             'customers',
             'schedule',
             'apps',
-        ]);
+        ])
+        // Concept A Field/My Day are web staff destinations, not mobile bottom-nav keys.
+        ->and(collect($response->json('navigation'))->pluck('key')->intersect(['field-queue', 'field', 'my-day'])->all())->toBe([]);
 });
 
 test('technician my work returns only assigned repair orders', function (): void {
