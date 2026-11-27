@@ -7,7 +7,6 @@ use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\Auth\OfflineRecoveryController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\VerifyEmailController;
@@ -27,19 +26,15 @@ Route::middleware('guest')->group(function () {
         ->name('password.request');
 
     Route::post('app/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->middleware('throttle:6,1')
         ->name('password.email');
 
-    Route::get('app/reset-password', [NewPasswordController::class, 'create'])
+    Route::get('app/reset-password/{token}', [NewPasswordController::class, 'create'])
         ->name('password.reset');
 
     Route::post('app/reset-password', [NewPasswordController::class, 'store'])
+        ->middleware('throttle:6,1')
         ->name('password.store');
-
-    Route::get('app/offline-recovery', [OfflineRecoveryController::class, 'create'])
-        ->name('password.offline');
-
-    Route::post('app/offline-recovery', [OfflineRecoveryController::class, 'store'])
-        ->name('password.offline.store');
 });
 
 Route::middleware('auth')->group(function () {

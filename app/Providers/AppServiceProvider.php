@@ -62,6 +62,8 @@ use App\Ark\Runtime\Surfaces\PublicRootUrlConfigurator;
 use App\Ark\Vehicles\Providers\NhtsaProvider;
 use App\Ark\Vehicles\VehicleIntelligenceManager;
 use App\Http\Middleware\ApplyShopRuntimeConfig;
+use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Database\Events\MigrationsEnded;
@@ -226,6 +228,21 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        ResetPassword::createUrlUsing(function (User $user, string $token): string {
+            $parameters = [
+                'token' => $token,
+                'email' => $user->getEmailForPasswordReset(),
+            ];
+
+            // Hosted SaaS: pin the link to this shop's host (request or primary domain).
+            // Tokens live in the tenant DB; the host must match so a link cannot open another shop.
+            if (class_exists(\Central\Support\TenantUrl::class)) {
+                return \Central\Support\TenantUrl::route('password.reset', $parameters);
+            }
+
+            return URL::route('password.reset', $parameters);
+        });
 
         PdfRuntimeConfigurator::apply();
         ShopIntegrationRuntimeConfig::apply();
