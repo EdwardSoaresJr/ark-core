@@ -865,6 +865,25 @@
     color: var(--ark-status-building-fg) !important;
 }
 
+/*
+ * Shop Queue "All" aggregate filter accent (JobBoardLaneTabPresentation::ALL_ACCENT).
+ * System slate — not a repair-order status and not in status/lane color pickers.
+ * Kept distinct from Building Estimate (--ark-status-building).
+ */
+:root,
+[data-bs-theme='light'] {
+    --ark-queue-all: #64748b;
+}
+
+[data-bs-theme='dark'] {
+    --ark-queue-all: #94a3b8;
+}
+
+.bg-ark-all {
+    --tblr-bg-opacity: 1;
+    background-color: var(--ark-queue-all) !important;
+}
+
 .ark-job-board-hybrid-record__primary {
     min-width: 0;
     display: grid;
@@ -2086,7 +2105,6 @@
     --tblr-card-border-width: 1px;
     --tblr-card-border-radius: var(--ark-lane-tab-radius);
     --ark-lane-accent: var(--tblr-secondary);
-    --ark-lane-tab-active-underline: var(--tblr-body-color);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -2141,7 +2159,8 @@
 
 /*
  * Selected tab: same neutral surface as siblings; bold label + bottom underline.
- * No primary fill, outline, or inset glow — status accent stays on card-status-top only.
+ * No primary fill, outline, or inset glow — status accent stays on card-status-top;
+ * the underline reuses that same bg-* class (see .ark-job-board-lane-tabs__underline).
  */
 .ark-job-board-lane-tabs__tab.active,
 .ark-job-board-lane-tabs__tab[aria-current='page'] {
@@ -2152,22 +2171,24 @@
     font-weight: var(--tblr-font-weight-bold, 700);
 }
 
-.ark-job-board-lane-tabs__tab.active::after,
-.ark-job-board-lane-tabs__tab[aria-current='page']::after {
-    content: '';
+.ark-job-board-lane-tabs__underline {
+    display: none;
     position: absolute;
     left: 0.5rem;
     right: 0.5rem;
     bottom: 0;
     height: 2.5px;
     border-radius: 2px 2px 0 0;
-    background: var(--ark-lane-tab-active-underline);
     pointer-events: none;
     z-index: 1;
 }
 
+.ark-job-board-lane-tabs__tab.active .ark-job-board-lane-tabs__underline,
+.ark-job-board-lane-tabs__tab[aria-current='page'] .ark-job-board-lane-tabs__underline {
+    display: block;
+}
+
 [data-bs-theme='dark'] .ark-job-board-lane-tabs__tab {
-    --ark-lane-tab-active-underline: #fff;
     background: var(--tblr-bg-surface);
     border-color: var(--tblr-border-color);
 }
@@ -2233,6 +2254,10 @@
 
 .ark-job-board-lane-tabs__tab[data-lane-tone='building'] {
     --ark-lane-accent: var(--ark-status-building);
+}
+
+.ark-job-board-lane-tabs__tab[data-lane-tone='ark-all'] {
+    --ark-lane-accent: var(--ark-queue-all);
 }
 
 /* Same breakpoint as compact Sort by: tabs on desktop, Queue select on smaller screens. */

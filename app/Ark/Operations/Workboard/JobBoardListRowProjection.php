@@ -93,9 +93,10 @@ final class JobBoardListRowProjection
         $laneTotal = $byLane->sum(fn (Collection $orders): int => $orders->count());
 
         $tabs = [[
-            'key' => 'all',
+            'key' => JobBoardLaneTabPresentation::ALL_KEY,
             'label' => 'All',
-            'color' => 'secondary',
+            // System aggregate accent — not a repair-order status / lane setting.
+            'color' => JobBoardLaneTabPresentation::ALL_ACCENT,
             'count' => $laneTotal,
         ]];
 
@@ -104,7 +105,7 @@ final class JobBoardListRowProjection
             $tabs[] = [
                 'key' => $key,
                 'label' => $column['label'],
-                'color' => $column['color'] ?? 'secondary',
+                'color' => JobBoardLaneTabPresentation::colorForTab($key, $column['color'] ?? null),
                 'count' => ($byLane->get($key) ?? collect())->count(),
             ];
         }

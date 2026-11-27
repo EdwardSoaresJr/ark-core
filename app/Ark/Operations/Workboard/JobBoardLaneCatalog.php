@@ -91,7 +91,9 @@ final class JobBoardLaneCatalog
 
     public function colorForKey(string $key): string
     {
-        return RepairOrderStatusColor::normalize($this->lane($key)['color'] ?? RepairOrderStatusColor::SECONDARY);
+        return RepairOrderStatusColor::normalize(
+            $this->lane($key)['color'] ?? JobBoardLaneTabPresentation::fallbackLaneColor($key),
+        );
     }
 
     public function acceptsStatusLaneKey(?string $laneKey): bool
