@@ -56,7 +56,7 @@ final class StaffNavigation
                 'items' => [
                     self::item('job-board', 'Shop Queue', 'layout-grid', route('operations.index'), ['operations.index', 'operations.workboard'], $operates),
                     self::item('workboard', 'Shop Queue', 'layout-grid', route('operations.workboard'), ['operations.workboard'], $produces && ! $operates),
-                    self::item('work-queues', 'Work Queues', 'list-check', route('operations.work.queue', WorkQueue::Tasks), ['operations.work.queue'], $operates),
+                    self::item('work-queues', 'Attention', 'list-check', route('operations.work.queue', WorkQueue::Tasks), ['operations.work.queue'], $operates),
                     self::item('schedule', 'Schedule', 'calendar', route('operations.appointments.index'), ['operations.appointments.*'], $operates && ShopSettings::current()->appointmentsEnabled()),
                     self::item('communications', 'Communications', 'message', $communicationsUrl, ['operations.communications.*'], $operates, liveCount: true),
                 ],

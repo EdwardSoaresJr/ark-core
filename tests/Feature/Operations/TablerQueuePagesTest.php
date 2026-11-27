@@ -55,7 +55,7 @@ test('each work queue links to the other queues and marks its own', function (Wo
 
     $html = $this->actingAs($advisor)->get(route('operations.work.queue', $queue))->assertOk()->getContent();
     $xpath = tablerQueueXpath($html);
-    $nav = $xpath->query('//nav[@data-work-queue-nav][@aria-label="Work queues"]')->item(0);
+    $nav = $xpath->query('//nav[@data-work-queue-nav][@aria-label="Attention"]')->item(0);
 
     expect($nav)->toBeInstanceOf(DOMElement::class);
 
