@@ -9,6 +9,7 @@
     aria-label="Shop Queue queues"
     data-job-board-lane-tabs
 >
+    {{-- Desktop: Kanban-header-style lane tiles. Mobile ≤991.98px uses the Queue select below. --}}
     <div class="ark-job-board-lane-tabs__track" data-job-board-lane-tabs-track>
         @foreach ($jobBoardLaneTabs as $tab)
             @php
@@ -25,7 +26,6 @@
                 href="{{ $tabUrl }}"
                 @class([
                     'ark-job-board-lane-tabs__tab',
-                    'nav-link',
                     'active' => $isActive,
                 ])
                 data-job-board-lane-tab="{{ $tab['key'] }}"
@@ -33,13 +33,15 @@
                 data-lane-tone="{{ $tabTone }}"
                 @if ($isActive) aria-current="page" @endif
             >
-                <span class="status-dot status-{{ $tabTone }}" aria-hidden="true"></span>
-                <span class="ark-job-board-lane-tabs__label">{{ $tab['label'] }}</span>
-                <span
-                    class="ark-job-board-lane-tabs__count"
-                    data-job-board-lane-count="{{ $tab['key'] }}"
-                    title="Total in this queue"
-                >{{ $tab['count'] }}</span>
+                <span class="card-status-top bg-{{ $tabTone }}" aria-hidden="true"></span>
+                <span class="ark-job-board-lane-tabs__body">
+                    <span class="ark-job-board-lane-tabs__label">{{ $tab['label'] }}</span>
+                    <span
+                        class="badge bg-secondary-lt text-secondary ark-job-board-lane-tabs__count"
+                        data-job-board-lane-count="{{ $tab['key'] }}"
+                        title="Total in this queue"
+                    >{{ $tab['count'] }}</span>
+                </span>
             </a>
         @endforeach
     </div>

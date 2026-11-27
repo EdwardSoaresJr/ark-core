@@ -12,8 +12,17 @@ it('maps each chip tone to a Tabler color that matches the status badge family',
     'motion' => ['motion', 'azure'],
     'ready' => ['ready', 'green'],
     'closed' => ['closed', 'dark'],
+    'building' => ['building', 'building'],
     'move' => ['move', 'secondary'],
 ]);
+
+it('maps Building Estimate light and Closed dark to distinct chip tones', function (): void {
+    expect(RepairOrderStatusColor::chipTone(RepairOrderStatusColor::LIGHT))->toBe('building')
+        ->and(RepairOrderStatusColor::chipTone(RepairOrderStatusColor::DARK))->toBe('closed')
+        ->and(RepairOrderStatusColor::tablerColorForChipTone('building'))->toBe('building')
+        ->and(RepairOrderStatusColor::tablerColorForChipTone('closed'))->toBe('dark')
+        ->and(RepairOrderStatusColor::label(RepairOrderStatusColor::LIGHT))->toBe('White');
+});
 
 it('normalizes unknown tones to the neutral move edge', function (): void {
     expect(RepairOrderStatusColor::normalizeChipTone('not-a-tone'))->toBe('move')

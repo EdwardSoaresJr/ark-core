@@ -133,7 +133,7 @@ final class RepairOrderStatusCatalogDefaults
     {
         return [
             self::status('draft', 'Draft', lane: JobBoardLaneCatalogDefaults::ESTIMATES, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 0, color: 'dark', customerCopy: 'We’re still putting together your estimate.'),
-            self::status('estimate', 'Building Estimate', lane: JobBoardLaneCatalogDefaults::ESTIMATES, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 1, color: 'secondary', customerCopy: 'We’re preparing your estimate.'),
+            self::status('estimate', 'Building Estimate', lane: JobBoardLaneCatalogDefaults::ESTIMATES, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 1, color: RepairOrderStatusColor::LIGHT, customerCopy: 'We’re preparing your estimate.'),
             self::status('waiting_approval', 'Waiting Approval', lane: JobBoardLaneCatalogDefaults::WAITING_APPROVAL, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 2, color: 'warning', customerCopy: 'Your estimate is ready. Reply APPROVE to proceed or NO to decline.'),
             self::status('approved', 'Approved', lane: JobBoardLaneCatalogDefaults::WORK_IN_PROGRESS, group: 'work_in_progress', groupName: 'Work in progress', sort: 3, color: 'primary', customerCopy: 'Your estimate is approved. We’re moving forward.', technicianBoard: true),
             self::status('waiting_parts', 'Waiting Parts', lane: JobBoardLaneCatalogDefaults::PARTS, group: 'work_in_progress', groupName: 'Work in progress', sort: 4, color: 'info', customerCopy: 'We’re waiting on parts to arrive.', technicianBoard: true),
@@ -381,10 +381,18 @@ final class RepairOrderStatusCatalogDefaults
         app(JobBoardLaneCatalog::class)->forgetCache();
 
         foreach (self::statusDefinitions() as $definition) {
-            RepairOrderStatusDefinition::query()->updateOrCreate(
-                ['slug' => $definition['slug']],
-                $definition,
-            );
+            $existing = RepairOrderStatusDefinition::query()->where('slug', $definition['slug'])->first();
+            if ($existing === null) {
+                RepairOrderStatusDefinition::query()->create($definition);
+
+                continue;
+            }
+
+            // Preserve tenant-chosen colors; sync still refreshes structure and flags.
+            $tenantColor = $existing->color;
+            $existing->fill($definition);
+            $existing->color = $tenantColor;
+            $existing->save();
         }
 
         foreach (self::variantDefinitions() as $variant) {
