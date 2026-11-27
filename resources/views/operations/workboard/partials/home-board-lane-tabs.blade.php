@@ -42,6 +42,8 @@
                         title="Total in this queue"
                     >{{ $tab['count'] }}</span>
                 </span>
+                {{-- Same bg-* as card-status-top so the active underline tracks the lane accent (incl. tenant colors). --}}
+                <span class="ark-job-board-lane-tabs__underline bg-{{ $tabTone }}" aria-hidden="true"></span>
             </a>
         @endforeach
     </div>
