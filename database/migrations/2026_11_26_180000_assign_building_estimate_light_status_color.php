@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Schema;
  *
  * Platform default was secondary (same visual family as other neutrals). Closed stays dark/gray.
  * Only rewrite rows that are still on the prior platform default so tenant customizations survive.
+ *
+ * Rollback is intentionally non-destructive: this migration does not record which rows it touched,
+ * so `down()` must not rewrite every `light` value back to `secondary` (that would overwrite a
+ * later intentional tenant choice). Operators who need the prior platform default can set
+ * `ro_statuses.color = secondary` for slug `estimate` and `job_board_lanes.color = secondary`
+ * for key `estimates` only where they still want that default, then clear the status catalog caches.
  */
 return new class extends Migration
 {
@@ -34,20 +40,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasTable('ro_statuses')) {
-            DB::table('ro_statuses')
-                ->where('slug', 'estimate')
-                ->where('color', 'light')
-                ->update(['color' => 'secondary']);
-        }
-
-        if (Schema::hasTable('job_board_lanes')) {
-            DB::table('job_board_lanes')
-                ->where('key', 'estimates')
-                ->where('color', 'light')
-                ->update(['color' => 'secondary']);
-        }
-
+        // Non-destructive: no provenance of which rows this migration changed.
         $this->forgetStatusCatalogCaches();
     }
 
