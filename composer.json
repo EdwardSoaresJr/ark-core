@@ -19,6 +19,7 @@
         "laravel/reverb": "^1.10",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
+        "mpdf/mpdf": "^8.2",
         "smalot/pdfparser": "^2.12",
         "spatie/browsershot": "^5.4",
         "spatie/laravel-permission": "^8.0",

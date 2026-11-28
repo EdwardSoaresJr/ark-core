@@ -1,0 +1,45 @@
+name: Release ZIP
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Semver label for the artifact (for example 1.0.0-rc.1)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, json, bcmath, fileinfo, pdo_mysql, gd, zip
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Build release ZIP
+        env:
+          ARK_RELEASE_VERSION: ${{ inputs.version }}
+          ARK_RELEASE_OUT_DIR: ${{ github.workspace }}/dist
+        run: |
+          chmod +x scripts/build-release-zip.sh
+          scripts/build-release-zip.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ark-core-release-zip
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error

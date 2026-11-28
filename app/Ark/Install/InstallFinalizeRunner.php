@@ -2,10 +2,13 @@
 
 namespace App\Ark\Install;
 
+use App\Ark\Runtime\InfrastructureProfile;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 
 /**
- * Starts ark:install-finalize outside the HTTP request so proxies cannot abort migrate.
+ * Starts ark:install-finalize outside the HTTP request when the host allows it.
+ * On constrained shared hosting (no exec/nohup), runs finalize synchronously.
  */
 final class InstallFinalizeRunner
 {
@@ -26,6 +29,12 @@ final class InstallFinalizeRunner
             return;
         }
 
+        if (! InfrastructureProfile::detachedFinalizeAvailable()) {
+            self::runSynchronously();
+
+            return;
+        }
+
         $php = self::phpCliBinary();
         $artisan = base_path('artisan');
         $log = storage_path('logs/install-finalize.log');
@@ -41,7 +50,22 @@ final class InstallFinalizeRunner
             escapeshellarg($log)
         );
 
-        exec($cmd);
+        $exit = 0;
+        $output = [];
+        @exec($cmd, $output, $exit);
+
+        if ($exit !== 0) {
+            Log::warning('Detached install finalize failed; falling back to synchronous finalize.', [
+                'exit' => $exit,
+                'output' => $output,
+            ]);
+            self::runSynchronously();
+        }
+    }
+
+    public static function runSynchronously(): void
+    {
+        Artisan::call('ark:install-finalize');
     }
 
     /**

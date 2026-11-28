@@ -2,6 +2,7 @@
 
 namespace App\Ark\Install;
 
+use App\Ark\Runtime\InfrastructureProfile;
 use Illuminate\Support\Facades\File;
 
 final class SystemRequirementsChecker
@@ -68,6 +69,48 @@ final class SystemRequirementsChecker
                 ? 'Writable .env - browser can persist database bootstrap values'
                 : 'Immutable environment - supply APP_KEY / DB_* via the hosting platform; wizard will validate only',
         ];
+
+        $infra = InfrastructureProfile::inspect();
+        $checks[] = [
+            'id' => 'infra_profile',
+            'label' => 'Infrastructure profile',
+            'status' => 'pass',
+            'detail' => 'Detected '.$infra['profile'].' (Docker/VPS/shared availability — not a commercial entitlement)',
+        ];
+
+        $pdfStatus = 'fail';
+        $pdfDetail = 'No PDF engine available';
+        if ($infra['chromium_pdf']) {
+            $pdfStatus = 'pass';
+            $pdfDetail = 'Chromium PDF available';
+        } elseif ($infra['native_pdf']) {
+            $pdfStatus = 'pass';
+            $pdfDetail = 'Native PHP PDF available (mPDF)';
+        }
+        $checks[] = [
+            'id' => 'pdf_engine',
+            'label' => 'PDF generation',
+            'status' => $pdfStatus,
+            'detail' => $pdfDetail,
+        ];
+
+        $checks[] = [
+            'id' => 'install_finalize',
+            'label' => 'Install finalize',
+            'status' => 'pass',
+            'detail' => $infra['detached_finalize']
+                ? 'Detached CLI finalize available'
+                : 'Constrained host — finalize runs inside the browser request (no exec/nohup required)',
+        ];
+
+        foreach ($infra['notes'] as $index => $note) {
+            $checks[] = [
+                'id' => 'infra_note_'.$index,
+                'label' => 'Infrastructure note',
+                'status' => 'warning',
+                'detail' => $note,
+            ];
+        }
 
         return $checks;
     }
