@@ -180,6 +180,53 @@ test('connected shop sends website confirmation through platform mail only', fun
     )->toBeTrue();
 });
 
+test('website lead confirmation uses installation smtp when platform is disconnected', function (): void {
+    bindFakeOutboundSms();
+
+    ShopSettings::current()->persistTrusted([
+        'installation_mail_mode' => \App\Ark\Installation\Mail\InstallationMailConfiguration::MODE_SHOP,
+        'installation_mail_enabled' => true,
+        'installation_mail_mailer' => 'smtp',
+        'installation_mail_host' => '127.0.0.1',
+        'installation_mail_port' => 587,
+        'installation_mail_from_address' => 'shop@example.test',
+        'installation_mail_from_name' => 'Demo Shop',
+        'cloud_status' => 'disconnected',
+        'ark_mail_from_email' => null,
+    ]);
+    config(['mail.default' => 'array']);
+
+    $transport = Mockery::mock(\Symfony\Component\Mailer\Transport\TransportInterface::class);
+    $transport->shouldReceive('send')->once()->andReturnNull();
+    app()->instance(\App\Ark\Installation\Mail\InstallationMailTransportFactory::class, new class($transport) extends \App\Ark\Installation\Mail\InstallationMailTransportFactory
+    {
+        public function __construct(private $transport) {}
+
+        public function make(array $config): \Symfony\Component\Mailer\Transport\TransportInterface
+        {
+            return $this->transport;
+        }
+    });
+
+    $lead = app(LeadRecorder::class)->recordWebsiteSubmission([
+        'concern' => 'Battery warning.',
+        'contact_name' => 'Casey Standalone',
+        'contact_phone' => '7195550150',
+        'contact_email' => 'casey@example.test',
+        'contact_preference' => LeadContactPreference::Email,
+        'source' => LeadSource::Website,
+    ]);
+
+    app(SendWebsiteLeadConfirmationAction::class)->execute($lead->fresh());
+
+    expect(
+        ConversationMessage::query()
+            ->where('channel', OperationalCommunicationChannel::Email)
+            ->where('metadata->website_lead_confirmation', true)
+            ->exists()
+    )->toBeTrue();
+});
+
 test('platform mail rejection does not fall back to local mail', function (): void {
     enableHostedPlatformMail();
     Mail::fake();

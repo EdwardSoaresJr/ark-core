@@ -35,6 +35,20 @@ final class ApplyAppointmentStatus
         $this->facts->execute($appointment, $this->eventName($status), $actor, [
             'from_appointment_status' => $from->value,
         ]);
+
+        if ($status === AppointmentStatus::Canceled) {
+            $email = app(AppointmentEmailDelivery::class);
+            if ($email->canSend($appointment)) {
+                try {
+                    $email->sendCanceled($appointment);
+                } catch (\Throwable $exception) {
+                    \Illuminate\Support\Facades\Log::warning('appointment_canceled_email_failed', [
+                        'appointment_id' => $appointment->getKey(),
+                        'message' => $exception->getMessage(),
+                    ]);
+                }
+            }
+        }
     }
 
     private function eventName(AppointmentStatus $status): OperationalEventName

@@ -2,8 +2,7 @@
 
 namespace App\Ark\Operations\Leads;
 
-use App\Ark\Mail\ArkMailClient;
-use App\Ark\Mail\TransactionalMailEnvelope;
+use App\Ark\Installation\Mail\CustomerOutboundMail;
 use App\Ark\Mail\TransactionalMailOperation;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
@@ -15,7 +14,6 @@ use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Communications\CommunicationMessageContext;
-use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Support\Mail\ShopMailBranding;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -28,7 +26,7 @@ class SendWebsiteLeadConfirmationAction
         private readonly ShopIntegrationCredentials $credentials,
         private readonly LeadConfirmationAuditConversation $confirmationAudit,
         private readonly ResolvePhoneSmsCapabilityAction $smsCapability,
-        private readonly ArkMailClient $mail,
+        private readonly CustomerOutboundMail $mail,
     ) {}
 
     public function execute(Lead $lead): void
@@ -118,7 +116,7 @@ class SendWebsiteLeadConfirmationAction
         try {
             $viewData = WebsiteLeadConfirmationCopy::emailViewData($lead);
 
-            if (! ManagedMailGate::platformSend()) {
+            if (! $this->mail->canSend()) {
                 Log::warning('website_lead_confirmation_email_failed', [
                     'lead_id' => $lead->id,
                     'reason_code' => 'email_not_configured',
@@ -130,6 +128,7 @@ class SendWebsiteLeadConfirmationAction
             $variables = [
                 'shop_name' => ShopMailBranding::shopName(),
                 'intro' => (string) $viewData['intro'],
+                'subject' => WebsiteLeadConfirmationCopy::emailSubject($lead),
             ];
             if (filled($viewData['response_hint'] ?? null)) {
                 $variables['response_hint'] = (string) $viewData['response_hint'];
@@ -138,14 +137,14 @@ class SendWebsiteLeadConfirmationAction
                 $variables['phone_display'] = (string) $viewData['phone_display'];
             }
 
-            $result = $this->mail->send(TransactionalMailEnvelope::intent(
-                operation: TransactionalMailOperation::CustomerTransactionalMessage,
+            $result = $this->mail->send(
+                operation: TransactionalMailOperation::CustomerTransactionalMessage->value,
                 recipientEmail: $email,
                 variables: $variables,
                 idempotencyKey: 'website-lead-confirmation-'.$lead->uuid,
                 domainObjectType: 'lead',
                 domainObjectId: (string) $lead->uuid,
-            ));
+            );
 
             if (! $result->ok()) {
                 Log::warning('website_lead_confirmation_email_failed', [

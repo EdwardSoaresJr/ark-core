@@ -2,9 +2,8 @@
 
 namespace App\Ark\Operations\EmailVerification;
 
-use App\Ark\Mail\EmailIntent;
-use App\Ark\Platform\Mail\ArkMailClient;
-use App\Ark\Platform\Mail\ManagedMailGate;
+use App\Ark\Installation\Mail\CustomerOutboundMail;
+use App\Ark\Mail\TransactionalMailOperation;
 use App\Support\Mail\ShopMailBranding;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -14,35 +13,35 @@ use RuntimeException;
  */
 final class EmailVerificationNotification
 {
-    public function __construct(private readonly ArkMailClient $mail) {}
+    public function __construct(private readonly CustomerOutboundMail $mail) {}
 
     public function available(): bool
     {
-        return ManagedMailGate::platformSend();
+        return $this->mail->canSend();
     }
 
     public function send(string $email, string $plainCode): void
     {
-        if (! ManagedMailGate::platformSend()) {
+        if (! $this->mail->canSend()) {
             throw new RuntimeException("Email isn't configured yet.");
         }
 
         $ttl = max(1, (int) config('email_verification.code_ttl_minutes', 5));
 
-        $result = $this->mail->sendTransactional(EmailIntent::payload(
-            operation: 'booking.identity_code',
-            to: $email,
+        $result = $this->mail->send(
+            operation: TransactionalMailOperation::BookingIdentityCode->value,
+            recipientEmail: $email,
             variables: [
                 'shop_name' => ShopMailBranding::shopName(),
                 'code' => $plainCode,
                 'expires_in' => $ttl.' minutes',
             ],
             idempotencyKey: 'booking-identity-'.Str::uuid(),
-        ));
+        );
 
-        if (($result['ok'] ?? false) !== true) {
+        if (! $result->ok()) {
             throw new RuntimeException(
-                is_string($result['message'] ?? null) ? $result['message'] : 'Email could not be sent.',
+                is_string($result->message) ? $result->message : 'Email could not be sent.',
             );
         }
     }

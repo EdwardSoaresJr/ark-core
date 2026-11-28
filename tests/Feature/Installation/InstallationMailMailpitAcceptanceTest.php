@@ -292,3 +292,101 @@ it('routes CustomerOutboundMail through installation SMTP to Mailpit when Platfo
     expect((string) ($detail['Subject'] ?? ''))->toContain('Test email')
         ->and((string) data_get($detail, 'To.0.Address'))->toBe('test-send@mailpit.acceptance.test');
 });
+
+it('delivers lead confirmation, booking code, appointment, and staff verification via Mailpit', function () {
+    mailpitDeleteAll();
+
+    $lead = app(\App\Ark\Operations\Leads\LeadRecorder::class)->recordWebsiteSubmission([
+        'concern' => 'Check engine light.',
+        'contact_name' => 'Mailpit Lead',
+        'contact_phone' => '7195550199',
+        'contact_email' => 'lead-confirm@mailpit.acceptance.test',
+        'source' => \App\Ark\Operations\Leads\LeadSource::Website,
+    ]);
+    app(\App\Ark\Operations\Leads\SendWebsiteLeadConfirmationAction::class)->execute($lead->fresh());
+
+    app(\App\Ark\Operations\EmailVerification\EmailVerificationNotification::class)
+        ->send('booking-code@mailpit.acceptance.test', '123456');
+
+    $appointment = \App\Ark\Operations\Appointments\Appointment::query()->create([
+        'starts_at' => now()->addDay()->setTime(9, 0),
+        'ends_at' => now()->addDay()->setTime(10, 0),
+        'status' => \App\Ark\Operations\Appointments\AppointmentStatus::Scheduled,
+        'concern' => 'Oil change',
+        'contact_name' => 'Mailpit Appt',
+        'contact_email' => 'appt-confirm@mailpit.acceptance.test',
+    ]);
+    app(\App\Ark\Operations\Appointments\AppointmentEmailDelivery::class)->sendConfirmation($appointment);
+
+    $staff = \App\Models\User::factory()->unverified()->create([
+        'email' => 'staff-verify@mailpit.acceptance.test',
+        'name' => 'Staff Verify',
+    ]);
+    $staff->sendEmailVerificationNotification();
+
+    $deadline = microtime(true) + 8;
+    $messages = [];
+    do {
+        $messages = mailpitMessages();
+        if (count($messages) >= 4) {
+            break;
+        }
+        usleep(150_000);
+    } while (microtime(true) < $deadline);
+
+    expect(count($messages))->toBeGreaterThanOrEqual(4);
+
+    $bodies = [];
+    foreach ($messages as $summary) {
+        $detail = mailpitMessage((string) ($summary['ID'] ?? ''));
+        $to = strtolower((string) data_get($detail, 'To.0.Address', ''));
+        $bodies[$to] = strtolower((string) ($detail['HTML'] ?? '').(string) ($detail['Text'] ?? '').(string) ($detail['Subject'] ?? ''));
+    }
+
+    expect($bodies['lead-confirm@mailpit.acceptance.test'] ?? '')->toContain('received')
+        ->and($bodies['booking-code@mailpit.acceptance.test'] ?? '')->toContain('123456')
+        ->and($bodies['appt-confirm@mailpit.acceptance.test'] ?? '')->toContain('appointment')
+        ->and($bodies['staff-verify@mailpit.acceptance.test'] ?? '')->toContain('verify');
+});
+
+it('delivers appointment reminder cancel and reschedule notices through Mailpit', function () {
+    mailpitDeleteAll();
+
+    $appointment = \App\Ark\Operations\Appointments\Appointment::query()->create([
+        'starts_at' => now()->addDay()->setTime(14, 0),
+        'ends_at' => now()->addDay()->setTime(15, 0),
+        'status' => \App\Ark\Operations\Appointments\AppointmentStatus::Scheduled,
+        'concern' => 'Brake inspection',
+        'contact_name' => 'Mailpit Lifecycle',
+        'contact_email' => 'appt-lifecycle@mailpit.acceptance.test',
+        'reminder_hours_before' => 2,
+    ]);
+
+    $email = app(\App\Ark\Operations\Appointments\AppointmentEmailDelivery::class);
+    $email->sendReminder($appointment, \App\Ark\Operations\Appointments\SendAppointmentReminderSmsAction::TYPE_HOURS_BEFORE);
+    $email->sendRescheduled($appointment, 'Mon, Jan 1 · 9:00 AM');
+    $email->sendCanceled($appointment);
+
+    $deadline = microtime(true) + 8;
+    $messages = [];
+    do {
+        $messages = mailpitMessages();
+        if (count($messages) >= 3) {
+            break;
+        }
+        usleep(150_000);
+    } while (microtime(true) < $deadline);
+
+    expect(count($messages))->toBeGreaterThanOrEqual(3);
+
+    $blob = '';
+    foreach ($messages as $summary) {
+        $detail = mailpitMessage((string) ($summary['ID'] ?? ''));
+        $blob .= strtolower((string) ($detail['Subject'] ?? '').(string) ($detail['HTML'] ?? '').(string) ($detail['Text'] ?? ''));
+        expect((string) data_get($detail, 'To.0.Address'))->toBe('appt-lifecycle@mailpit.acceptance.test');
+    }
+
+    expect($blob)->toContain('reminder')
+        ->and($blob)->toContain('reschedule')
+        ->and($blob)->toContain('cancel');
+});
