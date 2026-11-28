@@ -90,6 +90,9 @@ const ALLOWED = [
     'tests/Feature/Installation/InstallationMailHostedIsolationTest.php' => 'Hosted SaaS cannot use installation SMTP routes or fallback',
     'tests/Feature/Installation/CustomerOutboundMailTest.php' => 'Tests Platform vs installation routing and honesty',
     'tests/Feature/Installation/InstallationMailUpgradeAndFreshInstallTest.php' => 'Fresh install and upgrade migration / env-managed mail modes',
+    'app/Ark/Operations/Appointments/AppointmentEmailDelivery.php' => 'Customer appointment email via CustomerOutboundMail / installation SMTP (not SMS)',
+    'app/Ark/Operations/Appointments/AppointmentEmailCopy.php' => 'Copy for standalone appointment confirmation, reminder, cancel, reschedule email',
+    'docs/releases/native-email-remaining-workflows.md' => 'Release notes for remaining native standalone email workflows',
 ];
 // The shared Communications workspace (docs/PRODUCT_BOUNDARY.md, owner-approved exception 2026-11-03): files added for
 // it, each with its reason. Adding a file here needs the project owner's approval.
