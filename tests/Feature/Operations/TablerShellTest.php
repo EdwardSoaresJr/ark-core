@@ -247,3 +247,34 @@ test('customer search shows a Tabler empty state with a way back', function (): 
         ->assertSee('No customers match &ldquo;Nobody Here&rdquo;.', false)
         ->assertSee('Clear search');
 });
+
+test('the Tabler profile header shows name without a persistent role list', function (): void {
+    $admin = User::factory()->create([
+        'name' => 'Very Long Staff Display Name For Truncation',
+        'email' => 'long.name.admin@example.test',
+    ])->assignRole(ArkRole::Admin->value, ArkRole::Advisor->value);
+
+    $html = $this->actingAs($admin)
+        ->get(route('operations.customers.search'))
+        ->assertOk()
+        ->assertSee('aria-label="Account menu for Very Long Staff Display Name For Truncation"', false)
+        ->assertSee('nav-link dropdown-toggle d-flex align-items-center', false)
+        ->assertSee('d-block text-truncate">Very Long Staff Display Name For Truncation', false)
+        ->assertSee('dropdown-item-text', false)
+        ->getContent();
+
+    expect($html)->toMatch(
+        '/nav-link dropdown-toggle d-flex align-items-center[\s\S]*?<span class="d-none d-xl-block ps-2 text-start"[^>]*>\s*<span class="d-block text-truncate">Very Long Staff Display Name For Truncation<\/span>\s*<\/span>\s*<\/a>/'
+    );
+
+    $triggerStart = strpos($html, 'aria-label="Account menu for Very Long Staff Display Name For Truncation"');
+    expect($triggerStart)->not->toBeFalse();
+    $menuStart = strpos($html, 'dropdown-menu dropdown-menu-end dropdown-menu-arrow', $triggerStart);
+    expect($menuStart)->not->toBeFalse();
+    $menuHtml = substr($html, $menuStart, 900);
+
+    expect($menuHtml)
+        ->toContain('Very Long Staff Display Name For Truncation')
+        ->and($menuHtml)->toContain('long.name.admin@example.test')
+        ->and($menuHtml)->toContain('admin, advisor');
+});
