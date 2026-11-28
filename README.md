@@ -135,7 +135,7 @@ The communications screen is part of Core. Sending texts or email, and hosted ph
 
 ARK can be run with Docker Compose or directly on a compatible PHP environment.
 
-* PHP 8.3+ - match the version requirements in `composer.json`
+* PHP 8.4.1+ - match the version requirements in `composer.json`
 * Composer when running directly on the host
 * Node.js and npm for Vite assets
 * MySQL 8 for the application database

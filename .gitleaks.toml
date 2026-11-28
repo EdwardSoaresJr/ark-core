@@ -11,4 +11,9 @@ regexes = [
   '''jeep-wrangler-2014''',
   '''BEGIN PRIVATE KEY-----\\ntest\\n-----END PRIVATE KEY''',
   '''example-token-value-not-real''',
+  # Historical docs false positive: "scheduling/appointment" matched generic-api-key.
+  '''scheduling/appointment''',
+]
+paths = [
+  '''docs/releases/traditional-hosting-runtime-profiles\.md''',
 ]

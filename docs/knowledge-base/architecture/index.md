@@ -7,7 +7,7 @@ description: Request path, directories, domain modules, and where business logic
 
 <!-- source: bootstrap/app.php -->
 
-ARK Core is a Laravel 13 application on PHP 8.3+. Domain code lives under `app/Ark`, not in a generic `app/Services` pile. HTTP entry is `public/index.php`. Route registration is `bootstrap/app.php`.
+ARK Core is a Laravel 13 application on PHP 8.4.1+. Domain code lives under `app/Ark`, not in a generic `app/Services` pile. HTTP entry is `public/index.php`. Route registration is `bootstrap/app.php`.
 
 ```mermaid
 flowchart LR

@@ -9,9 +9,9 @@ PDF rendering uses `EstimateDocument::snapshot_json` when it is a full v2 snapsh
 
 ## PDF Runtime
 
-PDFs are rendered through `spatie/browsershot`, backed by Puppeteer/Chromium.
+`PreferringPdfRenderer` prefers Chromium (`spatie/browsershot` / Puppeteer) for full document fidelity. When Chromium/Node is unavailable, **mPDF** renders a table-oriented native document (`native-document.blade.php`). Soft-fail is not an acceptable shared-host outcome for estimates and invoices.
 
-Runtime requirements:
+### Chromium path (preferred)
 
 - PHP can execute Node through Browsershot.
 - Node dependencies are installed with `npm install`.
@@ -21,4 +21,10 @@ Runtime requirements:
 - Production: `infra/releasepanel/install-pdf-runtime.sh` (post-deploy) installs Chrome into `production/shared/puppeteer-cache` and sets `PDF_CHROME_PATH` / `PDF_NO_SANDBOX=true`. Ubuntu also needs Chromium system libraries (`libasound`, `libnss3`, etc.); the install script installs them when run as root.
 - Storage disk `local` is writable because generated PDFs are stored under `storage/app/private/estimate-documents`.
 
-Do not use `window.print()`, DomPDF, mPDF, or live repair order views as PDF authority.
+### Native PHP path (shared hosting / constrained)
+
+- Requires the `mpdf/mpdf` Composer dependency (shipped in release ZIPs).
+- Uses a dedicated compat template — not the Chromium flex/grid Blade.
+- Labels that need exact millimetre transforms may still require Chromium or QZ Tray; shop estimate/invoice PDF email must work on the native path.
+
+Do not use `window.print()` or live repair order HTML views as PDF authority.

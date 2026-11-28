@@ -14,8 +14,8 @@ use App\Ark\Operations\Commands\OperationsCommandRegistry;
 use App\Ark\Operations\Commands\RegisterCoreOperationsCommands;
 use App\Ark\Operations\Communications\CommunicationsWorkspaceSignals;
 use App\Ark\Operations\Communications\CoreCommunicationsWorkspaceSignals;
-use App\Ark\Operations\Documents\HeadlessChromiumPdfRenderer;
 use App\Ark\Operations\Documents\PdfRenderer;
+use App\Ark\Operations\Documents\PreferringPdfRenderer;
 use App\Ark\Operations\Documents\PdfRuntimeConfigurator;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Learn\LearnArkProgressResolver;
@@ -164,7 +164,7 @@ class AppServiceProvider extends ServiceProvider
             return $app->make(NotConfiguredPartsCatalogLauncher::class);
         });
 
-        $this->app->bind(PdfRenderer::class, HeadlessChromiumPdfRenderer::class);
+        $this->app->bind(PdfRenderer::class, PreferringPdfRenderer::class);
         $this->app->bind(VehicleIntelligenceManager::class, fn ($app) => new VehicleIntelligenceManager(
             [$app->make(NhtsaProvider::class)],
         ));

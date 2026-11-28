@@ -2,15 +2,33 @@
 
 namespace App\Ark\Operations\Documents;
 
+use Illuminate\Support\Facades\Log;
+use Mpdf\Mpdf;
+use Mpdf\Output\Destination;
 use RuntimeException;
 use Spatie\Browsershot\Browsershot;
+use Symfony\Component\Process\Exception\LogicException as ProcessLogicException;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Throwable;
 
 class HtmlPdfBuilder
 {
     public function toPdfBytes(string $html): string
     {
-        $this->assertRuntimeIsReady();
+        try {
+            return $this->chromiumToPdfBytes($html);
+        } catch (PdfRuntimeUnavailable $exception) {
+            Log::notice('Chromium HTML PDF runtime unavailable; using native PHP PDF engine.', [
+                'reason' => $exception->getMessage(),
+            ]);
+
+            return $this->nativeToPdfBytes($html);
+        }
+    }
+
+    private function chromiumToPdfBytes(string $html): string
+    {
+        $this->assertChromiumRuntimeIsReady();
 
         $temporaryPath = tempnam(sys_get_temp_dir(), 'ark-sheet-');
 
@@ -28,25 +46,103 @@ class HtmlPdfBuilder
             }
 
             return $bytes;
+        } catch (PdfRuntimeUnavailable $exception) {
+            throw $exception;
         } catch (Throwable $exception) {
+            if ($this->isProcessSpawnFailure($exception)) {
+                throw new PdfRuntimeUnavailable($exception->getMessage(), previous: $exception);
+            }
+
             throw new RuntimeException('PDF generation failed: '.$exception->getMessage(), previous: $exception);
         } finally {
             @unlink($temporaryPath);
         }
     }
 
-    private function assertRuntimeIsReady(): void
+    private function nativeToPdfBytes(string $html): string
     {
+        if (! class_exists(Mpdf::class)) {
+            throw new PdfRuntimeUnavailable('Native PHP PDF engine (mPDF) is not installed.');
+        }
+
+        $tempDir = storage_path('app/mpdf-temp');
+        if (! is_dir($tempDir)) {
+            @mkdir($tempDir, 0755, true);
+        }
+
+        $mpdf = new Mpdf([
+            'format' => 'Letter',
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 12,
+            'margin_bottom' => 14,
+            'tempDir' => $tempDir,
+            'default_font' => 'dejavusans',
+        ]);
+        // Shared-host print CSS uses flex/grid; mPDF needs block/table approximations.
+        $mpdf->WriteHTML($this->nativeCompatStyles());
+        $mpdf->WriteHTML($html);
+
+        return $mpdf->Output('', Destination::STRING_RETURN);
+    }
+
+    private function nativeCompatStyles(): string
+    {
+        return <<<'CSS'
+<style>
+body, table, td, th, div, p, span, li { font-family: dejavusans, sans-serif; }
+.header, .totals, .summary, .chips, .identity { display: block !important; width: 100% !important; }
+.header > div, .totals > div { display: block !important; margin: 0 0 8px 0 !important; }
+.summary { overflow: hidden !important; }
+.summary-card {
+    display: block !important;
+    float: left !important;
+    width: 23% !important;
+    margin: 0 1% 8px 0 !important;
+    box-sizing: border-box !important;
+}
+.page { display: block !important; }
+</style>
+CSS;
+    }
+
+    private function assertChromiumRuntimeIsReady(): void
+    {
+        if (! PdfRuntimePaths::processSpawningAvailable()) {
+            throw new PdfRuntimeUnavailable(
+                'PDF runtime cannot spawn processes (exec/proc_open disabled). Native PHP PDF engine will be used.'
+            );
+        }
+
         $node = config('services.pdf.node_binary');
         $chrome = config('services.pdf.chrome_path');
 
         if (! is_string($node) || $node === '' || ! is_executable($node)) {
-            throw new RuntimeException('PDF runtime is missing Node. Set PDF_NODE_BINARY or run install-pdf-runtime.');
+            throw new PdfRuntimeUnavailable('PDF runtime is missing Node. Set PDF_NODE_BINARY or run install-pdf-runtime.');
         }
 
         if (! is_string($chrome) || $chrome === '' || ! is_executable($chrome)) {
-            throw new RuntimeException('PDF runtime is missing Chromium. Set PDF_CHROME_PATH or run: npx puppeteer browsers install chrome-headless-shell');
+            throw new PdfRuntimeUnavailable('PDF runtime is missing Chromium. Set PDF_CHROME_PATH or run: npx puppeteer browsers install chrome-headless-shell');
         }
+    }
+
+    private function isProcessSpawnFailure(Throwable $exception): bool
+    {
+        if ($exception instanceof ProcessFailedException || $exception instanceof ProcessLogicException) {
+            return true;
+        }
+
+        $previous = $exception->getPrevious();
+        if ($previous instanceof ProcessFailedException || $previous instanceof ProcessLogicException) {
+            return true;
+        }
+
+        $message = $exception->getMessage();
+
+        return str_contains($message, 'proc_open')
+            || str_contains($message, 'exec()')
+            || str_contains($message, 'Unable to launch the browser')
+            || str_contains($message, 'browser.cjs');
     }
 
     private function browser(string $html): Browsershot

@@ -2,6 +2,7 @@
 
 namespace App\Ark\Install;
 
+use App\Ark\Runtime\InfrastructureProfile;
 use Illuminate\Support\Facades\File;
 
 final class SystemRequirementsChecker
@@ -13,15 +14,16 @@ final class SystemRequirementsChecker
     {
         $checks = [];
 
-        $phpOk = version_compare(PHP_VERSION, '8.3.0', '>=');
+        // RC.1 contract: Composer lock (Symfony 8.1) requires PHP >= 8.4.1.
+        $phpOk = version_compare(PHP_VERSION, '8.4.1', '>=');
         $checks[] = [
             'id' => 'php_version',
             'label' => 'PHP version',
             'status' => $phpOk ? 'pass' : 'fail',
-            'detail' => 'PHP '.PHP_VERSION.($phpOk ? ' (requires 8.3+)' : ' - ARK requires PHP 8.3 or newer'),
+            'detail' => 'PHP '.PHP_VERSION.($phpOk ? ' (requires 8.4.1+)' : ' - ARK requires PHP 8.4.1 or newer'),
         ];
 
-        foreach (['pdo', 'pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'bcmath', 'fileinfo'] as $ext) {
+        foreach (['pdo', 'pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'bcmath', 'fileinfo', 'gd', 'zip'] as $ext) {
             $loaded = extension_loaded($ext);
             $checks[] = [
                 'id' => 'ext_'.$ext,
@@ -69,7 +71,62 @@ final class SystemRequirementsChecker
                 : 'Immutable environment - supply APP_KEY / DB_* via the hosting platform; wizard will validate only',
         ];
 
-        return $checks;
+        $infra = InfrastructureProfile::inspect();
+        $checks[] = [
+            'id' => 'infra_profile',
+            'label' => 'Infrastructure profile',
+            'status' => 'pass',
+            'detail' => 'Detected '.$infra['profile'].' (Docker/VPS/shared availability — not a commercial entitlement)',
+        ];
+
+        $checks[] = [
+            'id' => 'redis_reachability',
+            'label' => 'Redis reachability',
+            'status' => ! $infra['redis_configured']
+                ? 'pass'
+                : ($infra['redis_reachable'] ? 'pass' : 'warning'),
+            'detail' => ! $infra['redis_configured']
+                ? 'Redis not configured — file/database drivers are appropriate'
+                : ($infra['redis_reachable']
+                    ? 'Redis configured and reachable'
+                    : 'Redis configured but not reachable'),
+        ];
+
+        $pdfStatus = 'fail';
+        $pdfDetail = 'No PDF engine available';
+        if ($infra['chromium_pdf']) {
+            $pdfStatus = 'pass';
+            $pdfDetail = 'Chromium PDF available';
+        } elseif ($infra['native_pdf']) {
+            $pdfStatus = 'pass';
+            $pdfDetail = 'Native PHP PDF available';
+        }
+        $checks[] = [
+            'id' => 'pdf_engine',
+            'label' => 'PDF generation',
+            'status' => $pdfStatus,
+            'detail' => $pdfDetail,
+        ];
+
+        $checks[] = [
+            'id' => 'install_finalize',
+            'label' => 'Install finalize',
+            'status' => 'pass',
+            'detail' => $infra['detached_finalize']
+                ? 'Detached CLI finalize available'
+                : 'Constrained host — finalize runs inside the browser request with raised time limits and checkpointed progress',
+        ];
+
+        foreach ($infra['notes'] as $index => $note) {
+            $checks[] = [
+                'id' => 'infra_note_'.$index,
+                'label' => 'Infrastructure note',
+                'status' => 'warning',
+                'detail' => $note,
+            ];
+        }
+
+        return array_merge($checks, (new InstallationSecurityChecker)->check());
     }
 
     /**

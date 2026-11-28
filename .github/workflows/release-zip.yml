@@ -1,0 +1,84 @@
+name: Release ZIP
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/build-release-zip.sh'
+      - 'scripts/verify-release-zip-install.sh'
+      - '.github/workflows/release-zip.yml'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.*'
+      - 'resources/js/**'
+      - 'resources/css/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Semver label for the artifact (for example 1.0.0-rc.1)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: ark
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, json, bcmath, fileinfo, pdo_mysql, gd, zip
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Build release ZIP (clean provenance + extract self-test)
+        env:
+          ARK_RELEASE_VERSION: ${{ github.event.inputs.version || format('pr-{0}', github.event.pull_request.number) }}
+          ARK_RELEASE_OUT_DIR: ${{ github.workspace }}/dist
+        run: |
+          chmod +x scripts/build-release-zip.sh scripts/verify-release-zip-install.sh
+          scripts/build-release-zip.sh
+          test -f dist/*.sha256
+          ls -lh dist/
+
+      - name: Install from extracted archive (isolated)
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USERNAME: root
+          DB_PASSWORD: ''
+        run: |
+          # verify script uses mysql CLI against local root; map service.
+          sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client
+          ZIP=$(ls dist/*.zip | head -1)
+          scripts/verify-release-zip-install.sh "$ZIP" /tmp/ark-zip-ci-install
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ark-core-release-zip
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error

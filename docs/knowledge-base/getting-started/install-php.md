@@ -55,7 +55,9 @@ A host install does not start Horizon, Reverb, or the scheduler for you. `.env.e
 
 That is enough to finish setup and use the shop without Redis. Before you depend on background jobs or browser realtime, switch the queue and cache to Redis and run the processes in [Environment and services](/getting-started/configuration).
 
-PDF generation still needs a Chromium binary on this host. Label printing through QZ Tray needs a certificate and private key the shop supplies. Those files do not ship in the repository.
+PDF generation prefers a Chromium binary when Node/Chrome are available. On constrained hosts (including shared hosting from a Release ZIP), the native PHP PDF engine (mPDF) renders estimates and invoices without Chromium. Label printing through QZ Tray needs a certificate and private key the shop supplies; those files do not ship in the repository.
+
+For shared hosting without Composer or Node on the server, use a CI-built Release ZIP (`scripts/build-release-zip.sh`) and point the document root at `public/`. Host PHP must be **8.4.1+**. The `/setup` system check refuses older versions before installation begins.
 
 ## Development convenience
 
