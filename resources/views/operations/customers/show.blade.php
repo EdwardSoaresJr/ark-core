@@ -66,6 +66,7 @@
                         <div class="col-12 col-md col-xl-12">
                             <div class="card">
                                 <div class="card-body">
+                                    <h3 class="card-title mb-1">{{ $customer->name }}</h3>
                                     <div class="text-secondary small">
                                         {{ $customer->customer_type ?: 'Retail' }}
                                         @if ($referralLabel)

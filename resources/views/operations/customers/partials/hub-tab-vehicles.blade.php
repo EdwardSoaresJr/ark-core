@@ -1,5 +1,5 @@
 <div class="card-body border-bottom py-2 d-flex flex-wrap align-items-center gap-2">
-    <h3 class="card-title mb-0 me-auto">Fleet</h3>
+    <h3 class="card-title mb-0 me-auto">Vehicles</h3>
     @can(App\Ark\Runtime\Authorization\ArkCapability::VehiclesManage->value)
         <button
             type="button"
@@ -50,7 +50,7 @@
                     <div class="card-status-start {{ $vehicleActiveRepairOrder ? 'bg-orange' : 'bg-secondary' }}"></div>
                     <div class="card-body">
                         <a
-                            href="{{ route('operations.customers.show', ['customer' => $customer, 'vehicle' => $vehicle->id]) }}"
+                            href="{{ route('operations.vehicles.show', $vehicle) }}"
                             class="d-block fw-bold text-reset text-truncate"
                             title="{{ $vehicle->display_name }}"
                         >{{ $vehicle->operational_identity }}</a>
@@ -196,7 +196,7 @@
                                     :aria-expanded="(activeRoVehicleId === {{ $vehicle->id }}).toString()"
                                     aria-controls="vehicle-ro-create-{{ $vehicle->id }}"
                                 >
-                                    Start RO
+                                    Create RO
                                 </button>
                             @endcan
 

@@ -11,17 +11,7 @@
 <div class="page">
     <aside class="navbar navbar-vertical navbar-expand-lg d-print-none" data-bs-theme="dark" aria-label="Primary operations">
         <div class="container-fluid">
-            <button
-                class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#ark-sidebar-menu"
-                aria-controls="ark-sidebar-menu"
-                aria-expanded="false"
-                aria-label="Toggle navigation"
-            >
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            {{-- Mobile hamburger lives in the global top bar so placement stays consistent. --}}
             <div class="navbar-brand">
                 <a href="{{ $staffFrontDoorUrl }}">
                     <img
@@ -52,6 +42,9 @@
                                         data-ops-comms-nav-style="tabler"
                                         data-initial-count="{{ $commsNavCount }}"
                                     @endif
+                                    @if (! empty($item['label']))
+                                        title="{{ $item['label'] }}"
+                                    @endif
                                 >
                                     <span class="nav-link-icon">
                                         <x-tabler.icon :name="$item['icon']" />
@@ -70,9 +63,43 @@
     </aside>
 
     <div class="page-wrapper">
-        {{-- One bar: the page's context and actions (pushed by x-tabler.page) on the left, the global controls on the right. --}}
+        {{-- Global chrome (left) → page context → global account cluster (right). Record actions stay in ark-page-context. --}}
         <header class="navbar navbar-expand d-print-none ark-topbar" data-ark-topbar>
             <div class="container-fluid gap-2 flex-nowrap">
+                <div class="navbar-nav flex-row align-items-center gap-1 flex-shrink-0 ark-topbar-global" data-ark-topbar-global>
+                    <button
+                        class="navbar-toggler ark-topbar-hamburger d-lg-none"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#ark-sidebar-menu"
+                        aria-controls="ark-sidebar-menu"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation"
+                    >
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-icon d-none d-lg-inline-flex"
+                        data-bs-toggle="sidebar-folded"
+                        aria-pressed="false"
+                        aria-label="Collapse sidebar"
+                        title="Collapse sidebar"
+                    >
+                        <x-tabler.icon name="layout-sidebar" />
+                    </button>
+                    @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                        <button
+                            type="button"
+                            class="btn btn-icon"
+                            data-ops-global-search-open
+                            aria-label="Search"
+                            title="Search (⌘K)"
+                        >
+                            <x-tabler.icon name="search" />
+                        </button>
+                    @endcan
+                </div>
                 @stack('ark-page-context')
                 <div class="navbar-nav flex-row align-items-center gap-2 ms-auto flex-shrink-0">
                     {{-- The Inbox sits with the header's own items on every staff page, Communications included. --}}

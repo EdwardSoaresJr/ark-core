@@ -2975,6 +2975,21 @@ span.ark-legacy {
     height: var(--ark-topbar-height);
 }
 
+/* Global chrome (hamburger / fold / search) stays left of page context; record actions stay in ark-page-context. */
+.ark-topbar-global {
+    flex-shrink: 0;
+}
+
+.ark-topbar-hamburger.navbar-toggler {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-color: var(--tblr-border-color);
+}
+
 /*
  * Two legacy overlays stack below the station lock (145): the payment workspace (130, inside the repair order rail) and
  * the deposit breakdown (140). While one is open, the top bar, workspace strip and action dock give up their layer so

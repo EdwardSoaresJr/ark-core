@@ -80,13 +80,18 @@ Every migrated view picks one layout. `layout` is required, and an unknown value
 
 ### The top bar
 
-One compact bar holds the page's context and the global controls. `<x-tabler.page>` pushes its context to the `ark-page-context` stack and the shell renders it (`components.tabler.page-context`); the shell itself holds no page-specific control.
+Three layers share the sticky chrome: **global application controls**, **page context** (record identity + contextual actions), and the **workspace tab strip** below.
 
-- **Left:** breadcrumbs, then the title (`h2.page-title`), the `meta` slot (a status badge), and the subtitle. Breadcrumbs are `[['label' => …, 'url' => …], …]`; without them a `pretitle` becomes a single unlinked crumb, and a crumb that repeats the title is dropped. Link a crumb only to a page the same permission opens.
-- **Right:** the page's actions, a divider, then Inbox, the workstation, and the account menu.
-- **Narrow screens:** the title truncates rather than wrapping the bar; the subtitle shows from `xl`, the crumbs from `md`. Below `md` secondary actions (`<x-tabler.page-action>` without `primary`) move into the bar's "More page actions" menu (`resources/js/ark-page-context.js`, which moves the elements themselves, so listeners and forms keep working); the primary action stays, icon-only below `sm`. Other markup in the actions slot (a dropdown, a form) stays in the bar.
-- **Scripts:** the bar has its own empty `x-data`, so Alpine handlers in actions run; a handler must not rely on the page's Alpine scope. The bar's id is `ark-page-context`: a worksheet page lists it in `continuityPanelIds` so a refresh replaces the bar with the page's fresh copy (the repair order does).
-- The bar is not sticky; the workspace strip below it is. There is no title row, so the page body starts 1rem under the bar.
+- **Global (shell, left then right):** left cluster `data-ark-topbar-global` — mobile hamburger (`#ark-sidebar-menu`), desktop sidebar fold (`data-bs-toggle="sidebar-folded"`, preference `localStorage` key `tabler-sidebar`), and global search (`data-ops-global-search-open`). Right cluster — Inbox, workstation, account/theme. Record actions never belong here.
+- **Page context:** `<x-tabler.page>` pushes breadcrumbs, title (`h2.page-title`), `meta`, subtitle, and contextual actions to `ark-page-context`. Breadcrumbs are `[['label' => …, 'url' => …], …]`; without them a `pretitle` becomes a single unlinked crumb, and a crumb that repeats the title is dropped.
+- **Workspace strip:** open records only (active, close, overflow). Check In is **not** a permanent docked strip action; use Shop Queue / Customers / Vehicles / appointments.
+- **Narrow screens:** the title truncates; secondary page actions move into "More page actions" (`ark-page-context.js`). Primary stays visible.
+- **Scripts:** the context bar has empty `x-data`; id `ark-page-context` is replaced on worksheet continuity refresh.
+- Action naming: use **Create RO** for customer-, vehicle-, and RO-originated intake. Keep **Check In** for appointment / Shop Queue visit entry.
+
+### Sidebar fold
+
+Desktop fold uses Tabler's `data-bs-sidebar="folded-hover"` and persists via `tabler-sidebar`. Mobile uses Bootstrap collapse of `#ark-sidebar-menu` from the top-bar hamburger. Folding must not alter workspace tab state or business records.
 
 | Layout | Container | Use for |
 | --- | --- | --- |

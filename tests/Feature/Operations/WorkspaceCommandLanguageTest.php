@@ -36,7 +36,7 @@ test('customer hub exposes Call Text Schedule and Create RO commands', function 
         ->assertSee(ScheduleUrl::to(['customer' => $customer->id]), false);
 });
 
-test('vehicle row exposes Schedule and Start RO commands', function () {
+test('vehicle row exposes Schedule and Create RO commands', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $customer = Customer::query()->create([
         'first_name' => 'Fleet',
@@ -55,12 +55,12 @@ test('vehicle row exposes Schedule and Start RO commands', function () {
         ->assertOk()
         ->assertSee('aria-label="Vehicle commands"', false)
         ->assertSee('Schedule', false)
-        ->assertSee('Start RO', false)
+        ->assertSee('Create RO', false)
         ->assertSee('schedule?customer='.$customer->id, false)
         ->assertSee('vehicle='.$vehicle->id, false);
 });
 
-test('repair order identity exposes Message, Schedule Follow-up, and New RO', function () {
+test('repair order identity exposes Message, Schedule Follow-up, and Create RO', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $customer = Customer::query()->create([
         'first_name' => 'Ro',
@@ -88,7 +88,7 @@ test('repair order identity exposes Message, Schedule Follow-up, and New RO', fu
         ->assertSee('#communication-rail', false)
         ->assertSee('Schedule Follow-up', false)
         ->assertSee(ScheduleUrl::to(['repair_order' => $repairOrder->id]), false)
-        ->assertSee('New RO', false)
+        ->assertSee('Create RO', false)
         ->assertSee('customer_id='.$customer->id, false)
         ->assertSee('vehicle_id='.$vehicle->id, false)
         ->assertSee('source_repair_order_id='.$repairOrder->id, false)
