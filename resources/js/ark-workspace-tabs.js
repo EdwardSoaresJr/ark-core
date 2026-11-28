@@ -1166,6 +1166,9 @@ function confirmNavigateAway(fromKey, onConfirm) {
     const label = tab?.title ? `"${tab.title}"` : 'This workspace';
 
     if (window.confirm(`${label} has unsaved changes. Switch without saving?`)) {
+        // Advisor discarded the departing draft — clear sticky session dirty so a
+        // later inactive-tab close does not re-scare with no DOM to live-sync.
+        setDirtyKey(fromKey, false);
         onConfirm();
     }
 }

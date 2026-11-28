@@ -23,6 +23,7 @@ Not browser `beforeunload` (tabs `beforeunload` only persists scroll/context).
 - Flush departing dirty before `location.assign`.
 - Adopt baselines on dirty-binding init (double rAF).
 - On successful worksheet save, adopt the saved form then `syncDirty`.
+- On confirmed “Switch without saving?”, clear sticky dirty for the departing key (inactive close must not re-scare).
 - Policy helpers + tests in `ark-workspace-dirty-policy.js` / `ark-workspace-dirty.test.js`.
 
 ## Protections retained

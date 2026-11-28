@@ -41,6 +41,7 @@ Modal discard already uses: `Discard unsaved changes in this form?` — preserve
 | Policy helpers | `resources/js/ark-workspace-dirty-policy.js` |
 | Adopt baselines + sync on bind | `resources/js/ark-workspace-dirty-bindings.js` |
 | Flush dirty before cross-workspace navigate | `resources/js/ark-workspace-tabs.js` |
+| Clear sticky dirty after confirmed switch-away | `resources/js/ark-workspace-tabs.js` (`confirmNavigateAway`) |
 | Adopt saved form on successful `settleSaveDirty` | `resources/js/ark-worksheet-continuity.js` |
 | Regression tests | `resources/js/ark-workspace-dirty.test.js` |
 
@@ -104,6 +105,9 @@ Permissions/authorization rules unchanged — presentation only.
 | Docs vs CSS | TABLER.md says top bar not sticky; CSS makes `.ark-topbar` sticky |
 | Density | Some hubs sparse; RO worksheet dense — hierarchy uneven |
 | Themes | Supported via Tabler `data-bs-theme`; chrome tokens exist but not a full ARK scale doc |
+| Action naming | **Create RO** (customer bar) vs **Start RO** (vehicle card) vs **New RO** (RO identity) vs **Check In / Create RO** (appointments) |
+| Dual shell | Advisor triage (`operations.index`) and briefing still on **legacy** chrome while most staff pages are Tabler |
+| Two “tab” systems | Global entity strip vs in-RO Estimate/Inspection/… tabs — different jobs; keep both, name clearly |
 
 Shared-component vs page-specific: most header inconsistency is **page action packing**, not missing shell primitives. Vehicle workspace gap is **routing/product**, not only CSS.
 

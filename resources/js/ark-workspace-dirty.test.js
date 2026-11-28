@@ -126,6 +126,11 @@ test('cross-workspace navigation flushes departing dirty before location.assign'
     assert.match(tabsSource, /window\.location\.assign\(route\)/);
 });
 
+test('confirmed switch-without-saving clears sticky dirty on the departing key', () => {
+    assert.match(tabsSource, /Switch without saving\?/);
+    assert.match(tabsSource, /setDirtyKey\(fromKey, false\)/);
+});
+
 test('successful settleSaveDirty adopts the saved form baseline before syncDirty', () => {
     assert.match(continuitySource, /adoptRenderedBaseline\(form\)/);
     assert.match(continuitySource, /settleSaveDirty\(form, true\)/);
