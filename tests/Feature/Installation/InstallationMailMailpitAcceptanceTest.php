@@ -348,3 +348,45 @@ it('delivers lead confirmation, booking code, appointment, and staff verificatio
         ->and($bodies['appt-confirm@mailpit.acceptance.test'] ?? '')->toContain('appointment')
         ->and($bodies['staff-verify@mailpit.acceptance.test'] ?? '')->toContain('verify');
 });
+
+it('delivers appointment reminder cancel and reschedule notices through Mailpit', function () {
+    mailpitDeleteAll();
+
+    $appointment = \App\Ark\Operations\Appointments\Appointment::query()->create([
+        'starts_at' => now()->addDay()->setTime(14, 0),
+        'ends_at' => now()->addDay()->setTime(15, 0),
+        'status' => \App\Ark\Operations\Appointments\AppointmentStatus::Scheduled,
+        'concern' => 'Brake inspection',
+        'contact_name' => 'Mailpit Lifecycle',
+        'contact_email' => 'appt-lifecycle@mailpit.acceptance.test',
+        'reminder_hours_before' => 2,
+    ]);
+
+    $email = app(\App\Ark\Operations\Appointments\AppointmentEmailDelivery::class);
+    $email->sendReminder($appointment, \App\Ark\Operations\Appointments\SendAppointmentReminderSmsAction::TYPE_HOURS_BEFORE);
+    $email->sendRescheduled($appointment, 'Mon, Jan 1 · 9:00 AM');
+    $email->sendCanceled($appointment);
+
+    $deadline = microtime(true) + 8;
+    $messages = [];
+    do {
+        $messages = mailpitMessages();
+        if (count($messages) >= 3) {
+            break;
+        }
+        usleep(150_000);
+    } while (microtime(true) < $deadline);
+
+    expect(count($messages))->toBeGreaterThanOrEqual(3);
+
+    $blob = '';
+    foreach ($messages as $summary) {
+        $detail = mailpitMessage((string) ($summary['ID'] ?? ''));
+        $blob .= strtolower((string) ($detail['Subject'] ?? '').(string) ($detail['HTML'] ?? '').(string) ($detail['Text'] ?? ''));
+        expect((string) data_get($detail, 'To.0.Address'))->toBe('appt-lifecycle@mailpit.acceptance.test');
+    }
+
+    expect($blob)->toContain('reminder')
+        ->and($blob)->toContain('reschedule')
+        ->and($blob)->toContain('cancel');
+});
