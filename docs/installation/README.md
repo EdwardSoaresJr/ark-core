@@ -11,7 +11,7 @@ You should **not** need to hand-edit a giant `.env` for a typical install.
 
 ## Prerequisites
 
-- PHP 8.3+ with extensions required by Composer (`pdo_mysql`, `mbstring`, `openssl`, …)
+- PHP 8.4.1+ with extensions required by Composer (`pdo_mysql`, `mbstring`, `openssl`, `gd`, `zip`, …)
 - MySQL 8 (empty database)
 - Writable `storage/` and `bootstrap/cache/`
 - Composer dependencies installed (`composer install`)

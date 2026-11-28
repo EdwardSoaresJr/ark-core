@@ -38,8 +38,8 @@ Do not publish either tag or a stable GitHub Release before owner acceptance of 
 | Posture | Requirements |
 | --- | --- |
 | Docker Compose | Docker Engine + Compose; published compose files |
-| Native VPS | PHP 8.3+, MySQL 8, Composer, Node 22 for build **or** deploy from Release ZIP; cron; optional Redis/Horizon/Reverb/Chromium |
-| Shared hosting | PHP 8.3+ with required extensions; MySQL; docroot `public/`; writable `storage/` + `bootstrap/cache`; Release ZIP only; cron preferred |
+| Native VPS | PHP **8.4.1+**, MySQL 8, Composer, Node 22 for build **or** deploy from Release ZIP; cron; optional Redis/Horizon/Reverb/Chromium |
+| Shared hosting | PHP **8.4.1+** with required extensions (`gd`, `zip`, …); MySQL; docroot `public/`; writable `storage/` + `bootstrap/cache`; Release ZIP only; cron preferred |
 
 Honest limits (labels/mm print, WebSockets, Horizon) are documented per posture — not hidden.
 

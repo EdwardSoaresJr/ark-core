@@ -14,15 +14,16 @@ final class SystemRequirementsChecker
     {
         $checks = [];
 
-        $phpOk = version_compare(PHP_VERSION, '8.3.0', '>=');
+        // RC.1 contract: Composer lock (Symfony 8.1) requires PHP >= 8.4.1.
+        $phpOk = version_compare(PHP_VERSION, '8.4.1', '>=');
         $checks[] = [
             'id' => 'php_version',
             'label' => 'PHP version',
             'status' => $phpOk ? 'pass' : 'fail',
-            'detail' => 'PHP '.PHP_VERSION.($phpOk ? ' (requires 8.3+)' : ' - ARK requires PHP 8.3 or newer'),
+            'detail' => 'PHP '.PHP_VERSION.($phpOk ? ' (requires 8.4.1+)' : ' - ARK requires PHP 8.4.1 or newer'),
         ];
 
-        foreach (['pdo', 'pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'bcmath', 'fileinfo'] as $ext) {
+        foreach (['pdo', 'pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'bcmath', 'fileinfo', 'gd', 'zip'] as $ext) {
             $loaded = extension_loaded($ext);
             $checks[] = [
                 'id' => 'ext_'.$ext,

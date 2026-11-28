@@ -77,11 +77,33 @@ class HtmlPdfBuilder
             'margin_top' => 12,
             'margin_bottom' => 14,
             'tempDir' => $tempDir,
+            'default_font' => 'dejavusans',
         ]);
-        // Statement/inspection templates often use flex; approximate with auto layout.
+        // Shared-host print CSS uses flex/grid; mPDF needs block/table approximations.
+        $mpdf->WriteHTML($this->nativeCompatStyles());
         $mpdf->WriteHTML($html);
 
         return $mpdf->Output('', Destination::STRING_RETURN);
+    }
+
+    private function nativeCompatStyles(): string
+    {
+        return <<<'CSS'
+<style>
+body, table, td, th, div, p, span, li { font-family: dejavusans, sans-serif; }
+.header, .totals, .summary, .chips, .identity { display: block !important; width: 100% !important; }
+.header > div, .totals > div { display: block !important; margin: 0 0 8px 0 !important; }
+.summary { overflow: hidden !important; }
+.summary-card {
+    display: block !important;
+    float: left !important;
+    width: 23% !important;
+    margin: 0 1% 8px 0 !important;
+    box-sizing: border-box !important;
+}
+.page { display: block !important; }
+</style>
+CSS;
     }
 
     private function assertChromiumRuntimeIsReady(): void

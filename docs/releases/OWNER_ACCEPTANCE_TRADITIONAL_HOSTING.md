@@ -16,7 +16,7 @@ Feature freeze: `v1.0.0` train. No unrelated feature expansion.
 
 ## Recommended minimum hosting requirements
 
-- PHP **8.4+** (Composer lock currently requires `>=8.4.1` via Symfony 8.1; `composer.json` still declares `^8.3` aspirationally) with extensions: `mbstring`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `pdo_mysql`, `gd`, `zip`, `tokenizer`, `openssl`
+- PHP **8.4.1+** (RC.1 contract; `/setup` rejects older versions) with extensions: `mbstring`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `pdo_mysql`, `gd`, `zip`, `tokenizer`, `openssl`
 - MySQL **8.0+** (empty database for fresh install)
 - HTTPS-capable web server; **document root = `public/`**
 - Writable `storage/` and `bootstrap/cache/`
@@ -25,7 +25,7 @@ Feature freeze: `v1.0.0` train. No unrelated feature expansion.
 
 ## Shared hosting compatibility checklist
 
-- [ ] PHP 8.3+ with required extensions (no need for Redis, Horizon, Reverb, Node, Chromium, or Composer on the server)
+- [ ] PHP 8.4.1+ with required extensions (no need for Redis, Horizon, Reverb, Node, Chromium, or Composer on the server)
 - [ ] `exec` / `proc_open` may be disabled — installer finalizes synchronously
 - [ ] Document root points at `public/` (not the archive root)
 - [ ] `.htaccess` / nginx rules keep `.env`, `vendor/`, `storage/` non-public

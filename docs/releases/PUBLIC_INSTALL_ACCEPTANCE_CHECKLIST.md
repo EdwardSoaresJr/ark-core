@@ -17,7 +17,7 @@ Feature freeze remains in effect for the release train.
 
 - [ ] Upload ZIP; extract above the web root
 - [ ] Point document root at `public/`
-- [ ] PHP 8.3+ with required extensions; MySQL empty database
+- [ ] PHP 8.4.1+ with required extensions; MySQL empty database
 - [ ] `storage/` and `bootstrap/cache/` writable
 - [ ] Open `/setup` over HTTPS
 - [ ] Complete system → database → shop → admin → install → progress → complete

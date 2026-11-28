@@ -57,7 +57,7 @@ That is enough to finish setup and use the shop without Redis. Before you depend
 
 PDF generation prefers a Chromium binary when Node/Chrome are available. On constrained hosts (including shared hosting from a Release ZIP), the native PHP PDF engine (mPDF) renders estimates and invoices without Chromium. Label printing through QZ Tray needs a certificate and private key the shop supplies; those files do not ship in the repository.
 
-For shared hosting without Composer or Node on the server, use a CI-built Release ZIP (`scripts/build-release-zip.sh`) and point the document root at `public/`.
+For shared hosting without Composer or Node on the server, use a CI-built Release ZIP (`scripts/build-release-zip.sh`) and point the document root at `public/`. Host PHP must be **8.4.1+**. The `/setup` system check refuses older versions before installation begins.
 
 ## Development convenience
 

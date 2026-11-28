@@ -59,6 +59,7 @@ class NativePhpPdfRenderer implements PdfRenderer
                 'margin_top' => 12,
                 'margin_bottom' => 14,
                 'tempDir' => $tempDir,
+                'default_font' => 'dejavusans',
             ]);
             $mpdf->SetTitle((string) data_get($snapshot, 'pdf_document_label', 'Document'));
             $mpdf->WriteHTML($html);

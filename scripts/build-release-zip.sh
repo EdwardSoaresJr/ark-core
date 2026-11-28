@@ -169,7 +169,7 @@ cat > "$STAGE/RELEASE.json" <<EOF
   "commit": "$COMMIT",
   "tree": "$TREE",
   "built_at": "$STAMP",
-  "php": "^8.3",
+  "php": "^8.4.1",
   "license": "AGPL-3.0-only",
   "document_root": "public",
   "setup": "/setup",

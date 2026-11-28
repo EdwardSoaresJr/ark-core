@@ -7,22 +7,22 @@ description: PHP, database, Node, Redis, and hardware expectations for ARK Core.
 
 <!-- source: composer.json -->
 
-ARK Core is a Laravel application. The supported language floor is **PHP 8.3**. The container image used by Docker Compose is **PHP 8.4**.
+ARK Core is a Laravel application. The supported language floor for the `v1.0.0-rc.1` release train is **PHP 8.4.1** (Composer lock / Symfony 8.1). The container image used by Docker Compose is **PHP 8.4**.
 
 | Requirement | Docker Compose | PHP on the host |
 | --- | --- | --- |
-| PHP | Inside the image (`php:8.4-fpm-bookworm`) | 8.3 or newer, matching `composer.json` (`"php": "^8.3"`) |
-| Composer | Image build installs dependencies | Required |
-| Node.js and npm | Image build compiles Vite assets | Required to compile assets (`npm run build`) |
+| PHP | Inside the image (`php:8.4-fpm-bookworm`) | **8.4.1 or newer**, matching `composer.json` (`"php": "^8.4.1"`) |
+| Composer | Image build installs dependencies | Required for source installs; **not** required when deploying a Release ZIP |
+| Node.js and npm | Image build compiles Vite assets | Required to compile assets from source (`npm run build`); **not** required for Release ZIP hosts |
 | Database | MySQL 8.4 service in Compose | MySQL 8, empty database |
-| Redis | Required. Cache, sessions, Horizon queues, Reverb | Not required for a thin first boot. Add it before realtime features and background workers |
+| Redis | Required. Cache, sessions, Horizon queues, Reverb | Not required for a thin first boot or shared hosting. Add it before realtime features and Horizon workers |
 | Browser | Used for `/setup` | Used for `/setup` |
 
 <!-- source: Dockerfile -->
 
-PHP extensions must satisfy Composer. A host install needs at least `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, and `fileinfo`. The Composer platform check is the authority if a package demands another extension.
+PHP extensions must satisfy Composer. A host install needs at least `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `gd`, and `zip`. The Composer platform check is the authority if a package demands another extension. `/setup` fails closed when PHP is older than 8.4.1.
 
-PDF rendering uses a headless Chromium path (`spatie/browsershot` and Puppeteer). Plan for a Chrome or Chromium binary on any install that generates estimate and invoice PDFs. See `PDF_CHROME_PATH` in [Environment and services](/getting-started/configuration).
+PDF rendering prefers Chromium when Node/Chrome are available. Constrained and shared-host installs use the native PHP PDF engine (mPDF) without Chromium. See `PDF_CHROME_PATH` in [Environment and services](/getting-started/configuration).
 
 ## Tests are not the application database
 
