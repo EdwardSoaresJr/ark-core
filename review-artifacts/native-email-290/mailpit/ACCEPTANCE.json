@@ -1,0 +1,48 @@
+{
+    "captured_at": "2026-11-28T04:03:00+00:00",
+    "mailpit_api": "http://127.0.0.1:18025",
+    "smtp": "127.0.0.1:2587",
+    "count": 5,
+    "messages": [
+        {
+            "to": "statement@mailpit.acceptance.test",
+            "subject": "Account statement from Mailpit Acceptance Shop",
+            "attachment_count": 1,
+            "attachment_names": [
+                "statement-customer-1.pdf"
+            ]
+        },
+        {
+            "to": "document@mailpit.acceptance.test",
+            "subject": "Authorization from Mailpit Acceptance Shop",
+            "attachment_count": 1,
+            "attachment_names": [
+                "authorization.pdf"
+            ]
+        },
+        {
+            "to": "inspection@mailpit.acceptance.test",
+            "subject": "Inspection from Mailpit Acceptance Shop",
+            "attachment_count": 1,
+            "attachment_names": [
+                "inspection-notes.pdf"
+            ]
+        },
+        {
+            "to": "invoice@mailpit.acceptance.test",
+            "subject": "Invoice from Mailpit Acceptance Shop",
+            "attachment_count": 1,
+            "attachment_names": [
+                "invoice-ro-1002.pdf"
+            ]
+        },
+        {
+            "to": "estimate@mailpit.acceptance.test",
+            "subject": "Estimate from Mailpit Acceptance Shop",
+            "attachment_count": 1,
+            "attachment_names": [
+                "estimate-ro-1001.pdf"
+            ]
+        }
+    ]
+}

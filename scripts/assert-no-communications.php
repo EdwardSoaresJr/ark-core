@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /**
- * Fails when public Core contains functional communications code. Policy: docs/PRODUCT_BOUNDARY.md.
+ * Fails when public Core contains SMS/voice/proprietary-provider communications code.
+ * Installation SMTP/sendmail for standalone customer email is permitted (docs/PRODUCT_BOUNDARY.md).
  *
  *   php scripts/assert-no-communications.php --routes routes.json [--tables tables.json] [--previous-baseline base.json]
  *   php scripts/assert-no-communications.php --routes routes.json --write-baseline   (only to shrink the baseline)
@@ -65,7 +66,30 @@ const LINK = '/\b(conversation_id|call_session_id|conversationId|callSessionId|c
 const TRAINING = '/\b(sms|mms|texting|inbox|voicemail|incoming calls?|telephony|ring group|conversations?)\b/i';
 // Framework files that may mention a provider without being a communications product. Each needs a reason.
 const ALLOWED = [
-    'config/mail.php' => 'Laravel mailer configuration, used for staff sign-in and password-reset mail',
+    'config/mail.php' => 'Laravel mailer configuration for staff auth and optional installation customer SMTP',
+    // Standalone installation customer email (owner-approved PRODUCT_BOUNDARY amendment, 2026-11-27).
+    'app/Ark/Installation/Mail/InstallationMailConfiguration.php' => 'Resolves installation SMTP/sendmail for standalone customer email',
+    'app/Ark/Installation/Mail/InstallationMailHostGuard.php' => 'SSRF guard for installation SMTP hosts',
+    'app/Ark/Installation/Mail/InstallationMailSender.php' => 'Sends customer mail through installation SMTP/sendmail',
+    'app/Ark/Installation/Mail/InstallationMailTransportFactory.php' => 'Builds SMTP transports with required STARTTLS and peer verify',
+    'app/Ark/Installation/Mail/CustomerOutboundMail.php' => 'Routes customer mail to Platform or installation SMTP',
+    'app/Ark/Installation/Mail/InstallationMailAudit.php' => 'Audit history for installation mail configuration changes',
+    'app/Ark/Installation/Mail/InstallationMailAuditEvent.php' => 'Eloquent model for installation mail audit events',
+    'app/Ark/Installation/Mail/InstallationMailMessageRenderer.php' => 'Renders HTML bodies for installation transactional mail',
+    'app/Ark/Operations/Settings/InstallationMailSettingsController.php' => 'Tabler admin for standalone SMTP configuration and test send',
+    'resources/views/operations/settings/partials/installation-email-settings.blade.php' => 'Tabler UI for standalone email settings',
+    'database/migrations/2026_11_27_120000_add_installation_mail_to_shop_settings.php' => 'Shop settings columns for installation SMTP',
+    'database/migrations/2026_11_27_120100_create_installation_mail_audit_events_table.php' => 'Audit table for installation mail configuration',
+    'database/migrations/2026_11_27_130000_add_installation_mail_mode_to_shop_settings.php' => 'Explicit disabled/shop/environment mail modes',
+    'tests/Feature/Installation/InstallationMailConfigurationTest.php' => 'Tests installation mail config modes and hosted isolation',
+    'tests/Feature/Installation/InstallationMailSenderTest.php' => 'Tests installation SMTP send statuses and transport rejection',
+    'tests/Feature/Installation/InstallationMailSettingsTest.php' => 'Tests Tabler SMTP admin save, mask, and test-send',
+    'tests/Feature/Installation/InstallationMailTransportFactoryTest.php' => 'Tests STARTTLS require and certificate verify defaults',
+    'tests/Feature/Installation/InstallationMailSmtpAcceptanceTest.php' => 'Controlled SMTP acceptance and content/attachment proof',
+    'tests/Feature/Installation/InstallationMailMailpitAcceptanceTest.php' => 'Real Mailpit SMTP receipt for customer email workflows',
+    'tests/Feature/Installation/InstallationMailHostedIsolationTest.php' => 'Hosted SaaS cannot use installation SMTP routes or fallback',
+    'tests/Feature/Installation/CustomerOutboundMailTest.php' => 'Tests Platform vs installation routing and honesty',
+    'tests/Feature/Installation/InstallationMailUpgradeAndFreshInstallTest.php' => 'Fresh install and upgrade migration / env-managed mail modes',
 ];
 // The shared Communications workspace (docs/PRODUCT_BOUNDARY.md, owner-approved exception 2026-11-03): files added for
 // it, each with its reason. Adding a file here needs the project owner's approval.
@@ -315,7 +339,11 @@ foreach (array_keys(WORKSPACE_EXCEPTION) as $path) {
 }
 $violations = array_filter(
     $violations,
-    fn (string $key): bool => ! isset(WORKSPACE_EXCEPTION[substr($key, strpos($key, ': ') + 2)]),
+    function (string $key): bool {
+        $subject = substr($key, strpos($key, ': ') + 2);
+
+        return ! isset(WORKSPACE_EXCEPTION[$subject]) && ! isset(ALLOWED[$subject]);
+    },
     ARRAY_FILTER_USE_KEY,
 );
 $found = array_keys($violations);

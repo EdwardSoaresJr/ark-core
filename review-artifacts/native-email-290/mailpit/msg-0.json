@@ -1,0 +1,11 @@
+{
+    "to": [
+        {
+            "Name": "",
+            "Address": "test-send@mailpit.acceptance.test"
+        }
+    ],
+    "subject": "Test email from Mailpit Acceptance Shop",
+    "attachments": [],
+    "html_excerpt": "This is a test message from Mailpit Acceptance Shop. Installation email is working.If you received this, SMTP\/sendmail accepted the message from ARK Core.Transport acceptance is not the same as confirmed delivery to every mailbox."
+}

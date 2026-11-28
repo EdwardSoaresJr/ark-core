@@ -1,0 +1,23 @@
+PHPUnit 12.5.40 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.28
+Configuration: /private/tmp/ark-stancl-native-email-290/phpunit.xml
+
+......F..                                                           9 / 9 (100%)
+
+Time: 01:51.449, Memory: 107.00 MB
+
+There was 1 failure:
+
+1) Tests\Feature\TenantStaffPasswordResetTest::test_customer_transactional_mail_stays_on_ark_shop_not_laravel_mail
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'App\Ark\Platform\Mail\ArkMailClient'
++'App\Ark\Installation\Mail\CustomerOutboundMail'
+
+/private/tmp/ark-stancl-native-email-290/tests/Feature/TenantStaffPasswordResetTest.php:282
+
+FAILURES!
+Tests: 9, Assertions: 114, Failures: 1.

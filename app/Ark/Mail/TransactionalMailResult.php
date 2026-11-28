@@ -11,6 +11,12 @@ final class TransactionalMailResult
 
     public const STATUS_PROVIDER_SENT = 'provider_sent';
 
+    public const STATUS_QUEUED = 'queued';
+
+    public const STATUS_TRANSPORT_ACCEPTED = 'transport_accepted';
+
+    public const STATUS_FAILED = 'failed';
+
     public const STATUS_NOT_CONFIGURED = 'not_configured';
 
     public const STATUS_REJECTED = 'rejected';
@@ -30,7 +36,18 @@ final class TransactionalMailResult
 
     public function ok(): bool
     {
-        return in_array($this->status, [self::STATUS_SENT, self::STATUS_PROVIDER_SENT], true);
+        return in_array($this->status, [
+            self::STATUS_SENT,
+            self::STATUS_PROVIDER_SENT,
+            self::STATUS_QUEUED,
+            self::STATUS_TRANSPORT_ACCEPTED,
+        ], true);
+    }
+
+    public function confirmedDelivered(): bool
+    {
+        // Platform may later map delivery webhooks here. SMTP acceptance never qualifies.
+        return false;
     }
 
     public static function notConfigured(): self
@@ -52,6 +69,27 @@ final class TransactionalMailResult
         return new self(self::STATUS_PROVIDER_SENT, null, null, $correlationId, $context);
     }
 
+    public static function queued(?string $correlationId = null, array $context = []): self
+    {
+        return new self(self::STATUS_QUEUED, null, 'Email queued for delivery.', $correlationId, $context);
+    }
+
+    public static function transportAccepted(?string $correlationId = null, array $context = []): self
+    {
+        return new self(
+            self::STATUS_TRANSPORT_ACCEPTED,
+            null,
+            'Email accepted by the mail server. Delivery to the recipient is not confirmed.',
+            $correlationId,
+            $context,
+        );
+    }
+
+    public static function failed(string $message, ?string $correlationId = null): self
+    {
+        return new self(self::STATUS_FAILED, 'transport_failed', $message, $correlationId);
+    }
+
     public static function rejected(string $reasonCode, string $message, ?string $correlationId = null): self
     {
         return new self(self::STATUS_REJECTED, $reasonCode, $message, $correlationId);
@@ -65,10 +103,13 @@ final class TransactionalMailResult
     public function operatorMessage(): string
     {
         return match ($this->status) {
-            self::STATUS_NOT_CONFIGURED => "Email isn't configured yet. Configure Customer Email in Settings.",
+            self::STATUS_NOT_CONFIGURED => "Email isn't configured yet. Configure Email in Settings.",
             self::STATUS_REJECTED => $this->message ?? 'Email was rejected.',
-            self::STATUS_PROVIDER_ERROR => $this->message ?? 'Email provider is unavailable.',
-            self::STATUS_PROVIDER_SENT, self::STATUS_SENT => 'Email sent.',
+            self::STATUS_PROVIDER_ERROR, self::STATUS_FAILED => $this->message ?? 'Email could not be sent.',
+            self::STATUS_QUEUED => $this->message ?? 'Email queued for delivery.',
+            self::STATUS_TRANSPORT_ACCEPTED => $this->message
+                ?? 'Email accepted by the mail server. Delivery to the recipient is not confirmed.',
+            self::STATUS_PROVIDER_SENT, self::STATUS_SENT => 'Email handed off to the mail provider.',
             default => $this->message ?? 'Email could not be sent.',
         };
     }

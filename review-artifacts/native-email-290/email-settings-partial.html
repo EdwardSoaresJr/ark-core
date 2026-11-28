@@ -1,0 +1,116 @@
+<!DOCTYPE html><html><head><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css"></head><body class="p-4"><div class="d-flex flex-column gap-3">
+    <div>
+        <div class="subheader">Customer email</div>
+        <p class="text-secondary small mb-2">
+            Send estimates, invoices, inspections, and statements through this installation’s mail server.
+            No ARK account is required. SMTP acceptance is not confirmed delivery to the recipient’s inbox.
+        </p>
+        <dl class="row small mb-0">
+            <dt class="col-sm-4 text-secondary">Configuration mode</dt>
+            <dd class="col-sm-8 fw-semibold">Disabled</dd>
+            <dt class="col-sm-4 text-secondary">Delivery status</dt>
+            <dd class="col-sm-8 fw-semibold">Not configured</dd>
+            <dt class="col-sm-4 text-secondary">Active transport</dt>
+            <dd class="col-sm-8">
+                                    None — customer email is disabled
+                            </dd>
+        </dl>
+                    <p class="alert alert-warning small mt-2 mb-0">
+                Customer email is not ready. Choose Installation Settings or Environment Managed with a complete smtp/sendmail configuration.
+            </p>
+                    </div>
+
+    <form method="POST" action="https://ark-core.test/app/settings/shop/installation-mail" class="border rounded p-3 d-flex flex-column gap-3" autocomplete="off">
+        <input type="hidden" name="_token" value="" autocomplete="off">        <input type="hidden" name="_method" value="PATCH">
+        <label>
+            <span class="form-label">Configuration mode</span>
+            <select name="installation_mail_mode" class="form-select ">
+                <option value="disabled" selected>Disabled — do not send customer email</option>
+                <option value="shop_settings" >Installation Settings — use the SMTP form below</option>
+                <option value="environment"  disabled>
+                    Environment Managed — use server MAIL_* only
+                </option>
+            </select>
+                        <span class="form-hint">
+                Disabled never falls back to environment SMTP. Invalid Installation Settings never fall back to another transport.
+            </span>
+        </label>
+
+        <div class="row g-3">
+            <label class="col-12 col-md-4">
+                <span class="form-label">Mailer</span>
+                <select name="installation_mail_mailer" class="form-select">
+                    <option value="smtp" selected>SMTP</option>
+                    <option value="sendmail" >Sendmail</option>
+                </select>
+            </label>
+            <label class="col-12 col-md-5">
+                <span class="form-label">SMTP hostname</span>
+                <input type="text" name="installation_mail_host" value="" class="form-control " placeholder="mail.yourshop.com" autocomplete="off">
+                            </label>
+            <label class="col-6 col-md-3">
+                <span class="form-label">Port</span>
+                <input type="number" name="installation_mail_port" value="587" class="form-control" min="1" max="65535">
+            </label>
+            <label class="col-6 col-md-4">
+                <span class="form-label">Encryption</span>
+                <select name="installation_mail_encryption" class="form-select">
+                                        <option value="tls" selected>TLS (STARTTLS required)</option>
+                    <option value="ssl" >SSL (SMTPS)</option>
+                    <option value="none" >None</option>
+                </select>
+            </label>
+            <label class="col-12 col-md-4">
+                <span class="form-label">Username</span>
+                <input type="text" name="installation_mail_username" value="" class="form-control" autocomplete="off">
+            </label>
+            <label class="col-12 col-md-4">
+                <span class="form-label">Password</span>
+                <input type="password" name="installation_mail_password" value="" class="form-control" autocomplete="new-password" placeholder="">
+                <span class="form-hint">Leave blank to keep the current password. Passwords are never shown or flashed back.</span>
+            </label>
+            <label class="col-12 form-check">
+                <input type="checkbox" name="replace_password" value="1" class="form-check-input" >
+                <span class="form-check-label">Replace stored password (required to clear or change it)</span>
+            </label>
+            <label class="col-12 col-md-6">
+                <span class="form-label">Sender email</span>
+                <input type="email" name="installation_mail_from_address" value="" class="form-control ">
+                            </label>
+            <label class="col-12 col-md-6">
+                <span class="form-label">Sender name</span>
+                <input type="text" name="installation_mail_from_name" value="" class="form-control">
+            </label>
+            <label class="col-12 col-md-6">
+                <span class="form-label">Reply-to (optional)</span>
+                <input type="email" name="installation_mail_reply_to" value="" class="form-control">
+            </label>
+        </div>
+
+        <div class="d-flex justify-content-end border-top pt-3">
+            <button type="submit" class="btn btn-primary">Save email settings</button>
+        </div>
+    </form>
+
+    <form method="POST" action="https://ark-core.test/app/settings/shop/installation-mail/test" class="border rounded p-3 d-flex flex-column gap-3" autocomplete="off">
+        <input type="hidden" name="_token" value="" autocomplete="off">        <div>
+            <div class="subheader">Test email</div>
+            <p class="text-secondary small mb-0">
+                Sends through the selected installation transport only (never ARK Email / Platform). Limited to 3 tests per minute.
+                Success means the mail server accepted the message.
+            </p>
+        </div>
+        <div class="row g-3 align-items-end">
+            <label class="col-12 col-md-8">
+                <span class="form-label">Recipient</span>
+                <input type="email" name="test_recipient" value="" class="form-control " required>
+                            </label>
+            <div class="col-12 col-md-4">
+                <button type="submit" class="btn btn-outline-primary w-100" disabled>Send test email</button>
+            </div>
+        </div>
+                    <p class="small text-secondary mb-0">No successful test for the current connection settings.</p>
+            </form>
+
+    </div>
+</body></html>

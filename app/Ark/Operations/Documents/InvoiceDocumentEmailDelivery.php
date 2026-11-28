@@ -14,10 +14,8 @@ use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Payments\CreateCustomerPayTokenAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Mail\EmailIntent;
-use App\Ark\Platform\Mail\ArkMailClient;
+use App\Ark\Installation\Mail\CustomerOutboundMail;
 use Brick\Money\Money;
-use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -33,7 +31,7 @@ class InvoiceDocumentEmailDelivery
         private readonly OperationalEventRecorder $events,
         private readonly ConversationRecorder $conversations,
         private readonly CommunicationEventRecorder $communicationEvents,
-        private readonly ArkMailClient $mail,
+        private readonly CustomerOutboundMail $mail,
     ) {}
 
     public function send(RepairOrder $repairOrder, User $actor, string $recipientEmail, ?string $staffNote = null): void
@@ -75,7 +73,7 @@ class InvoiceDocumentEmailDelivery
         $settings = ShopSettings::current();
         $shopName = $settings->shop_name ?: config('app.name', 'ARK-SMS');
         $pdfFilename = sprintf('invoice-ro-%d.pdf', $repairOrder->repair_order_id);
-        if (! ManagedMailGate::platformSend()) {
+        if (! $this->mail->canSend()) {
             throw new RuntimeException("Email isn't configured yet.");
         }
 
@@ -92,7 +90,7 @@ class InvoiceDocumentEmailDelivery
             $variables['pay_url'] = $payUrl;
         }
 
-        $this->sendViaPlatform($repairOrder, $invoice, $recipientEmail, $pdfFilename, $variables);
+        $this->sendCustomerEmail($repairOrder, $invoice, $recipientEmail, $pdfFilename, $variables);
 
         $summary = 'Final invoice emailed to '.$recipientEmail.'.';
 
@@ -144,7 +142,7 @@ class InvoiceDocumentEmailDelivery
     /**
      * @param  array<string, string>  $variables
      */
-    private function sendViaPlatform(
+    private function sendCustomerEmail(
         RepairOrder $repairOrder,
         EstimateDocument $invoice,
         string $recipientEmail,
@@ -157,9 +155,9 @@ class InvoiceDocumentEmailDelivery
             throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
         }
 
-        $result = $this->mail->sendTransactional(EmailIntent::payload(
+        $result = $this->mail->send(
             operation: 'invoice.send',
-            to: $recipientEmail,
+            recipientEmail: $recipientEmail,
             variables: $variables,
             idempotencyKey: 'invoice-send-'.Str::uuid(),
             domainObjectType: 'repair_order',
@@ -173,14 +171,10 @@ class InvoiceDocumentEmailDelivery
                 'repair_order_id' => $repairOrder->id,
                 'invoice_document_id' => $invoice->id,
             ],
-        ));
+        );
 
-        if (($result['ok'] ?? false) !== true) {
-            throw new RuntimeException(
-                is_string($result['message'] ?? null)
-                    ? $result['message']
-                    : 'Invoice email could not be sent.',
-            );
+        if (! $result->ok()) {
+            throw new RuntimeException($result->operatorMessage());
         }
     }
 }
