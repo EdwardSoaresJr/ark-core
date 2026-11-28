@@ -8,7 +8,7 @@ Runtime profiles describe **infrastructure availability**. They are not commerci
 | `standard` | VPS with SSH + Composer + Node | file/database or Redis | database + cron or Redis | Chromium or native | Detached when allowed |
 | `constrained` | Shared hosting from release ZIP | file/database | sync or cron-bounded `queue:work` | **native mPDF required** | In-request when `exec` blocked |
 
-Essential workflows (repair orders, estimates/invoices, portal authorization, inspections, statements, native email, PDF generation, auth/password recovery, scheduling/appointment notifications) must remain available. Infrastructure limits are reported in `/setup` requirements — not used to hide features.
+Essential workflows (repair orders, estimates/invoices, portal authorization, inspections, statements, native email, PDF generation, auth/password recovery, and appointment scheduling notifications) must remain available. Infrastructure limits are reported in `/setup` requirements — not used to hide features.
 
 ## PDF
 

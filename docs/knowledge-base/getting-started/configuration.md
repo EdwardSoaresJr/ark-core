@@ -90,9 +90,7 @@ Appointment reminders do nothing useful as customer texts unless a messaging tra
 
 ## Dragon
 
-<!-- source: config/dragon.php -->
-
-`DRAGON_PROVIDER` defaults to `none`. Tests may set `fake`. Stock Core does not include an ARK-hosted model. Configure a provider you operate, or leave Dragon unset.
+`DRAGON_PROVIDER` defaults to `none` when present in the environment. Tests may set `fake`. Stock Core does not include an ARK-hosted model. Configure a provider you operate, or leave Dragon unset.
 
 ## Printing and PDFs
 
