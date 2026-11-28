@@ -6,66 +6,45 @@
 
 | Field | Value |
 | --- | --- |
-| Tip SHA | `6a83378ffeaa29ec8fc751f087f5cd924203a8b8` |
+| PR tip SHA | _(see git; may include docs-only commits after packaging)_ |
+| **Release artifact source SHA** | `6fdb98c95824daa8c21fba935aaf14d0a9132acd` |
 | PR | https://github.com/EdwardSoaresJr/ark-core/pull/292 |
 | Label | `1.0.0-rc.1` (not tagged) |
+| **Minimum PHP** | **8.4.1** (`composer.json` `^8.4.1`, `/setup` fails closed below that, `RELEASE.json` `"php":"^8.4.1"`) |
 
 ## 1. Release archive
 
-Built with `scripts/build-release-zip.sh` from a clean committed tree at the tip SHA.
-
 | Artifact | Path |
 | --- | --- |
-| ZIP | `dist/ark-core-1.0.0-rc.1-6a83378f.zip` (local; also CI `ark-core-release-zip` artifact) |
-| Checksum | `dist/ark-core-1.0.0-rc.1-6a83378f.zip.sha256` |
-| SHA-256 | `ab923b8db28b733b18d2035604a24991590fc7019a7e60d7368e145061e7eebf` |
+| ZIP | `dist/ark-core-1.0.0-rc.1-6fdb98c9.zip` |
+| SHA-256 | `4647ccd68f146bc8f8b216a568ee1a4463a38187e23d72b185519a95b3ad2e29` |
 
-Verified:
+Verified: clean git provenance, `--no-dev` Composer, compiled frontend, `RELEASE.json` / `MANIFEST.sha256` / `.ark-source-commit`, AGPL license, no `.env`/secrets/customer data, install without Composer/Node/Chromium at runtime.
 
-- Clean `git archive` provenance (dirty tree refused)
-- `composer install --no-dev`
-- Compiled `public/build/manifest.json`
-- `RELEASE.json` + `MANIFEST.sha256` + `.ark-source-commit`
-- No `.env`, secrets, customer data, or dumps
-- Extracted tree boots; `scripts/verify-release-zip-install.sh` performs migrate + native PDF bytes + interrupted-install recovery under `disable_functions=exec,proc_open,...`
-
-PR workflow: `.github/workflows/release-zip.yml` (pull_request path filters + `workflow_dispatch`).
+Cancelled Regression run `46121049231` was superseded by successful full pest on the same packaging tip; current tip re-ran Tests + Release ZIP + Regression.
 
 ## 2. PDF acceptance
 
-Paired Chromium + native mPDF artifacts under `pdfs/`; PNG page previews under `previews/`.
+See `PDF_VISUAL_INDEX.md`. Paired Chromium/native PDFs + PNG previews in `pdfs/` / `previews/`.
 
-| Document | Native | Chromium |
-| --- | --- | --- |
-| Estimate | `estimate-native.pdf` | `estimate-chromium.pdf` |
-| Invoice | `invoice-native.pdf` | `invoice-chromium.pdf` |
-| Inspection | `inspection-native.pdf` | `inspection-chromium.pdf` |
-| Statement | `statement-native.pdf` | `statement-chromium.pdf` |
+Mailpit: estimate attachment send accepted (`casey@cleanroom.test` — Estimate from Cleanroom Auto). Prior suite: `mailpit-ACCEPTANCE.json`.
 
-Fixtures: realistic RO closeout + Unicode shop name (`Fidelity Auto — 東京`), authorization language, financial lines. Pixel parity **not** required.
+## 3. Constrained + clean-room
 
-Mailpit: `InstallationMailMailpitAcceptanceTest` — estimate, invoice, inspection, document, statement attachments accepted on SMTP `:2587` / API `:18025`.
+- `scripts/verify-release-zip-install.sh` — migrate + native PDF + interrupted recovery under `disable_functions`
+- `scripts/cleanroom-zip-install-rehearsal.sh` — `/setup` → shop/admin → installed; login at `/app/login`; storage probe; schedule + bounded queue; SQL+storage backup/restore
+- Clean-room workflows on installed ZIP tree: estimate/invoice PDF, inspection PDF, payment to $0 balance, statement PDF, SMTP via Mailpit
 
-## 3. Constrained runtime
+## 4. Product boundary
 
-Isolated extract of the Release ZIP:
+No SaaS registration, entitlements, hosted credentials, or Core pin changes in this train.
 
-- No Docker / Node / Chromium / Redis / Horizon / Reverb / Composer at runtime
-- PHP with `disable_functions` including `exec` + `proc_open`
-- Database queue + `ark:queue-work-bounded` + `schedule:list`
-- Native PDF generation succeeded (`native_pdf_bytes>0`, `detached_finalize=n`)
-- `InstallationState::recoverInterruptedProgress` after forced `IN_PROGRESS`
+## Owner acceptance items
 
-## 4. Regression
-
-Watch PR #292 Regression / Tests / Release ZIP / Secret scan on tip `6a83378f`.
-
-Docker / VPS / hosted SaaS code paths remain in-tree; no SaaS pin change.
-
-## 5. Owner package
-
-- Instructions: `docs/releases/OWNER_ACCEPTANCE_TRADITIONAL_HOSTING.md`
-- Checklist: `docs/releases/PUBLIC_INSTALL_ACCEPTANCE_CHECKLIST.md`
-- Cron: `docs/releases/constrained-hosting-cron.md`
-
-**Do not** publish GitHub Release, create tag, merge #292, or advance SaaS Core pin without separate authorization.
+- [ ] Independent ZIP install using only public docs
+- [ ] PHP 8.4.1+ host confirmed
+- [ ] Visual PDF index reviewed (`PDF_VISUAL_INDEX.md`)
+- [ ] Mailpit / SMTP acceptable
+- [ ] Cron notes understood
+- [ ] Authorize merge of #292 separately
+- [ ] Authorize tag / GitHub Release / SaaS pin separately

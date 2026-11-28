@@ -57,12 +57,13 @@ trap cleanup EXIT
 sleep 1
 
 curl_c() {
-  curl -sS -c "$COOKIE_JAR" -b "$COOKIE_JAR" -L "$@"
+  # Avoid -L on POSTs (can rewrite method and confuse journey guards).
+  curl -sS -c "$COOKIE_JAR" -b "$COOKIE_JAR" "$@"
 }
 
 # CSRF token helper from HTML forms
 csrf_from() {
-  php -r '$h=file_get_contents("php://stdin"); if(preg_match("/name=\"_token\" value=\"([^\"]+)\"/",$h,$m)){echo $m[1]; exit;} if(preg_match("/name='\''_token'\'' value='\''([^'\'']+)'\''/",$h,$m)){echo $m[1]; exit;} fwrite(STDERR,"csrf missing\n"); exit(1);'
+  php -r '$h=stream_get_contents(STDIN); if(preg_match("/name=\"_token\"\\s+value=\"([^\"]+)\"/",$h,$m)||preg_match("/value=\"([^\"]+)\"\\s+name=\"_token\"/",$h,$m)){echo $m[1]; exit(0);} fwrite(STDERR,"csrf missing\n"); exit(1);'
 }
 
 log "== /setup begin"
@@ -142,17 +143,19 @@ for i in $(seq 1 90); do
   fi
 done
 
-# Login
-LOGIN=$(curl_c "$BASE/login")
+# Login (staff auth is /app/login — not /login)
+LOGIN=$(curl -sS -c "$COOKIE_JAR" -b "$COOKIE_JAR" "$BASE/app/login")
 TOKEN=$(echo "$LOGIN" | csrf_from)
-curl_c -X POST "$BASE/login" \
+LOGIN_CODE=$(curl -sS -c "$COOKIE_JAR" -b "$COOKIE_JAR" -X POST "$BASE/app/login" \
   -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H "Referer: $BASE/app/login" \
   --data-urlencode "_token=$TOKEN" \
   --data-urlencode "email=admin@cleanroom.test" \
   --data-urlencode "password=CleanroomPass1!" \
-  -o "$WORK/login.html" -w 'login_http=%{http_code}\n' | tee -a "$EVIDENCE"
+  -o "$WORK/login.html" -w '%{http_code}')
+log "login_http=$LOGIN_CODE"
 
-APP_HOME=$(curl_c "$BASE/app" -o "$WORK/app-home.html" -w '%{http_code}')
+APP_HOME=$(curl -sS -c "$COOKIE_JAR" -b "$COOKIE_JAR" "$BASE/app" -o "$WORK/app-home.html" -w '%{http_code}')
 log "app_home_http=$APP_HOME"
 grep -qi 'Cleanroom\|Dashboard\|Repair\|Today\|Operations' "$WORK/app-home.html" && log "admin_login=ok"
 
