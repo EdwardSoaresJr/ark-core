@@ -81,22 +81,15 @@ done < <(find "$STAGE" -type f -print0)
 test -f "$STAGE/.env.example"
 
 echo "== composer --no-dev (locked)"
+test -f "$STAGE/.env.example"
 cp composer.lock "$STAGE/composer.lock"
 composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --no-scripts --working-dir="$STAGE"
-# Run discover without touching host env secrets
-(
-  cd "$STAGE"
-  mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache storage/app/mpdf-temp
-  if [[ ! -f .env.example ]]; then
-    echo "ERROR: .env.example missing from staged tree" >&2
-    exit 1
-  fi
-  cp .env.example .env
-  php artisan key:generate --force --no-interaction >/dev/null
-  php artisan package:discover --ansi
-  # Strip generated app key from packaged .env — installer/wizard owns secrets.
-  rm -f .env
-)
+# Do not generate .env or APP_KEY here — browser /setup owns secrets on the target host.
+mkdir -p "$STAGE/storage/framework/"{cache,sessions,views} \
+  "$STAGE/storage/logs" "$STAGE/bootstrap/cache" "$STAGE/storage/app/mpdf-temp"
+# Ensure package discovery metadata exists for offline hosts.
+composer dump-autoload --optimize --working-dir="$STAGE" --no-interaction
+test ! -e "$STAGE/.env"
 
 echo "== frontend build on throwaway host copy"
 git archive --format=tar HEAD | tar -x -C "$BUILD_HOST"
