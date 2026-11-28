@@ -3,7 +3,6 @@
 /tests export-ignore
 /.github export-ignore
 /docs/review-artifacts export-ignore
-*.md !docs/**/*.md
 /AGENTS.md export-ignore
 /CONTRIBUTING.md export-ignore
 /.cursor export-ignore
