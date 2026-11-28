@@ -79,6 +79,14 @@ class CustomerShowController
         if (old('_vehicle_id')) {
             $hubInitialTask = 'hub-vehicle';
             $hubInitialContext = ['vehicleId' => (int) old('_vehicle_id')];
+        } elseif (
+            $request->boolean('edit')
+            && $request->filled('vehicle')
+            && $customer->vehicles->contains('id', $request->integer('vehicle'))
+        ) {
+            // Vehicle show "Edit Vehicle" deep-links here with the correct vehicle selected.
+            $hubInitialTask = 'hub-vehicle';
+            $hubInitialContext = ['vehicleId' => $request->integer('vehicle')];
         }
 
         $showVehicleRail = $request->has('vehicle')

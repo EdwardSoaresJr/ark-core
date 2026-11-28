@@ -26,11 +26,18 @@
                 />
             @endif
             @can(App\Ark\Runtime\Authorization\ArkCapability::VehiclesManage->value)
-                <x-tabler.page-action
-                    :href="route('operations.customers.show', ['customer' => $customer, 'vehicle' => $vehicle->id, 'tab' => 'vehicles'])"
-                    icon="pencil"
-                    label="Edit Vehicle"
-                />
+                @if ($customer)
+                    <x-tabler.page-action
+                        :href="route('operations.customers.show', [
+                            'customer' => $customer,
+                            'vehicle' => $vehicle->id,
+                            'tab' => 'vehicles',
+                            'edit' => 1,
+                        ])"
+                        icon="pencil"
+                        label="Edit Vehicle"
+                    />
+                @endif
             @endcan
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
                 <x-tabler.page-action
