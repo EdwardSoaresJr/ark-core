@@ -1,11 +1,9 @@
-* text=auto eol=lf
-
-*.blade.php diff=html
-*.css diff=css
-*.html diff=html
-*.md diff=markdown
-*.php diff=php
-
+# Paths omitted from `git archive` / Release ZIP provenance exports.
+/review-artifacts export-ignore
+/tests export-ignore
 /.github export-ignore
-CHANGELOG.md export-ignore
-.styleci.yml export-ignore
+/docs/review-artifacts export-ignore
+*.md !docs/**/*.md
+/AGENTS.md export-ignore
+/CONTRIBUTING.md export-ignore
+/.cursor export-ignore

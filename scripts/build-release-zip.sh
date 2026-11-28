@@ -56,12 +56,21 @@ DENY_PATTERNS=(
   '*.dump'
 )
 
-echo "== deny sensitive paths"
+echo "== prune non-distribution paths"
+rm -rf "$STAGE/review-artifacts" "$STAGE/tests" "$STAGE/.github" "$STAGE/.cursor"   "$STAGE/node_modules" "$STAGE/vendor" "$STAGE/dist" "$STAGE/storage/logs"   "$STAGE/storage/app/private" "$STAGE/storage/app/public" "$STAGE/database/"*.sqlite   "$STAGE/.env" "$STAGE/.env."* 2>/dev/null || true
+# Fail closed on secrets that must never ship.
 while IFS= read -r -d '' path; do
   rel="${path#"$STAGE"/}"
+  base="$(basename "$rel")"
+  case "$base" in
+    .env|.env.*|*.pem|id_rsa|id_rsa.pub|id_ed25519|id_ed25519.pub)
+      echo "ERROR: forbidden sensitive file in archive stage: $rel" >&2
+      exit 1
+      ;;
+  esac
   case "$rel" in
-    .env|.env.*|*.pem|*.key|id_rsa*|id_ed25519*|storage/app/*|storage/logs/*|node_modules/*|vendor/*|dist/*|review-artifacts/*|*.sqlite|*.sql|*.sql.gz|*.dump)
-      echo "ERROR: forbidden path in archive stage: $rel" >&2
+    *.sql|*.sql.gz|*.dump|*.sqlite)
+      echo "ERROR: forbidden data artifact in archive stage: $rel" >&2
       exit 1
       ;;
   esac
