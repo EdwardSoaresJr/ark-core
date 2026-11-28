@@ -57,13 +57,16 @@ DENY_PATTERNS=(
 )
 
 echo "== prune non-distribution paths"
-rm -rf "$STAGE/review-artifacts" "$STAGE/tests" "$STAGE/.github" "$STAGE/.cursor"   "$STAGE/node_modules" "$STAGE/vendor" "$STAGE/dist" "$STAGE/storage/logs"   "$STAGE/storage/app/private" "$STAGE/storage/app/public" "$STAGE/database/"*.sqlite   "$STAGE/.env" "$STAGE/.env."* 2>/dev/null || true
-# Fail closed on secrets that must never ship.
+rm -rf "$STAGE/review-artifacts" "$STAGE/tests" "$STAGE/.github" "$STAGE/.cursor" \
+  "$STAGE/node_modules" "$STAGE/vendor" "$STAGE/dist" "$STAGE/storage/logs" \
+  "$STAGE/storage/app/private" "$STAGE/storage/app/public" 2>/dev/null || true
+rm -f "$STAGE/database/"*.sqlite "$STAGE/.env" 2>/dev/null || true
+# Keep .env.example. Fail closed on real secrets / dumps.
 while IFS= read -r -d '' path; do
   rel="${path#"$STAGE"/}"
   base="$(basename "$rel")"
   case "$base" in
-    .env|.env.*|*.pem|id_rsa|id_rsa.pub|id_ed25519|id_ed25519.pub)
+    .env|*.pem|id_rsa|id_rsa.pub|id_ed25519|id_ed25519.pub)
       echo "ERROR: forbidden sensitive file in archive stage: $rel" >&2
       exit 1
       ;;
@@ -75,6 +78,7 @@ while IFS= read -r -d '' path; do
       ;;
   esac
 done < <(find "$STAGE" -type f -print0)
+test -f "$STAGE/.env.example"
 
 echo "== composer --no-dev (locked)"
 cp composer.lock "$STAGE/composer.lock"
