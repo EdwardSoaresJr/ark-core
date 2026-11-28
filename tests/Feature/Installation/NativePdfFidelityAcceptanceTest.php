@@ -150,9 +150,10 @@ it('renders inspection and statement PDFs through HtmlPdfBuilder native fallback
     $inspectionHtml .= '<div style="page-break-before:always"><h1>追加ページ — Additional page</h1><p>Unicode multipage check 東京</p></div>';
 
     // Force native path for constrained-hosting acceptance.
+    // Use non-existent paths (/bin/false is executable on Linux CI and would enter Chromium).
     config([
-        'services.pdf.node_binary' => '/bin/false',
-        'services.pdf.chrome_path' => '/bin/false',
+        'services.pdf.node_binary' => '',
+        'services.pdf.chrome_path' => '',
     ]);
     $inspectionNative = app(HtmlPdfBuilder::class)->toPdfBytes($inspectionHtml);
     expect(str_starts_with($inspectionNative, '%PDF'))->toBeTrue()

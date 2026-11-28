@@ -5,6 +5,8 @@ namespace App\Ark\Operations\Documents;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Browsershot\Browsershot;
+use Symfony\Component\Process\Exception\LogicException as ProcessLogicException;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Throwable;
 
 class HeadlessChromiumPdfRenderer implements PdfRenderer
@@ -113,11 +115,21 @@ class HeadlessChromiumPdfRenderer implements PdfRenderer
 
     private function isProcessSpawnFailure(Throwable $exception): bool
     {
+        if ($exception instanceof ProcessFailedException || $exception instanceof ProcessLogicException) {
+            return true;
+        }
+
+        $previous = $exception->getPrevious();
+        if ($previous instanceof ProcessFailedException || $previous instanceof ProcessLogicException) {
+            return true;
+        }
+
         $message = $exception->getMessage();
 
         return str_contains($message, 'proc_open')
             || str_contains($message, 'exec()')
-            || str_contains($message, 'Unable to launch the browser');
+            || str_contains($message, 'Unable to launch the browser')
+            || str_contains($message, 'browser.cjs');
     }
 
     private function browser(string $html): Browsershot

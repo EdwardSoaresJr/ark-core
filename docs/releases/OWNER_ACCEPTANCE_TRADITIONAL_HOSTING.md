@@ -8,15 +8,15 @@ Feature freeze: `v1.0.0` train. No unrelated feature expansion.
 
 | Field | Value |
 | --- | --- |
-| Candidate SHA | _filled after packaging commit_ |
+| Candidate SHA | `3e9fa5ae505fed278a7bac12702a0162c8050569` (rebuild after CI PHP/fallback fixes may advance tip) |
 | Release label | `1.0.0-rc.1` (proposed; not tagged) |
-| Artifact | `dist/ark-core-1.0.0-rc.1-<shortsha>.zip` |
-| Checksum file | `dist/ark-core-1.0.0-rc.1-<shortsha>.zip.sha256` |
+| Artifact | `dist/ark-core-1.0.0-rc.1-3e9fa5ae.zip` (local/CI; not committed) |
+| SHA-256 | `1270a6706e0caedcc48ee7b253ecabf78e5fb43f0b7f26d316a80dfa15bf517a` |
 | Review pack | `review-artifacts/traditional-hosting-292/` |
 
 ## Recommended minimum hosting requirements
 
-- PHP **8.3+** (8.3 or 8.4) with extensions: `mbstring`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `pdo_mysql`, `gd`, `zip`, `tokenizer`, `openssl`
+- PHP **8.4+** (Composer lock currently requires `>=8.4.1` via Symfony 8.1; `composer.json` still declares `^8.3` aspirationally) with extensions: `mbstring`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `pdo_mysql`, `gd`, `zip`, `tokenizer`, `openssl`
 - MySQL **8.0+** (empty database for fresh install)
 - HTTPS-capable web server; **document root = `public/`**
 - Writable `storage/` and `bootstrap/cache/`

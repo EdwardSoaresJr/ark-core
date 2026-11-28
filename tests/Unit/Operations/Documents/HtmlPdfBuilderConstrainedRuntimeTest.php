@@ -5,8 +5,8 @@ use App\Ark\Operations\Documents\PdfRuntimePaths;
 
 it('falls back to native PDF when Chromium readiness reports process spawning unavailable', function () {
     config([
-        'services.pdf.node_binary' => '/bin/false',
-        'services.pdf.chrome_path' => '/bin/false',
+        'services.pdf.node_binary' => '',
+        'services.pdf.chrome_path' => '',
     ]);
 
     $bytes = app(HtmlPdfBuilder::class)->toPdfBytes(
