@@ -8,9 +8,9 @@
 | `config/app.php` | `version` ← `APP_VERSION` (optional env) |
 | Compose / images | Commit identity via `.ark-source-commit` / `ARK_SOURCE_COMMIT_FILE` |
 
-**Proposed first public line:** `v1.0.0-rc.1` → owner clean-room acceptance → `v1.0.0` stable.
+**Approved version line (do not publish tags until authorized):** `v1.0.0-rc.1` → owner clean-room acceptance → `v1.0.0` stable.
 
-Do not publish a stable GitHub Release before owner acceptance of independent installation tests.
+Do not publish either tag or a stable GitHub Release before owner acceptance of independent installation tests. Checklist: `PUBLIC_INSTALL_ACCEPTANCE_CHECKLIST.md`.
 
 ## Feature freeze
 

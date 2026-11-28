@@ -28,13 +28,22 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Build release ZIP
+      - name: Build release ZIP (clean provenance + extract self-test)
         env:
           ARK_RELEASE_VERSION: ${{ inputs.version }}
           ARK_RELEASE_OUT_DIR: ${{ github.workspace }}/dist
         run: |
           chmod +x scripts/build-release-zip.sh
           scripts/build-release-zip.sh
+          test -f dist/*.sha256
+          # Re-extract artifact and assert packaged app boots autoload without source workspace.
+          mkdir -p /tmp/ark-zip-verify
+          unzip -q dist/*.zip -d /tmp/ark-zip-verify
+          ROOT=$(find /tmp/ark-zip-verify -maxdepth 1 -type d -name 'ark-core-*' | head -1)
+          test -f "$ROOT/public/index.php"
+          test -f "$ROOT/public/build/manifest.json"
+          test ! -e "$ROOT/.env"
+          php -r 'require $argv[1]."/vendor/autoload.php"; exit(class_exists("Mpdf\\Mpdf")?0:1);' "$ROOT"
 
       - uses: actions/upload-artifact@v4
         with:

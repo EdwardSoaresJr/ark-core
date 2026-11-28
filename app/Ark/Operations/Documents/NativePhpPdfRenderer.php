@@ -4,11 +4,13 @@ namespace App\Ark\Operations\Documents;
 
 use Illuminate\Support\Facades\Storage;
 use Mpdf\Mpdf;
+use Mpdf\Output\Destination;
 use Throwable;
 
 /**
  * Table-oriented native PHP PDF path for hosts without Chromium/Node.
- * Chromium remains the preferred fidelity engine when available.
+ * Uses the same customer snapshot preparation as Chromium so financial
+ * accuracy and document semantics stay intact.
  */
 class NativePhpPdfRenderer implements PdfRenderer
 {
@@ -16,6 +18,7 @@ class NativePhpPdfRenderer implements PdfRenderer
 
     public function __construct(
         private readonly EstimateDocumentPdfSnapshot $pdfSnapshot,
+        private readonly DocumentPdfPresenter $presenter,
     ) {}
 
     public function renderEstimate(EstimateDocument $document): string
@@ -34,26 +37,32 @@ class NativePhpPdfRenderer implements PdfRenderer
 
         $path = DocumentPdfPath::for($document);
         $absolutePath = $this->prepareEstimateOutputPath($path);
+        $snapshot = $this->presenter->prepareForCustomer(
+            $this->pdfSnapshot->resolve($document),
+        );
         $html = view(self::VIEW, [
             'document' => $document,
-            'snapshot' => $this->pdfSnapshot->resolve($document),
+            'snapshot' => $snapshot,
         ])->render();
 
         try {
             $temporaryPath = $absolutePath.'.rendering-'.bin2hex(random_bytes(6)).'.pdf';
+            $tempDir = storage_path('app/mpdf-temp');
+            if (! is_dir($tempDir)) {
+                @mkdir($tempDir, 0755, true);
+            }
+
             $mpdf = new Mpdf([
                 'format' => 'Letter',
                 'margin_left' => 12,
                 'margin_right' => 12,
                 'margin_top' => 12,
-                'margin_bottom' => 12,
-                'tempDir' => storage_path('app/mpdf-temp'),
+                'margin_bottom' => 14,
+                'tempDir' => $tempDir,
             ]);
-            if (! is_dir(storage_path('app/mpdf-temp'))) {
-                @mkdir(storage_path('app/mpdf-temp'), 0755, true);
-            }
+            $mpdf->SetTitle((string) data_get($snapshot, 'pdf_document_label', 'Document'));
             $mpdf->WriteHTML($html);
-            $mpdf->Output($temporaryPath, \Mpdf\Output\Destination::FILE);
+            $mpdf->Output($temporaryPath, Destination::FILE);
             @chmod($temporaryPath, 0664);
             if (! @rename($temporaryPath, $absolutePath)) {
                 throw new \RuntimeException('Native PDF could not be moved into place.');

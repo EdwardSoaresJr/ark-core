@@ -78,6 +78,19 @@ final class SystemRequirementsChecker
             'detail' => 'Detected '.$infra['profile'].' (Docker/VPS/shared availability — not a commercial entitlement)',
         ];
 
+        $checks[] = [
+            'id' => 'redis_reachability',
+            'label' => 'Redis reachability',
+            'status' => ! $infra['redis_configured']
+                ? 'pass'
+                : ($infra['redis_reachable'] ? 'pass' : 'warning'),
+            'detail' => ! $infra['redis_configured']
+                ? 'Redis not configured — file/database drivers are appropriate'
+                : ($infra['redis_reachable']
+                    ? 'Redis configured and reachable'
+                    : 'Redis configured but not reachable'),
+        ];
+
         $pdfStatus = 'fail';
         $pdfDetail = 'No PDF engine available';
         if ($infra['chromium_pdf']) {
@@ -85,7 +98,7 @@ final class SystemRequirementsChecker
             $pdfDetail = 'Chromium PDF available';
         } elseif ($infra['native_pdf']) {
             $pdfStatus = 'pass';
-            $pdfDetail = 'Native PHP PDF available (mPDF)';
+            $pdfDetail = 'Native PHP PDF available';
         }
         $checks[] = [
             'id' => 'pdf_engine',
@@ -100,7 +113,7 @@ final class SystemRequirementsChecker
             'status' => 'pass',
             'detail' => $infra['detached_finalize']
                 ? 'Detached CLI finalize available'
-                : 'Constrained host — finalize runs inside the browser request (no exec/nohup required)',
+                : 'Constrained host — finalize runs inside the browser request with raised time limits and checkpointed progress',
         ];
 
         foreach ($infra['notes'] as $index => $note) {
@@ -112,7 +125,7 @@ final class SystemRequirementsChecker
             ];
         }
 
-        return $checks;
+        return array_merge($checks, (new InstallationSecurityChecker)->check());
     }
 
     /**

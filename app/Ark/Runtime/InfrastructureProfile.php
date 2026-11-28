@@ -3,12 +3,15 @@
 namespace App\Ark\Runtime;
 
 use App\Ark\Operations\Documents\PdfRuntimePaths;
+use Illuminate\Support\Facades\Redis;
 
 /**
  * Describes what infrastructure this process can use.
  *
  * Profiles are availability signals for Docker / VPS / shared hosting — not
  * commercial entitlements and not artificial product feature flags.
+ *
+ * Distinguishes configured drivers from services that are actually reachable.
  */
 final class InfrastructureProfile
 {
@@ -21,26 +24,35 @@ final class InfrastructureProfile
     /**
      * @return array{
      *     profile: self::FULL|self::STANDARD|self::CONSTRAINED,
-     *     redis: bool,
+     *     redis_extension: bool,
+     *     redis_reachable: bool,
+     *     redis_configured: bool,
      *     chromium_pdf: bool,
      *     native_pdf: bool,
      *     detached_finalize: bool,
-     *     long_running_workers: bool,
-     *     websockets: bool,
+     *     long_running_workers_configured: bool,
+     *     websockets_configured: bool,
+     *     websockets_usable: bool,
      *     notes: list<string>
      * }
      */
     public static function inspect(): array
     {
-        $redis = self::redisExtensionPresent();
+        $redisExtension = self::redisExtensionPresent();
+        $redisConfigured = self::redisConfigured();
+        $redisReachable = $redisConfigured && $redisExtension && self::redisReachable();
         $chromium = self::chromiumPdfAvailable();
         $nativePdf = self::nativePdfAvailable();
         $detached = self::detachedFinalizeAvailable();
-        $workers = self::longRunningWorkersConfigured();
-        $websockets = self::websocketsConfigured();
+        $workersConfigured = self::longRunningWorkersConfigured();
+        $websocketsConfigured = self::websocketsConfigured();
+        $websocketsUsable = $websocketsConfigured && $redisReachable;
 
         $notes = [];
-        if (! $redis) {
+        if ($redisConfigured && ! $redisReachable) {
+            $notes[] = 'Redis is configured but not reachable — falling back guidance: file/database cache and session.';
+        }
+        if (! $redisExtension) {
             $notes[] = 'Redis extension unavailable — use file/database cache and session; prefer sync or database queue with cron.';
         }
         if (! $chromium && $nativePdf) {
@@ -50,30 +62,39 @@ final class InfrastructureProfile
             $notes[] = 'No PDF engine available — install Chromium/Node or the native PHP PDF package.';
         }
         if (! $detached) {
-            $notes[] = 'Detached CLI finalize unavailable — installer runs finalize inside the HTTP request.';
+            $notes[] = 'Detached CLI finalize unavailable — installer runs finalize inside the HTTP request with resumable stages.';
         }
-        if (! $workers) {
-            $notes[] = 'Horizon/Redis workers not configured — use sync queue or cron-bounded queue:work.';
+        if ($workersConfigured && ! $redisReachable) {
+            $notes[] = 'Horizon is configured but Redis is unreachable — use ark:queue-work-bounded via cron.';
         }
-        if (! $websockets) {
+        if (! $workersConfigured) {
+            $notes[] = 'Horizon/Redis workers not configured — use sync queue or cron-bounded ark:queue-work-bounded.';
+        }
+        if ($websocketsConfigured && ! $websocketsUsable) {
+            $notes[] = 'Reverb is configured but not usable without reachable Redis — realtime falls back to polling/log broadcast.';
+        }
+        if (! $websocketsConfigured) {
             $notes[] = 'Reverb/WebSockets not configured — realtime UI falls back to polling/log broadcast.';
         }
 
         $profile = self::CONSTRAINED;
-        if ($redis && $chromium && $workers && $websockets && $detached) {
+        if ($redisReachable && $chromium && $workersConfigured && $websocketsUsable && $detached) {
             $profile = self::FULL;
-        } elseif (($redis || $detached) && ($chromium || $nativePdf)) {
+        } elseif (($redisReachable || $detached || $nativePdf) && ($chromium || $nativePdf)) {
             $profile = self::STANDARD;
         }
 
         return [
             'profile' => $profile,
-            'redis' => $redis,
+            'redis_extension' => $redisExtension,
+            'redis_reachable' => $redisReachable,
+            'redis_configured' => $redisConfigured,
             'chromium_pdf' => $chromium,
             'native_pdf' => $nativePdf,
             'detached_finalize' => $detached,
-            'long_running_workers' => $workers,
-            'websockets' => $websockets,
+            'long_running_workers_configured' => $workersConfigured,
+            'websockets_configured' => $websocketsConfigured,
+            'websockets_usable' => $websocketsUsable,
             'notes' => $notes,
         ];
     }
@@ -81,6 +102,27 @@ final class InfrastructureProfile
     public static function redisExtensionPresent(): bool
     {
         return extension_loaded('redis') || class_exists(\Predis\Client::class);
+    }
+
+    public static function redisConfigured(): bool
+    {
+        $store = (string) config('cache.default', '');
+        $queue = (string) config('queue.default', '');
+        $session = (string) config('session.driver', '');
+
+        return in_array('redis', [$store, $queue, $session], true)
+            || filled(config('database.redis.default.host'));
+    }
+
+    public static function redisReachable(): bool
+    {
+        try {
+            Redis::connection()->ping();
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public static function chromiumPdfAvailable(): bool

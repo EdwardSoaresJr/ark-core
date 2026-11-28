@@ -5,6 +5,11 @@
 
     RewriteEngine On
 
+    # Deny accidental exposure if sensitive files are placed under public/.
+    RewriteRule ^(\.env|.*\.env\..*)$ - [F,L]
+    RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|yarn\.lock)$ - [F,L]
+    RewriteRule ^(\.git|vendor|storage|bootstrap)(/|$) - [F,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

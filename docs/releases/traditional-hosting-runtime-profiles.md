@@ -18,11 +18,14 @@ Essential workflows (repair orders, estimates/invoices, portal authorization, in
 
 ## Release ZIP
 
-`scripts/build-release-zip.sh` (CI: `.github/workflows/release-zip.yml`) produces:
+`scripts/build-release-zip.sh` (CI: `.github/workflows/release-zip.yml`) builds from a **clean committed git archive** (dirty trees refused):
 
-- `vendor/` from `composer install --no-dev`
-- compiled `public/build`
-- application tree + `RELEASE.json` + `.ark-source-commit`
-- SHA-256 checksum
+- Locked `composer install --no-dev`
+- Compiled `public/build` from a throwaway build host
+- `RELEASE.json`, `.ark-source-commit`, `MANIFEST.sha256`, `COMPOSER_LICENSES.json`
+- Secret/sensitive-path scan; no `.env`, keys, uploads, backups, or `node_modules`
+- Archive extract self-test before publishing checksums
 
 Document root must be `public/`. Browser setup remains `/setup`. End users of a compatible shared host must not need Docker, SSH, root, Composer, or Node.
+
+See also: `constrained-hosting-cron.md`, `PUBLIC_INSTALL_ACCEPTANCE_CHECKLIST.md`.
