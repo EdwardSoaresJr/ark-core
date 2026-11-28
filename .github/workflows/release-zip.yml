@@ -1,6 +1,18 @@
 name: Release ZIP
 
 on:
+  pull_request:
+    paths:
+      - 'scripts/build-release-zip.sh'
+      - 'scripts/verify-release-zip-install.sh'
+      - '.github/workflows/release-zip.yml'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.*'
+      - 'resources/js/**'
+      - 'resources/css/**'
   workflow_dispatch:
     inputs:
       version:
@@ -14,6 +26,19 @@ permissions:
 jobs:
   package:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: ark
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
     steps:
       - uses: actions/checkout@v4
 
@@ -30,20 +55,25 @@ jobs:
 
       - name: Build release ZIP (clean provenance + extract self-test)
         env:
-          ARK_RELEASE_VERSION: ${{ inputs.version }}
+          ARK_RELEASE_VERSION: ${{ github.event.inputs.version || format('pr-{0}', github.event.pull_request.number) }}
           ARK_RELEASE_OUT_DIR: ${{ github.workspace }}/dist
         run: |
-          chmod +x scripts/build-release-zip.sh
+          chmod +x scripts/build-release-zip.sh scripts/verify-release-zip-install.sh
           scripts/build-release-zip.sh
           test -f dist/*.sha256
-          # Re-extract artifact and assert packaged app boots autoload without source workspace.
-          mkdir -p /tmp/ark-zip-verify
-          unzip -q dist/*.zip -d /tmp/ark-zip-verify
-          ROOT=$(find /tmp/ark-zip-verify -maxdepth 1 -type d -name 'ark-core-*' | head -1)
-          test -f "$ROOT/public/index.php"
-          test -f "$ROOT/public/build/manifest.json"
-          test ! -e "$ROOT/.env"
-          php -r 'require $argv[1]."/vendor/autoload.php"; exit(class_exists("Mpdf\\Mpdf")?0:1);' "$ROOT"
+          ls -lh dist/
+
+      - name: Install from extracted archive (isolated)
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USERNAME: root
+          DB_PASSWORD: ''
+        run: |
+          # verify script uses mysql CLI against local root; map service.
+          sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client
+          ZIP=$(ls dist/*.zip | head -1)
+          scripts/verify-release-zip-install.sh "$ZIP" /tmp/ark-zip-ci-install
 
       - uses: actions/upload-artifact@v4
         with:
