@@ -15,6 +15,7 @@ use App\Ark\Operations\Documents\HtmlPdfBuilder;
 use App\Ark\Operations\Documents\NativePhpPdfRenderer;
 use App\Ark\Operations\Documents\PdfRuntimeUnavailable;
 use App\Ark\Operations\Financial\CustomerAccountStatementBuilder;
+use App\Ark\Operations\Financial\CustomerAccountStatementPdf;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Inspections\InspectionReportProjection;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -27,7 +28,7 @@ use Illuminate\Support\Facades\Storage;
 
 function acceptanceArtifactDir(): string
 {
-    $dir = storage_path('app/native-pdf-acceptance');
+    $dir = base_path('review-artifacts/traditional-hosting-292/pdfs');
     if (! is_dir($dir)) {
         mkdir($dir, 0755, true);
     }
@@ -139,11 +140,6 @@ it('renders inspection and statement PDFs through HtmlPdfBuilder native fallback
     $repairOrder = financialCloseoutRepairOrder(RepairOrderStatus::Estimate);
     $customer = $repairOrder->customer;
 
-    config([
-        'services.pdf.node_binary' => '/bin/false',
-        'services.pdf.chrome_path' => '/bin/false',
-    ]);
-
     $report = app(InspectionReportProjection::class)->for(
         $repairOrder,
         InspectionReportProjection::MODE_DETAILED,
@@ -152,17 +148,37 @@ it('renders inspection and statement PDFs through HtmlPdfBuilder native fallback
         'report' => $report,
     ])->render();
     $inspectionHtml .= '<div style="page-break-before:always"><h1>追加ページ — Additional page</h1><p>Unicode multipage check 東京</p></div>';
-    $inspectionBytes = app(HtmlPdfBuilder::class)->toPdfBytes($inspectionHtml);
-    expect(str_starts_with($inspectionBytes, '%PDF'))->toBeTrue()
-        ->and(strlen($inspectionBytes))->toBeGreaterThan(1000);
-    writeAcceptanceBytes('inspection-native.pdf', $inspectionBytes);
+
+    // Force native path for constrained-hosting acceptance.
+    config([
+        'services.pdf.node_binary' => '/bin/false',
+        'services.pdf.chrome_path' => '/bin/false',
+    ]);
+    $inspectionNative = app(HtmlPdfBuilder::class)->toPdfBytes($inspectionHtml);
+    expect(str_starts_with($inspectionNative, '%PDF'))->toBeTrue()
+        ->and(strlen($inspectionNative))->toBeGreaterThan(1000);
+    writeAcceptanceBytes('inspection-native.pdf', $inspectionNative);
 
     $statement = app(CustomerAccountStatementBuilder::class)->forCustomer($customer);
-    $statementHtml = view('operations.financials.accounts-receivable.statement-document', [
-        'statement' => $statement,
-        'combined' => false,
-    ])->render();
-    $statementBytes = app(HtmlPdfBuilder::class)->toPdfBytes($statementHtml);
-    expect(str_starts_with($statementBytes, '%PDF'))->toBeTrue();
-    writeAcceptanceBytes('statement-native.pdf', $statementBytes);
+    $statementNative = app(CustomerAccountStatementPdf::class)->bytes($statement);
+    expect(str_starts_with($statementNative, '%PDF'))->toBeTrue();
+    writeAcceptanceBytes('statement-native.pdf', $statementNative);
+
+    // Optional Chromium pair when host has Node + Chrome configured via env.
+    $node = getenv('PDF_NODE_BINARY') ?: (PHP_BINARY !== '' ? dirname(PHP_BINARY).'/node' : '');
+    $chrome = getenv('PDF_CHROME_PATH') ?: '';
+    if (is_string($node) && is_executable($node) && is_string($chrome) && is_executable($chrome)) {
+        config([
+            'services.pdf.node_binary' => $node,
+            'services.pdf.chrome_path' => $chrome,
+        ]);
+        try {
+            writeAcceptanceBytes('inspection-chromium.pdf', app(HtmlPdfBuilder::class)->toPdfBytes($inspectionHtml));
+            writeAcceptanceBytes('statement-chromium.pdf', app(CustomerAccountStatementPdf::class)->bytes($statement));
+        } catch (Throwable $e) {
+            writeAcceptanceBytes('inspection-chromium.SKIPPED.txt', $e->getMessage());
+        }
+    } else {
+        writeAcceptanceBytes('inspection-chromium.SKIPPED.txt', 'PDF_NODE_BINARY/PDF_CHROME_PATH not executable in this environment.');
+    }
 })->group('native-pdf-acceptance');

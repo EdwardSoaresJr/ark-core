@@ -128,6 +128,10 @@ final class InfrastructureProfile
     public static function chromiumPdfAvailable(): bool
     {
         try {
+            if (! PdfRuntimePaths::processSpawningAvailable()) {
+                return false;
+            }
+
             if (! class_exists(\Spatie\Browsershot\Browsershot::class)) {
                 return false;
             }

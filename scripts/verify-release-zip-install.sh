@@ -37,7 +37,15 @@ php -r '$j=json_decode(file_get_contents($argv[1]),true); foreach(["version","co
 
 # Isolated DB name for install smoke (requires local MySQL).
 DB_NAME="ark_zip_verify_$(date +%s)"
-mysql -uroot -e "DROP DATABASE IF EXISTS \`$DB_NAME\`; CREATE DATABASE \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+DB_HOST="${DB_HOST:-127.0.0.1}"
+DB_PORT="${DB_PORT:-3306}"
+DB_USERNAME="${DB_USERNAME:-root}"
+DB_PASSWORD="${DB_PASSWORD:-}"
+MYSQL=(mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USERNAME")
+if [[ -n "$DB_PASSWORD" ]]; then
+  MYSQL+=(-p"$DB_PASSWORD")
+fi
+"${MYSQL[@]}" -e "DROP DATABASE IF EXISTS \`$DB_NAME\`; CREATE DATABASE \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 cd "$APP"
 cp .env.example .env
@@ -45,15 +53,17 @@ php -r '
 $env=file_get_contents(".env");
 $env=preg_replace("/^APP_KEY=.*/m","APP_KEY=",$env);
 $env=preg_replace("/^APP_URL=.*/m","APP_URL=http://127.0.0.1",$env);
+$env=preg_replace("/^DB_HOST=.*/m","DB_HOST=".$argv[2],$env);
+$env=preg_replace("/^DB_PORT=.*/m","DB_PORT=".$argv[3],$env);
 $env=preg_replace("/^DB_DATABASE=.*/m","DB_DATABASE=".$argv[1],$env);
-$env=preg_replace("/^DB_USERNAME=.*/m","DB_USERNAME=root",$env);
-$env=preg_replace("/^DB_PASSWORD=.*/m","DB_PASSWORD=",$env);
+$env=preg_replace("/^DB_USERNAME=.*/m","DB_USERNAME=".$argv[4],$env);
+$env=preg_replace("/^DB_PASSWORD=.*/m","DB_PASSWORD=".$argv[5],$env);
 $env=preg_replace("/^SESSION_DRIVER=.*/m","SESSION_DRIVER=file",$env);
 $env=preg_replace("/^CACHE_STORE=.*/m","CACHE_STORE=file",$env);
 $env=preg_replace("/^QUEUE_CONNECTION=.*/m","QUEUE_CONNECTION=database",$env);
 $env=preg_replace("/^BROADCAST_CONNECTION=.*/m","BROADCAST_CONNECTION=log",$env);
 file_put_contents(".env",$env);
-' "$DB_NAME"
+' "$DB_NAME" "$DB_HOST" "$DB_PORT" "$DB_USERNAME" "$DB_PASSWORD"
 
 # Constrain: no redis/reverb/chromium assumptions.
 {
@@ -69,7 +79,8 @@ CONSTRAINED_PHP=(php -d disable_functions=exec,passthru,shell_exec,system,proc_o
 "${CONSTRAINED_PHP[@]}" artisan key:generate --force --no-interaction
 "${CONSTRAINED_PHP[@]}" artisan package:discover --ansi >/dev/null
 "${CONSTRAINED_PHP[@]}" artisan migrate --force --no-interaction
-"${CONSTRAINED_PHP[@]}" artisan about --only=environment 2>/dev/null | head -20 || "${CONSTRAINED_PHP[@]}" artisan --version
+# `artisan about` may require Process; version is enough under disable_functions.
+"${CONSTRAINED_PHP[@]}" artisan --version
 
 # Interrupted install recovery: mark IN_PROGRESS then recover.
 "${CONSTRAINED_PHP[@]}" -r '

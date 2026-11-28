@@ -71,6 +71,27 @@ final class PdfRuntimePaths
         return null;
     }
 
+    /**
+     * Chromium/Browsershot and detached install finalize require process spawning.
+     * Shared hosts often disable exec/proc_open in php-fpm.
+     */
+    public static function processSpawningAvailable(): bool
+    {
+        if (! function_exists('proc_open') || ! function_exists('exec')) {
+            return false;
+        }
+
+        $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+
+        foreach (['proc_open', 'exec'] as $fn) {
+            if (in_array($fn, $disabled, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static function resolveChromePath(): ?string
     {
         if ($configured = self::executable(env('PDF_CHROME_PATH'))) {

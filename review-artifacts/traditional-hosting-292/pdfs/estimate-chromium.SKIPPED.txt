@@ -1,0 +1,36 @@
+The command "PATH=$PATH:/usr/local/bin:/opt/homebrew/bin NODE_PATH=$("/Users/edwardsoares/Library/Application Support/Herd/config/nvm/versions/node/v22.22.1/bin/node" "/Users/edwardsoares/Library/Application Support/Herd/config/nvm/versions/node/v22.22.1/bin/npm" root -g)  "/Users/edwardsoares/Library/Application Support/Herd/config/nvm/versions/node/v22.22.1/bin/node" '/private/tmp/ark-core-hosting-g1/vendor/spatie/browsershot/src/../bin/browser.cjs' '{"url":"file:\/\/\/var\/folders\/56\/df478kyd7d71cwllxg1yck4h0000gn\/T\/1689017309-0662195001795849904\/index.html","action":"pdf","options":{"path":"\/private\/var\/folders\/56\/df478kyd7d71cwllxg1yck4h0000gn\/T\/ark-core-tests-83832-cd8d05e0139cf6546e0af401\/storage\/app\/private\/estimate-documents\/ro-1\/current-estimate.pdf.rendering-b84bf2279274.pdf","args":[],"viewport":{"width":800,"height":600},"displayHeaderFooter":false,"format":"Letter","margin":{"top":"0mm","right":"0mm","bottom":"0mm","left":"0mm"},"waitUntil":"networkidle0","executablePath":"\/Applications\/Google Chrome.app\/Contents\/MacOS\/Google Chrome","printBackground":true}}'" failed.
+
+Exit Code: 1(General error)
+
+Working directory: /private/tmp/ark-core-hosting-g1
+
+Output:
+================
+
+
+Error Output:
+================
+node:internal/modules/cjs/loader:1383
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module 'puppeteer'
+Require stack:
+- /private/tmp/ark-core-hosting-g1/vendor/spatie/browsershot/bin/browser.cjs
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at callChrome (/private/tmp/ark-core-hosting-g1/vendor/spatie/browsershot/bin/browser.cjs:75:28)
+    at Object.<anonymous> (/private/tmp/ark-core-hosting-g1/vendor/spatie/browsershot/bin/browser.cjs:498:5) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/private/tmp/ark-core-hosting-g1/vendor/spatie/browsershot/bin/browser.cjs'
+  ]
+}
+
+Node.js v22.22.1

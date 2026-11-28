@@ -47,6 +47,10 @@ class HtmlPdfBuilder
         } catch (PdfRuntimeUnavailable $exception) {
             throw $exception;
         } catch (Throwable $exception) {
+            if ($this->isProcessSpawnFailure($exception)) {
+                throw new PdfRuntimeUnavailable($exception->getMessage(), previous: $exception);
+            }
+
             throw new RuntimeException('PDF generation failed: '.$exception->getMessage(), previous: $exception);
         } finally {
             @unlink($temporaryPath);
@@ -80,6 +84,12 @@ class HtmlPdfBuilder
 
     private function assertChromiumRuntimeIsReady(): void
     {
+        if (! PdfRuntimePaths::processSpawningAvailable()) {
+            throw new PdfRuntimeUnavailable(
+                'PDF runtime cannot spawn processes (exec/proc_open disabled). Native PHP PDF engine will be used.'
+            );
+        }
+
         $node = config('services.pdf.node_binary');
         $chrome = config('services.pdf.chrome_path');
 
@@ -90,6 +100,15 @@ class HtmlPdfBuilder
         if (! is_string($chrome) || $chrome === '' || ! is_executable($chrome)) {
             throw new PdfRuntimeUnavailable('PDF runtime is missing Chromium. Set PDF_CHROME_PATH or run: npx puppeteer browsers install chrome-headless-shell');
         }
+    }
+
+    private function isProcessSpawnFailure(Throwable $exception): bool
+    {
+        $message = $exception->getMessage();
+
+        return str_contains($message, 'proc_open')
+            || str_contains($message, 'exec()')
+            || str_contains($message, 'Unable to launch the browser');
     }
 
     private function browser(string $html): Browsershot
