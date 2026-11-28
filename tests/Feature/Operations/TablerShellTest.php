@@ -5,6 +5,7 @@ use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
+use App\Support\Branding\Branding;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Foundation\Vite;
 use Illuminate\Support\HtmlString;
@@ -246,6 +247,35 @@ test('customer search shows a Tabler empty state with a way back', function (): 
         ->assertSee('class="empty"', false)
         ->assertSee('No customers match &ldquo;Nobody Here&rdquo;.', false)
         ->assertSee('Clear search');
+});
+
+test('the Tabler sidebar uses fold-aware section titles and dual brand marks', function (): void {
+    $html = $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
+        ->get(route('operations.customers.search'))
+        ->assertOk()
+        ->assertSee('class="nav-section-title">Operations</div>', false)
+        ->assertSee('class="nav-section-title">Records</div>', false)
+        ->assertSee('ark-sidebar-brand-full', false)
+        ->assertSee('ark-sidebar-brand-mark', false)
+        ->assertSee(Branding::sidebarIcon(), false)
+        ->assertSee(Branding::logo('full_white'), false)
+        ->getContent();
+
+    $sidebarStart = strpos($html, 'aria-label="Primary operations"');
+    expect($sidebarStart)->not->toBeFalse();
+    $menuStart = strpos($html, 'id="ark-sidebar-menu"', $sidebarStart);
+    expect($menuStart)->not->toBeFalse();
+    $menuEnd = strpos($html, '</ul>', $menuStart);
+    expect($menuEnd)->not->toBeFalse();
+    $sidebarHtml = substr($html, $sidebarStart, $menuEnd - $sidebarStart);
+
+    expect($sidebarHtml)
+        ->toContain('nav-section-title')
+        ->and($sidebarHtml)->not->toContain('subheader px-3')
+        ->and($sidebarHtml)->toContain('ark-sidebar-brand-full')
+        ->and($sidebarHtml)->toContain('ark-sidebar-brand-mark')
+        // Fold CSS collapses titles; they must remain in the accessibility tree.
+        ->and($sidebarHtml)->toContain('nav-link-title">Customers</span>');
 });
 
 test('the Tabler profile header shows name without a persistent role list', function (): void {

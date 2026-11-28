@@ -3587,3 +3587,61 @@ body:is(.ops-deposit-modal-open, :has(.ops-review-rail--payment-open)) .ark-topb
 #worksheet-concerns {
     gap: 0.75rem !important;
 }
+
+/*
+ * Collapsed sidebar branding + badge containment.
+ *
+ * Tabler folds .nav-link-title and .nav-section-title, but crops a wide brand
+ * image. ARK swaps to the square icon master instead of stretching/cropping
+ * the full wordmark. Scoped to lg+ so mobile off-canvas keeps the full logo.
+ */
+.ark-sidebar-brand {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.ark-sidebar-brand-full,
+.ark-sidebar-brand-mark {
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: left center;
+}
+
+.ark-sidebar-brand-mark {
+    display: none;
+    width: var(--tblr-navbar-brand-image-height, 2rem);
+    height: var(--tblr-navbar-brand-image-height, 2rem);
+    object-position: center;
+}
+
+@media (min-width: 992px) {
+    html[data-bs-sidebar='folded'] .navbar-vertical .ark-sidebar-brand-full,
+    html[data-bs-sidebar='folded-hover'] .navbar-vertical:not(:hover):not(:has(:focus-visible)) .ark-sidebar-brand-full {
+        display: none;
+    }
+
+    html[data-bs-sidebar='folded'] .navbar-vertical .ark-sidebar-brand-mark,
+    html[data-bs-sidebar='folded-hover'] .navbar-vertical:not(:hover):not(:has(:focus-visible)) .ark-sidebar-brand-mark {
+        display: block;
+    }
+
+    /*
+     * Numbered badges stay visible as corner chips in the icon rail so they
+     * cannot force horizontal overflow beside a collapsed title.
+     */
+    html[data-bs-sidebar='folded'] .navbar-vertical .navbar-nav .nav-link > .badge:not(:empty),
+    html[data-bs-sidebar='folded-hover'] .navbar-vertical:not(:hover):not(:has(:focus-visible)) .navbar-nav .nav-link > .badge:not(:empty) {
+        position: absolute;
+        inset-inline-end: 0.1rem;
+        top: 0.1rem;
+        z-index: 1;
+        margin: 0;
+        min-width: 1rem;
+        padding: 0.1rem 0.25rem;
+        font-size: 0.625rem;
+        line-height: 1;
+        transform: none;
+    }
+}
