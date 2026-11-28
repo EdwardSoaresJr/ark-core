@@ -94,3 +94,6 @@ id_ed25519
 
 # Local Settings UX review captures (not for main lineage)
 .review-capture/
+
+# Release ZIP build output (owner/CI artifacts; do not commit binaries)
+/dist/
