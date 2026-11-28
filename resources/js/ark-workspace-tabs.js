@@ -22,6 +22,7 @@ import {
     splitVisibleTabs,
     tabsForActivityRefresh,
 } from './ark-workspace-tab-lifecycle';
+import { flushDepartingWorkspaceDirty, workspaceNeedsDiscardConfirm } from './ark-workspace-dirty-policy';
 import {
     classNames,
     classTokens,
@@ -1042,15 +1043,16 @@ function isDirtyKey(key) {
  * do not scare advisors after they revert edits.
  */
 function keyHasUnsavedChanges(key) {
-    if (!key) {
-        return false;
-    }
+    const hasLiveSync = key === state.activeKey && typeof window.ARK?.workspace?.syncDirty === 'function';
+    const liveDirty = hasLiveSync ? !!window.ARK.workspace.syncDirty() : null;
 
-    if (key === state.activeKey && typeof window.ARK?.workspace?.syncDirty === 'function') {
-        return !!window.ARK.workspace.syncDirty();
-    }
-
-    return isDirtyKey(key);
+    return workspaceNeedsDiscardConfirm({
+        key,
+        activeKey: state.activeKey,
+        sessionDirty: isDirtyKey(key),
+        liveDirty,
+        hasLiveSync,
+    });
 }
 
 function setDirtyKey(key, dirty) {
@@ -1164,6 +1166,9 @@ function confirmNavigateAway(fromKey, onConfirm) {
     const label = tab?.title ? `"${tab.title}"` : 'This workspace';
 
     if (window.confirm(`${label} has unsaved changes. Switch without saving?`)) {
+        // Advisor discarded the departing draft — clear sticky session dirty so a
+        // later inactive-tab close does not re-scare with no DOM to live-sync.
+        setDirtyKey(fromKey, false);
         onConfirm();
     }
 }
@@ -1232,6 +1237,12 @@ function navigateTo(route, key, samePage, departingKey = null, options = {}) {
     }
 
     const performNavigate = () => {
+        // DOM still describes the departing workspace — flush sticky dirty before assign.
+        flushDepartingWorkspaceDirty({
+            fromKey,
+            bootKey: window.__ARK_WORKSPACE__?.boot?.key || null,
+            syncDirty: window.ARK?.workspace?.syncDirty,
+        });
         state.activeKey = key;
         saveState();
         window.location.assign(route);

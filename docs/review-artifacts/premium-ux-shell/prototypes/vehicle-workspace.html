@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ARK Prototype — Vehicle workspace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.3/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="./_shell.css" />
+</head>
+<body>
+  <div class="ark-proto" id="shell">
+    <aside class="ark-proto__sidebar" aria-label="Primary operations">
+      <div class="ark-proto__brand">ARK <span>Operations</span></div>
+      <nav class="ark-proto__nav">
+        <a href="#"><span>Today</span></a>
+        <a href="#"><span>Shop Queue</span></a>
+        <a href="#"><span>Customers</span></a>
+        <a href="#" class="is-active"><span>Vehicles</span></a>
+        <a href="#"><span>Repair Orders</span></a>
+        <a href="#"><span>Schedule</span></a>
+        <a href="#"><span>Inbox</span></a>
+      </nav>
+    </aside>
+
+    <div class="ark-proto__main">
+      <header class="ark-proto__global" aria-label="Application">
+        <button type="button" class="ark-proto__hamburger" id="toggleSidebar" aria-label="Toggle sidebar">☰</button>
+        <div class="ark-proto__search">
+          <input type="search" placeholder="Search customers, vehicles, ROs…" aria-label="Global search" />
+        </div>
+        <div class="ark-proto__global-actions">
+          <button type="button" class="btn btn-ghost-secondary btn-sm">Inbox</button>
+          <button type="button" class="btn btn-ghost-secondary btn-sm" id="toggleTheme">Theme</button>
+          <button type="button" class="btn btn-ghost-secondary btn-sm">EH</button>
+        </div>
+      </header>
+
+      <div class="ark-proto__tabs" aria-label="Workspaces">
+        <div class="ark-proto__tab">CU Jordan Hale <button type="button" aria-label="Close">×</button></div>
+        <div class="ark-proto__tab is-active">VH 2018 Subaru <button type="button" aria-label="Close">×</button></div>
+        <div class="ark-proto__tab">RO #4821 <button type="button" aria-label="Close">×</button></div>
+        <button type="button" class="ark-proto__tab-overflow">+1</button>
+      </div>
+
+      <div class="ark-proto__context">
+        <div class="ark-proto__context-main">
+          <div class="ark-proto__crumbs"><a href="./customer-workspace.html">Jordan Hale</a> / Vehicles</div>
+          <div class="ark-proto__title-row">
+            <h1 class="ark-proto__title">2018 Subaru Outback 2.5i Premium</h1>
+            <span class="ark-proto__badge is-ok">Active</span>
+          </div>
+          <div class="ark-proto__submeta">
+            Owner <strong><a href="./customer-workspace.html">Jordan Hale</a></strong>
+            · VIN <strong>4S4BSAFC5J3XXXXXX</strong>
+            · Plate <strong>CO-7KMT42</strong>
+            · 64,210 mi
+          </div>
+        </div>
+        <div class="ark-proto__context-actions" aria-label="Vehicle commands">
+          <button type="button" class="btn btn-outline-secondary btn-sm">Call owner</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm ark-hide-sm">Schedule</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm">Edit Vehicle</button>
+          <button type="button" class="btn btn-primary btn-sm">Create RO</button>
+        </div>
+      </div>
+
+      <main class="ark-proto__body">
+        <div class="row g-2">
+          <div class="col-12 col-lg-5">
+            <section class="ark-proto__card">
+              <h3>Identity</h3>
+              <dl class="ark-proto__kv">
+                <dt>Year / make</dt><dd>2018 Subaru</dd>
+                <dt>Model / trim</dt><dd>Outback 2.5i Premium</dd>
+                <dt>Engine</dt><dd>2.5L H4</dd>
+                <dt>Drive</dt><dd>AWD</dd>
+                <dt>Color</dt><dd>Crystal White Pearl</dd>
+                <dt>Unit #</dt><dd>—</dd>
+              </dl>
+            </section>
+          </div>
+          <div class="col-12 col-lg-7">
+            <section class="ark-proto__card">
+              <h3>Current work</h3>
+              <div class="ark-proto__row">
+                <div>
+                  <div><strong><a href="./repair-order-workspace.html">RO #4821</a></strong> · Diagnosis</div>
+                  <div class="text-secondary">Front brake noise · Tech M. Ortiz · Auth pending · $286.40</div>
+                </div>
+                <a class="btn btn-outline-primary btn-sm" href="./repair-order-workspace.html">Open RO</a>
+              </div>
+            </section>
+            <section class="ark-proto__card mt-2">
+              <h3>Service history</h3>
+              <div class="ark-proto__row">
+                <div>RO #4702 · Oil + rotate · 62,880 mi · Oct 12</div>
+                <span class="ark-proto__badge is-ok">Paid</span>
+              </div>
+              <div class="ark-proto__row">
+                <div>RO #4611 · Alignment · 60,102 mi · Aug 3</div>
+                <span class="ark-proto__badge is-ok">Paid</span>
+              </div>
+              <div class="ark-proto__row">
+                <div>RO #4490 · Brake fluid flush · 57,440 mi · Apr 22</div>
+                <span class="ark-proto__badge is-ok">Paid</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="./_shell.js"></script>
+</body>
+</html>
