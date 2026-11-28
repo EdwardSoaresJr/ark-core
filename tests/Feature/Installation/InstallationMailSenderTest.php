@@ -5,11 +5,17 @@ use App\Ark\Installation\Mail\InstallationMailSender;
 use App\Ark\Mail\TransactionalMailResult;
 use App\Ark\Operations\Settings\ShopSettings;
 
-it('returns not configured when no installation mail is ready', function () {
+it('returns not configured when mode is disabled', function () {
     ShopSettings::current()->persistTrusted([
+        'installation_mail_mode' => InstallationMailConfiguration::MODE_DISABLED,
         'installation_mail_enabled' => false,
     ]);
-    config(['mail.default' => 'array']);
+    config([
+        'mail.default' => 'smtp',
+        'mail.from.address' => 'env@example.test',
+        'mail.mailers.smtp.host' => '127.0.0.1',
+        'mail.mailers.smtp.port' => 587,
+    ]);
 
     $result = app(InstallationMailSender::class)->send(
         'installation.mail.test',
@@ -32,13 +38,15 @@ it('reports transport acceptance distinctly from confirmed delivery', function (
 
 it('exposes active source for the admin UI', function () {
     ShopSettings::current()->persistTrusted([
+        'installation_mail_mode' => InstallationMailConfiguration::MODE_SHOP,
         'installation_mail_enabled' => true,
         'installation_mail_mailer' => 'smtp',
-        'installation_mail_host' => 'smtp.example.test',
+        'installation_mail_host' => '127.0.0.1',
         'installation_mail_port' => 587,
         'installation_mail_from_address' => 'shop@example.test',
     ]);
 
     expect(app(InstallationMailConfiguration::class)->formDefaults()['active_source'])
-        ->toBe(InstallationMailConfiguration::SOURCE_SHOP);
+        ->toBe(InstallationMailConfiguration::SOURCE_SHOP)
+        ->and(app(InstallationMailConfiguration::class)->modeLabel())->toBe('Installation Settings');
 });

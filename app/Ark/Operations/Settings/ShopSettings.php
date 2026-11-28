@@ -131,6 +131,7 @@ use InvalidArgumentException;
     'postmark_reply_to',
     'postmark_reply_to_name',
     'installation_mail_enabled',
+    'installation_mail_mode',
     'installation_mail_mailer',
     'installation_mail_host',
     'installation_mail_port',

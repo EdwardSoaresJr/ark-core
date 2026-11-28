@@ -149,6 +149,7 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
         ->name('operations.settings.shop.installation-mail.update');
 
     Route::post('/app/settings/shop/installation-mail/test', [\App\Ark\Operations\Settings\InstallationMailSettingsController::class, 'test'])
+        ->middleware('throttle:3,1')
         ->name('operations.settings.shop.installation-mail.test');
 
     Route::post('/app/settings/shop/ark-cloud/connect', [ShopPlatformSettingsController::class, 'connect'])

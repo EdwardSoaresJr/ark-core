@@ -4,7 +4,6 @@ namespace App\Ark\Installation\Mail;
 
 use App\Ark\Mail\TransactionalMailResult;
 use Symfony\Component\Mailer\Mailer;
-use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Throwable;
@@ -18,12 +17,14 @@ final class InstallationMailSender
     public function __construct(
         private readonly InstallationMailConfiguration $configuration,
         private readonly InstallationMailMessageRenderer $renderer,
+        private readonly InstallationMailTransportFactory $transports,
         private readonly InstallationMailHostGuard $hostGuard = new InstallationMailHostGuard,
     ) {}
 
     /**
      * @param  array<string, mixed>  $variables
      * @param  list<array{filename: string, mime?: string, path?: string, content?: string, content_base64?: string}>  $attachments
+     * @param  array<string, mixed>|null  $configOverride  When set (e.g. admin test), skip activeResolved().
      */
     public function send(
         string $operation,
@@ -31,6 +32,7 @@ final class InstallationMailSender
         array $variables = [],
         array $attachments = [],
         ?string $correlationId = null,
+        ?array $configOverride = null,
     ): TransactionalMailResult {
         if ($this->configuration->hostedIsolated()) {
             return TransactionalMailResult::rejected(
@@ -40,7 +42,7 @@ final class InstallationMailSender
             );
         }
 
-        $config = $this->configuration->activeResolved();
+        $config = $configOverride ?? $this->configuration->activeResolved();
         if ($config === null) {
             return TransactionalMailResult::notConfigured();
         }
@@ -71,11 +73,11 @@ final class InstallationMailSender
                 $this->attach($email, $attachment);
             }
 
-            $mailer = new Mailer(Transport::fromDsn($this->dsn($config)));
+            $mailer = new Mailer($this->transports->make($config));
             $mailer->send($email);
 
             return TransactionalMailResult::transportAccepted($correlationId, [
-                'source' => $config['source'],
+                'source' => $config['source'] ?? 'unknown',
                 'mailer' => $config['mailer'],
                 'operation' => $operation,
             ]);
@@ -85,56 +87,6 @@ final class InstallationMailSender
                 $correlationId,
             );
         }
-    }
-
-    /**
-     * @param  array{
-     *     mailer: string,
-     *     host: ?string,
-     *     port: ?int,
-     *     encryption: ?string,
-     *     username: ?string,
-     *     password: ?string,
-     * }  $config
-     */
-    private function dsn(array $config): string
-    {
-        if ($config['mailer'] === 'sendmail') {
-            $path = (string) config('mail.mailers.sendmail.path', '/usr/sbin/sendmail -bs -i');
-
-            return 'sendmail://default?command='.urlencode($path);
-        }
-
-        $user = $config['username'] ?? null;
-        $pass = $config['password'] ?? null;
-        $auth = '';
-        if (filled($user)) {
-            $auth = rawurlencode((string) $user);
-            if (filled($pass)) {
-                $auth .= ':'.rawurlencode((string) $pass);
-            }
-            $auth .= '@';
-        }
-
-        $scheme = match ($config['encryption'] ?? null) {
-            'ssl' => 'smtps',
-            default => 'smtp',
-        };
-
-        $query = [];
-        if (($config['encryption'] ?? null) === 'tls') {
-            $query[] = 'encryption=tls';
-        }
-
-        $dsn = sprintf(
-            '%s://%s%s:%d',
-            $scheme,
-            $auth,
-            $config['host'],
-            (int) $config['port'],
-        );
-
-        return $query === [] ? $dsn : $dsn.'?'.implode('&', $query);
     }
 
     /**
@@ -171,8 +123,10 @@ final class InstallationMailSender
             return 'The mail server rejected the connection.';
         }
 
-        // Avoid leaking credentials that Symfony may echo in transport exceptions.
+        // Strip credentials that transport exceptions may echo in DSNs or auth lines.
         $message = preg_replace('/:[^:@\\s\\/]+@/', ':***@', $message) ?? $message;
+        $message = preg_replace('/(pass(word)?|pwd|secret|credential)\\s*[:=]\\s*\\S+/i', '$1=***', $message) ?? $message;
+        $message = preg_replace('#(smtp[s]?://)([^:\\s]+):([^@\\s]+)@#i', '$1$2:***@', $message) ?? $message;
 
         return 'Mail transport error: '.$message;
     }

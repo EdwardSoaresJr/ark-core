@@ -9,11 +9,21 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Resolves standalone customer mail settings.
  *
- * Precedence: shop database settings (when enabled) → environment MAIL_* → none.
+ * Modes (explicit, no silent crossover):
+ * - disabled: no installation customer delivery (env SMTP must not reactivate)
+ * - shop_settings: only the saved shop SMTP/sendmail (invalid → not configured)
+ * - environment: only Laravel MAIL_* (smtp/sendmail)
+ *
  * Hosted SaaS never exposes or uses installation SMTP for customer delivery.
  */
 final class InstallationMailConfiguration
 {
+    public const MODE_DISABLED = 'disabled';
+
+    public const MODE_SHOP = 'shop_settings';
+
+    public const MODE_ENVIRONMENT = 'environment';
+
     public const SOURCE_SHOP = 'shop_settings';
 
     public const SOURCE_ENVIRONMENT = 'environment';
@@ -38,6 +48,27 @@ final class InstallationMailConfiguration
         return $this->activeResolved() !== null;
     }
 
+    public function mode(): string
+    {
+        if ($this->hostedIsolated() || ! $this->hasShopColumns()) {
+            return self::MODE_DISABLED;
+        }
+
+        $settings = ShopSettings::current();
+        $mode = strtolower(trim((string) ($settings->installation_mail_mode ?? '')));
+
+        if (in_array($mode, [self::MODE_DISABLED, self::MODE_SHOP, self::MODE_ENVIRONMENT], true)) {
+            return $mode;
+        }
+
+        // Legacy rows: enabled flag without mode column value.
+        if ((bool) ($settings->installation_mail_enabled ?? false)) {
+            return self::MODE_SHOP;
+        }
+
+        return self::MODE_DISABLED;
+    }
+
     /**
      * @return array{
      *     source: string,
@@ -59,12 +90,11 @@ final class InstallationMailConfiguration
             return null;
         }
 
-        $shop = $this->shopResolved();
-        if ($shop !== null) {
-            return $shop;
-        }
-
-        return $this->environmentResolved();
+        return match ($this->mode()) {
+            self::MODE_SHOP => $this->shopResolved(),
+            self::MODE_ENVIRONMENT => $this->environmentResolved(),
+            default => null,
+        };
     }
 
     public function activeSource(): string
@@ -72,6 +102,34 @@ final class InstallationMailConfiguration
         $resolved = $this->activeResolved();
 
         return $resolved['source'] ?? self::SOURCE_NONE;
+    }
+
+    public function modeLabel(): string
+    {
+        return match ($this->mode()) {
+            self::MODE_SHOP => 'Installation Settings',
+            self::MODE_ENVIRONMENT => 'Environment Managed',
+            default => 'Disabled',
+        };
+    }
+
+    /**
+     * Fingerprint of connection settings used to invalidate prior successful tests.
+     */
+    public function connectionFingerprint(?array $config = null): string
+    {
+        $config ??= $this->activeResolved() ?? [];
+
+        return hash('sha256', implode('|', [
+            (string) ($config['mailer'] ?? ''),
+            (string) ($config['host'] ?? ''),
+            (string) ($config['port'] ?? ''),
+            (string) ($config['encryption'] ?? ''),
+            (string) ($config['username'] ?? ''),
+            (string) ($config['from_address'] ?? ''),
+            (string) ($config['reply_to'] ?? ''),
+            ! empty($config['password_configured']) || filled($config['password'] ?? null) ? '1' : '0',
+        ]));
     }
 
     /**
@@ -96,10 +154,6 @@ final class InstallationMailConfiguration
         }
 
         $settings = ShopSettings::current();
-        if (! (bool) ($settings->installation_mail_enabled ?? false)) {
-            return null;
-        }
-
         $mailer = strtolower(trim((string) ($settings->installation_mail_mailer ?: 'smtp')));
         if (! in_array($mailer, ['smtp', 'sendmail'], true)) {
             return null;
@@ -210,8 +264,6 @@ final class InstallationMailConfiguration
     }
 
     /**
-     * Values for the Tabler form (shop settings, including disabled drafts).
-     *
      * @return array<string, mixed>
      */
     public function formDefaults(): array
@@ -221,24 +273,28 @@ final class InstallationMailConfiguration
         }
 
         $settings = ShopSettings::current();
-        $env = $this->environmentResolved();
+        $envAvailable = $this->environmentResolved() !== null;
+        $mode = $this->mode();
 
         return [
-            'enabled' => (bool) ($settings->installation_mail_enabled ?? false),
+            'mode' => $mode,
+            'mode_label' => $this->modeLabel(),
+            'enabled' => $mode === self::MODE_SHOP,
             'mailer' => (string) ($settings->installation_mail_mailer ?: 'smtp'),
-            'host' => (string) ($settings->installation_mail_host ?: ($env['host'] ?? '')),
-            'port' => (int) ($settings->installation_mail_port ?: ($env['port'] ?? 587)),
-            'encryption' => (string) ($settings->installation_mail_encryption ?: ($env['encryption'] ?? 'tls') ?: 'tls'),
+            'host' => (string) ($settings->installation_mail_host ?: ''),
+            'port' => (int) ($settings->installation_mail_port ?: 587),
+            'encryption' => (string) ($settings->installation_mail_encryption ?: 'tls'),
             'username' => (string) ($settings->installation_mail_username ?: ''),
             'password_configured' => filled($settings->installation_mail_password),
-            'from_address' => (string) ($settings->installation_mail_from_address ?: ($settings->email ?: ($env['from_address'] ?? ''))),
-            'from_name' => (string) ($settings->installation_mail_from_name ?: ($settings->shop_name ?: ($env['from_name'] ?? ''))),
+            'from_address' => (string) ($settings->installation_mail_from_address ?: ($settings->email ?: '')),
+            'from_name' => (string) ($settings->installation_mail_from_name ?: ($settings->shop_name ?: '')),
             'reply_to' => (string) ($settings->installation_mail_reply_to ?: ($settings->customerReplyToAddress() ?: '')),
             'last_tested_at' => $settings->installation_mail_last_tested_at,
             'last_test_status' => $settings->installation_mail_last_test_status,
             'last_error' => $settings->installation_mail_last_error,
             'active_source' => $this->activeSource(),
-            'environment_available' => $env !== null,
+            'environment_available' => $envAvailable,
+            'connection_fingerprint' => $this->connectionFingerprint(),
         ];
     }
 
@@ -248,6 +304,8 @@ final class InstallationMailConfiguration
     private function emptyFormDefaults(): array
     {
         return [
+            'mode' => self::MODE_DISABLED,
+            'mode_label' => 'Disabled',
             'enabled' => false,
             'mailer' => 'smtp',
             'host' => '',
@@ -263,6 +321,7 @@ final class InstallationMailConfiguration
             'last_error' => null,
             'active_source' => self::SOURCE_NONE,
             'environment_available' => false,
+            'connection_fingerprint' => '',
         ];
     }
 

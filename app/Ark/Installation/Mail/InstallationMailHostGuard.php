@@ -5,6 +5,7 @@ namespace App\Ark\Installation\Mail;
 /**
  * Blocks SMTP hosts that target cloud metadata or link-local admin endpoints.
  * Private LAN mail servers remain allowed for legitimate self-hosted SMTP.
+ * Resolves DNS at check time so rebinding to metadata IPs is rejected.
  */
 final class InstallationMailHostGuard
 {
@@ -18,6 +19,10 @@ final class InstallationMailHostGuard
             throw new \InvalidArgumentException('SMTP hostname is required.');
         }
 
+        if (str_contains($host, '/') || str_contains($host, '\\') || str_contains($host, ' ')) {
+            throw new \InvalidArgumentException('SMTP hostname is invalid.');
+        }
+
         if (! in_array($port, self::ALLOWED_PORTS, true)) {
             throw new \InvalidArgumentException('SMTP port must be one of: '.implode(', ', self::ALLOWED_PORTS).'.');
         }
@@ -27,6 +32,10 @@ final class InstallationMailHostGuard
         }
 
         $ips = $this->resolve($host);
+        if ($ips === []) {
+            throw new \InvalidArgumentException('SMTP hostname could not be resolved.');
+        }
+
         foreach ($ips as $ip) {
             if ($this->isBlockedIp($ip)) {
                 throw new \InvalidArgumentException('That SMTP host resolves to a blocked address.');
@@ -65,7 +74,6 @@ final class InstallationMailHostGuard
             if ($normalized === '::1' || str_starts_with($normalized, 'fe80:')) {
                 return true;
             }
-            // IPv4-mapped 169.254.x.x
             if (preg_match('/^::ffff:169\.254\./', $normalized) === 1) {
                 return true;
             }

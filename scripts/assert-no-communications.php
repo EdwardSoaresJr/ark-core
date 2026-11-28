@@ -71,6 +71,7 @@ const ALLOWED = [
     'app/Ark/Installation/Mail/InstallationMailConfiguration.php' => 'Resolves installation SMTP/sendmail for standalone customer email',
     'app/Ark/Installation/Mail/InstallationMailHostGuard.php' => 'SSRF guard for installation SMTP hosts',
     'app/Ark/Installation/Mail/InstallationMailSender.php' => 'Sends customer mail through installation SMTP/sendmail',
+    'app/Ark/Installation/Mail/InstallationMailTransportFactory.php' => 'Builds SMTP transports with required STARTTLS and peer verify',
     'app/Ark/Installation/Mail/CustomerOutboundMail.php' => 'Routes customer mail to Platform or installation SMTP',
     'app/Ark/Installation/Mail/InstallationMailAudit.php' => 'Audit history for installation mail configuration changes',
     'app/Ark/Installation/Mail/InstallationMailAuditEvent.php' => 'Eloquent model for installation mail audit events',
@@ -79,9 +80,13 @@ const ALLOWED = [
     'resources/views/operations/settings/partials/installation-email-settings.blade.php' => 'Tabler UI for standalone email settings',
     'database/migrations/2026_11_27_120000_add_installation_mail_to_shop_settings.php' => 'Shop settings columns for installation SMTP',
     'database/migrations/2026_11_27_120100_create_installation_mail_audit_events_table.php' => 'Audit table for installation mail configuration',
-    'tests/Feature/Installation/InstallationMailConfigurationTest.php' => 'Tests installation mail config precedence and hosted isolation',
+    'database/migrations/2026_11_27_130000_add_installation_mail_mode_to_shop_settings.php' => 'Explicit disabled/shop/environment mail modes',
+    'tests/Feature/Installation/InstallationMailConfigurationTest.php' => 'Tests installation mail config modes and hosted isolation',
     'tests/Feature/Installation/InstallationMailSenderTest.php' => 'Tests installation SMTP send statuses and transport rejection',
     'tests/Feature/Installation/InstallationMailSettingsTest.php' => 'Tests Tabler SMTP admin save, mask, and test-send',
+    'tests/Feature/Installation/InstallationMailTransportFactoryTest.php' => 'Tests STARTTLS require and certificate verify defaults',
+    'tests/Feature/Installation/InstallationMailSmtpAcceptanceTest.php' => 'Controlled SMTP acceptance and content/attachment proof',
+    'tests/Feature/Installation/InstallationMailHostedIsolationTest.php' => 'Hosted SaaS cannot use installation SMTP routes or fallback',
     'tests/Feature/Installation/CustomerOutboundMailTest.php' => 'Tests Platform vs installation routing and honesty',
 ];
 // The shared Communications workspace (docs/PRODUCT_BOUNDARY.md, owner-approved exception 2026-11-03): files added for

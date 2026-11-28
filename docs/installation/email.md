@@ -14,16 +14,22 @@ SMS, MMS, voice, and managed ARK Email remain ARK Shop capabilities.
 
 1. Sign in as an Admin.
 2. Open **Settings → Email**.
-3. Enable customer email, enter SMTP hostname, port, encryption, username, password, and sender address.
-4. Save, then send a test message to yourself.
+3. Choose a configuration mode:
+   - **Disabled** — customer email stays off (environment `MAIL_*` does not reactivate it)
+   - **Installation Settings** — use the SMTP/sendmail form on this page only
+   - **Environment Managed** — use server `MAIL_*` only
+4. For Installation Settings, enter SMTP hostname, port, encryption, username, password, and sender address.
+5. Save, then send a test message to yourself.
 
-Passwords are encrypted at rest and masked in the UI. Check **Replace stored password** to change or clear them. Configuration changes apply to the next send without restarting queue workers.
+Passwords are encrypted at rest and masked in the UI. They are never flashed back into the session. Check **Replace stored password** to change or clear them. Configuration changes apply to the next send without restarting queue workers. Changing connection settings clears the previous test status.
+
+TLS (STARTTLS) is required when encryption is TLS — plaintext downgrade is refused. Certificate verification stays on.
 
 Hosted SaaS shops do not see this screen and never fall back to installation SMTP.
 
 ## Environment configuration (optional)
 
-Automated and infrastructure-managed installs may set Laravel `MAIL_*` instead of (or before) using the UI:
+Automated and infrastructure-managed installs may set Laravel `MAIL_*`, then select **Environment Managed** in Settings → Email:
 
 ```env
 MAIL_MAILER=smtp
@@ -38,13 +44,15 @@ MAIL_FROM_NAME="Your Shop"
 
 `log` and `array` mailers are never treated as successful customer delivery.
 
-### Precedence
+### Modes (no silent crossover)
 
-1. Shop Settings when enabled and complete
-2. Otherwise environment `MAIL_*` when mailer is `smtp` or `sendmail`
-3. Otherwise not configured
+| Mode | Behavior |
+| --- | --- |
+| Disabled | No installation customer delivery |
+| Installation Settings | Only the saved shop SMTP/sendmail (invalid → not configured) |
+| Environment Managed | Only `MAIL_*` smtp/sendmail |
 
-The Email settings page shows which source is active.
+The Email settings page shows the active mode and transport.
 
 ## Delivery honesty
 

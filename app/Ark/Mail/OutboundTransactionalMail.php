@@ -47,9 +47,9 @@ class OutboundTransactionalMail
             $cloud->isSuspended() => 'Suspended',
             $cloud->isPairing() => 'Pairing',
             $this->providerMode() === 'ark_mail' => 'ARK Email',
-            $this->providerMode() === 'installation' => match ($this->installation->activeSource()) {
-                InstallationMailConfiguration::SOURCE_SHOP => 'Installation SMTP (Settings)',
-                InstallationMailConfiguration::SOURCE_ENVIRONMENT => 'Installation SMTP (environment)',
+            $this->providerMode() === 'installation' => match ($this->installation->mode()) {
+                InstallationMailConfiguration::MODE_SHOP => 'Installation Settings',
+                InstallationMailConfiguration::MODE_ENVIRONMENT => 'Environment Managed',
                 default => 'Installation SMTP',
             },
             default => 'Not configured',

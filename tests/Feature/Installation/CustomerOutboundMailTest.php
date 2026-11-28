@@ -1,16 +1,18 @@
 <?php
 
 use App\Ark\Installation\Mail\CustomerOutboundMail;
+use App\Ark\Installation\Mail\InstallationMailConfiguration;
 use App\Ark\Mail\OutboundTransactionalMail;
 use App\Ark\Mail\TransactionalMailResult;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Facades\Http;
 
-it('marks outbound ready when installation smtp is configured', function () {
+it('marks outbound ready when installation smtp mode is shop_settings', function () {
     ShopSettings::current()->persistTrusted([
+        'installation_mail_mode' => InstallationMailConfiguration::MODE_SHOP,
         'installation_mail_enabled' => true,
         'installation_mail_mailer' => 'smtp',
-        'installation_mail_host' => 'smtp.example.test',
+        'installation_mail_host' => '127.0.0.1',
         'installation_mail_port' => 587,
         'installation_mail_from_address' => 'shop@example.test',
         'cloud_status' => 'disconnected',
@@ -24,7 +26,7 @@ it('marks outbound ready when installation smtp is configured', function () {
     expect($outbound->providerMode())->toBe('installation')
         ->and($outbound->isReady())->toBeTrue()
         ->and(app(CustomerOutboundMail::class)->canSend())->toBeTrue()
-        ->and($outbound->statusLabel())->toContain('Installation SMTP');
+        ->and($outbound->statusLabel())->toBe('Installation Settings');
 });
 
 it('prefers ark mail over installation smtp when platform mail is configured', function () {
@@ -37,9 +39,10 @@ it('prefers ark mail over installation smtp when platform mail is configured', f
         'ark_mail_status' => 'connected',
         'ark_mail_credential' => 'cloud-install-secret',
         'ark_mail_from_email' => 'shop@mail.example.test',
+        'installation_mail_mode' => InstallationMailConfiguration::MODE_SHOP,
         'installation_mail_enabled' => true,
         'installation_mail_mailer' => 'smtp',
-        'installation_mail_host' => 'smtp.example.test',
+        'installation_mail_host' => '127.0.0.1',
         'installation_mail_port' => 587,
         'installation_mail_from_address' => 'local@example.test',
     ]);
@@ -66,6 +69,7 @@ it('prefers ark mail over installation smtp when platform mail is configured', f
 
 it('does not treat not-configured as success', function () {
     ShopSettings::current()->persistTrusted([
+        'installation_mail_mode' => InstallationMailConfiguration::MODE_DISABLED,
         'installation_mail_enabled' => false,
         'cloud_status' => 'disconnected',
         'ark_mail_from_email' => null,
