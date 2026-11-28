@@ -83,7 +83,11 @@ composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader -
 (
   cd "$STAGE"
   mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache storage/app/mpdf-temp
-  php -r "file_exists('.env') || copy('.env.example', '.env');"
+  if [[ ! -f .env.example ]]; then
+    echo "ERROR: .env.example missing from staged tree" >&2
+    exit 1
+  fi
+  cp .env.example .env
   php artisan key:generate --force --no-interaction >/dev/null
   php artisan package:discover --ansi
   # Strip generated app key from packaged .env — installer/wizard owns secrets.
