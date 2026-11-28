@@ -13,13 +13,22 @@
         <div class="container-fluid">
             {{-- Mobile hamburger lives in the global top bar so placement stays consistent. --}}
             <div class="navbar-brand">
-                <a href="{{ $staffFrontDoorUrl }}">
+                <a href="{{ $staffFrontDoorUrl }}" class="ark-sidebar-brand">
+                    {{-- Expanded rail: full wordmark. Folded rail: square mark (see tabler.css). --}}
                     <img
                         src="{{ \App\Support\Branding\Branding::logo('full_white') }}"
                         alt="{{ \App\Support\Branding\Branding::tabTitle() }}"
-                        class="navbar-brand-image"
+                        class="navbar-brand-image ark-sidebar-brand-full"
                         width="1432"
                         height="434"
+                    >
+                    <img
+                        src="{{ \App\Support\Branding\Branding::sidebarIcon() }}"
+                        alt=""
+                        class="navbar-brand-image ark-sidebar-brand-mark"
+                        width="1024"
+                        height="1024"
+                        aria-hidden="true"
                     >
                 </a>
             </div>
@@ -27,8 +36,9 @@
                 <ul class="navbar-nav pt-lg-3">
                     @foreach ($navSections as $section)
                         @if ($section['label'] !== null)
-                            <li class="nav-item mt-3">
-                                <div class="subheader px-3 pb-1">{{ $section['label'] }}</div>
+                            <li class="nav-item">
+                                {{-- Tabler fold CSS targets .nav-section-title (not .subheader). --}}
+                                <div class="nav-section-title">{{ $section['label'] }}</div>
                             </li>
                         @endif
                         @foreach ($section['items'] as $item)
@@ -51,7 +61,7 @@
                                     </span>
                                     <span class="nav-link-title">{{ $item['label'] }}</span>
                                     @if ($item['live_count'] && $commsNavCount > 0)
-                                        <span class="badge ms-auto {{ $commsBadgeClass }}" data-ops-comms-nav-count aria-label="{{ $commsNavCount }} need attention">{{ $commsNavCount }}</span>
+                                        <span class="badge {{ $commsBadgeClass }}" data-ops-comms-nav-count aria-label="{{ $commsNavCount }} need attention">{{ $commsNavCount }}</span>
                                     @endif
                                 </a>
                             </li>

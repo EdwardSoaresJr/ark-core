@@ -151,8 +151,8 @@ test('a section with no destination for the user is left out of both shells', fu
         ->toContain('<p class="ops-rail-section__label">System</p>')
         ->not->toContain('<p class="ops-rail-section__label">Business</p>');
     expect(Blade::render('<x-operations.app ui="tabler">body</x-operations.app>'))
-        ->toContain('<div class="subheader px-3 pb-1">System</div>')
-        ->not->toContain('<div class="subheader px-3 pb-1">Business</div>');
+        ->toContain('<div class="nav-section-title">System</div>')
+        ->not->toContain('<div class="nav-section-title">Business</div>');
 });
 
 test('schedule follows the appointments setting', function (): void {
@@ -206,7 +206,7 @@ test('both shells render exactly the shared sections', function (callable $makeU
         Blade::render('<x-operations.app ui="tabler">body</x-operations.app>'),
         'id="ark-sidebar-menu"',
         '</ul>',
-        '<div class="subheader px-3 pb-1">(?<section>[^<]+)<\/div>',
+        '<div class="nav-section-title">(?<section>[^<]+)<\/div>',
         '<a\s+href="(?<url>[^"]+)"\s+class="nav-link".*?<span class="nav-link-title">(?<label>[^<]+)<\/span>',
     );
 
