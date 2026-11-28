@@ -1,8 +1,13 @@
 # ARK Premium UX / Workspace Shell — Owner visual review
 
-**Status:** Design package ready for owner visual approval. Narrow false-dirty fix implemented in this branch; **broad shell redesign not started**.
+**Status:** Narrow dirty-state fix ready for merge review. Design package updated for owner visual approval. **Broad shell redesign not started.**
 
 **Do not merge production. Do not deploy without separate authorization.**
+
+Two separate gates:
+
+1. **ARK DIRTY-STATE FIX — READY FOR MERGE REVIEW**
+2. **ARK PREMIUM UX — READY FOR OWNER VISUAL APPROVAL**
 
 ---
 
@@ -12,11 +17,10 @@
 |------|--------|
 | Core `origin/main` | `03541f034742a6bc612c0eb39a2c4a5081497163` (#292 / RC.1 merge) |
 | Public tag | `v1.0.0-rc.1` — **not modified** |
-| This branch | `fix/workspace-false-dirty-warn` (from `origin/main`) |
-| SaaS / Shop pin in local `ark-saas` | `1b63d6d0…` (not advanced to RC.1) |
-| Stancl routing PR | [ark-stancl#379](https://github.com/EdwardSoaresJr/ark-stancl/pull/379) open (field routing / Maps) — **staging must not be overwritten** without coordinating that workstream |
-| Staging hosts historically used | `alpha.staging.arksms.com` / `demo.staging.arksms.com` on `157.230.172.143` |
-| Staging for this package | **Not deployed** — isolated branch + local acceptance only |
+| This branch / PR | `fix/workspace-false-dirty-warn` → [Core #293](https://github.com/EdwardSoaresJr/ark-core/pull/293) |
+| SaaS / Shop pin | not advanced |
+| Stancl routing PR | [ark-stancl#379](https://github.com/EdwardSoaresJr/ark-stancl/pull/379) — **staging not claimed** |
+| Staging for this package | **Not deployed** |
 
 ---
 
@@ -39,15 +43,17 @@ Modal discard already uses: `Discard unsaved changes in this form?` — preserve
 | Change | File |
 |--------|------|
 | Policy helpers | `resources/js/ark-workspace-dirty-policy.js` |
-| Adopt baselines + sync on bind | `resources/js/ark-workspace-dirty-bindings.js` |
+| Touch-aware hydration adopt (immediate + deferred) | `resources/js/ark-workspace-dirty-bindings.js` |
+| Submit snapshot + generation-safe settle | `resources/js/ark-worksheet-draft.js`, `ark-worksheet-continuity.js` |
 | Flush dirty before cross-workspace navigate | `resources/js/ark-workspace-tabs.js` |
-| Clear sticky dirty after confirmed switch-away | `resources/js/ark-workspace-tabs.js` (`confirmNavigateAway`) |
-| Adopt saved form on successful `settleSaveDirty` | `resources/js/ark-worksheet-continuity.js` |
-| Regression tests | `resources/js/ark-workspace-dirty.test.js` |
+| Clear sticky dirty after confirmed switch-away | `resources/js/ark-workspace-tabs.js` |
+| Race unit + Chromium tests | `ark-workspace-dirty-races.test.js`, `tests/JavaScript/ark-workspace-dirty-browser.test.mjs` |
 
-**Kept:** failed-save dirty, modal discard confirm, closed-modal ignore, live sync for active tab, continuity preserved drafts.
+**Kept:** failed-save dirty, modal discard confirm, closed-modal ignore, live sync for active tab, worksheet busy serialization.
 
-**Tests:** `node --test resources/js/ark-workspace-dirty.test.js` (+ related focus-save / draft / modal dismissal) — **27 passed**.
+**Race audit:** [RACE_AUDIT.md](./RACE_AUDIT.md) (scenarios A–F).
+
+**Tests:** unit dirty/race/focus/draft + Chromium browser races — see PR checks.
 
 ---
 
@@ -134,24 +140,18 @@ Full detail: [DESIGN_STANDARD.md](./DESIGN_STANDARD.md).
 
 ## 6. Prototypes & screenshots
 
-Interactive HTML (Tabler CDN + shared shell):
+**Revised hierarchy:** global header ≠ context header (record actions only in context).
+
+Interactive HTML:
 
 - [prototypes/customer-workspace.html](./prototypes/customer-workspace.html)
 - [prototypes/vehicle-workspace.html](./prototypes/vehicle-workspace.html)
-- [prototypes/repair-order-workspace.html](./prototypes/repair-order-workspace.html)
+- [prototypes/repair-order-workspace.html](./prototypes/repair-order-workspace.html) — Estimate/Inspection/Recommendations/Comms/History + identity band
 
-Rendered screenshots (Puppeteer, not AI concept art):
+Visual package (1920 / 1366 / 390, light/dark, collapsed): [VISUAL_ACCEPTANCE.md](./VISUAL_ACCEPTANCE.md)
 
-| File | What |
-|------|------|
-| `screenshots/customer-desktop-light.png` | Customer identity + Vehicles (not Fleet) |
-| `screenshots/customer-desktop-dark.png` | Dark theme |
-| `screenshots/customer-desktop-sidebar-collapsed.png` | Collapsed sidebar |
-| `screenshots/customer-mobile-light.png` | Mobile width |
-| `screenshots/customer-modal-dirty.png` | Modal draft (discard path) |
-| `screenshots/vehicle-desktop-light.png` / `vehicle-mobile-light.png` | Vehicle context |
-| `screenshots/ro-desktop-light.png` / `ro-desktop-dark.png` / `ro-mobile-light.png` | RO context |
-| `screenshots/ro-save-failed.png` | Failed autosave feedback |
+Primary inspect folder: [`screenshots/acceptance/`](./screenshots/acceptance/)  
+Prior prototype refs: [`screenshots/before/`](./screenshots/before/)
 
 ---
 

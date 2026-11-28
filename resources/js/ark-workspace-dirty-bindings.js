@@ -26,6 +26,7 @@ export function initWorkspaceDirtyBindings() {
         '.ops-workspace-tabs',
         '#workspace-modal-host[data-workspace-modal-open="0"]',
     ].join(', ');
+    const touchedFields = new WeakSet();
 
     function syncDirty() {
         const dirty = rootHasUnsavedFormChanges(root);
@@ -55,11 +56,26 @@ export function initWorkspaceDirtyBindings() {
         return true;
     }
 
+    function markTouched(target) {
+        const el = target?.closest?.('input, textarea, select, [contenteditable="true"]');
+        if (el) {
+            touchedFields.add(el);
+        }
+    }
+
+    function adoptHydrationBaselines() {
+        // Skip controls the advisor already edited so a deferred adopt cannot
+        // treat an unpersisted draft as the new clean baseline.
+        adoptRenderedBaselines(root, { skipFields: touchedFields });
+        syncDirty();
+    }
+
     root.addEventListener('input', (event) => {
         if (!event.isTrusted || !shouldTrack(event.target)) {
             return;
         }
 
+        markTouched(event.target);
         syncDirty();
     }, true);
 
@@ -68,6 +84,7 @@ export function initWorkspaceDirtyBindings() {
             return;
         }
 
+        markTouched(event.target);
         syncDirty();
     }, true);
 
@@ -76,12 +93,13 @@ export function initWorkspaceDirtyBindings() {
     window.ARK.workspace.syncDirty = syncDirty;
     window.ARK.workspace.hasUnsavedFormChanges = () => rootHasUnsavedFormChanges(root);
 
-    // Server HTML / Alpine first paint can leave value !== defaultValue with no user edit.
-    // Adopt the rendered controls as baseline (same as continuity morph), then clear sticky scare.
+    // Immediate adopt after Alpine.start() (bindings run after Alpine in app.js).
+    adoptHydrationBaselines();
+
+    // One deferred pass for late Alpine/select hydration; still skips touched fields.
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            adoptRenderedBaselines(root);
-            syncDirty();
+            adoptHydrationBaselines();
         });
     });
 }

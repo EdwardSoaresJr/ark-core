@@ -24,72 +24,96 @@
     </aside>
 
     <div class="ark-proto__main">
-      <header class="ark-proto__topbar">
+      <!-- A. Global application header -->
+      <header class="ark-proto__global" aria-label="Application">
         <button type="button" class="ark-proto__hamburger" id="toggleSidebar" aria-label="Toggle sidebar">☰</button>
-        <div class="ark-proto__context">
-          <div class="ark-proto__crumbs">Customers</div>
-          <div class="ark-proto__title-row">
-            <h1 class="ark-proto__title">Jordan Hale</h1>
-            <span class="ark-proto__badge">Retail</span>
-            <span class="ark-proto__saving" id="saveState">Saved</span>
-          </div>
+        <div class="ark-proto__search">
+          <input type="search" placeholder="Search customers, vehicles, ROs…" aria-label="Global search" />
         </div>
-        <div class="ark-proto__actions" aria-label="Customer commands">
-          <button type="button" class="btn btn-outline-secondary btn-sm">Call</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm"><span class="btn-secondary-label">Text</span></button>
-          <button type="button" class="btn btn-outline-secondary btn-sm"><span class="btn-secondary-label">Schedule</span></button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" id="openEdit">Edit Customer</button>
-          <button type="button" class="btn btn-primary btn-sm">Create RO</button>
-        </div>
-        <div class="ark-proto__global">
+        <div class="ark-proto__global-actions">
+          <button type="button" class="btn btn-ghost-secondary btn-sm">Inbox <span class="badge bg-red-lt ms-1">2</span></button>
           <button type="button" class="btn btn-ghost-secondary btn-sm" id="toggleTheme">Theme</button>
-          <button type="button" class="btn btn-ghost-secondary btn-sm">Inbox</button>
           <button type="button" class="btn btn-ghost-secondary btn-sm">EH</button>
         </div>
       </header>
 
+      <!-- B. Workspace strip -->
       <div class="ark-proto__tabs" aria-label="Workspaces">
         <div class="ark-proto__tab is-active">CU Jordan Hale <button type="button" aria-label="Close">×</button></div>
         <div class="ark-proto__tab">VH 2018 Subaru <button type="button" aria-label="Close">×</button></div>
         <div class="ark-proto__tab">RO #4821 <button type="button" aria-label="Close">×</button></div>
+        <button type="button" class="ark-proto__tab-overflow" aria-label="More workspaces">+2</button>
+      </div>
+
+      <!-- C. Context header -->
+      <div class="ark-proto__context">
+        <div class="ark-proto__context-main">
+          <div class="ark-proto__crumbs">Customers</div>
+          <div class="ark-proto__title-row">
+            <h1 class="ark-proto__title">Jordan Hale</h1>
+            <span class="ark-proto__badge">Retail</span>
+            <span class="ark-proto__saving">Saved</span>
+          </div>
+          <div class="ark-proto__submeta">
+            <strong>(303) 555-0142</strong>
+            · <span class="text-secondary">No email on file</span>
+            · 1 vehicle · 1 active RO · Last visit Oct 12
+          </div>
+        </div>
+        <div class="ark-proto__context-actions" aria-label="Customer commands">
+          <button type="button" class="btn btn-outline-secondary btn-sm">Call</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm ark-hide-sm">Text</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm ark-hide-sm">Schedule</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="openEdit">Edit Customer</button>
+          <button type="button" class="btn btn-primary btn-sm">Create RO</button>
+          <button type="button" class="btn btn-ghost-secondary btn-sm ark-hide-sm" title="More page actions">⋯</button>
+        </div>
       </div>
 
       <main class="ark-proto__body">
-        <section class="ark-proto__identity ark-proto__card">
-          <h2 class="ark-proto__identity-name">Jordan Hale</h2>
-          <div class="ark-proto__meta">
-            <span><strong>Retail</strong></span>
-            <span>Phone <strong>(303) 555-0142</strong></span>
-            <span>Email <strong class="text-secondary">No email on file</strong></span>
-            <span>1 vehicle · 1 active RO · Last visit Oct 12</span>
-          </div>
-        </section>
+        <div class="ark-proto__alert" role="status">
+          Credit due on RO #4702: <strong>$42.18</strong> to refund or issue as store credit.
+        </div>
 
-        <div class="row g-3">
-          <div class="col-12 col-lg-7">
+        <div class="row g-2">
+          <div class="col-12 col-xl-7">
             <section class="ark-proto__card">
               <h3>Vehicles</h3>
               <div class="ark-proto__row">
                 <div>
-                  <div><strong>2018 Subaru Outback 2.5i Premium</strong></div>
-                  <div class="text-secondary">VIN …A4821 · Plate CO-7KMT42 · Owner Jordan Hale</div>
+                  <div><strong><a href="./vehicle-workspace.html">2018 Subaru Outback 2.5i Premium</a></strong></div>
+                  <div class="text-secondary">VIN …A4821 · Plate CO-7KMT42 · 64,210 mi</div>
                 </div>
-                <div class="ark-proto__toolbar">
-                  <button type="button" class="btn btn-outline-secondary btn-sm">Edit Vehicle</button>
-                  <button type="button" class="btn btn-primary btn-sm">Create RO</button>
-                </div>
+                <a class="btn btn-outline-secondary btn-sm" href="./repair-order-workspace.html">Open RO #4821</a>
               </div>
             </section>
           </div>
-          <div class="col-12 col-lg-5">
+          <div class="col-12 col-md-6 col-xl-5">
             <section class="ark-proto__card">
               <h3>Active work</h3>
               <div class="ark-proto__row">
                 <div>
-                  <div><strong>RO #4821</strong> · Diagnosis</div>
-                  <div class="text-secondary">Brake noise · Tech: M. Ortiz</div>
+                  <div><strong><a href="./repair-order-workspace.html">RO #4821</a></strong> · Diagnosis</div>
+                  <div class="text-secondary">Brake noise · Tech M. Ortiz · Auth pending</div>
                 </div>
                 <span class="ark-proto__badge is-warn">In shop</span>
+              </div>
+            </section>
+          </div>
+          <div class="col-12 col-md-6 col-xl-12">
+            <section class="ark-proto__card">
+              <h3>Recent history</h3>
+              <div class="ark-proto__row">
+                <div>RO #4702 · Oil + rotate · Closed Oct 12</div>
+                <span class="ark-proto__badge is-danger">Credit due</span>
+              </div>
+              <div class="ark-proto__row">
+                <div>RO #4611 · Alignment · Closed Aug 3</div>
+                <span class="ark-proto__badge is-ok">Paid</span>
+              </div>
+              <div class="ark-proto__row">
+                <div>Appt · Tire rotate · No-show Jul 19</div>
+                <span class="ark-proto__badge">Missed</span>
               </div>
             </section>
           </div>
@@ -109,23 +133,12 @@
         <button type="button" class="btn btn-outline-danger btn-sm" id="discardEdit">Close</button>
         <button type="button" class="btn btn-primary btn-sm" id="saveEdit">Save changes</button>
       </div>
-      <p class="ark-proto__saving mt-2 mb-0" id="modalHint">Genuine modal drafts ask before discard. Workspace tabs do not warn for autosaved work.</p>
+      <p class="ark-proto__saving mt-2 mb-0">Modal drafts confirm discard by form name. Workspace tabs do not warn for autosaved work.</p>
     </div>
   </div>
 
+  <script src="./_shell.js"></script>
   <script>
-    const shell = document.getElementById('shell');
-    document.getElementById('toggleSidebar').onclick = () => {
-      if (window.matchMedia('(max-width: 900px)').matches) {
-        shell.classList.toggle('is-nav-open');
-      } else {
-        shell.classList.toggle('is-collapsed');
-      }
-    };
-    document.getElementById('toggleTheme').onclick = () => {
-      const html = document.documentElement;
-      html.setAttribute('data-bs-theme', html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
-    };
     const modal = document.getElementById('editModal');
     const name = document.getElementById('editName');
     const baseline = { name: name.value, email: '' };
@@ -138,8 +151,6 @@
     document.getElementById('saveEdit').onclick = () => {
       baseline.name = name.value;
       baseline.email = document.getElementById('editEmail').value;
-      document.getElementById('saveState').textContent = 'Saved';
-      document.getElementById('saveState').classList.remove('is-error');
       modal.classList.remove('is-open');
     };
   </script>

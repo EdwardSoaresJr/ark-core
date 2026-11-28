@@ -21,10 +21,10 @@ Not browser `beforeunload` (tabs `beforeunload` only persists scroll/context).
 ## Fix (this branch)
 
 - Flush departing dirty before `location.assign`.
-- Adopt baselines on dirty-binding init (double rAF).
-- On successful worksheet save, adopt the saved form then `syncDirty`.
-- On confirmed “Switch without saving?”, clear sticky dirty for the departing key (inactive close must not re-scare).
-- Policy helpers + tests in `ark-workspace-dirty-policy.js` / `ark-workspace-dirty.test.js`.
+- Immediate + deferred hydration adopt that **skips touched fields** (race A).
+- On successful save, adopt the **submit snapshot**, not live values (race B); ignore stale settle generations (race C).
+- On confirmed “Switch without saving?”, clear sticky dirty for the departing key.
+- Policy helpers + unit + Chromium race tests — see [RACE_AUDIT.md](./RACE_AUDIT.md).
 
 ## Protections retained
 

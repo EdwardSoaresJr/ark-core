@@ -115,7 +115,8 @@ test('failed autosave keeps dirty; successful save with no remaining form drift 
 });
 
 test('dirty bindings adopt rendered baselines on init then syncDirty', () => {
-    assert.match(bindingsSource, /adoptRenderedBaselines\(root\)/);
+    assert.match(bindingsSource, /adoptHydrationBaselines/);
+    assert.match(bindingsSource, /skipFields: touchedFields/);
     assert.match(bindingsSource, /requestAnimationFrame/);
     assert.match(bindingsSource, /syncDirty\(\)/);
 });
@@ -131,8 +132,9 @@ test('confirmed switch-without-saving clears sticky dirty on the departing key',
     assert.match(tabsSource, /setDirtyKey\(fromKey, false\)/);
 });
 
-test('successful settleSaveDirty adopts the saved form baseline before syncDirty', () => {
-    assert.match(continuitySource, /adoptRenderedBaseline\(form\)/);
+test('successful settleSaveDirty adopts the submitted snapshot baseline before syncDirty', () => {
+    assert.match(continuitySource, /adoptSnapshotAsBaseline\(form, snapshot\)/);
+    assert.match(continuitySource, /captureFormBaselineSnapshot/);
     assert.match(continuitySource, /settleSaveDirty\(form, true\)/);
     assert.match(continuitySource, /settleSaveDirty\(form, false\)/);
 });

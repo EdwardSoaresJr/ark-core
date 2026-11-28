@@ -34,6 +34,103 @@ export function dirtyControlsOutsideForms(root) {
     });
 }
 
+function baselineFieldKey(field, index) {
+    const name = String(field?.name || '');
+    const type = String(field?.type || '').toLowerCase();
+
+    if (type === 'radio') {
+        return `${name}::radio::${String(field.value ?? '')}`;
+    }
+
+    if (name !== '') {
+        return `${name}::${type || 'field'}`;
+    }
+
+    return `__idx_${index}`;
+}
+
+function readBaselineFieldState(field) {
+    const type = String(field?.type || '').toLowerCase();
+
+    if (type === 'checkbox' || type === 'radio') {
+        return { kind: 'check', checked: !!field.checked, value: String(field.value ?? '') };
+    }
+
+    if (field?.options) {
+        return { kind: 'select', value: String(field.value ?? '') };
+    }
+
+    return { kind: 'value', value: String(field?.value ?? '') };
+}
+
+function applyBaselineFieldState(field, state) {
+    if (! field || ! state) {
+        return;
+    }
+
+    if (state.kind === 'check') {
+        field.defaultChecked = !!state.checked;
+
+        return;
+    }
+
+    if (state.kind === 'select' && field.options) {
+        for (const option of field.options) {
+            option.defaultSelected = option.value === state.value;
+        }
+
+        return;
+    }
+
+    if ('defaultValue' in field) {
+        field.defaultValue = state.value;
+    }
+}
+
+/**
+ * Snapshot of trackable control state at submit (or hydrate) time.
+ * Used so a successful older response cannot adopt a newer live edit as "saved".
+ */
+export function captureFormBaselineSnapshot(form) {
+    const snapshot = new Map();
+
+    if (! form?.elements) {
+        return snapshot;
+    }
+
+    [...form.elements].forEach((field, index) => {
+        const type = String(field.type || '').toLowerCase();
+
+        if (type === 'hidden' || type === 'button' || type === 'submit' || type === 'reset' || type === 'file' || type === 'image') {
+            return;
+        }
+
+        snapshot.set(baselineFieldKey(field, index), readBaselineFieldState(field));
+    });
+
+    return snapshot;
+}
+
+/**
+ * Adopt defaults from a prior snapshot (what was submitted), not from live values.
+ * Newer edits after submit remain dirty vs the saved snapshot.
+ */
+export function adoptSnapshotAsBaseline(form, snapshot) {
+    if (! form?.elements || ! snapshot) {
+        return;
+    }
+
+    [...form.elements].forEach((field, index) => {
+        const type = String(field.type || '').toLowerCase();
+
+        if (type === 'hidden' || type === 'button' || type === 'submit' || type === 'reset' || type === 'file' || type === 'image') {
+            return;
+        }
+
+        applyBaselineFieldState(field, snapshot.get(baselineFieldKey(field, index)));
+    });
+}
+
 export function adoptRenderedBaseline(form) {
     if (! form?.elements) {
         return;
@@ -68,7 +165,11 @@ export function adoptRenderedBaseline(form) {
     }
 }
 
-export function adoptRenderedBaselines(root) {
+/**
+ * Hydration adopt that skips controls the advisor already touched.
+ * Prevents a deferred boot adopt from marking an in-progress edit as clean.
+ */
+export function adoptRenderedBaselines(root, { skipFields = null } = {}) {
     if (! root) {
         return;
     }
@@ -83,7 +184,45 @@ export function adoptRenderedBaselines(root) {
         forms.push(...root.querySelectorAll('form'));
     }
 
-    forms.forEach((form) => adoptRenderedBaseline(form));
+    forms.forEach((form) => {
+        if (! skipFields || typeof skipFields.has !== 'function') {
+            adoptRenderedBaseline(form);
+
+            return;
+        }
+
+        [...(form.elements || [])].forEach((field) => {
+            if (skipFields.has(field)) {
+                return;
+            }
+
+            const type = String(field.type || '').toLowerCase();
+
+            if (type === 'hidden' || type === 'button' || type === 'submit' || type === 'reset') {
+                return;
+            }
+
+            if (type === 'checkbox' || type === 'radio') {
+                field.defaultChecked = field.checked;
+
+                return;
+            }
+
+            if (field.options) {
+                const selected = field.value;
+
+                for (const option of field.options) {
+                    option.defaultSelected = option.value === selected;
+                }
+
+                return;
+            }
+
+            if ('defaultValue' in field) {
+                field.defaultValue = field.value;
+            }
+        });
+    });
 }
 
 function nodeHolds(ignore, node) {

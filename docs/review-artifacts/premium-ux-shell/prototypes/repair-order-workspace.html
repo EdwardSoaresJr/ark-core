@@ -23,24 +23,14 @@
     </aside>
 
     <div class="ark-proto__main">
-      <header class="ark-proto__topbar">
+      <header class="ark-proto__global" aria-label="Application">
         <button type="button" class="ark-proto__hamburger" id="toggleSidebar" aria-label="Toggle sidebar">☰</button>
-        <div class="ark-proto__context">
-          <div class="ark-proto__crumbs"><a href="./customer-workspace.html">Jordan Hale</a> / <a href="./vehicle-workspace.html">2018 Outback</a></div>
-          <div class="ark-proto__title-row">
-            <h1 class="ark-proto__title">RO #4821</h1>
-            <span class="ark-proto__badge is-warn">Diagnosis</span>
-            <span class="ark-proto__saving" id="saveState">Saved</span>
-          </div>
+        <div class="ark-proto__search">
+          <input type="search" placeholder="Search customers, vehicles, ROs…" aria-label="Global search" />
         </div>
-        <div class="ark-proto__actions" aria-label="RO commands">
-          <button type="button" class="btn btn-outline-secondary btn-sm" id="failSave">Simulate failed save</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm">Review Notes</button>
-          <button type="button" class="btn btn-primary btn-sm">Authorize</button>
-        </div>
-        <div class="ark-proto__global">
+        <div class="ark-proto__global-actions">
+          <button type="button" class="btn btn-ghost-secondary btn-sm">Inbox <span class="badge bg-azure-lt ms-1">1</span></button>
           <button type="button" class="btn btn-ghost-secondary btn-sm" id="toggleTheme">Theme</button>
-          <button type="button" class="btn btn-ghost-secondary btn-sm">Inbox</button>
           <button type="button" class="btn btn-ghost-secondary btn-sm">EH</button>
         </div>
       </header>
@@ -49,54 +39,191 @@
         <div class="ark-proto__tab">CU Jordan Hale <button type="button" aria-label="Close">×</button></div>
         <div class="ark-proto__tab">VH 2018 Subaru <button type="button" aria-label="Close">×</button></div>
         <div class="ark-proto__tab is-active">RO #4821 <button type="button" aria-label="Close">×</button></div>
+        <button type="button" class="ark-proto__tab-overflow">+3</button>
+      </div>
+
+      <div class="ark-proto__context">
+        <div class="ark-proto__context-main">
+          <div class="ark-proto__crumbs">
+            <a href="./customer-workspace.html">Jordan Hale</a> /
+            <a href="./vehicle-workspace.html">2018 Outback</a> /
+            Repair Orders
+          </div>
+          <div class="ark-proto__title-row">
+            <h1 class="ark-proto__title">RO #4821</h1>
+            <span class="ark-proto__badge is-warn">Diagnosis</span>
+            <span class="ark-proto__saving" id="saveState">Saved</span>
+          </div>
+          <div class="ark-proto__submeta">
+            Tech <strong>M. Ortiz</strong>
+            · Auth <strong>Pending</strong>
+            · Total <strong>$286.40</strong>
+            · Concern: front brake noise
+          </div>
+        </div>
+        <div class="ark-proto__context-actions" aria-label="RO commands">
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="failSave">Simulate failed save</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm ark-hide-sm">Review Notes</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm ark-hide-sm">Print</button>
+          <button type="button" class="btn btn-primary btn-sm">Request authorization</button>
+          <button type="button" class="btn btn-ghost-secondary btn-sm" title="More page actions">⋯</button>
+        </div>
       </div>
 
       <main class="ark-proto__body">
-        <section class="ark-proto__identity ark-proto__card">
-          <h2 class="ark-proto__identity-name">RO #4821 · Front brake noise</h2>
-          <div class="ark-proto__meta">
-            <span>Customer <strong><a href="./customer-workspace.html">Jordan Hale</a></strong></span>
-            <span>Vehicle <strong><a href="./vehicle-workspace.html">2018 Subaru Outback</a></strong></span>
-            <span>Tech <strong>M. Ortiz</strong></span>
-            <span>Auth <strong>Pending</strong></span>
-            <span>Total <strong>$286.40</strong></span>
+        <div class="row g-2 mb-2">
+          <div class="col-12 col-md-4">
+            <section class="ark-proto__card">
+              <h3>Customer</h3>
+              <div><strong><a href="./customer-workspace.html">Jordan Hale</a></strong> · Retail</div>
+              <div class="text-secondary" style="font-size:0.8rem;">(303) 555-0142 · No email</div>
+              <div class="mt-2 d-flex gap-1">
+                <button type="button" class="btn btn-outline-secondary btn-sm">Call</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm">Text</button>
+              </div>
+            </section>
           </div>
-        </section>
+          <div class="col-12 col-md-4">
+            <section class="ark-proto__card">
+              <h3>Vehicle</h3>
+              <div><strong><a href="./vehicle-workspace.html">2018 Subaru Outback 2.5i Premium</a></strong></div>
+              <div class="text-secondary" style="font-size:0.8rem;">VIN …A4821 · CO-7KMT42 · In 64,180 · Out —</div>
+            </section>
+          </div>
+          <div class="col-12 col-md-4">
+            <section class="ark-proto__card">
+              <h3>Visit</h3>
+              <dl class="ark-proto__kv">
+                <dt>Status</dt><dd>Diagnosis</dd>
+                <dt>Technician</dt><dd>M. Ortiz</dd>
+                <dt>Promise</dt><dd>Today 4:30p</dd>
+                <dt>Auth</dt><dd>Pending customer</dd>
+              </dl>
+            </section>
+          </div>
+        </div>
 
-        <div class="row g-3">
-          <div class="col-12 col-lg-8">
-            <section class="ark-proto__card">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h3 class="mb-0">Estimate lines</h3>
-                <span class="ark-proto__saving" id="lineSave">Autosaved</span>
-              </div>
-              <label class="form-label">Concern narrative</label>
-              <textarea class="form-control mb-2" id="concern" rows="3">Customer reports intermittent front brake noise under light braking after highway miles.</textarea>
-              <div class="ark-proto__row">
-                <div>Labor · Brake inspection · 0.8 hr</div>
-                <strong>$112.00</strong>
-              </div>
-              <div class="ark-proto__row">
-                <div>Parts · Front pad set (OEM-equivalent)</div>
-                <strong>$148.40</strong>
-              </div>
-            </section>
+        <div class="ark-proto__ro-tabs" role="tablist" aria-label="RO sections">
+          <button type="button" class="is-active" data-panel="estimate">Estimate</button>
+          <button type="button" data-panel="inspection">Inspection</button>
+          <button type="button" data-panel="recommendations">Recommendations</button>
+          <button type="button" data-panel="comms">Comms</button>
+          <button type="button" data-panel="history">History</button>
+        </div>
+
+        <div class="ark-proto__panel is-active" id="panel-estimate">
+          <div class="row g-2">
+            <div class="col-12 col-lg-8">
+              <section class="ark-proto__card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h3 class="mb-0">Concern · Front brake noise</h3>
+                  <span class="ark-proto__saving" id="lineSave">Autosaved</span>
+                </div>
+                <label class="form-label">Customer states</label>
+                <textarea class="form-control mb-2" id="concern" rows="3">Intermittent front brake noise under light braking after highway miles. Started last week.</textarea>
+                <div class="ark-proto__row">
+                  <div>
+                    <div><strong>Labor</strong> · Brake inspection · 0.8 hr · Ortiz</div>
+                    <div class="text-secondary">Approved for diagnosis</div>
+                  </div>
+                  <strong>$112.00</strong>
+                </div>
+                <div class="ark-proto__row">
+                  <div>
+                    <div><strong>Parts</strong> · Front pad set (OEM-eq) · Qty 1</div>
+                    <div class="text-secondary">Ordered · ETA tomorrow AM</div>
+                  </div>
+                  <strong>$148.40</strong>
+                </div>
+                <div class="ark-proto__row">
+                  <div><strong>Shop supplies</strong></div>
+                  <strong>$8.00</strong>
+                </div>
+                <div class="ark-proto__row">
+                  <div><strong>Tax</strong></div>
+                  <strong>$18.00</strong>
+                </div>
+                <div class="ark-proto__row">
+                  <div><strong>Estimate total</strong></div>
+                  <strong>$286.40</strong>
+                </div>
+              </section>
+            </div>
+            <div class="col-12 col-lg-4">
+              <section class="ark-proto__card mb-2">
+                <h3>Authorization</h3>
+                <p style="font-size:0.8rem;color:#475569;margin:0 0 0.55rem;">Customer has not authorized parts. Diagnosis labor may proceed.</p>
+                <button type="button" class="btn btn-primary w-100 mb-1">Request authorization</button>
+                <button type="button" class="btn btn-outline-secondary w-100">Send estimate link</button>
+              </section>
+              <section class="ark-proto__card">
+                <h3>Totals</h3>
+                <dl class="ark-proto__kv">
+                  <dt>Labor</dt><dd>$112.00</dd>
+                  <dt>Parts</dt><dd>$148.40</dd>
+                  <dt>Fees / tax</dt><dd>$26.00</dd>
+                  <dt>Authorized</dt><dd>$0.00</dd>
+                  <dt>Balance</dt><dd>$286.40</dd>
+                </dl>
+              </section>
+            </div>
           </div>
-          <div class="col-12 col-lg-4">
-            <section class="ark-proto__card">
-              <h3>Next decision</h3>
-              <p class="mb-2" style="font-size:0.875rem;color:#475569;">Customer authorization required before parts order. Check In belongs on the appointment/visit path — not on the workspace tab strip.</p>
-              <button type="button" class="btn btn-primary w-100 mb-2">Request authorization</button>
-              <button type="button" class="btn btn-outline-secondary w-100">Print estimate</button>
-            </section>
-          </div>
+        </div>
+
+        <div class="ark-proto__panel" id="panel-inspection">
+          <section class="ark-proto__card">
+            <h3>Inspection</h3>
+            <div class="ark-proto__row"><div>Front brakes · Pads at 3mm · Rotor lip present</div><span class="ark-proto__badge is-warn">Recommend</span></div>
+            <div class="ark-proto__row"><div>Tires · LF 5/32 · Others OK</div><span class="ark-proto__badge">Monitor</span></div>
+            <div class="ark-proto__row"><div>Fluids · Brake fluid dark</div><span class="ark-proto__badge is-warn">Recommend</span></div>
+          </section>
+        </div>
+
+        <div class="ark-proto__panel" id="panel-recommendations">
+          <section class="ark-proto__card">
+            <h3>Recommendations</h3>
+            <div class="ark-proto__row"><div>Replace front pads + resurface rotors</div><span class="ark-proto__badge is-warn">Pending auth</span></div>
+            <div class="ark-proto__row"><div>Brake fluid exchange</div><span class="ark-proto__badge">Deferred</span></div>
+          </section>
+        </div>
+
+        <div class="ark-proto__panel" id="panel-comms">
+          <section class="ark-proto__card">
+            <h3>Communications</h3>
+            <div class="ark-proto__row">
+              <div>SMS · “Vehicle is in diagnosis — we’ll text when ready for authorization.” · 9:14a</div>
+              <span class="ark-proto__badge is-ok">Sent</span>
+            </div>
+            <div class="ark-proto__row">
+              <div>Inbound SMS · “Thanks — I’m at work until 3.” · 9:16a</div>
+              <span class="ark-proto__badge">Inbound</span>
+            </div>
+            <label class="form-label mt-2">Quick reply</label>
+            <textarea class="form-control" rows="2" placeholder="Message customer…"></textarea>
+          </section>
+        </div>
+
+        <div class="ark-proto__panel" id="panel-history">
+          <section class="ark-proto__card">
+            <h3>Visit history on this vehicle</h3>
+            <div class="ark-proto__row"><div>RO #4702 · Oil + rotate · Oct 12</div><span class="ark-proto__badge is-ok">Paid</span></div>
+            <div class="ark-proto__row"><div>RO #4611 · Alignment · Aug 3</div><span class="ark-proto__badge is-ok">Paid</span></div>
+          </section>
         </div>
       </main>
     </div>
   </div>
 
+  <script src="./_shell.js"></script>
   <script>
-    const shell = document.getElementById('shell');
+    document.querySelectorAll('.ark-proto__ro-tabs button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ark-proto__ro-tabs button').forEach((b) => b.classList.remove('is-active'));
+        document.querySelectorAll('.ark-proto__panel').forEach((p) => p.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        document.getElementById('panel-' + btn.dataset.panel).classList.add('is-active');
+      });
+    });
     const concern = document.getElementById('concern');
     const lineSave = document.getElementById('lineSave');
     const saveState = document.getElementById('saveState');
@@ -105,6 +232,7 @@
       lineSave.textContent = 'Saving…';
       lineSave.classList.remove('is-error');
       saveState.textContent = 'Saving…';
+      saveState.classList.remove('is-error');
       clearTimeout(timer);
       timer = setTimeout(() => {
         lineSave.textContent = 'Autosaved';
@@ -116,17 +244,6 @@
       lineSave.classList.add('is-error');
       saveState.textContent = 'Save failed — edits kept';
       saveState.classList.add('is-error');
-    };
-    document.getElementById('toggleSidebar').onclick = () => {
-      if (window.matchMedia('(max-width: 900px)').matches) {
-        shell.classList.toggle('is-nav-open');
-      } else {
-        shell.classList.toggle('is-collapsed');
-      }
-    };
-    document.getElementById('toggleTheme').onclick = () => {
-      const html = document.documentElement;
-      html.setAttribute('data-bs-theme', html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
     };
   </script>
 </body>

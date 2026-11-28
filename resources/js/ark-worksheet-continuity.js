@@ -1,6 +1,6 @@
 import { focusWorksheetConcernRepairAction } from './ark-scope-entry-intake';
 import { dirtyAfterSaveAttempt, refreshPresentsAsSaving } from './ark-worksheet-autosave';
-import { adoptRenderedBaseline, adoptRenderedBaselines, blockedPanelIds, cancelWouldReplace, draftNodesIn, versionToSubmit } from './ark-worksheet-draft';
+import { adoptRenderedBaselines, adoptSnapshotAsBaseline, blockedPanelIds, cancelWouldReplace, captureFormBaselineSnapshot, draftNodesIn, versionToSubmit } from './ark-worksheet-draft';
 import { formHasChanges, isWorkspaceModalOpen } from './ark-form-unsaved';
 import { applyContinuityScopes, applyEditorPresentation, CONTINUITY_REFRESH_FAILED_MESSAGE, replaceSubmittedRegion } from './ark-worksheet-continuity-scope';
 
@@ -137,9 +137,18 @@ export const arkWorksheetContinuity = (config = {}) => {
 
         rememberSaveDirty(form) {
             this._saveHadUnsavedChanges = form instanceof HTMLFormElement && formHasChanges(form);
+            // Snapshot what this request is persisting. A later live edit must not
+            // become the clean baseline when this older response succeeds.
+            this._saveBaselineSnapshot = form instanceof HTMLFormElement
+                ? captureFormBaselineSnapshot(form)
+                : null;
+            this._saveGeneration = (this._saveGeneration || 0) + 1;
+            this._activeSaveGeneration = this._saveGeneration;
         },
 
         settleSaveDirty(form, ok) {
+            const settleGeneration = this._activeSaveGeneration;
+            const snapshot = this._saveBaselineSnapshot;
             const formDiffers = form instanceof HTMLFormElement && formHasChanges(form);
             const dirty = dirtyAfterSaveAttempt({
                 ok,
@@ -148,17 +157,23 @@ export const arkWorksheetContinuity = (config = {}) => {
             });
 
             if (ok) {
-                // Successful write: adopt this form's live values as baseline when it
-                // is still in the document so syncDirty does not re-scare from the
-                // pre-save defaultValue mismatch before continuity morph finishes.
-                if (form instanceof HTMLFormElement && document.contains(form)) {
-                    adoptRenderedBaseline(form);
+                // Ignore stale completions if a newer rememberSaveDirty started.
+                if (settleGeneration !== this._saveGeneration) {
+                    return;
+                }
+
+                if (form instanceof HTMLFormElement && document.contains(form) && snapshot) {
+                    adoptSnapshotAsBaseline(form, snapshot);
                 }
 
                 if (typeof window.ARK?.workspace?.syncDirty === 'function') {
                     window.ARK.workspace.syncDirty();
                 }
 
+                return;
+            }
+
+            if (settleGeneration !== this._saveGeneration) {
                 return;
             }
 
