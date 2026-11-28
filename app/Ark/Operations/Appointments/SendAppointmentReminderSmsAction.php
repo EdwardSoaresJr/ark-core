@@ -14,11 +14,24 @@ final class SendAppointmentReminderSmsAction
 
     public function __construct(
         private readonly AppointmentSmsDelivery $delivery,
+        private readonly AppointmentEmailDelivery $email,
     ) {}
 
     public function execute(Appointment $appointment, string $type, User $actor): void
     {
         $this->delivery->sendReminder($appointment, $type, $actor);
+
+        if ($this->email->canSend($appointment)) {
+            try {
+                $this->email->sendReminder($appointment, $type);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::warning('appointment_reminder_email_failed', [
+                    'appointment_id' => $appointment->getKey(),
+                    'type' => $type,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
     }
 
     public function isDayBeforeDue(Appointment $appointment, ?Carbon $now = null): bool

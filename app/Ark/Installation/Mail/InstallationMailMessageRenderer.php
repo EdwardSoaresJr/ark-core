@@ -69,6 +69,39 @@ final class InstallationMailMessageRenderer
                     'Transport acceptance is not the same as confirmed delivery to every mailbox.',
                 ],
             ),
+            'customer.transactional_message' => $this->compose(
+                subject: (string) ($variables['subject'] ?? "Message from {$shop}"),
+                intro: (string) ($variables['intro'] ?? "{$shop} sent you a message."),
+                lines: array_values(array_filter([
+                    filled($variables['response_hint'] ?? null) ? (string) $variables['response_hint'] : null,
+                    filled($variables['phone_display'] ?? null) ? 'Phone: '.$variables['phone_display'] : null,
+                ])),
+            ),
+            'booking.identity_code' => $this->compose(
+                subject: "Your verification code from {$shop}",
+                intro: "{$shop} sent a verification code.",
+                lines: [
+                    'Code: '.($variables['code'] ?? '—'),
+                    'Expires in: '.($variables['expires_in'] ?? '—'),
+                ],
+            ),
+            'account.email_verification' => $this->compose(
+                subject: "Verify your email — {$shop}",
+                intro: 'Hello '.($variables['name'] ?? 'there').',',
+                lines: [
+                    "Verify your email for {$shop}.",
+                    'This link expires in '.($variables['expires_in'] ?? '—').'.',
+                ],
+                ctaLabel: filled($variables['verification_url'] ?? null) ? 'Verify email' : null,
+                ctaUrl: $variables['verification_url'] ?? null,
+            ),
+            'appointment.send' => $this->compose(
+                subject: (string) ($variables['subject'] ?? "Appointment update from {$shop}"),
+                intro: (string) ($variables['intro'] ?? "{$shop} sent an appointment update."),
+                lines: is_array($variables['lines'] ?? null)
+                    ? array_values(array_filter($variables['lines'], fn ($line) => is_string($line) && trim($line) !== ''))
+                    : [],
+            ),
             default => $this->compose(
                 subject: "Message from {$shop}",
                 intro: "{$shop} sent you a message.",

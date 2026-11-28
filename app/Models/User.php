@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -314,10 +315,6 @@ class User extends Authenticatable implements CanResetPasswordContract, MustVeri
 
     public function sendEmailVerificationNotification(): void
     {
-        if (! \App\Ark\Platform\Mail\ManagedMailGate::platformSend()) {
-            throw new \RuntimeException("Email isn't configured yet.");
-        }
-
         $minutes = (int) config('auth.verification.expire', 60);
         $verificationUrl = URL::temporarySignedRoute(
             'verification.verify',
@@ -328,22 +325,64 @@ class User extends Authenticatable implements CanResetPasswordContract, MustVeri
             ],
         );
 
-        $result = app(\App\Ark\Platform\Mail\ArkMailClient::class)->sendTransactional(\App\Ark\Mail\EmailIntent::payload(
-            operation: 'account.email_verification',
-            to: (string) $this->email,
-            variables: [
-                'name' => (string) $this->name,
-                'verification_url' => $verificationUrl,
-                'expires_in' => $minutes.' minutes',
-            ],
-            idempotencyKey: 'account-email-verification-'.$this->getKey().'-'.now()->timestamp,
-        ));
+        $variables = [
+            'name' => (string) $this->name,
+            'shop_name' => \App\Support\Mail\ShopMailBranding::shopName(),
+            'verification_url' => $verificationUrl,
+            'expires_in' => $minutes.' minutes',
+        ];
 
-        if (($result['ok'] ?? false) !== true) {
-            throw new \RuntimeException(
-                is_string($result['message'] ?? null) ? $result['message'] : 'Email could not be sent.',
-            );
+        // Hosted / Platform-managed staff verification (not installation SMTP).
+        if (\App\Ark\Platform\Mail\ManagedMailGate::platformSend()) {
+            $result = app(\App\Ark\Platform\Mail\ArkMailClient::class)->sendTransactional(\App\Ark\Mail\EmailIntent::payload(
+                operation: 'account.email_verification',
+                to: (string) $this->email,
+                variables: $variables,
+                idempotencyKey: 'account-email-verification-'.$this->getKey().'-'.now()->timestamp,
+            ));
+
+            if (($result['ok'] ?? false) !== true) {
+                throw new \RuntimeException(
+                    is_string($result['message'] ?? null) ? $result['message'] : 'Email could not be sent.',
+                );
+            }
+
+            return;
         }
+
+        // Standalone: reuse the Settings / env installation transport (same config plane as customer mail).
+        if (! \App\Ark\Runtime\HostedRuntime::isHostedProduct()) {
+            $installation = app(\App\Ark\Installation\Mail\InstallationMailConfiguration::class);
+            if ($installation->allowsCustomerDelivery()) {
+                $result = app(\App\Ark\Installation\Mail\InstallationMailSender::class)->send(
+                    'account.email_verification',
+                    (string) $this->email,
+                    $variables,
+                );
+
+                if (! $result->ok()) {
+                    throw new \RuntimeException($result->message ?? 'Email could not be sent.');
+                }
+
+                return;
+            }
+        }
+
+        // Process MAIL_* (self-hosted env or shared node smtp on SaaS when Platform is unavailable).
+        if (! filled(config('mail.from.address'))) {
+            throw new \RuntimeException("Email isn't configured yet.");
+        }
+
+        \Illuminate\Support\Facades\Mail::html(
+            '<p>Hello '.e((string) $this->name).',</p>'
+            .'<p>Verify your email for '.e((string) $variables['shop_name']).'.</p>'
+            .'<p><a href="'.e($verificationUrl).'">Verify email</a></p>'
+            .'<p>This link expires in '.e((string) $variables['expires_in']).'.</p>',
+            function ($message) use ($variables): void {
+                $message->to((string) $this->email)
+                    ->subject('Verify your email — '.$variables['shop_name']);
+            },
+        );
     }
 
     /**

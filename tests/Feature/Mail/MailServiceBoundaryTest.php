@@ -36,18 +36,30 @@ function boundaryMailable(): \Illuminate\Mail\Mailable
 it('keeps estimate and invoice delivery on the OutboundTransactionalMail boundary', function () {
     $estimate = new ReflectionClass(EstimateDocumentEmailDelivery::class);
     $invoice = new ReflectionClass(InvoiceDocumentEmailDelivery::class);
+    $lead = new ReflectionClass(\App\Ark\Operations\Leads\SendWebsiteLeadConfirmationAction::class);
+    $appointment = new ReflectionClass(\App\Ark\Operations\Appointments\AppointmentEmailDelivery::class);
+    $bookingCode = new ReflectionClass(\App\Ark\Operations\EmailVerification\EmailVerificationNotification::class);
     $payment = new ReflectionClass(\App\Ark\Operations\Messaging\SendPaymentLinkEmailDelivery::class);
     $deposit = new ReflectionClass(\App\Ark\Operations\Messaging\SendDepositRequestEmailDelivery::class);
     $review = new ReflectionClass(\App\Ark\Operations\Messaging\SendReviewRequestEmailDelivery::class);
 
     expect($estimate->hasProperty('mail'))->toBeTrue()
         ->and($invoice->hasProperty('mail'))->toBeTrue()
+        ->and($lead->hasProperty('mail'))->toBeTrue()
+        ->and($appointment->hasProperty('mail'))->toBeTrue()
+        ->and($bookingCode->hasProperty('mail'))->toBeTrue()
         ->and($payment->hasProperty('mail'))->toBeTrue()
         ->and($deposit->hasProperty('mail'))->toBeTrue()
         ->and($review->hasProperty('mail'))->toBeTrue()
         ->and($estimate->getProperty('mail')->getType()?->getName())
         ->toBe(\App\Ark\Installation\Mail\CustomerOutboundMail::class)
         ->and($invoice->getProperty('mail')->getType()?->getName())
+        ->toBe(\App\Ark\Installation\Mail\CustomerOutboundMail::class)
+        ->and($lead->getProperty('mail')->getType()?->getName())
+        ->toBe(\App\Ark\Installation\Mail\CustomerOutboundMail::class)
+        ->and($appointment->getProperty('mail')->getType()?->getName())
+        ->toBe(\App\Ark\Installation\Mail\CustomerOutboundMail::class)
+        ->and($bookingCode->getProperty('mail')->getType()?->getName())
         ->toBe(\App\Ark\Installation\Mail\CustomerOutboundMail::class)
         ->and($payment->getProperty('mail')->getType()?->getName())
         ->toBe(\App\Ark\Platform\Mail\ArkMailClient::class)

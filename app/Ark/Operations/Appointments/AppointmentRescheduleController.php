@@ -71,6 +71,24 @@ class AppointmentRescheduleController
             ['previous_starts_at' => $previousStarts],
         );
 
+        $email = app(AppointmentEmailDelivery::class);
+        if ($email->canSend($appointment)) {
+            try {
+                $previousLabel = null;
+                if (is_string($previousStarts) && $previousStarts !== '') {
+                    $previousLabel = \App\Ark\Operations\Settings\ShopDisplayTimezone::present(
+                        \Illuminate\Support\Carbon::parse($previousStarts),
+                    )->format('D, M j · g:i A');
+                }
+                $email->sendRescheduled($appointment->fresh(), $previousLabel);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::warning('appointment_rescheduled_email_failed', [
+                    'appointment_id' => $appointment->getKey(),
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
+
         $appointment->load(['customer', 'vehicle', 'advisor', 'technician', 'workstation', 'repairOrder']);
 
         $card = app(AppointmentScheduleRowPresenter::class)->present($appointment, $request->user());

@@ -45,7 +45,7 @@ Core keeps:
 
 - the customer's phone numbers and email addresses as contact fields
 - basic customer intake: the website contact or booking request and the resulting lead record, with its source and status
-- local staff sign-in and account recovery that work without ARK Shop. The framework's password-reset and staff email-verification mail use the process `MAIL_*` settings for **staff** accounts (self-hosted: that install's mailer; hosted SaaS: the shared node platform SMTP — not a per-shop credential and not ARK Shop customer mail). Recovery must also work from the command line, with no mail at all.
+- local staff sign-in and account recovery that work without ARK Shop. The framework's password-reset mail uses the process `MAIL_*` settings for **staff** accounts (self-hosted: that install's mailer; hosted SaaS: the shared node platform SMTP — not a per-shop credential and not ARK Shop customer mail). Staff email verification on standalone Core may use the same installation SMTP/sendmail configuration administered in Settings when Platform is unavailable, so a shop that configured Email in Settings is not forced to edit environment files for verification; hosted SaaS never uses installation SMTP for staff verification. Recovery must also work from the command line, with no mail at all.
 - standalone customer email via installation SMTP/sendmail as described above
 - small, provider-neutral extension points: domain events, contracts whose Core implementation does nothing, and registries for navigation, timeline entries, attention sources, and settings sections
 - historical communications records and the shared Communications workspace shell described below
