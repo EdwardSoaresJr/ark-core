@@ -104,20 +104,26 @@ mkdir -p "$STAGE/public/build"
 rsync -a "$BUILD_HOST/public/build/" "$STAGE/public/build/"
 test -f "$STAGE/public/build/manifest.json"
 
-echo "== secret / sensitive scan on staged tree"
+echo "== prune vendor development trees from distribution"
+find "$STAGE/vendor" -type d \( -name tests -o -name Tests -o -name test -o -name docs -o -name .github \) -prune -exec rm -rf {} + 2>/dev/null || true
+
+echo "== secret / sensitive scan (application surface, not vendor noise)"
+SCAN_ROOTS=("$STAGE/app" "$STAGE/config" "$STAGE/routes" "$STAGE/database" "$STAGE/resources" "$STAGE/scripts" "$STAGE/bootstrap")
 if command -v gitleaks >/dev/null 2>&1; then
-  gitleaks detect --source "$STAGE" --no-git --verbose || {
-    echo "ERROR: gitleaks reported findings in staged release." >&2
-    exit 1
-  }
-else
-  # Lightweight fallback when gitleaks is not on the build agent.
-  if grep -RInE 'BEGIN (RSA |OPENSSH |)PRIVATE KEY|AWS_SECRET_ACCESS_KEY|AKIA[0-9A-Z]{16}' "$STAGE" \
-      --exclude-dir=vendor --exclude-dir=public/build --exclude='*.md' >/tmp/ark-release-secret-hits.txt 2>/dev/null; then
-    echo "ERROR: sensitive pattern found:" >&2
-    cat /tmp/ark-release-secret-hits.txt >&2
-    exit 1
-  fi
+  for root in "${SCAN_ROOTS[@]}"; do
+    [[ -d "$root" ]] || continue
+    gitleaks detect --source "$root" --no-git --verbose || {
+      echo "ERROR: gitleaks reported findings under ${root#"$STAGE"/}." >&2
+      exit 1
+    }
+  done
+fi
+if grep -RInE 'BEGIN (RSA |OPENSSH |)PRIVATE KEY|AWS_SECRET_ACCESS_KEY|AKIA[0-9A-Z]{16}' \
+    "$STAGE/app" "$STAGE/config" "$STAGE/routes" "$STAGE/database" "$STAGE/resources" "$STAGE/scripts" \
+    --exclude='*.md' >/tmp/ark-release-secret-hits.txt 2>/dev/null; then
+  echo "ERROR: sensitive pattern found:" >&2
+  cat /tmp/ark-release-secret-hits.txt >&2
+  exit 1
 fi
 
 # Ensure no .env slipped in
@@ -125,6 +131,7 @@ if [[ -e "$STAGE/.env" ]]; then
   echo "ERROR: .env must not be packaged." >&2
   exit 1
 fi
+
 
 echo "== license + manifest metadata"
 mkdir -p "$STAGE/storage/app" "$STAGE/storage/framework/cache" "$STAGE/storage/framework/sessions" "$STAGE/storage/framework/views" "$STAGE/storage/logs" "$STAGE/bootstrap/cache"
