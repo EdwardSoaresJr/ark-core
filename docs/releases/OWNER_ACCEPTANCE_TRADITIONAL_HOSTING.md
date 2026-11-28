@@ -8,10 +8,10 @@ Feature freeze: `v1.0.0` train. No unrelated feature expansion.
 
 | Field | Value |
 | --- | --- |
-| Candidate SHA | `6aeb1c127aa3b54e6f1c8b6911941bce873e7bcf` |
+| Candidate SHA | `6a83378ffeaa29ec8fc751f087f5cd924203a8b8` |
 | Release label | `1.0.0-rc.1` (proposed; not tagged) |
-| Artifact | `dist/ark-core-1.0.0-rc.1-6aeb1c12.zip` (local / CI `ark-core-release-zip`; not committed to git) |
-| SHA-256 | `abbb1d96daf42090c88fd64c4c196c65fa50e44607219865b189212ae153dcfd` |
+| Artifact | `dist/ark-core-1.0.0-rc.1-6a83378f.zip` (local / CI `ark-core-release-zip`; not committed to git) |
+| SHA-256 | `ab923b8db28b733b18d2035604a24991590fc7019a7e60d7368e145061e7eebf` |
 | Review pack | `review-artifacts/traditional-hosting-292/` |
 
 ## Recommended minimum hosting requirements

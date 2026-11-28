@@ -6,7 +6,7 @@
 
 | Field | Value |
 | --- | --- |
-| Tip SHA | `6aeb1c127aa3b54e6f1c8b6911941bce873e7bcf` |
+| Tip SHA | `6a83378ffeaa29ec8fc751f087f5cd924203a8b8` |
 | PR | https://github.com/EdwardSoaresJr/ark-core/pull/292 |
 | Label | `1.0.0-rc.1` (not tagged) |
 
@@ -16,9 +16,9 @@ Built with `scripts/build-release-zip.sh` from a clean committed tree at the tip
 
 | Artifact | Path |
 | --- | --- |
-| ZIP | `dist/ark-core-1.0.0-rc.1-6aeb1c12.zip` (local; also CI `ark-core-release-zip` artifact) |
-| Checksum | `dist/ark-core-1.0.0-rc.1-6aeb1c12.zip.sha256` |
-| SHA-256 | `abbb1d96daf42090c88fd64c4c196c65fa50e44607219865b189212ae153dcfd` |
+| ZIP | `dist/ark-core-1.0.0-rc.1-6a83378f.zip` (local; also CI `ark-core-release-zip` artifact) |
+| Checksum | `dist/ark-core-1.0.0-rc.1-6a83378f.zip.sha256` |
+| SHA-256 | `ab923b8db28b733b18d2035604a24991590fc7019a7e60d7368e145061e7eebf` |
 
 Verified:
 
@@ -58,7 +58,7 @@ Isolated extract of the Release ZIP:
 
 ## 4. Regression
 
-Watch PR #292 Regression / Tests / Release ZIP / Secret scan on tip `6aeb1c12`.
+Watch PR #292 Regression / Tests / Release ZIP / Secret scan on tip `6a83378f`.
 
 Docker / VPS / hosted SaaS code paths remain in-tree; no SaaS pin change.
 
