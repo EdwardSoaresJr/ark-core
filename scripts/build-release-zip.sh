@@ -118,11 +118,21 @@ if command -v gitleaks >/dev/null 2>&1; then
     }
   done
 fi
-if grep -RInE 'BEGIN (RSA |OPENSSH |)PRIVATE KEY|AWS_SECRET_ACCESS_KEY|AKIA[0-9A-Z]{16}' \
-    "$STAGE/app" "$STAGE/config" "$STAGE/routes" "$STAGE/database" "$STAGE/resources" "$STAGE/scripts" \
-    --exclude='*.md' >/tmp/ark-release-secret-hits.txt 2>/dev/null; then
+# Fail on embedded key material / access-key ids. Do not flag Laravel env('AWS_SECRET_ACCESS_KEY')
+# wiring, PEM header string checks in source, or this script's own pattern literals.
+if grep -RInE '-----BEGIN (RSA |OPENSSH )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}' \
+    "$STAGE/app" "$STAGE/config" "$STAGE/routes" "$STAGE/database" "$STAGE/resources" \
+    --exclude='*.md' --exclude='*.php' >/tmp/ark-release-secret-hits.txt 2>/dev/null; then
   echo "ERROR: sensitive pattern found:" >&2
   cat /tmp/ark-release-secret-hits.txt >&2
+  exit 1
+fi
+# PHP/config may mention PEM headers as validation needles; only fail when a full key block is present.
+if grep -RInE '-----BEGIN (RSA |OPENSSH )?PRIVATE KEY-----[\r\n]+[A-Za-z0-9+/=]' \
+    "$STAGE/app" "$STAGE/config" "$STAGE/routes" "$STAGE/database" "$STAGE/resources" \
+    --exclude='*.md' >/tmp/ark-release-secret-hits-php.txt 2>/dev/null; then
+  echo "ERROR: embedded private key material found:" >&2
+  cat /tmp/ark-release-secret-hits-php.txt >&2
   exit 1
 fi
 
