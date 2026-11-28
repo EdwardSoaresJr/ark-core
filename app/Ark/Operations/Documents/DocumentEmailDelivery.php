@@ -8,9 +8,7 @@ use App\Ark\Operations\Conversations\ConversationParticipantResolver;
 use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Mail\EmailIntent;
-use App\Ark\Platform\Mail\ArkMailClient;
-use App\Ark\Platform\Mail\ManagedMailGate;
+use App\Ark\Installation\Mail\CustomerOutboundMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -24,7 +22,7 @@ final class DocumentEmailDelivery
         private readonly ConversationRecorder $conversations,
         private readonly ConversationResolver $conversationResolver,
         private readonly ConversationParticipantResolver $participants,
-        private readonly ArkMailClient $mail,
+        private readonly CustomerOutboundMail $mail,
     ) {}
 
     public function send(
@@ -49,7 +47,7 @@ final class DocumentEmailDelivery
         $note = filled($staffNote) ? trim($staffNote) : null;
         $repairOrder = $document->repairOrder;
 
-        if (! ManagedMailGate::platformSend()) {
+        if (! $this->mail->canSend()) {
             throw new RuntimeException("Email isn't configured yet.");
         }
 
@@ -68,7 +66,7 @@ final class DocumentEmailDelivery
             $variables['staff_note'] = $note;
         }
 
-        $this->sendViaPlatform($document, $recipientEmail, $attachmentFilename, $variables);
+        $this->sendCustomerEmail($document, $recipientEmail, $attachmentFilename, $variables);
 
         $summary = sprintf(
             '%s emailed to %s.',
@@ -125,7 +123,7 @@ final class DocumentEmailDelivery
     /**
      * @param  array<string, string>  $variables
      */
-    private function sendViaPlatform(
+    private function sendCustomerEmail(
         Document $document,
         string $recipientEmail,
         string $attachmentFilename,
@@ -137,9 +135,9 @@ final class DocumentEmailDelivery
             throw new RuntimeException('This document could not be attached to the email.');
         }
 
-        $result = $this->mail->sendTransactional(EmailIntent::payload(
+        $result = $this->mail->send(
             operation: 'document.send',
-            to: $recipientEmail,
+            recipientEmail: $recipientEmail,
             variables: $variables,
             idempotencyKey: 'document-send-'.Str::uuid(),
             domainObjectType: 'document',
@@ -153,14 +151,10 @@ final class DocumentEmailDelivery
                 'document_id' => $document->id,
                 'repair_order_id' => $document->repair_order_id,
             ]),
-        ));
+        );
 
-        if (($result['ok'] ?? false) !== true) {
-            throw new RuntimeException(
-                is_string($result['message'] ?? null)
-                    ? $result['message']
-                    : 'Document email could not be sent.',
-            );
+        if (! $result->ok()) {
+            throw new RuntimeException($result->operatorMessage());
         }
     }
 

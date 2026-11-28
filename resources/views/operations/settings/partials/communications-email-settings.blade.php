@@ -2,19 +2,28 @@
     $outbound = app(\App\Ark\Mail\OutboundTransactionalMail::class);
     $statusLabel = $outbound->statusLabel();
     $mailReady = $outbound->isReady();
+    $hosted = \App\Ark\Runtime\HostedRuntime::isHostedProduct();
 @endphp
 
 <div class="d-flex flex-column gap-3">
     <div>
         <div class="subheader">Customer email</div>
         <p class="text-secondary small">
-            Estimates, invoices, and documents send through ARK Email when this shop is connected.
-            Reply-to stays on this shop so customer replies reach you.
+            @if ($hosted)
+                Estimates, invoices, and documents send through ARK Email when this shop is connected.
+                Reply-to stays on this shop so customer replies reach you.
+            @else
+                Managed ARK Email reply-to for shops connected to ARK Platform. Self-hosted SMTP is configured under Settings → Email.
+            @endif
         </p>
         <p class="small fw-semibold mb-0">Status: {{ $statusLabel }}</p>
         @unless ($mailReady)
             <p class="alert alert-warning small mt-2 mb-0">
-                Outbound customer email is not connected. You can still set reply-to. Messages will not send until ARK Shop connects ARK Email for this shop.
+                @if ($hosted)
+                    Outbound customer email is not connected. You can still set reply-to. Messages will not send until ARK Shop connects ARK Email for this shop.
+                @else
+                    Outbound customer email is not ready. Configure installation SMTP under Settings → Email, or connect ARK Email when Platform is available.
+                @endif
             </p>
         @endunless
     </div>

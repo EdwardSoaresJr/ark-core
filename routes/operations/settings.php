@@ -145,6 +145,12 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/email', [ShopIntegrationSettingsController::class, 'updateEmail'])
         ->name('operations.settings.shop.email.update');
 
+    Route::patch('/app/settings/shop/installation-mail', [\App\Ark\Operations\Settings\InstallationMailSettingsController::class, 'update'])
+        ->name('operations.settings.shop.installation-mail.update');
+
+    Route::post('/app/settings/shop/installation-mail/test', [\App\Ark\Operations\Settings\InstallationMailSettingsController::class, 'test'])
+        ->name('operations.settings.shop.installation-mail.test');
+
     Route::post('/app/settings/shop/ark-cloud/connect', [ShopPlatformSettingsController::class, 'connect'])
         ->name('operations.settings.shop.ark-cloud.connect');
 

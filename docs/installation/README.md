@@ -35,7 +35,9 @@ Redis is part of the Docker Compose runtime (cache, sessions, Horizon queues, Re
 ## After install
 
 - `/setup` is **locked**. There is no `?force=` reopen.
-- Use **Settings** for ordinary shop configuration (identity, financial rules, documents, staff). Record external payments on the repair order. Customer email, SMS, hosted phone, Dragon, and card capture inside ARK belong to ARK Shop when that product is connected.
+- Use **Settings** for ordinary shop configuration (identity, financial rules, documents, staff). Record external payments on the repair order.
+- **Customer email (self-hosted):** Settings → Email. See [email.md](./email.md). Configure SMTP or sendmail, send a test message, then email estimates, invoices, inspections, and statements. Environment `MAIL_*` remains available for automated deployments; shop Settings override it when enabled. Hosted SaaS shops use managed ARK Email instead — installation SMTP is not a fallback there.
+- SMS, hosted phone, Dragon, and card capture inside ARK belong to ARK Shop when that product is connected.
 - Licensed labor-guide data is never bundled. Import only what you are licensed to use.
 
 ## Operator commands

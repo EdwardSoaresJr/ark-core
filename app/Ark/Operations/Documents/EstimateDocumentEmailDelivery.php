@@ -15,9 +15,7 @@ use App\Ark\Operations\Portal\CreateOrReuseEstimateAccessTokenAction;
 use App\Ark\Operations\RepairOrders\MarkEstimateAwaitingCustomerApprovalAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Mail\EmailIntent;
-use App\Ark\Platform\Mail\ArkMailClient;
-use App\Ark\Platform\Mail\ManagedMailGate;
+use App\Ark\Installation\Mail\CustomerOutboundMail;
 use App\Models\User;
 use Brick\Money\Money;
 use Illuminate\Support\Facades\Storage;
@@ -35,7 +33,7 @@ class EstimateDocumentEmailDelivery
         private readonly CommunicationEventRecorder $communicationEvents,
         private readonly CreateOrReuseEstimateAccessTokenAction $estimateTokens,
         private readonly MarkEstimateAwaitingCustomerApprovalAction $markAwaitingApproval,
-        private readonly ArkMailClient $mail,
+        private readonly CustomerOutboundMail $mail,
     ) {}
 
     /**
@@ -70,11 +68,11 @@ class EstimateDocumentEmailDelivery
         $accessToken = $this->estimateTokens->execute($repairOrder, $actor);
         $portalUrl = route('portal.estimates.show', ['token' => $accessToken->plainToken]);
 
-        if (! ManagedMailGate::platformSend()) {
+        if (! $this->mail->canSend()) {
             throw new RuntimeException("Email isn't configured yet.");
         }
 
-        $this->sendViaPlatform($repairOrder, $document, $recipientEmail, $pdfFilename, [
+        $this->sendCustomerEmail($repairOrder, $document, $recipientEmail, $pdfFilename, [
             'shop_name' => $shopName,
             'vehicle' => (string) ($repairOrder->vehicle?->display_name ?? 'vehicle'),
             'repair_order_number' => (string) $repairOrder->repair_order_id,
@@ -154,7 +152,7 @@ class EstimateDocumentEmailDelivery
     /**
      * @param  array<string, string>  $variables
      */
-    private function sendViaPlatform(
+    private function sendCustomerEmail(
         RepairOrder $repairOrder,
         ?EstimateDocument $document,
         string $recipientEmail,
@@ -171,9 +169,9 @@ class EstimateDocumentEmailDelivery
             ];
         }
 
-        $result = $this->mail->sendTransactional(EmailIntent::payload(
+        $result = $this->mail->send(
             operation: 'estimate.send',
-            to: $recipientEmail,
+            recipientEmail: $recipientEmail,
             variables: $variables,
             idempotencyKey: 'estimate-send-'.Str::uuid(),
             domainObjectType: 'repair_order',
@@ -183,14 +181,10 @@ class EstimateDocumentEmailDelivery
                 'repair_order_id' => $repairOrder->id,
                 'estimate_document_id' => $document?->id,
             ], fn (mixed $value): bool => $value !== null),
-        ));
+        );
 
-        if (($result['ok'] ?? false) !== true) {
-            throw new RuntimeException(
-                is_string($result['message'] ?? null)
-                    ? $result['message']
-                    : 'Estimate email could not be sent.',
-            );
+        if (! $result->ok()) {
+            throw new RuntimeException($result->operatorMessage());
         }
     }
 }

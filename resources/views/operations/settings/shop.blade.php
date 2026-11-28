@@ -6,7 +6,9 @@
             active: (() => {
                 const candidate = @js($initialSection) || new URLSearchParams(window.location.search).get('section') || localStorage.getItem('ark:shop-settings:section') || 'general';
 
-                if (candidate === 'dragon-memory' || candidate === 'ark-cloud' || (candidate === 'communications' && !@js(\App\Ark\Platform\SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()))) {
+                if (candidate === 'dragon-memory' || candidate === 'ark-cloud'
+                    || (candidate === 'communications' && !@js(\App\Ark\Platform\SaasProviderConfigurationGate::allowsCommunicationsProviderSettings()))
+                    || (candidate === 'email' && @js(\App\Ark\Runtime\HostedRuntime::isHostedProduct()))) {
                     return 'general';
                 }
 
@@ -880,6 +882,21 @@
                     </div>
                     @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
                 </section>
+
+                @unless (\App\Ark\Runtime\HostedRuntime::isHostedProduct())
+                <section class="card" x-show="active === 'email'" x-cloak data-settings-section="email">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Email</div>
+                            <h2 class="card-title">Customer email</h2>
+                            <div class="card-subtitle">Configure this installation’s SMTP or sendmail for estimates, invoices, inspections, and statements.</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @include('operations.settings.partials.installation-email-settings', ['settings' => $settings])
+                    </div>
+                </section>
+                @endunless
 
                 @if (\App\Ark\Platform\SaasProviderConfigurationGate::allowsCommunicationsProviderSettings())
                 <section class="card" x-show="active === 'communications'" x-cloak data-settings-section="communications">

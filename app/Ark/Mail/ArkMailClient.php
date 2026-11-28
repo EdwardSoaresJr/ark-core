@@ -33,6 +33,16 @@ class ArkMailClient
 
         $attachments = [];
         foreach ($envelope->attachments as $attachment) {
+            if (isset($attachment['content_base64']) && is_string($attachment['content_base64']) && $attachment['content_base64'] !== '') {
+                $attachments[] = [
+                    'filename' => $attachment['filename'] ?? $attachment['name'] ?? 'attachment',
+                    'mime' => $attachment['mime'] ?? 'application/octet-stream',
+                    'content_base64' => $attachment['content_base64'],
+                ];
+
+                continue;
+            }
+
             $bytes = null;
             if (isset($attachment['content'])) {
                 $bytes = $attachment['content'];

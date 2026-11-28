@@ -6,7 +6,7 @@ The policy is [docs/PRODUCT_BOUNDARY.md](docs/PRODUCT_BOUNDARY.md). Do not copy 
 
 How we work: [docs/engineering/OPERATING_DIRECTIVE.md](docs/engineering/OPERATING_DIRECTIVE.md). The product boundary, release protocol, and production-protection rule take precedence.
 
-A change belongs here when a shop needs it to operate with no ARK Shop account. If that is unclear, stop and ask the project owner. Do not add communications (email, SMS, MMS, voice, SIP, voicemail, recordings, inboxes, conversation history, or their providers), Square, PartsTech, provider credential stores, or the legacy Platform texting client. `scripts/assert-no-communications.php` enforces the communications rule.
+A change belongs here when a shop needs it to operate with no ARK Shop account. If that is unclear, stop and ask the project owner. Do not add SMS, MMS, voice, SIP, voicemail, recordings, proprietary provider SDKs, commercial credential stores, Square, PartsTech, or the legacy Platform texting client. Native customer email via installation-controlled SMTP/sendmail is allowed in standalone Core (never as a hosted SaaS fallback). `scripts/assert-no-communications.php` enforces the communications rule.
 
 ## Release
 

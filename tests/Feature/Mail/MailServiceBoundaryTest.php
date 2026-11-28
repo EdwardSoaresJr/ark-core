@@ -46,9 +46,9 @@ it('keeps estimate and invoice delivery on the OutboundTransactionalMail boundar
         ->and($deposit->hasProperty('mail'))->toBeTrue()
         ->and($review->hasProperty('mail'))->toBeTrue()
         ->and($estimate->getProperty('mail')->getType()?->getName())
-        ->toBe(\App\Ark\Platform\Mail\ArkMailClient::class)
+        ->toBe(\App\Ark\Installation\Mail\CustomerOutboundMail::class)
         ->and($invoice->getProperty('mail')->getType()?->getName())
-        ->toBe(\App\Ark\Platform\Mail\ArkMailClient::class)
+        ->toBe(\App\Ark\Installation\Mail\CustomerOutboundMail::class)
         ->and($payment->getProperty('mail')->getType()?->getName())
         ->toBe(\App\Ark\Platform\Mail\ArkMailClient::class)
         ->and($deposit->getProperty('mail')->getType()?->getName())
@@ -255,7 +255,11 @@ it('exposes no stock BYO Postmark configuration surface', function () {
 
 it('remains structurally extensible via the OutboundTransactionalMail binding', function () {
     $this->app->bind(OutboundTransactionalMail::class, function ($app) {
-        return new class($app->make(ArkMailClient::class)) extends OutboundTransactionalMail
+        return new class(
+            $app->make(ArkMailClient::class),
+            $app->make(\App\Ark\Installation\Mail\InstallationMailConfiguration::class),
+            $app->make(\App\Ark\Installation\Mail\InstallationMailSender::class),
+        ) extends OutboundTransactionalMail
         {
             public function providerMode(): string
             {

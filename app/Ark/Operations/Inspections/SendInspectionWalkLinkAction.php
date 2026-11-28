@@ -9,9 +9,7 @@ use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Runtime\Authorization\ArkRole;
-use App\Ark\Mail\EmailIntent;
-use App\Ark\Platform\Mail\ArkMailClient;
-use App\Ark\Platform\Mail\ManagedMailGate;
+use App\Ark\Installation\Mail\CustomerOutboundMail;
 use App\Models\User;
 use App\Support\Mail\ShopMailBranding;
 use Illuminate\Support\Str;
@@ -28,7 +26,7 @@ final class SendInspectionWalkLinkAction
         private readonly OutboundSmsTransport $sms,
         private readonly ResolvePhoneSmsCapabilityAction $smsCapability,
         private readonly ShopIntegrationCredentials $credentials,
-        private readonly ArkMailClient $mail,
+        private readonly CustomerOutboundMail $mail,
     ) {}
 
     /**
@@ -124,13 +122,13 @@ final class SendInspectionWalkLinkAction
             throw new RuntimeException($recipient->name.' has no email on file.');
         }
 
-        if (! ManagedMailGate::platformSend()) {
+        if (! $this->mail->canSend()) {
             throw new RuntimeException("Email isn't configured yet.");
         }
 
-        $result = $this->mail->sendTransactional(EmailIntent::payload(
+        $result = $this->mail->send(
             operation: 'inspection.send',
-            to: $email,
+            recipientEmail: $email,
             variables: [
                 'shop_name' => ShopMailBranding::shopName(),
                 'recipient_name' => (string) $recipient->name,
@@ -139,12 +137,10 @@ final class SendInspectionWalkLinkAction
                 'walk_url' => $walkUrl,
             ],
             idempotencyKey: 'inspection-walk-'.Str::uuid(),
-        ));
+        );
 
-        if (($result['ok'] ?? false) !== true) {
-            throw new RuntimeException(
-                is_string($result['message'] ?? null) ? $result['message'] : 'Email could not be sent.',
-            );
+        if (! $result->ok()) {
+            throw new RuntimeException($result->operatorMessage());
         }
     }
 }

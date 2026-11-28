@@ -9,6 +9,8 @@ enum TransactionalMailOperation: string
     case InspectionSend = 'inspection.send';
     case AppointmentSend = 'appointment.send';
     case DocumentSend = 'document.send';
+    case StatementSend = 'statement.send';
+    case InstallationMailTest = 'installation.mail.test';
     case PaymentLinkSend = 'payment_link.send';
     case DepositRequestSend = 'deposit_request.send';
     case ReviewRequestSend = 'review_request.send';

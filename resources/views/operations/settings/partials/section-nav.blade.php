@@ -25,6 +25,7 @@
             ['key' => 'booking', 'label' => 'Online Requests', 'href' => route('operations.settings.booking')],
             ['key' => 'payments', 'label' => 'Payment methods'],
             ['key' => 'partstech', 'label' => 'Parts catalogs'],
+            ['key' => 'email', 'label' => 'Email', 'hidden' => $hostedShop],
             ['key' => 'communications', 'label' => 'Communications', 'hidden' => ! $saasProviderSettings],
         ],
         'Advanced' => [
