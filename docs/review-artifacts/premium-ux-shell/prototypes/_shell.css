@@ -1,0 +1,347 @@
+/* Shared ARK premium shell prototype tokens (Tabler-aligned; not production CSS). */
+:root {
+  --ark-topbar-height: 3.5rem;
+  --ark-workspace-tabs-height: 2.5rem;
+  --ark-sidebar-width: 15rem;
+  --ark-sidebar-collapsed: 4.25rem;
+  --ark-content-max: 96rem;
+  --ark-density-gap: 0.75rem;
+  --ark-identity-title: 1.125rem;
+  --ark-action-primary: var(--tblr-primary);
+  font-family: var(--tblr-font-sans-serif, Inter, system-ui, sans-serif);
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.ark-proto {
+  display: grid;
+  grid-template-columns: var(--ark-sidebar-width) 1fr;
+  min-height: 100vh;
+  background: var(--tblr-bg-surface-secondary, #f1f5f9);
+}
+
+.ark-proto.is-collapsed {
+  grid-template-columns: var(--ark-sidebar-collapsed) 1fr;
+}
+
+.ark-proto__sidebar {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 0.75rem 0.5rem;
+}
+
+.ark-proto__brand {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.5rem 0.75rem 1rem;
+  font-size: 0.95rem;
+}
+
+.ark-proto__nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #cbd5e1;
+  text-decoration: none;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.35rem;
+  font-size: 0.875rem;
+}
+
+.ark-proto__nav a.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.ark-proto.is-collapsed .ark-proto__nav span,
+.ark-proto.is-collapsed .ark-proto__brand span {
+  display: none;
+}
+
+.ark-proto__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ark-proto__topbar {
+  height: var(--ark-topbar-height);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+  background: var(--tblr-bg-surface, #fff);
+  border-bottom: 1px solid var(--tblr-border-color, #e2e8f0);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.ark-proto__hamburger {
+  border: 1px solid var(--tblr-border-color, #e2e8f0);
+  background: transparent;
+  border-radius: 0.35rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ark-proto__context {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ark-proto__crumbs {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.ark-proto__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ark-proto__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ark-proto__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.ark-proto__actions .btn {
+  white-space: nowrap;
+}
+
+.ark-proto__global {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--tblr-border-color, #e2e8f0);
+}
+
+.ark-proto__tabs {
+  height: var(--ark-workspace-tabs-height);
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding: 0 0.5rem;
+  background: var(--tblr-bg-surface, #fff);
+  border-bottom: 1px solid var(--tblr-border-color, #e2e8f0);
+  position: sticky;
+  top: var(--ark-topbar-height);
+  z-index: 19;
+}
+
+.ark-proto__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.75rem;
+  font-size: 0.8rem;
+  color: #475569;
+  border-bottom: 2px solid transparent;
+  max-width: 12rem;
+}
+
+.ark-proto__tab.is-active {
+  color: #0f172a;
+  border-bottom-color: var(--tblr-primary, #206bc4);
+  font-weight: 600;
+}
+
+.ark-proto__tab button {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.ark-proto__body {
+  padding: 1rem;
+  max-width: var(--ark-content-max);
+}
+
+.ark-proto__identity {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.ark-proto__identity-name {
+  font-size: var(--ark-identity-title);
+  font-weight: 700;
+  margin: 0;
+}
+
+.ark-proto__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.ark-proto__meta strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.ark-proto__saving {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.ark-proto__saving.is-error {
+  color: #b42318;
+  font-weight: 600;
+}
+
+.ark-proto__card {
+  background: var(--tblr-bg-surface, #fff);
+  border: 1px solid var(--tblr-border-color, #e2e8f0);
+  border-radius: 0.5rem;
+  padding: 0.9rem 1rem;
+}
+
+.ark-proto__card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.ark-proto__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--tblr-border-color, #e2e8f0);
+  font-size: 0.875rem;
+}
+
+.ark-proto__row:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.ark-proto__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  background: #e8f1fb;
+  color: #1d4f91;
+}
+
+.ark-proto__badge.is-warn {
+  background: #fff4e5;
+  color: #9a5b00;
+}
+
+.ark-proto__badge.is-ok {
+  background: #e7f6ee;
+  color: #0f6b3b;
+}
+
+.ark-proto__modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  padding: 1rem;
+}
+
+.ark-proto__modal.is-open {
+  display: flex;
+}
+
+.ark-proto__dialog {
+  width: min(28rem, 100%);
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+}
+
+.ark-proto__toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .ark-proto {
+    grid-template-columns: 1fr;
+  }
+
+  .ark-proto__sidebar {
+    display: none;
+  }
+
+  .ark-proto.is-nav-open .ark-proto__sidebar {
+    display: block;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(80vw, 16rem);
+    z-index: 30;
+  }
+
+  .ark-proto__actions .btn-secondary-label {
+    display: none;
+  }
+}
+
+[data-bs-theme="dark"] .ark-proto {
+  background: #0b1220;
+}
+
+[data-bs-theme="dark"] .ark-proto__topbar,
+[data-bs-theme="dark"] .ark-proto__tabs,
+[data-bs-theme="dark"] .ark-proto__card,
+[data-bs-theme="dark"] .ark-proto__dialog {
+  background: #111827;
+  border-color: #243044;
+  color: #e5e7eb;
+}
+
+[data-bs-theme="dark"] .ark-proto__title,
+[data-bs-theme="dark"] .ark-proto__identity-name,
+[data-bs-theme="dark"] .ark-proto__meta strong,
+[data-bs-theme="dark"] .ark-proto__tab.is-active {
+  color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .ark-proto__crumbs,
+[data-bs-theme="dark"] .ark-proto__meta,
+[data-bs-theme="dark"] .ark-proto__saving {
+  color: #94a3b8;
+}

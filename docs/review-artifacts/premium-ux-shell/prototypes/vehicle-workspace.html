@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ARK Prototype — Vehicle workspace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.3/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="./_shell.css" />
+</head>
+<body>
+  <div class="ark-proto" id="shell">
+    <aside class="ark-proto__sidebar" aria-label="Primary operations">
+      <div class="ark-proto__brand">ARK <span>Operations</span></div>
+      <nav class="ark-proto__nav">
+        <a href="#"><span>Today</span></a>
+        <a href="#"><span>Shop Queue</span></a>
+        <a href="#"><span>Customers</span></a>
+        <a href="#" class="is-active"><span>Vehicles</span></a>
+        <a href="#"><span>Repair Orders</span></a>
+        <a href="#"><span>Schedule</span></a>
+        <a href="#"><span>Inbox</span></a>
+      </nav>
+    </aside>
+
+    <div class="ark-proto__main">
+      <header class="ark-proto__topbar">
+        <button type="button" class="ark-proto__hamburger" id="toggleSidebar" aria-label="Toggle sidebar">☰</button>
+        <div class="ark-proto__context">
+          <div class="ark-proto__crumbs"><a href="./customer-workspace.html">Jordan Hale</a> / Vehicles</div>
+          <div class="ark-proto__title-row">
+            <h1 class="ark-proto__title">2018 Subaru Outback 2.5i Premium</h1>
+            <span class="ark-proto__badge is-ok">Active</span>
+          </div>
+        </div>
+        <div class="ark-proto__actions" aria-label="Vehicle commands">
+          <button type="button" class="btn btn-outline-secondary btn-sm">Call owner</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm">Schedule</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm">Edit Vehicle</button>
+          <button type="button" class="btn btn-primary btn-sm">Create RO</button>
+        </div>
+        <div class="ark-proto__global">
+          <button type="button" class="btn btn-ghost-secondary btn-sm" id="toggleTheme">Theme</button>
+          <button type="button" class="btn btn-ghost-secondary btn-sm">Inbox</button>
+          <button type="button" class="btn btn-ghost-secondary btn-sm">EH</button>
+        </div>
+      </header>
+
+      <div class="ark-proto__tabs" aria-label="Workspaces">
+        <div class="ark-proto__tab">CU Jordan Hale <button type="button" aria-label="Close">×</button></div>
+        <div class="ark-proto__tab is-active">VH 2018 Subaru <button type="button" aria-label="Close">×</button></div>
+        <div class="ark-proto__tab">RO #4821 <button type="button" aria-label="Close">×</button></div>
+      </div>
+
+      <main class="ark-proto__body">
+        <section class="ark-proto__identity ark-proto__card">
+          <h2 class="ark-proto__identity-name">2018 Subaru Outback 2.5i Premium</h2>
+          <div class="ark-proto__meta">
+            <span>Owner <strong><a href="./customer-workspace.html">Jordan Hale</a></strong></span>
+            <span>VIN <strong>4S4BSAFC5J3XXXXXX</strong></span>
+            <span>Plate <strong>CO-7KMT42</strong></span>
+            <span>Open RO <strong><a href="./repair-order-workspace.html">#4821</a></strong></span>
+          </div>
+        </section>
+
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <section class="ark-proto__card">
+              <h3>Current visit</h3>
+              <div class="ark-proto__row">
+                <div>
+                  <div><strong>RO #4821</strong> · Diagnosis</div>
+                  <div class="text-secondary">Concern: Front brake noise under light braking</div>
+                </div>
+                <a class="btn btn-outline-primary btn-sm" href="./repair-order-workspace.html">Open RO</a>
+              </div>
+            </section>
+          </div>
+          <div class="col-12 col-lg-6">
+            <section class="ark-proto__card">
+              <h3>Recent history</h3>
+              <div class="ark-proto__row">
+                <div>RO #4702 · Oil + rotate · Closed Oct 12</div>
+                <span class="ark-proto__badge">Paid</span>
+              </div>
+              <div class="ark-proto__row">
+                <div>RO #4611 · Alignment · Closed Aug 3</div>
+                <span class="ark-proto__badge">Paid</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const shell = document.getElementById('shell');
+    document.getElementById('toggleSidebar').onclick = () => {
+      if (window.matchMedia('(max-width: 900px)').matches) {
+        shell.classList.toggle('is-nav-open');
+      } else {
+        shell.classList.toggle('is-collapsed');
+      }
+    };
+    document.getElementById('toggleTheme').onclick = () => {
+      const html = document.documentElement;
+      html.setAttribute('data-bs-theme', html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+    };
+  </script>
+</body>
+</html>

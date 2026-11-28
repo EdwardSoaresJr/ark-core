@@ -3,6 +3,7 @@
  * from their loaded baselines (reverts clear the scare).
  */
 import { rootHasUnsavedFormChanges } from './ark-form-unsaved';
+import { adoptRenderedBaselines } from './ark-worksheet-draft';
 
 export function initWorkspaceDirtyBindings() {
     const cfg = window.__ARK_WORKSPACE__;
@@ -74,4 +75,13 @@ export function initWorkspaceDirtyBindings() {
     window.ARK.workspace = window.ARK.workspace || {};
     window.ARK.workspace.syncDirty = syncDirty;
     window.ARK.workspace.hasUnsavedFormChanges = () => rootHasUnsavedFormChanges(root);
+
+    // Server HTML / Alpine first paint can leave value !== defaultValue with no user edit.
+    // Adopt the rendered controls as baseline (same as continuity morph), then clear sticky scare.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            adoptRenderedBaselines(root);
+            syncDirty();
+        });
+    });
 }

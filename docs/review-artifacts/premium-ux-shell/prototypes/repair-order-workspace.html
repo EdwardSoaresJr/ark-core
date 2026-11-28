@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ARK Prototype — Repair Order workspace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.3/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="./_shell.css" />
+</head>
+<body>
+  <div class="ark-proto" id="shell">
+    <aside class="ark-proto__sidebar" aria-label="Primary operations">
+      <div class="ark-proto__brand">ARK <span>Operations</span></div>
+      <nav class="ark-proto__nav">
+        <a href="#"><span>Today</span></a>
+        <a href="#"><span>Shop Queue</span></a>
+        <a href="#"><span>Customers</span></a>
+        <a href="#"><span>Vehicles</span></a>
+        <a href="#" class="is-active"><span>Repair Orders</span></a>
+        <a href="#"><span>Schedule</span></a>
+        <a href="#"><span>Inbox</span></a>
+      </nav>
+    </aside>
+
+    <div class="ark-proto__main">
+      <header class="ark-proto__topbar">
+        <button type="button" class="ark-proto__hamburger" id="toggleSidebar" aria-label="Toggle sidebar">☰</button>
+        <div class="ark-proto__context">
+          <div class="ark-proto__crumbs"><a href="./customer-workspace.html">Jordan Hale</a> / <a href="./vehicle-workspace.html">2018 Outback</a></div>
+          <div class="ark-proto__title-row">
+            <h1 class="ark-proto__title">RO #4821</h1>
+            <span class="ark-proto__badge is-warn">Diagnosis</span>
+            <span class="ark-proto__saving" id="saveState">Saved</span>
+          </div>
+        </div>
+        <div class="ark-proto__actions" aria-label="RO commands">
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="failSave">Simulate failed save</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm">Review Notes</button>
+          <button type="button" class="btn btn-primary btn-sm">Authorize</button>
+        </div>
+        <div class="ark-proto__global">
+          <button type="button" class="btn btn-ghost-secondary btn-sm" id="toggleTheme">Theme</button>
+          <button type="button" class="btn btn-ghost-secondary btn-sm">Inbox</button>
+          <button type="button" class="btn btn-ghost-secondary btn-sm">EH</button>
+        </div>
+      </header>
+
+      <div class="ark-proto__tabs" aria-label="Workspaces">
+        <div class="ark-proto__tab">CU Jordan Hale <button type="button" aria-label="Close">×</button></div>
+        <div class="ark-proto__tab">VH 2018 Subaru <button type="button" aria-label="Close">×</button></div>
+        <div class="ark-proto__tab is-active">RO #4821 <button type="button" aria-label="Close">×</button></div>
+      </div>
+
+      <main class="ark-proto__body">
+        <section class="ark-proto__identity ark-proto__card">
+          <h2 class="ark-proto__identity-name">RO #4821 · Front brake noise</h2>
+          <div class="ark-proto__meta">
+            <span>Customer <strong><a href="./customer-workspace.html">Jordan Hale</a></strong></span>
+            <span>Vehicle <strong><a href="./vehicle-workspace.html">2018 Subaru Outback</a></strong></span>
+            <span>Tech <strong>M. Ortiz</strong></span>
+            <span>Auth <strong>Pending</strong></span>
+            <span>Total <strong>$286.40</strong></span>
+          </div>
+        </section>
+
+        <div class="row g-3">
+          <div class="col-12 col-lg-8">
+            <section class="ark-proto__card">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h3 class="mb-0">Estimate lines</h3>
+                <span class="ark-proto__saving" id="lineSave">Autosaved</span>
+              </div>
+              <label class="form-label">Concern narrative</label>
+              <textarea class="form-control mb-2" id="concern" rows="3">Customer reports intermittent front brake noise under light braking after highway miles.</textarea>
+              <div class="ark-proto__row">
+                <div>Labor · Brake inspection · 0.8 hr</div>
+                <strong>$112.00</strong>
+              </div>
+              <div class="ark-proto__row">
+                <div>Parts · Front pad set (OEM-equivalent)</div>
+                <strong>$148.40</strong>
+              </div>
+            </section>
+          </div>
+          <div class="col-12 col-lg-4">
+            <section class="ark-proto__card">
+              <h3>Next decision</h3>
+              <p class="mb-2" style="font-size:0.875rem;color:#475569;">Customer authorization required before parts order. Check In belongs on the appointment/visit path — not on the workspace tab strip.</p>
+              <button type="button" class="btn btn-primary w-100 mb-2">Request authorization</button>
+              <button type="button" class="btn btn-outline-secondary w-100">Print estimate</button>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const shell = document.getElementById('shell');
+    const concern = document.getElementById('concern');
+    const lineSave = document.getElementById('lineSave');
+    const saveState = document.getElementById('saveState');
+    let timer = null;
+    concern.addEventListener('input', () => {
+      lineSave.textContent = 'Saving…';
+      lineSave.classList.remove('is-error');
+      saveState.textContent = 'Saving…';
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        lineSave.textContent = 'Autosaved';
+        saveState.textContent = 'Saved';
+      }, 450);
+    });
+    document.getElementById('failSave').onclick = () => {
+      lineSave.textContent = "Couldn't save. Retry";
+      lineSave.classList.add('is-error');
+      saveState.textContent = 'Save failed — edits kept';
+      saveState.classList.add('is-error');
+    };
+    document.getElementById('toggleSidebar').onclick = () => {
+      if (window.matchMedia('(max-width: 900px)').matches) {
+        shell.classList.toggle('is-nav-open');
+      } else {
+        shell.classList.toggle('is-collapsed');
+      }
+    };
+    document.getElementById('toggleTheme').onclick = () => {
+      const html = document.documentElement;
+      html.setAttribute('data-bs-theme', html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+    };
+  </script>
+</body>
+</html>

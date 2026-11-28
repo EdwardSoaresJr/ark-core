@@ -1,6 +1,6 @@
 import { focusWorksheetConcernRepairAction } from './ark-scope-entry-intake';
 import { dirtyAfterSaveAttempt, refreshPresentsAsSaving } from './ark-worksheet-autosave';
-import { adoptRenderedBaselines, blockedPanelIds, cancelWouldReplace, draftNodesIn, versionToSubmit } from './ark-worksheet-draft';
+import { adoptRenderedBaseline, adoptRenderedBaselines, blockedPanelIds, cancelWouldReplace, draftNodesIn, versionToSubmit } from './ark-worksheet-draft';
 import { formHasChanges, isWorkspaceModalOpen } from './ark-form-unsaved';
 import { applyContinuityScopes, applyEditorPresentation, CONTINUITY_REFRESH_FAILED_MESSAGE, replaceSubmittedRegion } from './ark-worksheet-continuity-scope';
 
@@ -147,8 +147,17 @@ export const arkWorksheetContinuity = (config = {}) => {
                 hadUnsavedChanges: this._saveHadUnsavedChanges === true,
             });
 
-            if (ok && typeof window.ARK?.workspace?.syncDirty === 'function') {
-                window.ARK.workspace.syncDirty();
+            if (ok) {
+                // Successful write: adopt this form's live values as baseline when it
+                // is still in the document so syncDirty does not re-scare from the
+                // pre-save defaultValue mismatch before continuity morph finishes.
+                if (form instanceof HTMLFormElement && document.contains(form)) {
+                    adoptRenderedBaseline(form);
+                }
+
+                if (typeof window.ARK?.workspace?.syncDirty === 'function') {
+                    window.ARK.workspace.syncDirty();
+                }
 
                 return;
             }
