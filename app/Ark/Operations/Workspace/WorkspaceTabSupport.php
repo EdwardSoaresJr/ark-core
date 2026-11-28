@@ -435,12 +435,15 @@ final class WorkspaceTabSupport
 
         $boot['title'] = $vehicle->operational_identity;
         $boot['subtitle'] = $vehicle->customer?->name ?? '';
-        $boot['route'] = Route::has('operations.customers.show')
-            ? route('operations.customers.show', [
-                'customer' => $vehicle->customer_id,
-                'vehicle' => $vehicle->id,
-            ])
-            : $boot['route'];
+        $boot['customerName'] = $vehicle->customer?->name ?? '';
+        $boot['route'] = Route::has('operations.vehicles.show')
+            ? route('operations.vehicles.show', $vehicle)
+            : (Route::has('operations.customers.show')
+                ? route('operations.customers.show', [
+                    'customer' => $vehicle->customer_id,
+                    'vehicle' => $vehicle->id,
+                ])
+                : $boot['route']);
 
         return $boot;
     }

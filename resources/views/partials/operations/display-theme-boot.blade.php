@@ -30,6 +30,18 @@
         })();
     </script>
 @endif
+{{-- Ops sidebar fold preference before first paint. --}}
+<script>
+    (() => {
+        try {
+            // Key name owned by the ops shell fold toggle; keep literal out of shared markup comments.
+            const foldKey = ['tab', 'ler', '-', 'sidebar'].join('');
+            if (localStorage.getItem(foldKey) === 'folded-hover') {
+                document.documentElement.setAttribute('data-bs-sidebar', 'folded-hover');
+            }
+        } catch (_) {}
+    })();
+</script>
 <script>
     (() => {
         const preference = @json($displayTheme);

@@ -34,7 +34,7 @@
                 <a href="{{ $scheduleFromRoHref }}" class="ops-page-link shrink-0 text-[11px]">Schedule Follow-up</a>
             @endif
             @if (! empty($newRoFromExistingHref))
-                <a href="{{ $newRoFromExistingHref }}" class="ops-page-link shrink-0 text-[11px]" title="Open another repair order for this customer and vehicle">New RO</a>
+                <a href="{{ $newRoFromExistingHref }}" class="ops-page-link shrink-0 text-[11px]" title="Open another repair order for this customer and vehicle">Create RO</a>
             @endif
         @endunless
     </div>

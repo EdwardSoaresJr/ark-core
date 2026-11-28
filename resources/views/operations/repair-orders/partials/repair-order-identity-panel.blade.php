@@ -81,7 +81,7 @@
                     <a href="{{ $scheduleFromRoHref }}">Schedule Follow-up</a>
                 @endif
                 @if ($newRoFromExistingHref)
-                    <a href="{{ $newRoFromExistingHref }}" title="Open another repair order for this customer and vehicle">New RO</a>
+                    <a href="{{ $newRoFromExistingHref }}" title="Open another repair order for this customer and vehicle">Create RO</a>
                 @endif
             </div>
 

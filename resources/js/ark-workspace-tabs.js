@@ -803,7 +803,8 @@ function getBarAvailableWidth() {
         return Math.max(0, barEl.getBoundingClientRect().width - TAB_SCROLL_PAD);
     }
 
-    const sidebar = 56;
+    const folded = (document.documentElement.getAttribute('data-bs-sidebar') || '').startsWith('folded');
+    const sidebar = folded ? 56 : 232;
 
     return Math.max(0, window.innerWidth - sidebar - TAB_SCROLL_PAD);
 }
@@ -2223,6 +2224,11 @@ export function initWorkspaceTabs() {
     });
 
     window.addEventListener('resize', () => {
+        syncWorkspaceChromeOffset();
+        renderBar();
+    });
+
+    document.addEventListener('tabler:sidebar-folded', () => {
         syncWorkspaceChromeOffset();
         renderBar();
     });

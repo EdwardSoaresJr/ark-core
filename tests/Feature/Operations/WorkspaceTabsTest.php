@@ -149,8 +149,9 @@ test('operations layout boots workspace tabs for service intake', function () {
         ->get(route('operations.intake.create'))
         ->assertOk()
         ->assertSee('id="ops-workspace-tabs"', false)
-        ->assertSee('intake:service', false)
-        ->assertSee('Check In', false);
+        ->assertSee('"entityType":"intake"', false)
+        ->assertSee('Check In', false)
+        ->assertSee('"dockedContextual":[]', false);
 });
 
 test('operations report path is not a workspace tab', function () {
@@ -168,9 +169,7 @@ test('client config excludes operations report from permanent dock tabs', functi
     expect($config['permanentPinned'])->toBe([])
         ->and($config['excludedWorkspaceKeys'])->toContain('report:operations')
         ->and($config['dockedContextual'])->toBeArray()
-        ->and($config['dockedContextual'][0]['key'])->toBe('intake:service')
-        ->and($config['dockedContextual'][0]['route'])->toBe('/app/intake/new')
-        ->and($config['dockedContextual'][0]['title'])->toBe('Check In');
+        ->and($config['dockedContextual'])->toBe([]);
 });
 
 test('operations layout boots workspace tabs for repair order show', function () {
@@ -253,7 +252,7 @@ test('operations layout enriches vehicle workspace boot metadata', function () {
 
     expect($boot['title'])->toBe('2018 Ford F-150')
         ->and($boot['subtitle'])->toBe('Vehicle Owner')
-        ->and($boot['route'])->toContain('vehicle='.$vehicle->id);
+        ->and($boot['route'])->toContain('/app/vehicles/'.$vehicle->id);
 });
 
 test('workspace tabs can be disabled via config', function () {

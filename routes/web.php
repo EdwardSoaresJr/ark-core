@@ -274,6 +274,7 @@ use App\Ark\Operations\Today\TodayRecommendationCloseLostController;
 use App\Ark\Operations\Today\TodayRecommendationSnoozeController;
 use App\Ark\Operations\Vehicles\VehicleDestroyController;
 use App\Ark\Operations\Vehicles\VehicleSearchController;
+use App\Ark\Operations\Vehicles\VehicleShowController;
 use App\Ark\Operations\Vehicles\VehicleStoreController;
 use App\Ark\Operations\Vehicles\VehicleUpdateController;
 use App\Ark\Operations\Vehicles\VehicleVinDecodeController;
@@ -935,6 +936,10 @@ SurfaceRouting::appRoutes(function (): void {
         Route::get('/app/vehicles/search', VehicleSearchController::class)
             ->middleware('permission:'.ArkCapability::VehiclesManage->value)
             ->name('operations.vehicles.search');
+
+        Route::get('/app/vehicles/{vehicle}', VehicleShowController::class)
+            ->middleware('permission:'.ArkCapability::VehiclesManage->value)
+            ->name('operations.vehicles.show');
 
         Route::get('/app/caller-lookup', CallerLookupController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value)

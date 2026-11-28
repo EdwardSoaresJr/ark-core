@@ -46,18 +46,11 @@ return [
 
     /**
      * Always-present workspaces fixed on the right rail (outside the scroll area).
+     * Check In is contextual (Shop Queue / search / appointments), not a permanent strip action.
      *
      * @var list<array{key: string, entityType: string, entityId: string, route: string, title: string, subtitle?: string}>
      */
-    'docked_contextual' => [
-        [
-            'key' => 'intake:service',
-            'entityType' => 'intake',
-            'entityId' => 'service',
-            'route' => '/app/intake/new',
-            'title' => 'Check In',
-        ],
-    ],
+    'docked_contextual' => [],
 
     /**
      * @var list<string>
@@ -100,6 +93,11 @@ return [
         'customer_show' => [
             'type' => 'customer',
             'pattern' => '#^app/customers/(\d+)$#',
+            'id_group' => 1,
+        ],
+        'vehicle_show' => [
+            'type' => 'vehicle',
+            'pattern' => '#^app/vehicles/(\d+)$#',
             'id_group' => 1,
         ],
         'inbox_show' => [

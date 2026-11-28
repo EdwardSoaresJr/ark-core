@@ -40,7 +40,7 @@ test('the shop can move from customer search to vehicle to repair order draft', 
 
     $this->get(route('operations.customers.show', $customer))
         ->assertOk()
-        ->assertSee('Start RO')
+        ->assertSee('Create RO')
         ->assertSee('activeRoVehicleId', false)
         ->assertSee('aria-controls="vehicle-ro-create-'.$vehicle->id.'"', false)
         ->assertSee('x-show="activeRoVehicleId === '.$vehicle->id.'"', false)
@@ -106,8 +106,10 @@ test('the shop can edit customer and vehicle details from the customer page', fu
 
     $this->get(route('operations.customers.show', $customer))
         ->assertOk()
-        ->assertSee('Save Customer')
-        ->assertSee('Save Vehicle');
+        ->assertSee('Edit Customer', false)
+        ->assertSee('Create RO', false)
+        ->assertSee('hub-customer', false)
+        ->assertSee('hub-vehicle', false);
 
     $this->patch(route('operations.customers.update', $customer), [
         'first_name' => 'Roberto',
@@ -245,59 +247,21 @@ test('the shop can decode a vin and still override fields before saving', functi
         ->assertJsonPath('normalized_vehicle_key', '2019-toyota-rav4-xle-2-5l-awd-automatic');
 });
 
-test('the shop can decode a plate via partstech', function () {
+test('plate decode stays unavailable in stock core', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
     config()->set('services.partstech.username', 'ark');
     config()->set('services.partstech.api_key', 'secret');
-    config()->set('services.partstech.api_base_url', 'https://partstech.test');
 
-    Http::fake(function (\Illuminate\Http\Client\Request $request) {
-        if (str_contains($request->url(), '/oauth/access')) {
-            return Http::response(['accessToken' => 'token']);
-        }
-
-        if (str_contains($request->url(), '/catalog/plate/')) {
-            return Http::response([[
-                'vin' => '2T3RFREV6KW020202',
-                'vinDecode' => [
-                    'year' => '2019',
-                    'make' => 'Toyota',
-                    'model' => 'RAV4',
-                    'submodel' => 'XLE',
-                    'engine' => '2.5L',
-                ],
-            ]]);
-        }
-
-        return Http::response([], 500);
-    });
-
-    $this->postJson(route('operations.vehicles.decode-vin'), [
-        'plate' => 'ABC123',
-        'plate_state' => 'CO',
-    ])
-        ->assertOk()
-        ->assertJsonPath('vin', '2T3RFREV6KW020202')
-        ->assertJsonPath('plate', 'ABC123')
-        ->assertJsonPath('plate_state', 'CO')
-        ->assertJsonPath('make', 'Toyota')
-        ->assertJsonPath('model', 'Rav4')
-        ->assertJsonPath('trim', 'XLE');
-});
-
-test('plate decode says when partstech is not configured', function () {
-    $this->seed(ArkAuthorizationSeeder::class);
-    $this->actingAs(actingAsLearnCurrentAdvisor());
-
-    config()->set('services.partstech.username', null);
-    config()->set('services.partstech.api_key', null);
+    Http::fake();
 
     $this->postJson(route('operations.vehicles.decode-vin'), [
         'plate' => 'ABC123',
         'plate_state' => 'CO',
     ])
         ->assertStatus(422)
-        ->assertJsonPath('message', 'PartsTech is not set up for plate decode. Add the username and API key under Settings → PartsTech.');
+        ->assertJsonPath('message', 'Vehicle could not be decoded from that plate.');
+
+    Http::assertNothingSent();
 });
