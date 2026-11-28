@@ -283,7 +283,10 @@ final class InstallationMailConfiguration
             'mailer' => (string) ($settings->installation_mail_mailer ?: 'smtp'),
             'host' => (string) ($settings->installation_mail_host ?: ''),
             'port' => (int) ($settings->installation_mail_port ?: 587),
-            'encryption' => (string) ($settings->installation_mail_encryption ?: 'tls'),
+            'encryption' => $settings->installation_mail_encryption === null
+                && filled($settings->installation_mail_host)
+                ? 'none'
+                : (string) ($settings->installation_mail_encryption ?: 'tls'),
             'username' => (string) ($settings->installation_mail_username ?: ''),
             'password_configured' => filled($settings->installation_mail_password),
             'from_address' => (string) ($settings->installation_mail_from_address ?: ($settings->email ?: '')),

@@ -86,8 +86,10 @@ const ALLOWED = [
     'tests/Feature/Installation/InstallationMailSettingsTest.php' => 'Tests Tabler SMTP admin save, mask, and test-send',
     'tests/Feature/Installation/InstallationMailTransportFactoryTest.php' => 'Tests STARTTLS require and certificate verify defaults',
     'tests/Feature/Installation/InstallationMailSmtpAcceptanceTest.php' => 'Controlled SMTP acceptance and content/attachment proof',
+    'tests/Feature/Installation/InstallationMailMailpitAcceptanceTest.php' => 'Real Mailpit SMTP receipt for customer email workflows',
     'tests/Feature/Installation/InstallationMailHostedIsolationTest.php' => 'Hosted SaaS cannot use installation SMTP routes or fallback',
     'tests/Feature/Installation/CustomerOutboundMailTest.php' => 'Tests Platform vs installation routing and honesty',
+    'tests/Feature/Installation/InstallationMailUpgradeAndFreshInstallTest.php' => 'Fresh install and upgrade migration / env-managed mail modes',
 ];
 // The shared Communications workspace (docs/PRODUCT_BOUNDARY.md, owner-approved exception 2026-11-03): files added for
 // it, each with its reason. Adding a file here needs the project owner's approval.

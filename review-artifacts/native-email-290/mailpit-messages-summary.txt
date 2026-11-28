@@ -1,0 +1,6 @@
+count=1
+
+Fatal error: Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, int given in Command line code:1
+Stack trace:
+#0 {main}
+  thrown in Command line code on line 1
